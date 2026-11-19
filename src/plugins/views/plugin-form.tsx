@@ -10,6 +10,7 @@ import { useModalDialog } from "../../engine/controls/useModalDialog";
 import { Select } from "../../engine/controls/Select";
 import { ColorField, DateField } from "./plugin-form-fields";
 import "./plugin-form.css";
+import { DialogActions } from "../../engine/controls/DialogActions";
 
 /** Each field's starting value. */
 function initialValues(fields: PluginFormField[]): Record<string, unknown> {
@@ -113,7 +114,7 @@ function PluginForm({ request }: { request: Request }) {
                   ) : field.type === "multiline" ? (
                     <textarea
                       id={id}
-                      className="settings-text-input"
+                      className="tx-input settings-text-input"
                       rows={4}
                       value={String(value)}
                       placeholder={field.placeholder}
@@ -122,7 +123,7 @@ function PluginForm({ request }: { request: Request }) {
                   ) : (
                     <input
                       id={id}
-                      className="settings-text-input"
+                      className="tx-input settings-text-input"
                       type={field.type === "number" ? "number" : "text"}
                       value={String(value)}
                       placeholder={
@@ -143,15 +144,21 @@ function PluginForm({ request }: { request: Request }) {
             </div>
           );
         })}
-        <div className="close-prompt-buttons">
-          <div className="close-prompt-spacer" />
-          <button type="button" onClick={() => answer(request, null)}>
+        <DialogActions>
+          <button
+            className="tx-button"
+            type="button"
+            onClick={() => answer(request, null)}
+          >
             {request.cancelLabel}
           </button>
-          <button type="submit" className="close-prompt-primary">
+          <button
+            type="submit"
+            className="tx-button primary close-prompt-primary"
+          >
             {request.okLabel}
           </button>
-        </div>
+        </DialogActions>
       </form>
     </div>
   );

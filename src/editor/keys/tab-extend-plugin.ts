@@ -19,7 +19,8 @@ import { isImeKeydown } from "../../utils/ime";
 const INDENT = "  ";
 
 /**
- * Tab and Shift+Tab in a code block: an indent at the caret, or each selected
+ * Tab and Shift+Tab in a code block (or a formula, or the front matter): an
+ * indent at the caret, or each selected
  * line indented or outdented (two spaces or a tab). Null when there is
  * nothing to do, or the selection leaves the block.
  */
@@ -72,8 +73,10 @@ const moveToCell =
 
 /**
  * Tab at a table's last cell adds a row and jumps into it; elsewhere in a
- * table Tab moves between cells, and in a code block it indents. Runs ahead
- * of gfm's table keymap.
+ * table Tab moves between cells, and in a block of code it indents. Runs
+ * ahead of gfm's table keymap; a list's Tab (a level in or out) is the
+ * preset's own. Anywhere else (a quote, a callout, a paragraph) it does
+ * nothing.
  */
 export const tabExtendPlugin = $prose(
   () =>
@@ -87,7 +90,9 @@ export const tabExtendPlugin = $prose(
           const state = stateWithLiveSelection(view);
           const { $from } = state.selection;
 
-          if ($from.parent.type.name === "code_block") {
+          // A block of code: a code block, a display formula, the front
+          // matter's YAML.
+          if ($from.parent.type.spec.code && $from.parent.isTextblock) {
             const tr = indentCodeLines(state, event.shiftKey ? -1 : 1);
             if (tr) view.dispatch(tr.scrollIntoView());
             // Never on to the browser, which moves the focus out.

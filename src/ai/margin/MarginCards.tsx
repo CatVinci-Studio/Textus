@@ -78,7 +78,7 @@ export function cutClass(
 ): string {
   if (cut === null) return "";
   if (open) return " review-note-cut-open";
-  return chip ? " review-note-chip" : " review-note-cut";
+  return chip ? " review-note-chip" : " tx-cut-fade review-note-cut";
 }
 
 /** A card's box: its height for the stack, and its glide on `translate` so

@@ -68,10 +68,31 @@ export const commands = {
 	plugin_metadata_all: (id: string, root: string, after: number | null) => __TAURI_INVOKE<MetadataAll_Serialize>("plugin_metadata_all", { id, root, after }),
 	/**  What one document holds now, its blocks with it - read afresh. */
 	plugin_metadata_get: (id: string, root: string, path: string) => __TAURI_INVOKE<DocumentMeta_Serialize | null>("plugin_metadata_get", { id, root, path }),
+	/**  Reads no file: the window hands the texts in. */
+	plugin_metadata_of_texts: (documents: DocumentText[], blocks: boolean) => __TAURI_INVOKE<DocumentMeta_Serialize[]>("plugin_metadata_of_texts", { documents, blocks }),
 	plugin_git_status: (id: string, root: string) => __TAURI_INVOKE<GitStatus_Serialize | null>("plugin_git_status", { id, root }),
 	plugin_git_log: (id: string, root: string, path: string, limit: number | null) => __TAURI_INVOKE<GitCommit[]>("plugin_git_log", { id, root, path, limit }),
 	plugin_git_show: (id: string, root: string, hash: string, path: string) => __TAURI_INVOKE<string | null>("plugin_git_show", { id, root, hash, path }),
 	plugin_git_commit: (id: string, root: string, message: string, paths: string[]) => __TAURI_INVOKE<string>("plugin_git_commit", { id, root, message, paths }),
+	/**  The hosts named in the user's `~/.ssh/config`. */
+	plugin_ssh_hosts: (id: string) => __TAURI_INVOKE<string[]>("plugin_ssh_hosts", { id }),
+	/**  The user's yes to `id` reaching `host`. */
+	plugin_ssh_allow: (id: string, host: string) => __TAURI_INVOKE<null>("plugin_ssh_allow", { id, host }),
+	/**  A link to `host`; refused with NOT_ALLOWED until the user said yes. */
+	plugin_ssh_connect: (id: string, host: string) => __TAURI_INVOKE<number>("plugin_ssh_connect", { id, host }),
+	/**  The folder the link starts in: the user's home there. */
+	plugin_ssh_home: (id: string, session: number) => __TAURI_INVOKE<string>("plugin_ssh_home", { id, session }),
+	plugin_ssh_list: (id: string, session: number, path: string) => __TAURI_INVOKE<RemoteEntry[]>("plugin_ssh_list", { id, session, path }),
+	/**  Writes a file whole; base64 for bytes. */
+	plugin_ssh_write: (id: string, session: number, path: string, contents: string, base64: boolean) => __TAURI_INVOKE<null>("plugin_ssh_write", { id, session, path, contents, base64 }),
+	/**  A new empty file or folder; a name taken is refused. */
+	plugin_ssh_create: (id: string, session: number, path: string, folder: boolean) => __TAURI_INVOKE<null>("plugin_ssh_create", { id, session, path, folder }),
+	/**  Moves or renames; a name taken is refused. */
+	plugin_ssh_rename: (id: string, session: number, from: string, to: string) => __TAURI_INVOKE<null>("plugin_ssh_rename", { id, session, from, to }),
+	/**  Deletes a file, or an empty folder, for good. */
+	plugin_ssh_remove: (id: string, session: number, path: string) => __TAURI_INVOKE<null>("plugin_ssh_remove", { id, session, path }),
+	/**  Closes one link, or (no session) every link of the plugin. */
+	plugin_ssh_close: (id: string, session: number | null) => __TAURI_INVOKE<null>("plugin_ssh_close", { id, session }),
 	/**
 	 *  The writer agreed to Git running what the repository of `root` sets up,
 	 *  hooks included. Asked by the app itself, never on a plugin's word.
@@ -159,6 +180,13 @@ export type DocumentMeta_Serialize = {
 	blockIds: BlockIdMeta[],
 	blocks: BlockMeta[] | null,
 	modifiedMs: number | null,
+};
+
+/**  A document's place and text, as the window read it. */
+export type DocumentText = {
+	path: string,
+	rel: string,
+	text: string,
 };
 
 /**  One entry of a folder listing. */
@@ -288,6 +316,12 @@ export type MetadataAll_Serialize = {
 	whole: boolean,
 	documents: DocumentMeta_Serialize[],
 	gone: string[],
+};
+
+/**  One entry of a folder on the server. */
+export type RemoteEntry = {
+	name: string,
+	folder: boolean,
 };
 
 /**  A line that holds what was searched for. */

@@ -132,14 +132,17 @@ export function useChangedFiles(): ReadonlySet<string> {
   return useSyncExternalStore(onChangedFiles, () => snapshot);
 }
 
+/** A file written or put back; with no `before`, written unmarked (an
+ *  external agent's change). */
+export interface FileWritten {
+  file: string;
+  applied: boolean;
+  before?: string | null;
+}
+
 /** Where another window must hear of changes made here (the detached chat
  *  tells its editor); none in an editor window. */
-let relay:
-  | ((
-      written: { file: string; applied: boolean; before: string | null }[],
-      revised: string[],
-    ) => void)
-  | null = null;
+let relay: ((written: FileWritten[], revised: string[]) => void) | null = null;
 
 export function relayFileChanges(to: typeof relay): () => void {
   relay = to;
@@ -155,13 +158,11 @@ function revisionsChanged(files: string[]) {
 
 /** Files written or put back: open tabs of them read the disk again, and
  *  those now changed are marked. */
-export function filesChanged(
-  files: { file: string; applied: boolean; before: string | null }[],
-) {
+export function filesChanged(files: FileWritten[]) {
   relay?.(files, []);
   for (const { file, applied, before } of files) {
     // The earliest text before: a reply's later changes build on it.
-    if (applied && !bases.has(file)) {
+    if (applied && before !== undefined && !bases.has(file)) {
       bases.set(file, before);
       if (before != null) void keepBase(file, before);
     }

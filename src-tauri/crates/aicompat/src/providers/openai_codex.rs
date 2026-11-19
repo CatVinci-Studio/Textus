@@ -281,17 +281,17 @@ fn image_from_output(output: &[Value]) -> Result<Vec<u8>, ImageError> {
     decode_base64(result)
 }
 
-/// A failed request's words, as one of the three kinds the user can act on.
+/// A failed request's words, as one of the three kinds the user can act on:
+/// a limit or a balance as every provider's error reads (error_kind).
 fn image_failure(message: String) -> ImageError {
     let lower = message.to_lowercase();
     if lower.contains("moderation") || lower.contains("safety") || lower.contains("content policy")
     {
         ImageError::Refused(message)
-    } else if lower.contains("429")
-        || lower.contains("usage limit")
-        || lower.contains("rate limit")
-        || lower.contains("quota")
-    {
+    } else if matches!(
+        crate::error_kind::kind(&message),
+        Some("rateLimit" | "balance")
+    ) {
         ImageError::Quota(message)
     } else {
         ImageError::Failed(message)

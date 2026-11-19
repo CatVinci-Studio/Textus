@@ -206,7 +206,7 @@ export const commands = {
 	 *  Writes the themed, paginated document to a PDF at `output_path`, offscreen
 	 *  with no print dialog. Same text on every variant: it is the generated TS doc.
 	 */
-	export_pdf_native: (html: string, baseDir: string | null, outputPath: string, pageNumbers: boolean) => __TAURI_INVOKE<null>("export_pdf_native", { html, baseDir, outputPath, pageNumbers }),
+	export_pdf_native: (html: string, baseDir: string | null, outputPath: string, pageNumbers: boolean, sheet: PdfSheet) => __TAURI_INVOKE<null>("export_pdf_native", { html, baseDir, outputPath, pageNumbers, sheet }),
 	open_pandoc_install_page: () => __TAURI_INVOKE<null>("open_pandoc_install_page"),
 	/**  Shows the exported file in Finder, as visible feedback for the export. */
 	reveal_in_dir: (path: string) => __TAURI_INVOKE<null>("reveal_in_dir", { path }),
@@ -529,6 +529,20 @@ export type PandocOptions_Serialize = {
 	csl: string | null,
 	/**  The user's arguments for this format, as an argv list. */
 	extraArgs: string[],
+};
+
+/**
+ *  The sheet a PDF is printed on, in points: the paper, and the band left
+ *  at its top and bottom (the sides are the page's own padding).
+ */
+export type PdfSheet = {
+	width: number | null,
+	height: number | null,
+	/**
+	 *  Read on Linux only: elsewhere the pages are laid out with the band
+	 *  already in them.
+	 */
+	margin: number | null,
 };
 
 /**  A report as services/feedback/issue.ts reads it. */

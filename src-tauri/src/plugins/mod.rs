@@ -20,6 +20,7 @@ pub mod moved_skills;
 pub mod read_tool;
 pub mod scheme;
 pub mod scripts;
+pub mod ssh;
 pub mod state;
 pub mod store;
 pub mod uri;
@@ -37,15 +38,16 @@ macro_rules! with_plugin_commands {
             $crate::plugins::ai::plugin_ai_status,
             $crate::plugins::ai::plugin_ai_allow,
             $crate::plugins::ai::plugin_ai_complete,
+            $crate::plugins::ai::plugin_ai_stream,
             $crate::plugins::install::plugins_installed,
             $crate::plugins::install::plugin_install,
             $crate::plugins::install::plugin_install_files,
             $crate::plugins::catalog::plugin_catalog,
             $crate::plugins::catalog::plugin_catalog_cached,
-            $crate::plugins::catalog::plugin_catalog_readme,
-            $crate::plugins::catalog::plugin_catalog_icon,
-            $crate::plugins::catalog::skill_catalog,
-            $crate::plugins::catalog::skill_install_catalog,
+            $crate::plugins::catalog::pages::plugin_catalog_readme,
+            $crate::plugins::catalog::pages::plugin_catalog_icon,
+            $crate::plugins::catalog::skills::skill_catalog,
+            $crate::plugins::catalog::skills::skill_install_catalog,
             $crate::plugins::access::plugin_fs_rename,
             $crate::plugins::access::plugin_fs_trash,
             $crate::plugins::access::plugin_fs_mkdir,
@@ -58,10 +60,22 @@ macro_rules! with_plugin_commands {
             $crate::plugins::files::plugin_secret_set,
             $crate::plugins::metadata::plugin_metadata_all,
             $crate::plugins::metadata::plugin_metadata_get,
+            $crate::plugins::metadata::texts::plugin_metadata_of_texts,
             $crate::plugins::git::plugin_git_status,
             $crate::plugins::git::plugin_git_log,
             $crate::plugins::git::plugin_git_show,
             $crate::plugins::git::plugin_git_commit,
+            $crate::plugins::ssh::plugin_ssh_hosts,
+            $crate::plugins::ssh::plugin_ssh_allow,
+            $crate::plugins::ssh::plugin_ssh_connect,
+            $crate::plugins::ssh::plugin_ssh_home,
+            $crate::plugins::ssh::plugin_ssh_list,
+            $crate::plugins::ssh::plugin_ssh_read,
+            $crate::plugins::ssh::plugin_ssh_write,
+            $crate::plugins::ssh::plugin_ssh_create,
+            $crate::plugins::ssh::plugin_ssh_rename,
+            $crate::plugins::ssh::plugin_ssh_remove,
+            $crate::plugins::ssh::plugin_ssh_close,
             $crate::plugins::git::git_trust_repository,
             $crate::plugins::catalog::plugin_install_catalog,
             $crate::plugins::dev::plugin_load_dev,

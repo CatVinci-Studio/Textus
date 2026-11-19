@@ -146,7 +146,7 @@ it("sets a task's box on its line and nothing else", async () => {
 });
 
 it("tells file events only of files a plugin can read", async () => {
-  const { fileEventReadable } = await import("./broker");
+  const { fileEventReadable } = await import("./broker-events");
   expect(fileEventReadable({ path: "/notes/a.md" }, "/notes")).toBe(true);
   expect(fileEventReadable({ path: "/notes/.obsidian/x.json" }, "/notes")).toBe(
     false,

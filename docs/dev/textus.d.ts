@@ -1,5 +1,5 @@
 /**
- * The Textus plugin API, 1.8: the `textus` object a plugin's code is given
+ * The Textus plugin API, 1.9: the `textus` object a plugin's code is given
  * (src/plugins/host/host-runtime.ts), the context its `activate` receives, and
  * `acquireTextusApi()` in its webviews (webview-runtime.ts). The one source
  * of truth: docs/dev/plugins/guide.md explains it, the reference pages are
@@ -147,6 +147,9 @@ declare global {
       /** From 1.4.3: the folder's Git history (files.read; committing,
        *  git.commit). Desktop only. */
       git: Git;
+      /** From 1.9 (Textus 1.4.6, preview): a folder on a server through the
+       *  user's own ssh (permission ssh). Desktop only. */
+      ssh: Ssh;
       /** From 1.3.10: no permission, nothing leaves the plugin's frame. */
       dates: Dates;
       templates: Templates;
@@ -180,7 +183,7 @@ declare global {
       /** Textus's UI language ("en", "zh", "zh-Hant", ...). */
       readonly language: string;
       readonly appVersion: string;
-      /** This API's version: "1.8" from Textus 1.4.4 ("1.7": 1.4.3, "1.6": 1.4.2, "1.5": 1.3.13-rc.1,
+      /** This API's version: "1.9" from Textus 1.4.6 ("1.8": 1.4.4, "1.7": 1.4.3, "1.6": 1.4.2, "1.5": 1.3.13-rc.1,
        *  "1.4": 1.3.10, "1.3": 1.3.10-rc.1, "1.2": 1.3.9, "1.1": 1.3.0-beta.8). Prefer engines.textus; compare
        *  it as numbers, not as text ("1.10" > "1.9"). */
       readonly apiVersion: string;
@@ -513,10 +516,52 @@ declare global {
        *  and expands embeds inside it itself. One plugin draws each kind:
        *  the first turned on. From 1.3.9 (files.read). */
       registerEmbed(id: string, provider: EmbedProvider): EmbedHandle;
+      /** Another way to show a database's rows - a timeline, a gallery -
+       *  that the plugin drawing databases offers beside its own views.
+       *  `render` gets the rows and answers HTML, which is shown without
+       *  scripts, event attributes or `<style>` (style inline instead); an
+       *  element with `data-row="<row path>"` opens that row when clicked.
+       *  It gets rows only when the user picks it in a database. From 1.9
+       *  (Textus 1.4.6). */
+      registerDatabaseView(
+        id: string,
+        provider: DatabaseViewProvider,
+      ): Disposable;
+      /** The database views plugins registered, `id` as
+       *  `<plugin id>#<view id>`: for the plugin that draws databases.
+       *  From 1.9 (Textus 1.4.6). */
+      databaseViews(): Promise<
+        { id: string; label: string; icon: string | null; plugin: string }[]
+      >;
+      /** One of databaseViews() drawn for `data`: its HTML, cleaned. From
+       *  1.9 (Textus 1.4.6). */
+      renderDatabaseView(id: string, data: DatabaseViewData): Promise<string>;
       /** The plugin's page in Settings (`contributes.settingsPage`). */
       registerSettingsPage(provider: {
         resolve(webview: Webview): void | Promise<void>;
       }): Disposable;
+    }
+
+    interface DatabaseViewProvider {
+      label: string;
+      /** An SVG's markup, drawn in the text's colour. */
+      icon?: string;
+      render(data: DatabaseViewData): string | Promise<string>;
+    }
+
+    /** A database's rows as its view shows them: filtered and sorted. */
+    interface DatabaseViewData {
+      /** Each row: its note's path, name, and properties. */
+      rows: { path: string; name: string; props: Record<string, unknown> }[];
+      /** The properties shown, in order. */
+      columns: string[];
+      /** Each property's type: "text", "number", "date", "checkbox",
+       *  "tags", "list"... */
+      types: Record<string, string>;
+      /** The property the view is grouped by, if any. */
+      group?: string;
+      /** The property its dates come from, if it has one. */
+      date?: string;
     }
 
     interface EmbedProvider {
@@ -984,8 +1029,9 @@ declare global {
       capture(
         capture: { mode: "all" | "some"; keys: string[] } | null,
       ): Promise<boolean>;
+      /** Deprecated: use onDidPressKey. */
       onKey: Event<string>;
-      /** From 1.7: onKey by the events' rule; onKey stays. */
+      /** From 1.7: onKey by the events' rule. */
       onDidPressKey: Event<string>;
       exec(op: EditorOp): Promise<EditorOpResult>;
     }
@@ -1202,6 +1248,29 @@ declare global {
        *  instead of other apps' settings files; a field no app sets is
        *  null, for Textus's own settings. From 1.3.9 (files.read). */
       conventions(path?: string): Promise<FolderConventions>;
+      /** From 1.9 (Textus 1.4.6, preview): paths of the plugin's own scheme
+       *  (`ssh://host/home/me/notes`), read and written by `provider`, so
+       *  a folder it serves opens in the sidebar and its documents in tabs
+       *  like any other. Paths are whole URLs. A scheme is one plugin's;
+       *  file, content, http(s), data, blob, asset, tauri, textus and
+       *  mailto are never a plugin's. */
+      registerProvider(scheme: string, provider: FileProvider): Disposable;
+      /** From 1.9 (Textus 1.4.6, preview): opens a folder the plugin provides
+       *  (its `registerProvider` scheme) as the window's folder. */
+      openFolder(url: string): Promise<void>;
+      /** From 1.9 (Textus 1.4.6, files.read): reads the folder conventions of an
+       *  app Textus doesn't read itself (Logseq, Zettlr...). The app finds
+       *  `marker`, a file from the app's folder, in the open folder and the
+       *  folders above it, and hands `read` its text once (again when it
+       *  changes). What `read` answers is offered to the user like any
+       *  other app's settings, never applied by itself; folders are from the
+       *  app's folder, and ones leading out of it are left out. `notes`: the
+       *  app keeps notes linked by name, so wikilinks are found from its
+       *  folder. */
+      registerConventionReader(
+        id: string,
+        reader: ConventionReader,
+      ): Disposable;
       /** From 1.7 (files.write): sets how the open folder writes something,
        *  in its `.textus/settings.json` "conventions", keeping the rest;
        *  null clears it. Only `linkStyle` for now. */
@@ -1221,12 +1290,56 @@ declare global {
       onDidChangeConventions: Event<{ root: string }>;
     }
 
+    /** A remote or virtual folder's files (files.registerProvider). Each
+     *  path is a whole URL; a name taken is refused, never replaced. */
+    interface FileProvider {
+      list(path: string): Promise<{ name: string; folder: boolean }[]>;
+      readText(path: string): Promise<string>;
+      read(path: string): Promise<Uint8Array>;
+      writeText(path: string, text: string): Promise<void>;
+      create(dir: string, name: string, folder: boolean): Promise<void>;
+      rename(path: string, name: string): Promise<void>;
+      move(path: string, into: string): Promise<void>;
+      /** For good: a remote folder has no Trash. The user is asked first. */
+      delete(path: string): Promise<void>;
+    }
+
+    interface ConventionReader {
+      /** The app's name, as a card offering its settings shows it. */
+      label: string;
+      /** The file that says the folder is the app's, e.g.
+       *  "logseq/config.edn". */
+      marker: string;
+      notes?: boolean;
+      read(request: {
+        /** The app's folder, a whole path. */
+        root: string;
+        /** The marker file's text. */
+        text: string;
+      }): FoundConventions | null | Promise<FoundConventions | null>;
+    }
+
+    /** What an app sets, as a reader answers it. */
+    interface FoundConventions {
+      linkStyle?: "wiki" | "markdown";
+      linkPath?: "shortest" | "relative" | "absolute";
+      updateLinks?: "always" | "ask" | "never";
+      /** As FolderConventions' `attachments`, inside the app's folder. */
+      attachments?: string;
+      softBreaks?: boolean;
+      /** Folders and files from the app's folder. */
+      templates?: string;
+      daily?: { folder: string; format: string; template?: string };
+      newNotes?: string;
+      ignore?: string[];
+    }
+
     /** One setting of a folder and where it came from. */
     interface ConventionSetting<T> {
       value: T;
       /** "textus", "typora", "obsidian", "logseq", "dendron", "foam",
-       *  "vscode", "mkdocs", "hugo", "docusaurus", "jekyll", "quarto" or
-       *  "git". */
+       *  "vscode", "mkdocs", "hugo", "docusaurus", "jekyll", "quarto",
+       *  "git", or from 1.9 a plugin's reader, `<plugin id>#<id>`. */
       app: string;
       /** The folder these settings belong to. */
       root: string;
@@ -1242,8 +1355,9 @@ declare global {
     }
 
     interface FolderConventions {
-      /** The apps found, nearest first. */
-      sources: { app: string; root: string }[];
+      /** The apps found, nearest first; from 1.9 `notes` when the app
+       *  keeps notes linked by name, found from its folder. */
+      sources: { app: string; root: string; notes?: boolean }[];
       /** "wiki" or "markdown". */
       linkStyle: ConventionSetting<string> | null;
       /** "shortest", "relative" or "absolute". */
@@ -1345,6 +1459,39 @@ declare global {
       /** Commits the changes of `paths` only, with `message`, as the user's
        *  git does (hooks, signing): the new commit's hash. git.commit. */
       commit(message: string, paths: string[]): Promise<string>;
+    }
+
+    /** A link to a server: the user's own `ssh` (their config, agent,
+     *  keys and known hosts) running SFTP only. Each host is asked of the
+     *  user once per plugin. An unknown host key or a password is never
+     *  answered for the user: the link fails saying what to do. Paths are
+     *  the server's, absolute. */
+    interface Ssh {
+      /** The hosts named in `~/.ssh/config` (and its Includes). */
+      hosts(): Promise<string[]>;
+      /** A link to `host`, as the user's ssh names it: its session. */
+      connect(host: string): Promise<number>;
+      /** The folder the link starts in: the user's home there. */
+      home(session: number): Promise<string>;
+      list(
+        session: number,
+        path: string,
+      ): Promise<{ name: string; folder: boolean }[]>;
+      read(session: number, path: string): Promise<Uint8Array>;
+      readText(session: number, path: string): Promise<string>;
+      /** Writes the file whole. */
+      write(
+        session: number,
+        path: string,
+        data: string | Uint8Array,
+      ): Promise<void>;
+      /** A new empty file or folder; a name taken is refused. */
+      create(session: number, path: string, folder?: boolean): Promise<void>;
+      /** Moves or renames; a name taken is refused. */
+      rename(session: number, from: string, to: string): Promise<void>;
+      /** Deletes a file or an empty folder for good. */
+      delete(session: number, path: string): Promise<void>;
+      close(session: number): Promise<void>;
     }
 
     // ---------------------------------------------------------------
@@ -1542,15 +1689,30 @@ declare global {
         },
       ): Disposable;
       /** Whether the user's writing model can be asked now: Textus AI is on
-       *  (never in the iOS App Store download in mainland China). ai.model.
+       *  (never on iOS or iPadOS). ai.model.
        *  From 1.4.4 (API 1.8, preview). */
       available(): Promise<boolean>;
       /** The user's writing model's answer, as text (ai.model). The first
        *  call asks the user; each plugin has 100,000 tokens a month (counted
        *  roughly: a CJK character is one, other text one per four
        *  characters), and the user is asked before more. Refused when the
-       *  user says no or Textus AI is off. From 1.4.4 (API 1.8, preview). */
-      complete(request: AiRequest): Promise<string>;
+       *  user says no or Textus AI is off. From 1.4.4 (API 1.8, preview).
+       *  From 1.9 `signal` stops it (an AbortError), the answer unwritten
+       *  and uncounted. */
+      complete(
+        request: AiRequest,
+        options?: { signal?: AbortSignal },
+      ): Promise<string>;
+      /** complete(), the answer coming in as it is written: each piece
+       *  to `onText` in order, the whole answer returned at the end. The
+       *  same permission, question and tokens as complete(); stopped by
+       *  `signal`, what was written so far is counted. From 1.9 (Textus
+       *  1.4.6, preview). */
+      stream(
+        request: AiRequest,
+        onText: (text: string) => void,
+        options?: { signal?: AbortSignal },
+      ): Promise<string>;
     }
 
     /** `prompt` for one question, or `messages` for a conversation whose
@@ -1828,10 +1990,6 @@ declare global {
       author?: string;
     }
 
-    /** Where a document's past versions are kept besides Textus's own: a
-     *  plugin offers its source (Git, a sync service), another - Version
-     *  History - lists them all and reads a version. Needs files.read.
-     *  From 1.8. */
     /** The notes in a document's margin: the writer's own and plugins',
      *  the same ones the user sees. While the document is open they are
      *  changed in its editor, else in the file Textus keeps them in. */
@@ -1859,6 +2017,10 @@ declare global {
       author: string | null;
     }
 
+    /** Where a document's past versions are kept besides Textus's own: a
+     *  plugin offers its source (Git, a sync service), another - Version
+     *  History - lists them all and reads a version. Needs files.read.
+     *  From 1.8. */
     interface History {
       /** Offers a source named `id` among the plugin's own. */
       registerSource(
@@ -1919,9 +2081,9 @@ declare global {
       readonly language: string;
       t(key: string, ...args: unknown[]): string;
       postMessage(message: unknown): void;
+      /** Deprecated: use onDidReceiveMessage. */
       onMessage(fn: (message: unknown) => void): Disposable;
-      /** From 1.7: onMessage by the name host.js's webview has; onMessage
-       *  stays. */
+      /** From 1.7: onMessage by the name host.js's webview has. */
       onDidReceiveMessage(fn: (message: unknown) => void): Disposable;
       /** From 1.7: whether the page is in sight. */
       readonly visible: boolean;

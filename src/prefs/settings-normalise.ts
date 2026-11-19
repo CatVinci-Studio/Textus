@@ -10,6 +10,12 @@ import { storedImageFolder } from "./image-folder";
 import { storedShortcuts } from "./shortcut-defaults";
 import { DEFAULT_SETTINGS, type Settings } from "./settings-types";
 import {
+  PDF_MARGINS,
+  PDF_PAPERS,
+  PDF_TEXT_SCALES,
+  type PdfMargin,
+  type PdfPaper,
+  type PdfTextScale,
   COLOR_SWATCH_MODES,
   type ColorSwatchMode,
   DIAGRAM_ENGINES,
@@ -128,13 +134,6 @@ function readSettings(parsed: Raw | null): Settings {
     return {
       ...DEFAULT_SETTINGS,
       ...parsed,
-      // A profile from before 1.3.13 kept it off, the old default: on once,
-      // then as the user leaves it.
-      formatBar:
-        parsed.formatBarOnce === true && typeof parsed.formatBar === "boolean"
-          ? parsed.formatBar
-          : true,
-      formatBarOnce: true,
       onboardingShown:
         typeof parsed.onboardingShown === "boolean"
           ? parsed.onboardingShown
@@ -185,6 +184,17 @@ function readSettings(parsed: Raw | null): Settings {
             Object.entries(parsed.plugins).filter(([, v]) => isRecord(v)),
           ) as Settings["plugins"])
         : {},
+      pdfPaper: PDF_PAPERS.includes(parsed.pdfPaper as PdfPaper)
+        ? (parsed.pdfPaper as PdfPaper)
+        : DEFAULT_SETTINGS.pdfPaper,
+      pdfMargin: PDF_MARGINS.includes(parsed.pdfMargin as PdfMargin)
+        ? (parsed.pdfMargin as PdfMargin)
+        : DEFAULT_SETTINGS.pdfMargin,
+      pdfTextScale: PDF_TEXT_SCALES.includes(
+        parsed.pdfTextScale as PdfTextScale,
+      )
+        ? (parsed.pdfTextScale as PdfTextScale)
+        : DEFAULT_SETTINGS.pdfTextScale,
       diagramEngine: DIAGRAM_ENGINES.includes(
         parsed.diagramEngine as DiagramEngine,
       )

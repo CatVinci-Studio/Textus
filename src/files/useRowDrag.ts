@@ -13,10 +13,13 @@ import { updateLinksAfterMove } from "./move-links";
 import { canMoveInto, failureText } from "./tree-shared";
 import { dragGhost } from "../engine/drag/ghost";
 import { trackDrag } from "../engine/drag/pointer-drag";
+import { holdToDrag } from "../engine/drag/hold-drag";
 import { useLatest } from "../utils/hooks/useLatest";
 import { edgeScroll } from "../engine/drag/edge-scroll";
+import { outermost, type TreeRow, type TreeSelection } from "./tree-selection";
 
-/** A row being dragged, and the folder under the pointer. */
+/** A row being dragged (or the first of several picked), and the folder
+ *  under the pointer. */
 interface Drag {
   path: string;
   isDir: boolean;
@@ -49,14 +52,24 @@ export function useRowDrag(
   /** The folder whose documents' links follow a move. */
   linkBase: string,
   t: Strings,
+  /** Rows picked together: a press on one of them drags them all. */
+  selection: TreeSelection,
+  /** A finger's hold let go where it was: the row's menu. */
+  onHeld: (at: { x: number; y: number }, path: string, isDir: boolean) => void,
 ) {
   const [drag, setDrag] = useState<Drag | null>(null);
-  const latest = useLatest({ reload, onEntryMoved, linkBase, t });
+  const latest = useLatest({ reload, onEntryMoved, linkBase, t, onHeld });
 
   const onRowPointerDown = useCallback(
     (e: ReactPointerEvent, path: string, name: string, isDir: boolean) => {
-      if (e.button !== 0 || e.pointerType === "touch") return;
+      if (e.button !== 0) return;
+      // A modified press is a pick (tree-selection.ts), not a drag.
+      if (e.shiftKey || e.metaKey || e.ctrlKey) return;
       holdSelection();
+      const group = selection.groupOf(path);
+      const moving: TreeRow[] = group ? outermost(group) : [{ path, isDir }];
+      const fits = (dir: string) =>
+        moving.every((row) => canMoveInto(row.path, row.isDir, dir));
       /** The tree's box as the drag began: off it, nothing to hit-test. */
       let treeBox: DOMRect | null = null;
       let into: string | null = null;
@@ -74,11 +87,7 @@ export function useRowDrag(
           .elementFromPoint(x, y)
           ?.closest<HTMLElement>("[data-drop-dir]");
         const dir = el?.dataset.dropDir;
-        return dir &&
-          treeRef.current?.contains(el) &&
-          canMoveInto(path, isDir, dir)
-          ? dir
-          : null;
+        return dir && treeRef.current?.contains(el) && fits(dir) ? dir : null;
       };
       // Near the tree's top or bottom it scrolls on while the pointer rests
       // there, over the tree.
@@ -91,11 +100,14 @@ export function useRowDrag(
           into = next;
         },
       );
-      trackDrag(e.nativeEvent, {
+      const handlers = {
         start: () => {
           setDragging(true);
           // The copy under the pointer, as every drag elsewhere has it.
-          ghost.current = dragGhost(name, "tree-drag-ghost floating-surface");
+          ghost.current = dragGhost(
+            group ? `${name} +${group.length - 1}` : name,
+            "tree-drag-ghost floating-surface",
+          );
           setDrag({ path, isDir, into: null });
         },
         move: (x, y, m) => {
@@ -108,7 +120,7 @@ export function useRowDrag(
           // The tree redraws only when where it would land changes.
           if (next !== into) setDrag({ path, isDir, into: next });
           into = next;
-          if (!into && !isDir) documentDrop()?.over(x, y, m.shiftKey);
+          if (!into && !isDir && !group) documentDrop()?.over(x, y, m.shiftKey);
           else documentDrop()?.leave();
         },
         end: (x, y, dropped, up) => {
@@ -118,25 +130,38 @@ export function useRowDrag(
           setDrag(null);
           documentDrop()?.leave();
           if (!dropped) return;
-          if (!into && !isDir)
+          if (!into && !isDir && !group)
             documentDrop()?.drop(path, x, y, up?.shiftKey ?? false);
-          if (into) void move(path, into);
+          if (!into) return;
+          if (group) selection.clear();
+          void moveAll(moving, into);
         },
-      });
+      } satisfies Parameters<typeof trackDrag>[1];
+      // A finger lifts the row by holding still; a move before that scrolls.
+      if (e.pointerType === "touch")
+        holdToDrag(e.nativeEvent, {
+          ...handlers,
+          lift: handlers.start,
+          held: (x, y) => latest.current.onHeld({ x, y }, path, isDir),
+        });
+      else trackDrag(e.nativeEvent, handlers);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- move reads latest
-    [treeRef],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- moveAll reads latest
+    [treeRef, selection],
   );
 
-  const move = async (from: string, into: string) => {
+  const moveAll = async (rows: readonly TreeRow[], into: string) => {
     const { reload, onEntryMoved, linkBase, t } = latest.current;
-    try {
-      const to = await fs.moveEntry(from, into);
-      reload(parentDir(from) ?? into, into);
-      onEntryMoved(from, to);
-      void updateLinksAfterMove(from, to, linkBase, t);
-    } catch (err) {
-      await showMessage(failureText(t, err, basename(from)));
+    for (const { path: from } of rows) {
+      try {
+        const to = await fs.moveEntry(from, into);
+        reload(parentDir(from) ?? into, into);
+        onEntryMoved(from, to);
+        void updateLinksAfterMove(from, to, linkBase, t);
+      } catch (err) {
+        await showMessage(failureText(t, err, basename(from)));
+        return;
+      }
     }
   };
   return { drag, onRowPointerDown };

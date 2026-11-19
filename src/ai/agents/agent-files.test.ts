@@ -30,7 +30,7 @@ describe("an agent's edits written to disk itself", () => {
     changed.mockReset();
   });
 
-  it("are marked against the text from before the step", async () => {
+  it("are read again, unmarked, once the step changed them", async () => {
     const edits = new Map();
     disk.set("/w/a.md", "old");
     followEdit(edits, "/w", {
@@ -43,9 +43,7 @@ describe("an agent's edits written to disk itself", () => {
     disk.set("/w/a.md", "new");
     followEdit(edits, "/w", { toolCallId: "e1", status: "completed" });
     await settle();
-    expect(changed).toHaveBeenCalledWith([
-      { file: "/w/a.md", applied: true, before: "old" },
-    ]);
+    expect(changed).toHaveBeenCalledWith([{ file: "/w/a.md", applied: true }]);
   });
 
   it("leave reads, unchanged files and places outside the folder alone", async () => {

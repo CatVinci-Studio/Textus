@@ -184,7 +184,7 @@
   background-color: color-mix(in srgb, var(--ui-text) 6%, transparent);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   :is(.agent-panel-body, .chat-window-body, .create-studio)
     .ui-select.inline-chat-mode:not(:disabled):hover {
     background-color: color-mix(in srgb, var(--ui-text) 10%, transparent);
@@ -242,7 +242,7 @@
   min-width: 30px;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .inline-chat-selection-chip:hover {
     background: color-mix(in srgb, var(--ui-accent) 22%, transparent);
   }

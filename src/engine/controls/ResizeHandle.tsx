@@ -30,8 +30,9 @@ export function ResizeHandle({
       held.last = held.startWidth + (e.clientX - held.startX) * outward;
       onResize(held.last, false);
     },
-    // Let go however it ends, the width where it was.
-    end: (held) => onResize(held.last, true),
+    // Let go, the width where it was; cancelled, the one it started at.
+    end: (held, how) =>
+      onResize(how === "cancelled" ? held.startWidth : held.last, true),
   });
   return (
     <div

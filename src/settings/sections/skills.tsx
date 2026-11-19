@@ -369,7 +369,7 @@ export function BuiltinSkillsSection({
                     <span className="settings-skill-actions">
                       {own || customized ? (
                         <button
-                          className="text-button settings-inline-button"
+                          className="tx-button text-button settings-inline-button"
                           aria-label={`${t.agentSkillsOpen}: ${text.label}`}
                           onClick={() => openCopy(name)}
                         >
@@ -377,7 +377,7 @@ export function BuiltinSkillsSection({
                         </button>
                       ) : (
                         <button
-                          className="text-button settings-inline-button"
+                          className="tx-button text-button settings-inline-button"
                           aria-label={`${t.agentSkillsCustomize}: ${text.label}`}
                           onClick={() => openCopy(name)}
                         >
@@ -386,7 +386,7 @@ export function BuiltinSkillsSection({
                       )}
                       {customized && (
                         <button
-                          className="text-button settings-inline-button"
+                          className="tx-button text-button settings-inline-button"
                           aria-label={`${t.agentSkillsReset}: ${text.label}`}
                           onClick={() => reset(name, text.label)}
                         >

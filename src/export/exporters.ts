@@ -7,7 +7,12 @@ import { basename, dirname } from "../utils/path";
 import { tabTitle, type DocTab } from "../document/doc-tabs";
 import { exportDoc, fs } from "../platform/ipc";
 import { isMacPlatform, isWindowsPlatform } from "../platform/os";
-import { canExportPdf, canExportWithPandoc } from "../platform/capabilities";
+import {
+  canExportPdf,
+  canExportWithPandoc,
+  isIOSApp,
+} from "../platform/capabilities";
+import { nativeFiles } from "../platform/native-files";
 import { toPandocMarkdown } from "./pandoc-markdown";
 import { numberedHeadings } from "./pandoc-headings";
 import { pandocOptions, type PandocSettings } from "./pandoc-options";
@@ -17,12 +22,15 @@ import { diagramsToImages, drawnBlocksToImages } from "./diagram-images";
 import { drawnPicturesByLanguage } from "./drawn-blocks";
 import { appearanceIsDark } from "../engine/tokens/appearance";
 import type { DiagramEngine } from "../prefs/SettingsContext";
+import { paginateHtml } from "./paginate";
 import {
-  MAC_PAGE,
-  WINDOWS_PAGE,
-  paginateHtml,
+  DEFAULT_PDF_LAYOUT,
+  marginPx,
+  pageGeometry,
+  pdfSheet,
   type PageGeometry,
-} from "./paginate";
+  type PdfLayout,
+} from "./pdf-page";
 import {
   buildStandaloneHtml,
   nextFrame,
@@ -43,6 +51,8 @@ function exportBaseName(tab: DocTab, t: Strings): string {
 // stylesheet inlined and the app root's theme attributes mirrored.
 
 const isMac = isMacPlatform();
+/** The PDF drawn by WebKit's createPDF, on the page's own colour. */
+const webKitPdf = isMac || isIOSApp;
 
 // Content too wide for a page wraps or shrinks instead of being clipped. A
 // page can't scroll, so display math breaks like inline math, and a diagram
@@ -57,17 +67,24 @@ const EXPORT_FIT_CSS =
 
 // Theme + page CSS for the offscreen PDF render. `whitePage` prints on white
 // (with the theme's light form). With a known page geometry the sheet margin
-// is zero so the page colour bleeds to the edges, and paginate.ts lays margins out.
+// is zero so the page colour bleeds to the edges, and paginate.ts lays margins
+// out. `textSize` (px), when set, is the document's text size on paper.
 export function pdfLayoutCss(
   page: PageGeometry | null,
   whitePage = false,
+  layout: PdfLayout = DEFAULT_PDF_LAYOUT,
+  textSize: number | null = null,
 ): string {
-  const side = Math.round((page?.width ?? 595) * 0.094);
+  const side = marginPx(layout);
   const background = whitePage ? "#fff" : "var(--doc-bg, var(--ui-bg))";
   return (
     ":root { -webkit-print-color-adjust: exact; print-color-adjust: exact; } " +
     // Whatever paints with the page colour (sticky bars, cut-outs) matches.
     (whitePage ? ":root { --doc-bg: #fff !important; } " : "") +
+    // A theme's own size on the document's blocks gives way too.
+    (textSize
+      ? `:root, :root .milkdown, :root #write { --doc-font-size: ${textSize}px !important; } `
+      : "") +
     // Only `auto` leaves Linux margins to the GTK page setup: given a CSS
     // margin, WebKitGTK cut pages taller and lost each page's last lines.
     `@page { margin: ${page ? "0" : "auto"}; } ` +
@@ -84,10 +101,10 @@ export function pdfLayoutCss(
   );
 }
 
-/** The sheet geometry this platform's native renderer lays out, if known. */
-function platformPage(): PageGeometry | null {
-  if (isMac) return MAC_PAGE;
-  if (isWindowsPlatform()) return WINDOWS_PAGE;
+/** The sheet this platform's native renderer lays out, if known. */
+function platformPage(layout: PdfLayout): PageGeometry | null {
+  if (webKitPdf) return pageGeometry(layout, "mac");
+  if (isWindowsPlatform()) return pageGeometry(layout, "windows");
   return null;
 }
 
@@ -108,7 +125,11 @@ function showPdfOverlay(t: Strings): HTMLElement {
 export async function exportPdf(
   tab: DocTab,
   t: Strings,
-  { pageNumbers = false, lightColors = false } = {},
+  {
+    pageNumbers = false,
+    lightColors = false,
+    layout = DEFAULT_PDF_LAYOUT,
+  }: { pageNumbers?: boolean; lightColors?: boolean; layout?: PdfLayout } = {},
 ): Promise<void> {
   if (!canExportPdf) return;
   const editor = await drawnEditor(tab, t);
@@ -121,8 +142,8 @@ export async function exportPdf(
       const overlay = showPdfOverlay(t);
       try {
         await nextFrame();
-        // macOS keeps the theme's page colour unless asked for light colours.
-        const whitePage = !isMac || lightColors;
+        // WebKit keeps the theme's page colour unless asked for light colours.
+        const whitePage = !webKitPdf || lightColors;
         const style = getComputedStyle(editor);
         const finished = await preparePage(editor, tab, {
           format: "pdf",
@@ -136,11 +157,17 @@ export async function exportPdf(
               ? { width: editor.clientWidth - 40, font: style.fontFamily }
               : undefined,
         });
-        const page = platformPage();
+        const page = platformPage(layout);
+        // The document's text size as drawn, scaled: a theme's own included.
+        const drawnSize = parseFloat(style.fontSize) || 16;
+        const textSize =
+          layout.textScale === 1
+            ? null
+            : Math.round(drawnSize * layout.textScale * 10) / 10;
         const standalone = buildStandaloneHtml(
           base,
           finished.html,
-          pdfLayoutCss(page, whitePage) + finished.css,
+          pdfLayoutCss(page, whitePage, layout, textSize) + finished.css,
           whitePage,
         );
         const html = page ? await paginateHtml(standalone, page) : standalone;
@@ -150,6 +177,7 @@ export async function exportPdf(
           baseDir: tab.path ? dirname(tab.path) : null,
           outputPath: picked,
           pageNumbers,
+          sheet: pdfSheet(layout),
         });
       } finally {
         // Off before any message: the overlay sits above the app's dialogs.
@@ -188,11 +216,16 @@ export async function runExport(
   failed: (err: unknown) => string = (err) => explainError(err, t),
 ): Promise<void> {
   const base = exportBaseName(tab, t);
-  const picked = await exportDoc.exportSaveDialog(`${base}.${ext}`, kind, ext);
+  // iOS: written aside, then the share sheet saves or sends it.
+  const share = isIOSApp && ext === "pdf";
+  const picked = share
+    ? await nativeFiles.scratchPath(`${base}.${ext}`)
+    : await exportDoc.exportSaveDialog(`${base}.${ext}`, kind, ext);
   if (!picked) return;
   try {
     await write(picked, base);
-    void exportDoc.revealInDir(picked);
+    if (share) await nativeFiles.share(picked);
+    else void exportDoc.revealInDir(picked);
   } catch (err) {
     await showMessage(failed(err), {
       title: t.exportFailedTitle,

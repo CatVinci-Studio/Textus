@@ -1,166 +1,30 @@
 import { type Editor, editorViewOptionsCtx, rootCtx } from "@milkdown/kit/core";
 import type { Ctx, MilkdownPlugin } from "@milkdown/kit/ctx";
 import { orderedListAttr } from "@milkdown/kit/preset/commonmark";
-import { historyOpened, openedFromCtx, openWith } from "./opened-from";
+import { openWith } from "./opened-from";
 import type { TabLeft } from "./tab-left";
-import { clipboard } from "@milkdown/kit/plugin/clipboard";
-import { listener } from "./editor-listener";
-import { $remark } from "@milkdown/kit/utils";
-import { createRemarkVerbatim, keepFor } from "./markdown/verbatim";
-import remarkCjkFriendly from "remark-cjk-friendly";
-import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethrough";
-import {
-  commonmarkWithoutMarks,
-  gfmWithoutStrikethrough,
-  unalignedTableCells,
-  headingInputRule,
-  orderedListInputRule,
-  ruleInputRule,
-} from "./markdown/reduced-presets";
-import {
-  remarkFrontmatterPlugin,
-  frontmatterSchema,
-} from "./markdown/frontmatter-schema";
-import { createGithubAlertPlugin } from "./markdown/github-alert-plugin";
-import { inlineSyntaxPlugin } from "./markdown/inline-syntax-plugin";
 import { installProseMirrorSpeedups } from "./prosemirror-speedups";
-import {
-  headingIdPlugin,
-  headingIdsOnParse,
-} from "./markdown/heading-id-plugin";
-import {
-  createTocPlugin,
-  remarkTocPlugin,
-  tocSchema,
-} from "./markdown/toc-plugin";
-import { createHeadingFoldPlugin } from "./fold/heading-fold";
-import { rawHtmlSchema } from "./html/raw-html-schema";
-import { remarkHtmlImages } from "./images/image-html";
-import { createRawHtmlPreviewPlugin } from "./html/raw-html-preview-plugin";
-import { htmlAlignPlugin } from "./html/html-align";
-import {
-  brToHardbreakPlugin,
-  remarkTableCellBreaks,
-} from "./markdown/br-hardbreak-plugin";
-import {
-  remarkHighlightPlugin,
-  remarkSuperscriptPlugin,
-  remarkStrikethroughTildesPlugin,
-  remarkEmphasisUnderscoresPlugin,
-  mdSpanSchema,
-  mdCodeSpanSchema,
-  mdSpanClipboardPlugin,
-} from "./marks/md-span-schema";
-import { createMdSpanAutopairPlugin } from "./marks/md-span-autopair-plugin";
-import { createColorSwatchPlugin } from "./marks/color-swatch-plugin";
-import { emojiShortcodePlugin } from "./emoji/emoji-shortcode-plugin";
-import { createBracketAutopairPlugin } from "./keys/bracket-autopair-plugin";
-import { formatShortcutPlugin } from "./keys/format-shortcut-plugin";
-import { selectAllKeyPlugin } from "./keys/select-all";
-import { enclosurePlugin } from "./marks/enclosure";
 import { linuxImeEnterPlugin } from "./keys/linux-ime-enter-plugin";
 import { iosEnterBeforeBlockPlugin } from "./keys/ios-enter-before-block-plugin";
 import { compositionPruneGuardPlugin } from "./keys/composition-prune-guard-plugin";
 import { configureMarkdownOutput } from "./markdown/markdown-output";
 import { openedParseRecorder } from "./markdown/source-preserving";
-import {
-  linkDefinitionSchema,
-  remarkReferenceLinksPlugin,
-} from "./markdown/reference-links";
-import {
-  remarkWikilinkPlugin,
-  wikilinkInputRule,
-  wikilinkSchema,
-} from "./markdown/wikilink";
-import {
-  remarkMathPlugin,
-  mathInlineSchema,
-  mathBlockSchema,
-  mathInlineInputRule,
-} from "./math/math-schema";
-import { mathAutopairPlugin } from "./math/math-autopair-plugin";
-import { createMathPreviewPlugin } from "./math/math-preview-plugin";
-import { headingMarkerPlugin } from "./marks/heading-marker-plugin";
 import { macNavigationPlugin } from "./keys/mac-navigation-plugin";
 import { editorExtensions } from "./extension-points";
 import { noRevealPlugin } from "./pointer-hold";
 import { pointerPlugins } from "./pointer-plugins";
 import { createBlockHandlesPlugin } from "./blocks/block-handles-plugin";
-import {
-  cjkTaskInputPlugin,
-  remarkEmptyTaskItems,
-  taskListClickPlugin,
-} from "./markdown/task-list-plugin";
-import { syntaxHighlightPlugin } from "./code/syntax-highlight-plugin";
-import { createCodeBlockView } from "./code/code-block-language-view";
-import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
-import { tableCaretPlugin } from "./tables/table-caret";
-import { tableGrowth } from "./tables/table-growth";
-import { keyboardCaretPlugin } from "./keyboard-caret-plugin";
 import { scrollOptions } from "./editor-scroll";
-import { tableKeys, tableRowPaste } from "./tables/table-keys";
-import { clickBelowEnd } from "./click-below-end";
-import {
-  tableColumnFreeze,
-  tableColumnResizing,
-  createTableView,
-} from "./tables/table-hover-view";
-import { createMermaidPreviewPlugin } from "./mermaid-plugin";
-import { blockKeysPlugin } from "./keys/block-keys-plugin";
-import { listBackspacePlugin } from "./keys/list-backspace-plugin";
-import { joinListsPlugin } from "./keys/join-lists-plugin";
-import { blockJoinPlugin } from "./keys/block-join-plugin";
-import { inlineSourcePlugin } from "./keys/inline-source-plugin";
-import { wikilinkRevealPlugin } from "./markdown/wikilink-reveal";
-import { tabExtendPlugin, tabStaysPlugin } from "./keys/tab-extend-plugin";
-import { moveBlockPlugin } from "./keys/move-block-plugin";
-import {
-  escapeTrailingBlockPlugin,
-  tableEdgeArrowPlugin,
-} from "./markdown/escape-trailing-block-plugin";
-import { pasteMarkdownSourcePlugin } from "./clipboard/paste-markdown-plugin";
-import { imageInputRule, linkInputRule } from "./markdown/link-input-rule";
-import { linkSettlePlugin } from "./markdown/link-settle";
-import { linkSchema, remarkLinkSourcePlugin } from "./markdown/link-source";
-import { createLinkRevealPlugin } from "./markdown/link-reveal";
-import { linkNormalizePlugin } from "./markdown/link-normalize";
-import {
-  footnoteInputRule,
-  htmlTagInputRule,
-} from "./markdown/source-input-rules";
-import { pasteUrlPlugin } from "./clipboard/paste-url";
-import { pasteHookPlugin } from "./clipboard/paste-hook";
-import { ownUndoStepPlugin } from "./clipboard/own-undo-step";
-import { changeSourcePlugin } from "./change-source";
-import { createLinkClickPlugin } from "./markdown/link-click-plugin";
-import { createLinkHoverPlugin } from "./hover/link-hover-plugin";
 import { createCompletionPlugin } from "./completion/completion-plugin";
 import { addEmojiCompletion } from "./emoji/emoji-completion";
-import { copiedPlugin } from "../clipboard/copied-plugin";
-import { copyTextPlugin } from "./clipboard/copy-text-plugin";
-import { pastePlainTextKeyPlugin } from "./clipboard/paste-plain";
-import { pictureCopyPlugin } from "./images/picture-clipboard";
 import { createImagePlugin } from "./images/image-plugin";
-import {
-  obsidianEmbedInputRule,
-  obsidianEmbedSchema,
-  remarkObsidianEmbedPlugin,
-} from "./images/obsidian-embed";
-import { createEmbedsPlugin } from "./embeds/embeds-plugin";
-import { createUndoFilePlugin } from "./undo-file";
-import { createMissingLinksPlugin } from "./markdown/missing-links";
-import { createTypewriterPlugin } from "./modes/typewriter-plugin";
-import { zenFocusPlugin } from "./modes/zen-focus-plugin";
-import { createPlaceholderPlugin } from "./placeholder-plugin";
-import { findReplacePlugin } from "./find/find-replace-plugin";
-import {
-  lazyBlocksPlugin,
-  withLazyBlockViews,
-} from "./lazy-blocks/lazy-blocks-editor";
-import { readOnlyPlugin, readOnlyStatePlugin } from "./read-only-plugin";
+import { withLazyBlockViews } from "./lazy/lazy-blocks-editor";
+import { readOnlyStatePlugin } from "./read-only-plugin";
 import { resolveStrings } from "../i18n/strings";
 import type { Settings } from "../prefs/SettingsContext";
-
+import type { CoreEnv } from "./editor-core-env";
+import { withEditorSyntax } from "./editor-core-syntax";
+import { withEditorInput } from "./editor-core-input";
 // Long documents: ProseMirror lookups that were linear made logarithmic.
 installProseMirrorSpeedups();
 
@@ -232,267 +96,47 @@ export function withEditorCore(
   // Only for writing: a preview, read and drawn, goes without them.
   const editing = (plugin: MilkdownPlugin | MilkdownPlugin[]) =>
     options.preview ? [] : plugin;
+  const env: CoreEnv = {
+    settings,
+    docPath,
+    editing,
+    disk,
+    images:
+      "noDiskImages" in options
+        ? options.noDiskImages
+        : createImagePlugin({
+            docPath: () => docPath.current,
+            settings: () => settings.current,
+            requestName: options.requestImageName,
+            onError: options.onImagePasteError,
+          }),
+  };
   addEmojiCompletion(
     () => resolveStrings(settings.current.language).completionEmoji,
   );
-  return (
-    editor
-      // First: the plugins that read it are asked in order.
-      .use(options.preview ? noRevealPlugin : [])
-      // Read-only's state before every plugin that reads it applying the
-      // same transaction (what shows as source); its keys come last.
-      .use(readOnlyStatePlugin)
-      .config(configureMarkdownOutput)
-      // Which part of the file each block was read from, so a save writes the
-      // blocks the user didn't touch as they were.
-      .use(openedParseRecorder)
-      // The open / panel takes the arrows, Enter, Tab and Esc first, even
-      // from a plugin holding the keyboard (Vim's normal mode).
-      .use(editing(createCompletionPlugin(() => docPath.current)))
-      .use(editing(editorExtensions().keyInput))
-      .use(editing(macNavigationPlugin))
-      .use(editing(pointerPlugins(settings)))
-      // A preview has no handles, but its fold carets come by a block's
-      // start as the editor's do.
-      .use(
-        options.preview
-          ? createBlockHandlesPlugin({ enabled: () => false })
-          : [],
-      )
-      .use(editing(linuxImeEnterPlugin))
-      .use(editing(iosEnterBeforeBlockPlugin))
-      .use(editing(compositionPruneGuardPlugin))
-      // Commonmark/GFM with bold/italic/strike marks stripped: those are nodes.
-      .use(commonmarkWithoutMarks)
-      .use(editing(headingInputRule))
-      .use(editing(ruleInputRule))
-      .use(editing(orderedListInputRule))
-      .use(headingIdsOnParse)
-      .use(headingIdPlugin)
-      // `[TOC]`: its Enter ahead of the block keys.
-      .use(remarkTocPlugin)
-      .use(tocSchema)
-      .use(
-        createTocPlugin(() => {
-          const t = resolveStrings(settings.current.language);
-          return { label: t.tocLabel, empty: t.tocEmpty };
-        }),
-      )
-      .use(createHeadingFoldPlugin(() => docPath.current))
-      // Ahead of gfm's table keys.
-      .use(editing(tableEdgeArrowPlugin))
-      .use(editing([tableKeys, tableRowPaste, clickBelowEnd]))
-      .use(gfmWithoutStrikethrough)
-      .use(unalignedTableCells)
-
-      // Before anything else can misread its "---" lines as setext headings.
-      .use(remarkFrontmatterPlugin)
-      .use(frontmatterSchema)
-
-      // Raw HTML parses to real text so it stays editable; common tags render
-      // while the cursor is elsewhere.
-      .use(rawHtmlSchema)
-      // A document type's own syntax (MDX's imports, {expressions}, JSX),
-      // read as raw source before anything else takes its text apart.
-      .use(createRemarkVerbatim(keepFor(docPath.current)))
-      .use(remarkHtmlImages)
-      .use(createRawHtmlPreviewPlugin({ docPath: () => docPath.current }))
-      .use(htmlAlignPlugin)
-      .use(brToHardbreakPlugin)
-      .use(remarkTableCellBreaks)
-
-      .use(remarkReferenceLinksPlugin)
-      .use(linkDefinitionSchema)
-      .use(remarkLinkSourcePlugin)
-      .use(linkSchema)
-
-      .use(remarkObsidianEmbedPlugin)
-      .use(obsidianEmbedSchema)
-      .use(editing(obsidianEmbedInputRule))
-      .use(remarkWikilinkPlugin)
-      .use(wikilinkSchema)
-      .use(editing(wikilinkInputRule))
-      .use(wikilinkRevealPlugin)
-      .use(createMissingLinksPlugin(() => docPath.current))
-      .use(
-        createEmbedsPlugin(
-          () => docPath.current,
-          () => settings.current,
-        ),
-      )
-
-      .use(
-        createGithubAlertPlugin((type) => {
-          const t = resolveStrings(settings.current.language);
-          return {
-            NOTE: t.alertNote,
-            TIP: t.alertTip,
-            IMPORTANT: t.alertImportant,
-            WARNING: t.alertWarning,
-            CAUTION: t.alertCaution,
-          }[type];
-        }),
-      )
-
-      .use(inlineSyntaxPlugin)
-
-      // CommonMark's flanking rules reject "**" next to CJK punctuation, which
-      // would break reopening bold made here. Parse side only.
-      .use($remark("remark-cjk-friendly", () => remarkCjkFriendly))
-      .use(
-        $remark(
-          "remark-cjk-friendly-gfm-strikethrough",
-          () => remarkCjkFriendlyGfmStrikethrough,
-        ),
-      )
-
-      // Bold/italic/strikethrough/highlight/sub- and superscript/inline code as nodes with
-      // synthesized, Typora-style delimiters.
-      .use(remarkHighlightPlugin)
-      .use(remarkSuperscriptPlugin)
-      .use(remarkStrikethroughTildesPlugin)
-      .use(remarkEmphasisUnderscoresPlugin)
-      .use(mdSpanSchema)
-      .use(mdCodeSpanSchema)
-      .use(mdSpanClipboardPlugin)
-      .use(
-        createMdSpanAutopairPlugin({
-          autoClose: () => settings.current.autoCloseMarks,
-        }),
-      )
-      .use(
-        editing(
-          createBracketAutopairPlugin({
-            enabled: () => settings.current.autoCloseBrackets,
-          }),
-        ),
-      )
-      .use(editing(formatShortcutPlugin))
-      .use(editing(selectAllKeyPlugin))
-      .use(editing(enclosurePlugin))
-      .use(
-        createColorSwatchPlugin({
-          mode: () => settings.current.colorSwatches,
-        }),
-      )
-
-      .use(emojiShortcodePlugin)
-
-      .use(remarkMathPlugin)
-      .use(mathInlineSchema)
-      .use(mathBlockSchema)
-      .use(editing(mathInlineInputRule))
-      .use(editing(mathAutopairPlugin))
-      .use(
-        createMathPreviewPlugin({ enabled: () => settings.current.enableMath }),
-      )
-
-      .use(headingMarkerPlugin)
-      .use(remarkEmptyTaskItems)
-      .use(taskListClickPlugin)
-      .use(editing(cjkTaskInputPlugin))
-      .use(syntaxHighlightPlugin)
-      .use(
-        createCodeBlockView(() => {
-          const t = resolveStrings(settings.current.language);
-          return {
-            copy: t.codeBlockCopy,
-            copied: t.codeBlockCopied,
-            selectAll: t.selectAll,
-            language: t.codeBlockLanguage,
-            languageSearch: t.codeBlockLanguageSearch,
-          };
-        }),
-      )
-      .use(
-        createCodeLineNumbersPlugin({
-          enabled: () => settings.current.codeLineNumbers,
-        }),
-      )
-      .use(createTableView(() => resolveStrings(settings.current.language)))
-      .use(tableCaretPlugin)
-      .use(editing(tableGrowth))
-      .use(keyboardCaretPlugin)
-      // Before the resize plugin: its press holds every column first.
-      .use(editing(tableColumnFreeze))
-      .use(editing(tableColumnResizing))
-      .use(
-        createMermaidPreviewPlugin({
-          enabled: () => settings.current.enableMermaid,
-          engine: () => settings.current.diagramEngine,
-        }),
-      )
-
-      // handlePaste props run in registration order: images first, then a lone
-      // URL, then markdown source, then milkdown's own clipboard plugin.
-      .use(openedFromCtx)
-      .use(editing(historyOpened))
-      .use(editing(disk ? createUndoFilePlugin(() => docPath.current) : []))
-      .use(editing(ownUndoStepPlugin))
-      .use(editing(changeSourcePlugin))
-      .use(
-        "noDiskImages" in options
-          ? options.noDiskImages
-          : createImagePlugin({
-              docPath: () => docPath.current,
-              settings: () => settings.current,
-              requestName: options.requestImageName,
-              onError: options.onImagePasteError,
-            }),
-      )
-      .use(editing(linkInputRule))
-      .use(createLinkRevealPlugin(() => docPath.current))
-      .use(editing(linkNormalizePlugin))
-      .use(editing(imageInputRule))
-      .use(editing(linkSettlePlugin))
-      .use(editing(htmlTagInputRule))
-      .use(editing(footnoteInputRule))
-      .use(editing(pasteHookPlugin))
-      .use(editing(pasteUrlPlugin))
-      .use(editing(pasteMarkdownSourcePlugin))
-      .use(editing(copyTextPlugin))
-      .use(editing(pictureCopyPlugin))
-      .use(editing(pastePlainTextKeyPlugin))
-      .use(editing(clipboard))
-      .use(editing(copiedPlugin))
-      // The playground leaves links to the browser it runs in.
-      .use(disk ? createLinkClickPlugin(() => docPath.current) : [])
-      .use(disk ? createLinkHoverPlugin(() => docPath.current) : [])
-      .use(listener)
-      // The block keys: after the inline ones above (enclosures, autopairs,
-      // headings, callouts), ahead of the preset keymaps, which Milkdown adds
-      // last. The order is pinned in editor-extensions.test.ts.
-      .use(editing(blockKeysPlugin))
-      .use(editing(tabExtendPlugin))
-      .use(editing(tabStaysPlugin))
-      .use(editing(moveBlockPlugin))
-      .use(editing(escapeTrailingBlockPlugin))
-      .use(editing(listBackspacePlugin))
-      .use(joinListsPlugin)
-      .use(editing(blockJoinPlugin))
-      .use(editing(inlineSourcePlugin))
-      .use(editing(findReplacePlugin))
-      // A long document's blocks out of sight are placeholders.
-      .use(lazyBlocksPlugin)
-      .use(readOnlyPlugin)
-      .use(editing(zenFocusPlugin))
-      .use(
-        editing(
-          createTypewriterPlugin({
-            enabled: () => settings.current.typewriterMode,
-          }),
-        ),
-      )
-      .use(
-        editing(
-          createPlaceholderPlugin(
-            () => resolveStrings(settings.current.language).emptyDocPlaceholder,
-            () =>
-              settings.current.emptyLineHint
-                ? resolveStrings(settings.current.language).emptyLineHint
-                : null,
-          ),
-        ),
-      )
-  );
+  const firstKeys = editor
+    // First: the plugins that read it are asked in order.
+    .use(options.preview ? noRevealPlugin : [])
+    // Read-only's state before every plugin that reads it applying the
+    // same transaction (what shows as source); its keys come last.
+    .use(readOnlyStatePlugin)
+    .config(configureMarkdownOutput)
+    // Which part of the file each block was read from, so a save writes the
+    // blocks the user didn't touch as they were.
+    .use(openedParseRecorder)
+    // The open / panel takes the arrows, Enter, Tab and Esc first, even
+    // from a plugin holding the keyboard (Vim's normal mode).
+    .use(editing(createCompletionPlugin(() => docPath.current)))
+    .use(editing(editorExtensions().keyInput))
+    .use(editing(macNavigationPlugin))
+    .use(editing(pointerPlugins(settings)))
+    // A preview has no handles, but its fold carets come by a block's
+    // start as the editor's do.
+    .use(
+      options.preview ? createBlockHandlesPlugin({ enabled: () => false }) : [],
+    )
+    .use(editing(linuxImeEnterPlugin))
+    .use(editing(iosEnterBeforeBlockPlugin))
+    .use(editing(compositionPruneGuardPlugin));
+  return withEditorInput(withEditorSyntax(firstKeys, env), env);
 }

@@ -27,6 +27,7 @@ export const PERMISSION_LABELS: Record<
   agents: "pluginPermAgents",
   appearance: "pluginPermAppearance",
   "git.commit": "pluginPermGitCommit",
+  ssh: "pluginPermSsh",
 };
 
 /** The permissions worth naming to the user: where Textus AI isn't offered,

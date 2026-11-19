@@ -171,7 +171,7 @@ final class KeyboardFit {
   }
 
   /// The web view as tall as the host less what the keyboard covers of it
-  /// (nothing when it is leaving, or is a floating/hardware-keyboard bar).
+  /// (nothing when it is leaving, floating or split).
   private func fit(animated: Bool, duration: Double = 0) {
     guard let webview = webview, let host = webview.superview else { return }
     // A frame as wide as the screen was before a turn is the old
@@ -181,8 +181,12 @@ final class KeyboardFit {
       guard let width = screenWidth, end.width > width + 1 else { return end }
       return nil
     }
-    let covered =
-      current.map { max(0, host.bounds.maxY - host.convert($0, from: nil).minY) } ?? 0
+    // Only a keyboard docked at the bottom, across the whole width, takes
+    // height: an iPad's floating or split one sits over the page and moves.
+    let docked = current.map { host.convert($0, from: nil) }.flatMap { end -> CGRect? in
+      end.maxY >= host.bounds.maxY - 1 && end.width >= host.bounds.width - 1 ? end : nil
+    }
+    let covered = docked.map { max(0, host.bounds.maxY - $0.minY) } ?? 0
     // Shows for a moment below the shortened view as the keyboard moves.
     host.backgroundColor = .systemBackground
     var frame = host.bounds

@@ -44,7 +44,7 @@
 .chat-window-pin-on {
   color: var(--ui-accent-text);
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .chat-window-pin-on:not(:disabled):hover {
     color: var(--ui-accent-text);
   }

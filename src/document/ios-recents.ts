@@ -1,5 +1,8 @@
 import { isMobileApp } from "../platform/capabilities";
-import { deleteSandboxEntry, renameSandboxEntry } from "../platform/ios-files";
+import {
+  deleteSandboxEntry,
+  renameSandboxEntry,
+} from "../platform/native-files";
 // Entries in Documents are stored relative to it: the app's container moves
 // on every reinstall and App Store update.
 import {

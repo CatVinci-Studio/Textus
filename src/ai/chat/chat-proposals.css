@@ -129,7 +129,7 @@
   margin-left: 2px;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .agent-diff-summary:hover {
     color: var(--ui-text);
   }
@@ -185,13 +185,13 @@
   color: var(--ui-text);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .agent-proposal-link:hover {
     color: var(--ui-text);
   }
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .agent-proposal-link:hover {
     text-decoration: underline;
   }

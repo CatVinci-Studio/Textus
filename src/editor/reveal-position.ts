@@ -1,6 +1,6 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { animate, duration, glideScroll } from "../engine/motion/motion";
-import { drawAround } from "./lazy-blocks/lazy-blocks-drawer";
+import { drawAround } from "./lazy/lazy-blocks-drawer";
 import { unfoldRange } from "./html/details-fold";
 
 /**
@@ -24,7 +24,9 @@ export function makeReachable(
  * smooth scroll crawled on long ways) and pulses its block once. A link's
  * target lands a third of the way down, where reading starts, and doesn't
  * move when already in view; `top` (the outline) puts its block at the top,
- * below the window bar, so the section reads from there.
+ * below the window bar, so the section reads from there. An editor given
+ * the keys is given them first: WebKit scrolls to the selection as its
+ * editor takes the focus, and would undo where this lands.
  */
 export function revealPosition(
   view: EditorView,

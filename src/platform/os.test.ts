@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { isAndroidPlatform, isDesktop, isIOSPlatform, modIsMeta } from "./os";
+import {
+  isAndroidPlatform,
+  isDesktop,
+  isIOSPlatform,
+  isWebKitEngine,
+  modIsMeta,
+} from "./os";
 
 // jsdom's navigator has no maxTouchPoints to spy on - swap in a plain one.
 function stub(platform: string, userAgent: string, maxTouchPoints = 0) {
@@ -58,5 +64,41 @@ describe("modIsMeta", () => {
   it("treats everything else as Ctrl", () => {
     for (const platform of ["Win32", "Linux x86_64", ""])
       expect(modIsMeta(platform)).toBe(false);
+  });
+});
+
+describe("isWebKitEngine", () => {
+  it("is WebKit on macOS, iOS and Linux, Chromium on Windows and Android", () => {
+    const cases: [string, string, boolean][] = [
+      [
+        "MacIntel",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+        true,
+      ],
+      [
+        "iPhone",
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
+        true,
+      ],
+      [
+        "Linux x86_64",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/605.1.15 (KHTML, like Gecko)",
+        true,
+      ],
+      [
+        "Win32",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0",
+        false,
+      ],
+      [
+        "Linux armv8l",
+        "Mozilla/5.0 (Linux; Android 14; Pixel 8; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/130.0.0.0 Mobile Safari/537.36",
+        false,
+      ],
+    ];
+    for (const [platform, ua, webkit] of cases) {
+      stub(platform, ua);
+      expect(isWebKitEngine()).toBe(webkit);
+    }
   });
 });

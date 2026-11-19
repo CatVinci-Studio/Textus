@@ -97,7 +97,7 @@ describe("Tooltip", () => {
   it("never opens for the mouse enter iOS WebKit sends after a tap", () => {
     const matchMedia = window.matchMedia;
     window.matchMedia = ((query: string) => ({
-      matches: query === "(hover: none)",
+      matches: query === "(any-hover: none)",
     })) as typeof window.matchMedia;
     try {
       const button = setup();

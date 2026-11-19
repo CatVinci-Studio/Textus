@@ -266,7 +266,7 @@ test("⋮⋮ alone in the margin turns its block into another kind or deletes it
   await openApp(page, { settings: { language: "en" } });
   await pasteMarkdown(page, "## Middle\n\nOmega\n\nAlpha");
   await hover(page, "Omega");
-  await expect(page.locator(`${handle} button`)).toHaveCount(1);
+  await expect(page.locator(`${handle} button:visible`)).toHaveCount(1);
 
   await hover(page, "Omega");
   await page.locator(`${handle} .block-handle-grip`).click();
@@ -291,11 +291,13 @@ test("the handles come with the fold caret over a block's line, stay away while 
   );
   // Anywhere on the line: ⋮⋮ and the fold caret, together.
   const heading = (await block(page, "Part one").boundingBox())!;
-  const caret = page.locator(`${editor} h2 > .heading-fold`);
-  await expect(caret).toHaveCSS("opacity", "0");
+  const caret = page.locator(`${handle} .block-handle-fold`);
+  await expect(caret).toBeHidden();
   await page.mouse.move(heading.x + heading.width - 20, heading.y + 10);
   await expect(page.locator(handle)).toBeVisible();
-  await expect(caret).toHaveCSS("opacity", "1");
+  await expect(caret).toBeVisible();
+  // Outside the heading's text.
+  await expect(page.locator(`${editor} h2 button`)).toHaveCount(0);
   // Left of ⋮⋮, never over it; reached across ⋮⋮, both stay.
   const grip = (await page
     .locator(`${handle} .block-handle-grip`)
@@ -305,9 +307,20 @@ test("the handles come with the fold caret over a block's line, stay away while 
   await page.mouse.move(fold.x + fold.width / 2, fold.y + fold.height / 2, {
     steps: 10,
   });
-  await page.waitForTimeout(200);
+  await settled(page);
   await expect(page.locator(handle)).toBeVisible();
-  await expect(caret).toHaveCSS("opacity", "1");
+  await expect(caret).toBeVisible();
+  // Folded, its caret stays in the same place with the mouse gone.
+  await caret.click();
+  await expect(page.getByText("Some text")).toBeHidden();
+  await hover(page, "Part one");
+  const mark = page.locator(".heading-fold-mark .block-handle-fold");
+  await expect(mark).toHaveAttribute("aria-expanded", "false");
+  const kept = (await mark.boundingBox())!;
+  expect(Math.abs(kept.x - fold.x)).toBeLessThan(1);
+  expect(Math.abs(kept.y - fold.y)).toBeLessThan(1);
+  await mark.click();
+  await expect(mark).toHaveCount(0);
   await hover(page, "Some text");
   await page.locator(editor).press("End");
   await page.keyboard.type(" more");
@@ -316,16 +329,13 @@ test("the handles come with the fold caret over a block's line, stay away while 
   await pasteMarkdown(page, "## Part one\n\nSome text");
   const box = (await block(page, "Some text").boundingBox())!;
   await page.mouse.move(box.x + 20, box.y + box.height / 2);
-  await page.waitForTimeout(200);
+  await settled(page);
   await expect(page.locator(handle)).toBeHidden();
-  // A heading's fold caret still comes over its line.
+  // A heading's fold caret still comes over its line, alone.
   const title = (await block(page, "Part one").boundingBox())!;
   await page.mouse.move(title.x + 6, title.y + 10);
-  await expect(page.locator(`${editor} h2 > .heading-fold`)).toHaveCSS(
-    "opacity",
-    "1",
-  );
-  await expect(page.locator(handle)).toBeHidden();
+  await expect(page.locator(`${handle} .block-handle-fold`)).toBeVisible();
+  await expect(page.locator(`${handle} .block-handle-grip`)).toBeHidden();
 });
 
 test("selected text pulled moves where it is let go; with Option or Ctrl a copy goes", async ({
@@ -384,6 +394,9 @@ test.describe("under a finger", () => {
       page.getByRole("menuitem", { name: "Delete Block" }),
     ).toBeVisible();
     await page.keyboard.press("Escape");
+    // The menu gone and the grip back by the caret: what the hold needs.
+    await expect(page.getByRole("menu")).toHaveCount(0);
+    await expect(grip).toBeVisible();
 
     // Held still, then pulled below the last block.
     const end = (await block(page, "Third").boundingBox())!;
@@ -430,12 +443,8 @@ test.describe("under a finger", () => {
     await pasteMarkdown(page, "## Part\n\nUnder it");
     const heading = page.locator(`${editor} h2`);
     await heading.tap();
-    const caret = heading.locator(".heading-fold");
+    const caret = page.locator(`${handle} .block-handle-fold`);
     await expect(caret).toBeVisible();
-    // Shown, and so taken by a finger, once the heading being written in
-    // shows its marker.
-    await expect(heading.locator(".heading-marker")).toHaveCount(1);
-    await expect(caret).toHaveCSS("pointer-events", "auto");
     // What a finger on the caret's middle lands on is the caret.
     expect(
       await caret.evaluate((el) => {
@@ -462,7 +471,7 @@ test("zoomed in, the blocks making room slide from where they were drawn", async
   await page.keyboard.down("Control");
   for (let i = 0; i < 4; i++) await page.mouse.wheel(0, -120);
   await page.keyboard.up("Control");
-  await page.waitForTimeout(600);
+  await settled(page);
   await hover(page, "First");
   const grip = (await page
     .locator(`${handle} .block-handle-grip`)
@@ -498,8 +507,7 @@ test("in split view the preview's fold caret comes by a heading's start, with no
   await expect(heading).toHaveText(/Part one/);
   const box = (await heading.boundingBox())!;
   await page.mouse.move(box.x + 6, box.y + 10);
-  await expect(heading.locator(".heading-fold")).toHaveCSS("opacity", "1");
-  await expect(
-    page.locator(".split-preview-editor .block-handle"),
-  ).toBeHidden();
+  const tools = page.locator(".split-preview-editor .block-handle");
+  await expect(tools.locator(".block-handle-fold")).toBeVisible();
+  await expect(tools.locator(".block-handle-grip")).toBeHidden();
 });

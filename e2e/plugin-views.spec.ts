@@ -2,13 +2,14 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { pluginsCheckout } from "../vite.dev-plugins";
-import { mockInvoke, openApp, sourceOf } from "./helpers";
+import { emit, mockInvoke, openApp, sourceOf } from "./helpers";
 import {
   hasPlugin,
   minimalDocx,
   minimalPdf,
   openPath,
   openWithPlugins,
+  pluginRuns,
   PNG,
   tabFrame,
 } from "./plugin-helpers";
@@ -471,4 +472,85 @@ test("a plugin's inline syntax is shown as it means, its source back under the c
   await spoiler.click();
   await expect(spoiler).toHaveClass(/is-touched/);
   await expect(editor.locator(".plugin-syntax-source")).toHaveCount(2);
+});
+
+test("a database shown as another plugin's view: the timeline's rows in date order, one opening on a click", async ({
+  page,
+}) => {
+  test.skip(
+    !hasPlugin("catvinci.database") || !hasPlugin("catvinci.timeline"),
+    "no plugins checkout",
+  );
+  await openWithPlugins(page, {
+    plugins: {
+      "catvinci.database": permissions("catvinci.database"),
+      "catvinci.timeline": permissions("catvinci.timeline"),
+    },
+    folder: {
+      "/work/notes/launch.md": "---\ndue: 2026-11-20\n---\n\nLaunch day\n",
+      "/work/notes/plan.md": "---\ndue: 2026-11-01\n---\n\nThe plan\n",
+      "/work/notes/tasks.base":
+        "views:\n  - type: catvinci.timeline#timeline\n    name: Timeline\n",
+    },
+  });
+  await page.evaluate(() => {
+    (window as unknown as Record<string, unknown>).__devPickFolder = "/work";
+  });
+  await emit(page, "menu-open-folder");
+  await expect(page.locator(".tree-row").first()).toBeVisible();
+  await openPath(page, "/work/notes/tasks.base");
+  const rows = tabFrame(page).locator(".plugin-view [data-row]");
+  await expect(rows).toHaveCount(2);
+  await expect(rows).toHaveText([/plan/, /launch/]);
+  await rows.first().click();
+  await expect(page.locator(".tab-pill").last()).toContainText("plan.md");
+});
+
+test("a folder a plugin opens as one document: one row in the sidebar, its text in a tab named after it", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.textbundle"), "no plugins checkout");
+  await openWithPlugins(page, {
+    plugins: { "catvinci.textbundle": [] },
+    folder: {
+      "/work/Trip.textbundle/text.md": "# Trip\n\nThe road north.\n",
+      "/work/Trip.textbundle/info.json": "{}",
+      "/work/notes.md": "Notes\n",
+    },
+  });
+  test.skip(
+    !(await pluginRuns(page, "catvinci.textbundle")),
+    "made for the next version",
+  );
+  await page.evaluate(() => {
+    (window as unknown as Record<string, unknown>).__devPickFolder = "/work";
+  });
+  await emit(page, "menu-open-folder");
+  const bundle = page.locator('.tree-row[data-path="/work/Trip.textbundle"]');
+
+  await expect(bundle).toHaveClass(/tree-row-file/);
+  await bundle.dblclick();
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toContainText("The road north.");
+  await expect(page.locator(".tab-pill").last()).toContainText(
+    "Trip.textbundle",
+  );
+  await expect(bundle).toHaveClass(/tree-row-active/);
+  // Nothing inside it is listed on its own.
+  await expect(page.locator('.tree-row[data-path$="info.json"]')).toHaveCount(
+    0,
+  );
+  // Renamed in the sidebar, the whole folder goes, its tab with it.
+  await bundle.click({ button: "right" });
+  await page.getByRole("menuitem", { name: /^Rename/ }).click();
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.type("Journey.textbundle");
+  await page.keyboard.press("Enter");
+  await expect(
+    page.locator('.tree-row[data-path="/work/Journey.textbundle"]'),
+  ).toHaveClass(/tree-row-active/);
+  await expect(page.locator(".tab-pill").last()).toContainText(
+    "Journey.textbundle",
+  );
 });

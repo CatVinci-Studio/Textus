@@ -107,7 +107,7 @@
 button.plugin-card-open {
   cursor: pointer;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   button.plugin-card-open:hover .plugin-card-name {
     text-decoration: underline;
     text-underline-offset: 2px;
@@ -252,8 +252,8 @@ button.plugin-card-open {
   max-height: calc(1.6em * 10);
   overflow: hidden;
 }
-.plugin-readme[data-cut] > .plugin-readme-body {
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 3em), transparent);
+.plugin-readme-body {
+  --cut-fade: 3em;
 }
 /* Permissions in small type, one line each, revoked from the line. */
 .plugin-permission {
@@ -326,7 +326,7 @@ button.plugin-card-open {
   font-size: var(--text-control);
   cursor: pointer;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .plugin-back:hover {
     background: var(--ui-hover);
   }

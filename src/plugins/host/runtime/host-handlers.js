@@ -202,6 +202,32 @@ var handlers = {
       path: params.path,
     });
   },
+  $databaseView: async function (params) {
+    var view = databaseViews.get(params.id);
+    if (!view) return null;
+    var html = await view.render(params.data);
+    return typeof html === "string" ? html : null;
+  },
+  $provider: async function (params) {
+    var provider = fileProviders.get(params.scheme);
+    if (!provider || typeof provider[params.op] !== "function")
+      throw new Error(params.scheme + " can't " + params.op + ".");
+    var answer = await provider[params.op].apply(provider, params.args);
+    if (params.op === "read")
+      return answer instanceof Uint8Array ? answer : bytesOf(answer);
+    return answer === undefined ? null : plain(answer);
+  },
+  $conventionRead: async function (params) {
+    var reader = conventionReaders.get(params.id);
+    if (!reader) return null;
+    var found = await reader.read({ root: params.root, text: params.text });
+    return found && typeof found === "object" ? plain(found) : null;
+  },
+  $aiStreamText: function (params) {
+    var onText = aiStreams.get(params.stream);
+    if (onText) onText(params.text);
+    return null;
+  },
   $inlineCompletion: async function (params) {
     var source = inlineCompletions.get(params.id);
     if (!source) return null;

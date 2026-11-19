@@ -1,7 +1,7 @@
 import { Plugin } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { drawWhileNear } from "../draw-when-visible";
+import { drawWhileNear } from "../lazy/draw-when-visible";
 import { showDocImage } from "../images/image-plugin";
 import { revealMoved } from "../pointer-hold";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
@@ -18,7 +18,7 @@ import {
 import { renderWhitelistedHtml } from "./raw-html-sanitize";
 import { katexLoaded } from "../math/katex-loader";
 import { htmlTextEditing, inHtmlTextEdit } from "./html-text-edit";
-import { sanitizeStyle } from "./html-policy";
+import { sanitizeStyle } from "./html-values";
 import { arrowOntoHtml } from "./html-arrow-keys";
 import {
   arrowIntoHtmlBlock,

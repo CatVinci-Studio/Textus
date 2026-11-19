@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { isImeKeydown } from "../ime";
 
 /// "Click outside (or press Escape) to close" for menus and popovers - the
@@ -14,6 +14,33 @@ export function useCloseOnOutsideClick<T extends HTMLElement>(
   inside: string | HTMLElement | null = "",
 ) {
   const ref = useRef<T>(null);
+
+  // Escape from the commit that shows it: a key pressed the moment it
+  // opens is already its.
+  useLayoutEffect(() => {
+    if (!open || !closeOnEscape) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (isImeKeydown(e)) return;
+      if (e.key !== "Escape") return;
+      // One Escape closes one thing: the overlay, not also the find bar.
+      e.stopPropagation();
+      onClose();
+    }
+    // An Escape outside the overlay (the editor keeps focus under its context
+    // menu) is taken in capture, before the editor's own Escape; one inside still
+    // bubbles so a field in the overlay keeps it.
+    function onKeyDownOutside(e: KeyboardEvent) {
+      const target = e.target as Node;
+      if (ref.current?.contains(target) || isInside(target, inside)) return;
+      onKeyDown(e);
+    }
+    document.addEventListener("keydown", onKeyDownOutside, true);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDownOutside, true);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [onClose, closeOnEscape, open, inside]);
 
   useEffect(() => {
     if (!open) return;
@@ -31,58 +58,39 @@ export function useCloseOnOutsideClick<T extends HTMLElement>(
       const target = e.target as Node;
       // Selects, the app menu and InfoTips are portalled to <body>; a click in
       // them still counts as inside.
-      if (isInside(target)) return;
+      if (isInside(target, inside)) return;
       // Without an element of its own, `inside` alone says what is in.
       if (ref.current ? !ref.current.contains(target) : !!inside) {
         closed = true;
         onClose();
       }
     }
-    function onKeyDown(e: KeyboardEvent) {
-      if (isImeKeydown(e)) return;
-      if (e.key !== "Escape") return;
-      // One Escape closes one thing: the overlay, not also the find bar.
-      e.stopPropagation();
-      onClose();
-    }
-    // An Escape outside the overlay (the editor keeps focus under its context
-    // menu) is taken in capture, before the editor's own Escape; one inside still
-    // bubbles so a field in the overlay keeps it.
-    function onKeyDownOutside(e: KeyboardEvent) {
-      const target = e.target as Node;
-      if (ref.current?.contains(target) || isInside(target)) return;
-      onKeyDown(e);
-    }
-    function isInside(target: Node) {
-      if (inside instanceof HTMLElement && inside.contains(target)) return true;
-      const named = typeof inside === "string" && inside ? `, ${inside}` : "";
-      return (
-        target instanceof Element &&
-        !!target.closest(
-          `[data-floating-select], [data-floating-menu], [data-floating-tip]${named}`,
-        )
-      );
-    }
+    // A tick later: the press that opened it is not one outside it.
     const id = setTimeout(() => {
       document.addEventListener("mousedown", onPointerDown, true);
       // iOS sends no mousedown for a tap on something not clickable; a touch's
       // pointerdown arrives wherever it lands.
       document.addEventListener("pointerdown", onPointerDown, true);
-      if (closeOnEscape) {
-        document.addEventListener("keydown", onKeyDownOutside, true);
-        document.addEventListener("keydown", onKeyDown);
-      }
     }, 0);
     return () => {
       clearTimeout(id);
       document.removeEventListener("mousedown", onPointerDown, true);
       document.removeEventListener("pointerdown", onPointerDown, true);
-      if (closeOnEscape) {
-        document.removeEventListener("keydown", onKeyDownOutside, true);
-        document.removeEventListener("keydown", onKeyDown);
-      }
     };
-  }, [onClose, closeOnEscape, open, inside]);
+  }, [onClose, open, inside]);
 
   return ref;
+}
+
+/** Selects, the app menu and InfoTips are portalled to <body>: in them is
+ *  inside too, as is anything `inside` names. */
+function isInside(target: Node, inside: string | HTMLElement | null): boolean {
+  if (inside instanceof HTMLElement && inside.contains(target)) return true;
+  const named = typeof inside === "string" && inside ? `, ${inside}` : "";
+  return (
+    target instanceof Element &&
+    !!target.closest(
+      `[data-floating-select], [data-floating-menu], [data-floating-tip]${named}`,
+    )
+  );
 }

@@ -621,6 +621,10 @@ type /name in a conversation to use one.
     "Move “{name}” to the Trash? You can put it back from there.",
   treeTrashFolderConfirm:
     "Move the folder “{name}” and everything in it to the Trash? You can put it back from there.",
+  treeTrashManyConfirm: {
+    one: "Move {n} item to the Trash? You can put it back from there.",
+    other: "Move {n} items to the Trash? You can put them back from there.",
+  },
   errorPermission:
     "Textus isn't allowed to open this file or folder. Check its permissions, or choose another location.",
   errorNotFound:
@@ -642,8 +646,8 @@ type /name in a conversation to use one.
     "The plugin store needs a newer Textus. Update Textus to see it.",
   errorImageTooBig: "The picture is empty or larger than 25 MB.",
   errorNoFolder: "Open a folder first.",
-  errorPluginsNeedAllFiles:
-    "Plugins can't read this folder: Textus wasn't given access to all files. Open the folder again and choose Continue.",
+  errorFarPictures:
+    "Pictures can't be saved into this folder yet. Paste them into a document on this device.",
   errorPdfUnsupported: "PDF export isn't available on this system.",
   errorNoText: "There is no readable text in it.",
   errorUnreadable: "This file can't be read.",
@@ -930,6 +934,7 @@ type /name in a conversation to use one.
   agentQueueContinue: "Continue",
   agentQueueEdit: "Edit",
   agentQueueRemove: "Remove",
+  agentQueueInsert: "Send now",
   agentSend: "Send",
   agentStop: "Stop",
   agentRetry: "Retry",
@@ -1091,6 +1096,12 @@ type /name in a conversation to use one.
   autoCloseBracketsLabel: "Close (), [] and “”",
   plainTextMenuLabel: "Plain text copy and paste in the context menu",
   pdfPageNumbersLabel: "Show page numbers in exports",
+  pdfPaperLabel: "PDF paper size",
+  pdfMarginLabel: "PDF margins",
+  pdfMarginNarrow: "Narrow",
+  pdfMarginNormal: "Normal",
+  pdfMarginWide: "Wide",
+  pdfTextScaleLabel: "PDF text size",
   docxTemplateLabel: "Word template",
   docxTemplateHelp:
     "Exported Word files take this file's styles, fonts and margins.",
@@ -1874,6 +1885,14 @@ type /name in a conversation to use one.
   pluginPermNotifications: "Show system notifications",
   pluginPermAppearance: "Change the colors of Textus and your documents",
   pluginPermGitCommit: "Make Git commits in the open folder with your Git",
+  pluginPermSsh:
+    "Connect to servers with your SSH settings (only ones you allow)",
+  pluginSshAsk:
+    "{plugin} wants to connect to {host} with your SSH settings, to read and write files there.",
+  pluginSshUnknownHost:
+    "{host} isn't a known host yet. Connect to it once in a terminal (ssh {host}) to check and accept its key, then try again.",
+  pluginSshNeedsLogin:
+    "{host} asked for a password or a key that isn't loaded. Add your key to the SSH agent (ssh-add) or set up key login, then try again.",
   pluginPermComments: "Read and leave notes in your documents' margins",
   pluginPermAiModel:
     "Use your AI model (it counts toward your AI service's usage)",

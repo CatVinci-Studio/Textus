@@ -62,9 +62,16 @@ it("keeps what the plugin sent before the page listens, and logs its errors", ()
   ]);
 });
 
-it("is one clean script once its parts are joined", async () => {
-  const [result] = await new ESLint().lintText(webview, {
-    filePath: "src/plugins/host/runtime/webview.js",
-  });
-  expect(result.messages.map((m) => `${m.line}: ${m.message}`)).toEqual([]);
-});
+const LINT_TIMEOUT = 30_000;
+
+it(
+  "is one clean script once its parts are joined",
+  async () => {
+    const [result] = await new ESLint().lintText(webview, {
+      filePath: "src/plugins/host/runtime/webview.js",
+    });
+    expect(result.messages.map((m) => `${m.line}: ${m.message}`)).toEqual([]);
+  },
+  // Starts ESLint and its TypeScript parser cold: seconds on a busy runner.
+  LINT_TIMEOUT,
+);

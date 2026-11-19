@@ -1,6 +1,7 @@
 import { fill } from "../i18n/fill";
 import type { Strings } from "../i18n/strings";
 import { openedText } from "./tracked-file";
+import { folderDocumentAround } from "../files/folder-documents";
 import { basename } from "../utils/path";
 import { lazyModule } from "../lazy/lazy-module";
 import { fs } from "../platform/ipc";
@@ -111,7 +112,8 @@ function firstLine(text: string): string | undefined {
 }
 
 export function tabTitle(tab: DocTab, t: Strings): string {
-  if (tab.path) return basename(tab.path);
+  // A folder opened as one document is named as the folder.
+  if (tab.path) return basename(folderDocumentAround(tab.path) ?? tab.path);
   if (showsStartPage(tab)) return t.startPageTab;
   // Textus's own pages, named in the window's language.
   if (tab.view?.kind === "page")

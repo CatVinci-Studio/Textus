@@ -88,13 +88,13 @@ export function SettingsFileSection({ t }: { t: Strings }) {
   return (
     <SettingRow label={t.settingsFileSummary} error={error}>
       <button
-        className="text-button settings-inline-button"
+        className="tx-button text-button settings-inline-button"
         onClick={() => void exportFile()}
       >
         {t.settingsFileExport}
       </button>
       <button
-        className="text-button settings-inline-button"
+        className="tx-button text-button settings-inline-button"
         onClick={() => void importFile()}
       >
         {t.settingsFileImport}

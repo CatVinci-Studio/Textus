@@ -40,15 +40,34 @@ describe("what is kept of a document's proposals", () => {
 
   it("names the pictures to keep beside them", () => {
     expect(
-      picturesOf(keptFrom([picture, preview()], 1, () => "", made)),
+      picturesOf(
+        keptFrom(
+          [picture, preview()],
+          () => 1,
+          () => "",
+          made,
+        ),
+      ),
     ).toEqual(["img1"]);
     expect(picturesOf(null)).toEqual([]);
   });
 
   it("is nothing once nothing is left to decide", () => {
-    expect(keptFrom([], 1, () => "", made)).toBeNull();
     expect(
-      keptFrom([preview({ streaming: true })], 1, () => "", made),
+      keptFrom(
+        [],
+        () => 1,
+        () => "",
+        made,
+      ),
+    ).toBeNull();
+    expect(
+      keptFrom(
+        [preview({ streaming: true })],
+        () => 1,
+        () => "",
+        made,
+      ),
     ).toBeNull();
   });
 
@@ -78,7 +97,7 @@ describe("what is kept of a document's proposals", () => {
           },
         }),
       ],
-      42,
+      () => 42,
       (from, to) => `md ${from}-${to}`,
       () => true,
     )!;
@@ -104,7 +123,7 @@ describe("what comes back", () => {
         to: 7,
       }),
     ],
-    42,
+    () => 42,
     () => "",
     () => true,
   )!;
@@ -136,7 +155,7 @@ describe("what comes back", () => {
           to: 9,
         }),
       ],
-      42,
+      () => 42,
       () => "Words.",
       () => true,
     )!;

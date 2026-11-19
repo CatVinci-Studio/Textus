@@ -63,7 +63,8 @@ export function AppMenu({
   const phone = usePhoneLayout();
   const { recents, fullscreen } = useMenuOpening();
 
-  const menu = hasAppMenu
+  // A tablet's layout is the desktop's, and so is its menu.
+  const menu = !phone
     ? buildAppMenu(
         t,
         settings.shortcuts,

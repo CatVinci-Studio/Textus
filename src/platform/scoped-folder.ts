@@ -5,15 +5,17 @@ import type {
   SearchResult,
   WorkspaceDocuments,
 } from "./bindings/files";
-import { iosFiles } from "./ios-files";
+import { farFiles } from "./far-files";
 import { TEXT_DOCUMENT_EXTENSIONS } from "./bindings/files";
 
 /*
- * A folder Android granted (a content:// tree) has no path the backend can
- * walk: its index, text search and documents are read here, through the
- * native plugin, with the backend's limits and result shapes.
+ * A folder the backend can't walk (far-files.ts: an Android pick, a
+ * plugin's remote folder): its index, text search and documents are read
+ * here, in the backend's result shapes.
  */
 
+/** Smaller than the backend's: each entry is a call through the native
+ *  plugin or a plugin's provider. */
 const MAX_FILES = 5000;
 const MAX_HITS = 200;
 const MAX_DOCUMENTS = 2000;
@@ -24,7 +26,9 @@ async function walk(root: string): Promise<FolderIndex> {
   const queue: { url: string; rel: string }[] = [{ url: root, rel: "" }];
   while (queue.length && files.length < MAX_FILES) {
     const dir = queue.shift()!;
-    const entries = await iosFiles.listFolder(dir.url).catch(() => []);
+    const entries = await farFiles(dir.url)
+      .listFolder(dir.url)
+      .catch(() => []);
     for (const entry of entries) {
       if (entry.hidden) continue;
       const rel = dir.rel ? `${dir.rel}/${entry.name}` : entry.name;
@@ -42,7 +46,9 @@ async function documents(root: string, limit: number) {
   const read = await Promise.all(
     docs.slice(0, limit).map(async (f) => ({
       ...f,
-      text: await iosFiles.readText(f.path).catch(() => ""),
+      text: await farFiles(f.path)
+        .readText(f.path)
+        .catch(() => ""),
     })),
   );
   return { read, truncated: index.truncated || docs.length > limit };

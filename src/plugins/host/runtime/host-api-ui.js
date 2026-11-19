@@ -314,6 +314,31 @@ textus.views = {
     };
     return handle;
   },
+  registerDatabaseView: function (id, provider) {
+    var key = String(id);
+    databaseViews.set(key, provider);
+    quiet(
+      call("views.registerDatabaseView", {
+        id: key,
+        label: provider.label == null ? undefined : String(provider.label),
+        icon: provider.icon == null ? undefined : String(provider.icon),
+      }),
+    );
+    return disposable(function () {
+      if (databaseViews.get(key) !== provider) return;
+      databaseViews.delete(key);
+      quiet(call("views.unregisterDatabaseView", { id: key }));
+    });
+  },
+  databaseViews: function () {
+    return call("views.databaseViews");
+  },
+  renderDatabaseView: function (id, data) {
+    return call("views.renderDatabaseView", {
+      id: String(id),
+      data: plain(data),
+    });
+  },
   registerSettingsPage: function (provider) {
     settingsProvider = provider;
     return disposable(function () {

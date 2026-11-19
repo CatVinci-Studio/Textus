@@ -6,7 +6,6 @@ import { Presence } from "../../motion/usePresence";
 import { TabPill, type TabInfo } from "./TabPill";
 import { TabListButton, useTabFit } from "./TabList";
 import { INCOMING, useTabStrip } from "./useTabStrip";
-import { useTabSwipe } from "./useTabSwipe";
 import { stripSlots } from "./tab-strip";
 import { useRevealTab } from "./useRevealTab";
 import { isMobileApp } from "../../../platform/capabilities";
@@ -102,8 +101,6 @@ export function TabBar({
     incomingX: previewTab?.x ?? null,
   });
 
-  useTabSwipe(barRef, ids, activeTabId, onActivate);
-
   // The open tab in view as it changes, and as the row narrows.
   const { x: slotX, w: slotW } = strip.slotOf(activeTabId) ?? {};
   const shownLength = fit && fit.available - (overflow ? fit.list : 0);
@@ -150,6 +147,7 @@ export function TabBar({
       data-tauri-drag-region={inner ? undefined : true}
       data-pane-id={paneId}
       data-overflow={overflow || undefined}
+      data-touch={isMobileApp || undefined}
       ref={barRef}
       role="tablist"
       aria-label={labels.tabs}

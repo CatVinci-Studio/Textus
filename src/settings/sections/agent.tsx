@@ -170,7 +170,7 @@ function ProviderModelRow({
         <input
           type="text"
           {...VERBATIM_INPUT}
-          className="settings-text-input"
+          className="tx-input settings-text-input"
           aria-label={label}
           placeholder={t.customModelPlaceholder}
           value={current}
@@ -235,7 +235,7 @@ export function ModelListRow({
       error={error}
     >
       <button
-        className="text-button settings-inline-button"
+        className="tx-button text-button settings-inline-button"
         onClick={fetchModels}
         disabled={loading}
       >
@@ -262,7 +262,7 @@ export function AgentWorkspaceSection({ t }: { t: Strings }) {
   return (
     <SettingRow label={t.agentWorkspaceLabel} error={error}>
       <button
-        className="text-button settings-inline-button"
+        className="tx-button text-button settings-inline-button"
         onClick={openFolder}
       >
         {t.agentWorkspaceOpenButton}
@@ -299,14 +299,14 @@ export function AgentWorkspaceRootSection({ t }: { t: Strings }) {
       <div className="settings-inline-buttons">
         {root && (
           <button
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             onClick={() => setSettings({ agentWorkspaceRoot: "" })}
           >
             {t.projectFollowSidebar}
           </button>
         )}
         <button
-          className="text-button settings-inline-button"
+          className="tx-button text-button settings-inline-button"
           onClick={pickRoot}
         >
           {t.agentWorkspaceRootPick}
@@ -344,7 +344,7 @@ export function AgentSystemPromptSection({
   return (
     <SettingRow label={t.agentSystemPromptLabel} error={error}>
       <button
-        className="text-button settings-inline-button"
+        className="tx-button text-button settings-inline-button"
         onClick={editAgentMd}
       >
         {t.agentSystemPromptEdit}

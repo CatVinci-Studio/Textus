@@ -1,35 +1,34 @@
-use crate::app_dirs::AppDirs;
-use std::path::PathBuf;
+use crate::settings::Stores;
+use serde_json::{json, Map};
 use tauri::Manager;
 
-/// Recently opened files and folders, backing File > Open Recent. Each list is
-/// a JSON array (most recent first) next to prefs.json; Rust owns the lists and the menu.
+/// Recently opened files and folders, backing File > Open Recent: lists in
+/// the UI state, most recent first. Rust owns the lists and the menu.
 const MAX_RECENT_FILES: usize = 10;
 /// Fewer folders than files: a writer keeps a handful of projects, and they
 /// sit above the files in the same submenu.
 const MAX_RECENT_FOLDERS: usize = 5;
 
-const FILES_LIST: &str = "recent_files";
-const FOLDERS_LIST: &str = "recent_folders";
-
-fn list_file(app: &tauri::AppHandle, name: &str) -> Option<PathBuf> {
-    app.path()
-        .own_config_dir()
-        .ok()
-        .map(|dir| dir.join(crate::settings::file_name(name)))
-}
+const FILES_LIST: &str = "recentFiles";
+const FOLDERS_LIST: &str = "recentFolders";
 
 fn read_list(app: &tauri::AppHandle, name: &str) -> Vec<String> {
-    list_file(app, name)
-        .and_then(|path| crate::json_file::read_or_set_aside(&path))
+    let Some(stores) = app.try_state::<Stores>() else {
+        return Vec::new();
+    };
+    let (state, _) = stores.ui_state.snapshot();
+    state
+        .get(name)
+        .and_then(|list| serde_json::from_value(list.clone()).ok())
         .unwrap_or_default()
 }
 
 fn write_list(app: &tauri::AppHandle, name: &str, list: &[String]) {
-    let Some(path) = list_file(app, name) else {
-        return;
-    };
-    let _ = crate::json_file::save(&path, list);
+    if let Some(stores) = app.try_state::<Stores>() {
+        let mut patch = Map::new();
+        patch.insert(name.into(), json!(list));
+        stores.ui_state.patch(&patch);
+    }
 }
 
 /// `list` with `path` moved to the front, at most `max` long.

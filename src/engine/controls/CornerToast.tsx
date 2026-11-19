@@ -61,7 +61,7 @@ export function CornerToast({
           {details ? (
             <button
               type="button"
-              className="corner-toast-summary"
+              className="tx-button small corner-toast-summary"
               aria-expanded={open}
               aria-controls={moreId}
               onClick={() => setOpen((v) => !v)}
@@ -78,8 +78,8 @@ export function CornerToast({
                 type="button"
                 className={
                   action.primary
-                    ? "corner-toast-primary"
-                    : "corner-toast-secondary"
+                    ? "tx-button small primary corner-toast-primary"
+                    : "tx-button small corner-toast-secondary"
                 }
                 onClick={action.onSelect}
               >

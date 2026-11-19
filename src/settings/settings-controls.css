@@ -30,7 +30,7 @@ button.settings-inline-button {
 
 /* Clear waits for the row it is on: a column of them was all one saw. Out
    of the row until then, so a key wrapped under its name starts there. */
-@media (hover: hover) {
+@media (any-hover: hover) {
   .shortcut-setting:not(:hover, :focus-within) .shortcut-clear {
     display: none;
   }

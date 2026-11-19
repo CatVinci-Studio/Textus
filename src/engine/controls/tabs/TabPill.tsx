@@ -9,7 +9,7 @@ import { trackDrag } from "../../drag/pointer-drag";
 import { useEffect, useRef } from "react";
 import { CloseIcon, LockIcon } from "../icons";
 import { Tooltip } from "../Tooltip";
-import { iosFiles } from "../../../platform/ios-files";
+import { nativeFiles } from "../../../platform/native-files";
 import { canHaptic } from "../../../platform/capabilities";
 
 // One tab in the bar and what a pointer or finger does with it: a click
@@ -152,7 +152,7 @@ export function TabPill({
     holding.current = true;
     lifted.current = true;
     elRef.current?.classList.add("tab-pill-lifted");
-    if (canHaptic) iosFiles.haptic();
+    if (canHaptic) nativeFiles.haptic();
   }
 
   function letGo() {

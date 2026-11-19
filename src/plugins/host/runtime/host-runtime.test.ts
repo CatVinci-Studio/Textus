@@ -16,9 +16,19 @@ type PathTools = {
 type Textus = {
   path: PathTools;
   files: { onDidSave: (fn: () => void) => { dispose(): void } };
-  editor: { registerHover: (p: object) => { dispose(): void } };
+  editor: {
+    registerHover: (p: object) => { dispose(): void };
+    registerBlockType: (id: string, t: object) => { dispose(): void };
+  };
   net: {
     fetch: (url: string, init?: { signal?: AbortSignal }) => Promise<unknown>;
+  };
+  ai: {
+    stream: (
+      r: object,
+      onText: (t: string) => void,
+      o?: { signal?: AbortSignal },
+    ) => Promise<string>;
   };
 };
 
@@ -57,13 +67,30 @@ it("tells the plugin's log when a permission refuses an event or a provider", as
     return null;
   };
   textus.files.onDidSave(() => {});
-  textus.editor.registerHover({ provideHover: () => null });
+  const hover = textus.editor.registerHover({ provideHover: () => null });
   await new Promise((r) => setTimeout(r, 0));
   expect(sent.filter(([m]) => m === "log")).toHaveLength(2);
   expect(sent[0][1]).toEqual({
     level: "error",
     message: "acme.x was not granted files.read",
   });
+  // Its last provider gone, the app stops asking it.
+  const asked: string[] = [];
+  answer = async (method) => {
+    asked.push(method);
+    return null;
+  };
+  hover.dispose();
+  const block = textus.editor.registerBlockType("box", {
+    label: "Box",
+    insert: () => {},
+  });
+  block.dispose();
+  expect(asked).toEqual([
+    "editor.unregisterHover",
+    "editor.registerBlockType",
+    "editor.unregisterBlockType",
+  ]);
 });
 
 it("stops a fetch whose signal aborts, in the app too", async () => {
@@ -87,6 +114,15 @@ it("stops a fetch whose signal aborts, in the app too", async () => {
   await expect(
     textus.net.fetch("https://example.com/", { signal: stop.signal }),
   ).rejects.toMatchObject({ name: "AbortError" });
+  // A question to the AI model stops the same way.
+  sent = [];
+  const answering = new AbortController();
+  const streamed = textus.ai.stream({ prompt: "hi" }, () => {}, {
+    signal: answering.signal,
+  });
+  answering.abort();
+  await expect(streamed).rejects.toMatchObject({ name: "AbortError" });
+  expect(sent).toEqual([["net.cancel", { cancelId: asked.cancelId }]]);
 });
 
 it('works paths out in the frame, with "/" on every system', () => {
@@ -105,13 +141,28 @@ it('works paths out in the frame, with "/" on every system', () => {
   expect(p.extname("notes/.textus")).toBe("");
   expect(p.relative("notes/daily", "notes/ideas/a.md")).toBe("../ideas/a.md");
   expect(p.relative("notes", "notes")).toBe(".");
+  // A provider's address keeps its "scheme://host/" as its root.
+  expect(p.join("ssh://box/home", "../notes", "a.md")).toBe(
+    "ssh://box/notes/a.md",
+  );
+  expect(p.normalize("ssh://box/../a.md")).toBe("ssh://box/a.md");
+  expect(p.dirname("ssh://box/a.md")).toBe("ssh://box/");
+  expect(p.dirname("ssh://box/notes/a.md")).toBe("ssh://box/notes");
+  expect(p.dirname("C:/a.md")).toBe("C:/");
   expect(sent).toEqual([]);
 });
 
-it("is one clean script once its parts are joined", async () => {
-  // The parts use what the others define, so they are linted as one.
-  const [result] = await new ESLint().lintText(host, {
-    filePath: "src/plugins/host/runtime/host.js",
-  });
-  expect(result.messages.map((m) => `${m.line}: ${m.message}`)).toEqual([]);
-});
+const LINT_TIMEOUT = 30_000;
+
+it(
+  "is one clean script once its parts are joined",
+  async () => {
+    // The parts use what the others define, so they are linted as one.
+    const [result] = await new ESLint().lintText(host, {
+      filePath: "src/plugins/host/runtime/host.js",
+    });
+    expect(result.messages.map((m) => `${m.line}: ${m.message}`)).toEqual([]);
+  },
+  // Starts ESLint and its TypeScript parser cold: seconds on a busy runner.
+  LINT_TIMEOUT,
+);

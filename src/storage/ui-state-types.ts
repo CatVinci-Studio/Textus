@@ -15,8 +15,13 @@ export interface UiState {
   sidebarOpen: boolean;
   /** The sidebar tab last shown: files, outline or clipboard. */
   sidebarTab: string;
-  /** The sidebar's tabs as the user dragged them, by id. */
-  sidebarTabOrder: string[];
+  /** Rust's (commands/prefs.rs, recents.rs): the last editor window's
+   *  inner size and place, in logical pixels, and the recent files and
+   *  folders of File › Open Recent, newest first. */
+  editorWindowSize: [number, number];
+  editorWindowPosition: [number, number];
+  recentFiles: string[];
+  recentFolders: string[];
   /** iOS: recently opened documents, newest first. */
   iosRecentDocuments: unknown;
   /** iOS: the document list's layout. */
@@ -59,8 +64,8 @@ export interface UiState {
   /** Files Textus AI left something in, by path: revisions waiting, a file
    *  it made waiting to be kept, a file it wrote straight in. */
   aiFileMarks: Record<string, AiFileMark>;
-  /** The note embeds folded, by the document they are in and what they
-   *  show, oldest first. */
+  /** Embeds folded, and opened as cards, kept apart before: moved into
+   *  foldedBlocks and openedBlocks the first time an embed is drawn. */
   foldedEmbeds: string[];
   /** The drawn blocks folded (editor/fold/block-fold.ts), by document and
    *  place, oldest first. */
@@ -68,7 +73,6 @@ export interface UiState {
   /** The drawn blocks opened by hand, so one folded in a narrow column
    *  stays open. */
   openedBlocks: string[];
-  /** With embeds shown as cards, the ones opened, the same way. */
   openedEmbeds: string[];
   /** The plugin suggestion card's answers by situation: how many times
    *  Later put it off, or "never" (plugins/store/plugin-card.ts). */
@@ -81,10 +85,6 @@ export interface UiState {
   movedToPluginsOffered: string[];
   /** "plugin key" pairs whose manifest key was someone else's, told once. */
   pluginKeysTold: string[];
-  /** The split the window was left in, its panes by their documents'
-   *  paths (app/layout/restore.ts); null when it showed one. Read
-   *  loosely: earlier versions kept a pair. */
-  splitLayout: { tree: unknown } | null;
   /** Settings › Extensions: the kinds whose Available list is folded. */
   extensionsFolded: string[];
   /** The folder a document was last saved into with Save As, where the

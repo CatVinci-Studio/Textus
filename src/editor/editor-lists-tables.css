@@ -224,7 +224,7 @@
   inset: 0 0 0 -4px;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .table-add-row-btn:hover,
   .table-add-col-btn:hover {
     color: var(--doc-accent-text);
@@ -259,7 +259,7 @@
 
 /* Zen focus: everything but the current block recedes, changing only per
    block. The fade is in content-base.css's layer, so leaving zen fades back. */
-.zen .milkdown .ProseMirror:has(> .zen-current) > :not(.zen-current) {
+.zen .milkdown .ProseMirror[data-zen-focus] > :not(.zen-current) {
   opacity: 0.32;
 }
 
@@ -310,7 +310,7 @@
   color: inherit;
   cursor: pointer;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .table-align-pill > button:hover:not(:disabled) {
     color: var(--doc-text);
   }
@@ -328,7 +328,7 @@
   aspect-ratio: 1;
   padding: 0.1em;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .block-pill.is-danger:hover {
     color: var(--ui-danger);
     border-color: color-mix(in srgb, var(--ui-danger) 40%, var(--doc-border));
@@ -376,7 +376,7 @@
 
 /* Without hover (a touch screen at any width) the "+" strips would stay
    after a tap; the size pill adds rows and columns there. */
-@media (hover: none) {
+@media (any-hover: none) {
   .table-add-row-btn,
   .table-add-col-btn {
     display: none;

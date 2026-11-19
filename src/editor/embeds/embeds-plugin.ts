@@ -6,7 +6,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration, type EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
-import { isScopedUrl } from "../../platform/ios-files";
+import { isFarUrl } from "../../platform/far-files";
 import type { Settings } from "../../prefs/SettingsContext";
 import { imageEmbedDecorations } from "../images/obsidian-embed-preview";
 import { windowFolder } from "../../platform/window-folder";
@@ -21,7 +21,7 @@ import {
 import { embedFolded, setEmbedFolded } from "./embed-folds";
 import { embedProvider, onEmbedsChange } from "./embed-sources";
 import "./note-embed.css";
-import { drawWhileNear, stopDrawing } from "../draw-when-visible";
+import { drawWhileNear, stopDrawing } from "../lazy/draw-when-visible";
 import {
   applyReveal,
   caretToSourceOnClick,
@@ -148,7 +148,7 @@ function embedReveal(state: EmbedView, settings: () => Settings): Reveal {
     decorate(node, pos, touches) {
       const docPath = state.docPath();
       // An unsaved document has no vault; an iOS Files one can't be searched.
-      if (!docPath || isScopedUrl(docPath)) return [];
+      if (!docPath || isFarUrl(docPath)) return [];
       if (touches(pos, pos + node.nodeSize)) return [];
       const image = imageEmbedDecorations(node, pos, docPath, settings);
       return image.length ? image : noteDecorations(state, node, pos, docPath);

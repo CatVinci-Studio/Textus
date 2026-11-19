@@ -52,6 +52,8 @@
       "files.root",
       "files.conventions",
       "files.appSettings",
+      "files.registerConventionReader",
+      "files.unregisterConventionReader",
       "files.list",
       "files.find",
       "files.stat",
@@ -153,7 +155,24 @@
     "permission": "ai.model",
     "calls": [
       "ai.available",
-      "ai.complete"
+      "ai.complete",
+      "ai.stream"
+    ]
+  },
+  {
+    "permission": "ssh",
+    "calls": [
+      "ssh.hosts",
+      "ssh.connect",
+      "ssh.home",
+      "ssh.list",
+      "ssh.read",
+      "ssh.write",
+      "ssh.create",
+      "ssh.rename",
+      "ssh.delete",
+      "ssh.close",
+      "ssh.readText"
     ]
   },
   {
@@ -161,7 +180,8 @@
     "calls": [
       "comments.list",
       "comments.add",
-      "comments.resolve"
+      "comments.resolve",
+      "comments.onDidChange"
     ]
   }
 ]

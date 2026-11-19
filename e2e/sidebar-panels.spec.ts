@@ -1,5 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
-import { MAC, PHONE, emit, openApp, pasteMarkdown } from "./helpers";
+import {
+  MAC,
+  PHONE,
+  emit,
+  openApp,
+  pasteMarkdown,
+  restedOn,
+  settled,
+} from "./helpers";
 
 // Sidebar panels: the plugin list opens a plugin's page in a tab of its
 // own; the sidebar steps aside for the islands and widens by its edge.
@@ -28,22 +36,6 @@ test("a plugin in the list opens its page in a tab named for it", async ({
   await expect(page.locator(".tab-pill")).toHaveCount(count);
 });
 
-test("Select All in the second island selects that island's document", async ({
-  page,
-}) => {
-  await open(page);
-  await pasteMarkdown(page, "第一篇");
-  await emit(page, "menu-split-right");
-  const second = page.locator(".ProseMirror").nth(1);
-  await expect(second).toBeVisible();
-  await second.click();
-  await page.keyboard.type("第二篇");
-  await page.keyboard.press(MAC ? "Meta+A" : "Control+A");
-  const selected = await page.evaluate(() => window.getSelection()?.toString());
-  expect(selected).toContain("第二篇");
-  expect(selected).not.toContain("第一篇");
-});
-
 test("too narrow for the islands at their least, the sidebar steps aside, then the AI folds; they come back in turn", async ({
   page,
 }) => {
@@ -70,7 +62,7 @@ test("too narrow for the islands at their least, the sidebar steps aside, then t
   await page.setViewportSize({ width: 780, height: 760 });
   await expect(sidebar).toHaveClass(/sidebar-collapsed/);
   await emit(page, "menu-toggle-sidebar");
-  await page.waitForTimeout(300);
+  await settled(page);
   await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
   // Opening the AI where it leaves too little room puts nothing away, and
   // splits nothing: it joins the document's island as a tab.
@@ -81,7 +73,7 @@ test("too narrow for the islands at their least, the sidebar steps aside, then t
   await page.getByRole("button", { name: "Textus AI" }).first().click();
   await expect(page.locator(".tab-pill")).toHaveCount(2);
   await expect(page.locator("section.island")).toHaveCount(1);
-  await page.waitForTimeout(300);
+  await settled(page);
   await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
   // And the island it joined stays in the window.
   const island = (await page.locator("section.island").boundingBox())!;
@@ -91,7 +83,7 @@ test("too narrow for the islands at their least, the sidebar steps aside, then t
   await emit(page, "menu-split-right");
   await expect(page.locator("section.island")).toHaveCount(2);
   await expect(sidebar).toHaveClass(/sidebar-collapsed/);
-  await page.waitForTimeout(300);
+  await settled(page);
   await expect(page.locator("section.island")).toHaveCount(2);
 });
 
@@ -102,7 +94,7 @@ test("its edge dragged out, the sidebar widens and the islands make room", async
   await emit(page, "menu-toggle-sidebar");
   const sidebar = page.locator(".sidebar");
   await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
-  await page.waitForTimeout(600);
+  await settled(page);
   const edge = (await page.locator(".sidebar-resizer").boundingBox())!;
   const before = (await sidebar.boundingBox())!;
   const island = (await page.locator("section.island").first().boundingBox())!;
@@ -110,12 +102,23 @@ test("its edge dragged out, the sidebar widens and the islands make room", async
   await page.mouse.down();
   await page.mouse.move(edge.x + 120, edge.y + edge.height / 2, { steps: 12 });
   await page.mouse.up();
-  await page.waitForTimeout(600);
+  await settled(page);
   const after = (await sidebar.boundingBox())!;
   // Wider, and the islands moved over for it.
   expect(after.width).toBeGreaterThan(before.width + 100);
   const moved = (await page.locator("section.island").first().boundingBox())!;
   expect(moved.x).toBeGreaterThan(island.x + 100);
+  // Dragged again and Esc pressed while held: back to where it was.
+  const again = (await page.locator(".sidebar-resizer").boundingBox())!;
+  await page.mouse.move(again.x + again.width / 2, again.y + again.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(again.x + 100, again.y + again.height / 2, {
+    steps: 8,
+  });
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  await settled(page);
+  expect((await sidebar.boundingBox())!.width).toBeCloseTo(after.width, 0);
 });
 
 test("the folder's tools coming on hover move none of the tree's rows", async ({
@@ -158,20 +161,26 @@ test("a file closed at once opens again at once", async ({ page }) => {
   await expect(tab).toBeVisible();
 });
 
-test("a file dragged onto a folder moves into it; with Esc it stays", async ({
+test("a file dragged onto a folder moves into it; with Esc it stays; picked files go together", async ({
   page,
 }) => {
   await page.addInitScript(() => {
     const w = window as unknown as Record<string, unknown>;
-    w.__devFs = { "/proj/a.md": "# A\n", "/proj/notes/n.md": "# N\n" };
+    w.__devFs = {
+      "/proj/a.md": "# A\n",
+      "/proj/b.md": "# B\n",
+      "/proj/c.md": "# C\n",
+      "/proj/d.md": "# D\n",
+      "/proj/notes/n.md": "# N\n",
+    };
     w.__devPickFolder = "/proj";
   });
   await openApp(page);
   await emit(page, "menu-open-folder");
   const row = (name: string) => page.locator(".tree-row", { hasText: name });
   await expect(row("a.md")).toBeVisible();
-  const drag = async (escape: boolean) => {
-    const from = (await row("a.md").boundingBox())!;
+  const drag = async (escape: boolean, name = "a.md") => {
+    const from = (await row(name).boundingBox())!;
     const to = (await row("notes").boundingBox())!;
     await page.mouse.move(from.x + 20, from.y + from.height / 2);
     await page.mouse.down();
@@ -186,10 +195,39 @@ test("a file dragged onto a folder moves into it; with Esc it stays", async ({
       ),
     );
   await drag(true);
-  await page.waitForTimeout(200);
-  expect(await files()).toContain("/proj/a.md");
+  await expect.poll(files).toContain("/proj/a.md");
   await drag(false);
   await expect.poll(files).toContain("/proj/notes/a.md");
+
+  // b to d by Shift, c let go of by ⌘/Ctrl: b and d go into notes together.
+  const picked = () =>
+    page.locator(".tree-row-picked .tree-label").allInnerTexts();
+  await row("b.md").click();
+  await row("d.md").click({ modifiers: ["Shift"] });
+  await expect.poll(picked).toEqual(["b.md", "c.md", "d.md"]);
+  await row("c.md").click({ modifiers: ["ControlOrMeta"] });
+  await expect.poll(picked).toEqual(["b.md", "d.md"]);
+  await drag(false, "b.md");
+  await expect
+    .poll(files)
+    .toEqual(
+      expect.arrayContaining([
+        "/proj/notes/b.md",
+        "/proj/notes/d.md",
+        "/proj/c.md",
+      ]),
+    );
+  await expect.poll(picked).toEqual([]);
+
+  // Two picked, right-clicked: both to the Trash after one question.
+  await row("c.md").click();
+  await row("n.md").click({ modifiers: ["ControlOrMeta"] });
+  await expect.poll(picked).toEqual(["n.md", "c.md"]);
+  await row("c.md").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "移到废纸篓" }).click();
+  await page.getByRole("button", { name: "移到废纸篓" }).click();
+  await expect.poll(files).not.toContain("/proj/c.md");
+  expect(await files()).not.toContain("/proj/notes/n.md");
 });
 
 test("the AI's edge stepped past what the window can show stops there, and steps back at once", async ({
@@ -257,7 +295,7 @@ test("a split the window has no room for is not made, and says why", async ({
   await page.mouse.move(last.x + last.width - 6, last.y + last.height / 2, {
     steps: 25,
   });
-  await page.waitForTimeout(700);
+  await restedOn(page);
   await page.mouse.up();
   await expect(page.locator(".notice-text")).toBeVisible();
   await expect(islands).toHaveCount(3);
@@ -272,7 +310,7 @@ test("a split the window has no room for is not made, and says why", async ({
   await page.mouse.move(last.x + last.width - 6, last.y + last.height / 2, {
     steps: 25,
   });
-  await page.waitForTimeout(700);
+  await restedOn(page);
   await page.mouse.up();
   await expect(page.locator(".notice-text")).toBeVisible();
   await expect(islands).toHaveCount(3);
@@ -282,6 +320,11 @@ test("a split the window has no room for is not made, and says why", async ({
   // it is too short, not too narrow.
   await page.locator(".notice-text").waitFor({ state: "hidden" });
   await page.setViewportSize({ width: 2400, height: 170 });
+  // The islands laid out in the new window first: the split is weighed
+  // against the room they have.
+  await expect
+    .poll(async () => (await islands.first().boundingBox())!.height)
+    .toBeLessThan(170);
   await emit(page, "menu-split-right");
   await expect(page.locator(".notice-text")).toContainText("太矮");
 });

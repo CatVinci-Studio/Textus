@@ -129,7 +129,7 @@
   hyphens: auto;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .settings-nav-item:hover {
     background: var(--ui-hover);
   }
@@ -208,7 +208,6 @@
 .settings-group-note {
   margin: 8px 0 0;
   padding-left: 4px;
-  max-width: 560px;
   color: var(--ui-muted);
   font-size: var(--text-footnote);
   line-height: 1.45;

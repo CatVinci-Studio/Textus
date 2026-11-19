@@ -54,7 +54,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .memory-section h4 button:hover,
   .memory-link:hover {
     text-decoration: underline;
@@ -65,14 +65,6 @@
   display: block;
   margin: 8px 0 0;
   font-size: var(--text-caption);
-}
-
-.memory-count {
-  padding: 0 4px;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: color-mix(in srgb, var(--ui-text) 7%, transparent);
-  font-variant-numeric: tabular-nums;
 }
 
 /* Each thing kept a row, as the remembered ones are: no box around them. */
@@ -147,25 +139,6 @@
   margin-top: 12px;
 }
 
-.memory-empty-actions button {
-  padding: 4px 12px;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  border: 1px solid var(--ui-border);
-  background: var(--ui-surface);
-  color: var(--ui-text);
-  font: inherit;
-  font-size: var(--text-caption);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.memory-empty-actions .primary {
-  border-color: var(--ui-primary);
-  background: var(--ui-primary);
-  color: var(--ui-on-primary);
-}
-
 /* An entry: its name, its first line, then whether it was sent; delete at
    its end on hover or focus. */
 .memory-entry-open {
@@ -200,7 +173,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .memory-entry-delete:hover {
     background: color-mix(in srgb, var(--ui-text) 8%, transparent);
     color: var(--ui-text);
@@ -234,7 +207,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .memory-reveal:hover {
     color: var(--ui-accent-text);
     text-decoration: underline;
@@ -302,13 +275,6 @@
   opacity: 0.6;
 }
 
-.memory-badge {
-  padding: 0 4px;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: color-mix(in srgb, var(--ui-text) 7%, transparent);
-}
-
 .memory-remembered-actions {
   display: flex;
   gap: 12px;
@@ -325,7 +291,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .memory-remembered-actions button:hover {
     text-decoration: underline;
   }

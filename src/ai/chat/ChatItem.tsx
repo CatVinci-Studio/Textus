@@ -206,7 +206,7 @@ export function ChatItem({
           {c.onContinue && !c.busy && last && (
             <button
               type="button"
-              className="inline-chat-action agent-stopped-continue"
+              className="tx-button small inline-chat-action agent-stopped-continue"
               onClick={c.onContinue}
             >
               {labels.continueAfterLimit}

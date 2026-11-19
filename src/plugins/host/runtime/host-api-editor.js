@@ -100,6 +100,7 @@ textus.editor = {
     quiet(call("editor.registerHover", {}));
     return disposable(function () {
       without(hoverProviders, provider);
+      if (!hoverProviders.length) quiet(call("editor.unregisterHover", {}));
     });
   },
   registerDecorations: function (provider) {
@@ -213,6 +214,36 @@ textus.files = {
     return call("files.setConvention", {
       key: String(key),
       value: value === undefined ? null : plain(value),
+    });
+  },
+  registerProvider: function (scheme, provider) {
+    var key = String(scheme).toLowerCase();
+    fileProviders.set(key, provider);
+    quiet(call("files.registerProvider", { scheme: key }));
+    return disposable(function () {
+      if (fileProviders.get(key) !== provider) return;
+      fileProviders.delete(key);
+      quiet(call("files.unregisterProvider", { scheme: key }));
+    });
+  },
+  openFolder: function (url) {
+    return call("files.openFolder", { url: String(url) });
+  },
+  registerConventionReader: function (id, reader) {
+    var key = String(id);
+    conventionReaders.set(key, reader);
+    quiet(
+      call("files.registerConventionReader", {
+        id: key,
+        label: String(reader.label == null ? key : reader.label),
+        marker: String(reader.marker),
+        notes: !!reader.notes,
+      }),
+    );
+    return disposable(function () {
+      if (conventionReaders.get(key) !== reader) return;
+      conventionReaders.delete(key);
+      quiet(call("files.unregisterConventionReader", { id: key }));
     });
   },
   appSettings: function (app, file, path) {

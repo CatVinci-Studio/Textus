@@ -3,7 +3,7 @@ import { scaledPx } from "../engine/tokens/chrome-scale";
 import { onBack } from "./back";
 import { OPEN_SETTINGS_PAGE_EVENT } from "../settings/settings-nav";
 import { androidBridge } from "../platform/android-bridge";
-import { across, swipeClaimed } from "../utils/gesture";
+import { across } from "../utils/gesture";
 
 /** How far a finger moves across before it counts as a swipe, and how near
  *  the left edge one must start to pull the sidebar in. */
@@ -64,8 +64,7 @@ export function usePushedSidebar(
     };
     const up = (e: TouchEvent) => {
       const t = e.changedTouches[0];
-      // The tab row's own swipe is the row's.
-      const dx = start && t && !swipeClaimed() ? across(start, t) : null;
+      const dx = start && t ? across(start, t) : null;
       const far = dx !== null && Math.abs(dx) > scaledPx(SWIPE);
       if (far && shown.current && dx < 0) setOpen(false);
       else if (far && !shown.current && dx > 0 && start!.x < scaledPx(EDGE))

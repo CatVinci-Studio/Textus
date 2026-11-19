@@ -36,14 +36,14 @@ export function PluginErrors({ id, t }: { id: string; t: Strings }) {
       <div className="plugin-errors-actions">
         <button
           type="button"
-          className="text-button settings-inline-button"
+          className="tx-button text-button settings-inline-button"
           onClick={() => void navigator.clipboard?.writeText(text)}
         >
           {t.pluginErrorsCopy}
         </button>
         <button
           type="button"
-          className="text-button settings-inline-button"
+          className="tx-button text-button settings-inline-button"
           onClick={() => clearPluginLog(id)}
         >
           {t.pluginErrorsClear}

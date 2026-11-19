@@ -12,7 +12,7 @@ import {
 import { liveCaretPos } from "../live-selection";
 import { renderWhitelistedHtml } from "./raw-html-sanitize";
 import { katexNow } from "../math/katex-loader";
-import { stopDrawing } from "../draw-when-visible";
+import { stopDrawing } from "../lazy/draw-when-visible";
 
 // The folding half of the raw-HTML preview. The plugin's state holds the
 // fold state too, so its key and shape are declared here.

@@ -639,6 +639,11 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeTrashConfirm: "Mover “{name}” para a lixeira? Dá para recuperar de lá.",
   treeTrashFolderConfirm:
     "Mover a pasta “{name}” e tudo o que ela contém para a lixeira? Dá para recuperar de lá.",
+  treeTrashManyConfirm: {
+    one: "Mover {n} item para a lixeira? Dá para recuperar de lá.",
+    many: "Mover {n} itens para a lixeira? Dá para recuperá-los de lá.",
+    other: "Mover {n} itens para a lixeira? Dá para recuperá-los de lá.",
+  },
   errorPermission:
     "O Textus não tem permissão para abrir este arquivo ou pasta. Verifique as permissões ou escolha outro local.",
   errorNotFound:
@@ -660,8 +665,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "A loja de plugins precisa de uma versão mais nova do Textus. Atualize o Textus para vê-la.",
   errorImageTooBig: "A imagem está vazia ou tem mais de 25 MB.",
   errorNoFolder: "Abra uma pasta primeiro.",
-  errorPluginsNeedAllFiles:
-    "Os plugins não conseguem ler esta pasta: o Textus não tem acesso a todos os arquivos. Abra a pasta de novo e escolha “Continuar”.",
+  errorFarPictures:
+    "Ainda não é possível guardar imagens nesta pasta. Cole-as num documento deste dispositivo.",
   errorPdfUnsupported:
     "A exportação para PDF não está disponível neste sistema.",
   errorNoText: "Não há texto legível nele.",
@@ -965,6 +970,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   agentQueueContinue: "Continuar",
   agentQueueEdit: "Editar",
   agentQueueRemove: "Remover",
+  agentQueueInsert: "Enviar agora",
   agentSend: "Enviar",
   agentStop: "Parar",
   agentRetry: "Tentar de novo",
@@ -1142,6 +1148,12 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   autoCloseBracketsLabel: "Fechar (), [] e “”",
   plainTextMenuLabel: "Copiar/colar como texto simples no menu de contexto",
   pdfPageNumbersLabel: "Mostrar números de página ao exportar",
+  pdfPaperLabel: "Tamanho do papel do PDF",
+  pdfMarginLabel: "Margens do PDF",
+  pdfMarginNarrow: "Estreitas",
+  pdfMarginNormal: "Normais",
+  pdfMarginWide: "Largas",
+  pdfTextScaleLabel: "Tamanho do texto do PDF",
   docxTemplateLabel: "Modelo do Word",
   docxTemplateHelp:
     "Os arquivos do Word exportados usam os estilos, fontes e margens deste arquivo.",
@@ -1939,6 +1951,14 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginPermNotifications: "Mostrar notificações do sistema",
   pluginPermAppearance: "Alterar as cores do Textus e dos seus documentos",
   pluginPermGitCommit: "Fazer commits do Git na pasta aberta com o seu Git",
+  pluginPermSsh:
+    "Ligar-se a servidores com as suas definições SSH (só os que permitir)",
+  pluginSshAsk:
+    "{plugin} quer ligar-se a {host} com as suas definições SSH, para ler e escrever ficheiros lá.",
+  pluginSshUnknownHost:
+    "{host} ainda não é um anfitrião conhecido. Ligue-se uma vez num terminal (ssh {host}) para verificar e aceitar a sua chave e tente de novo.",
+  pluginSshNeedsLogin:
+    "{host} pediu uma palavra-passe ou uma chave não carregada. Adicione a sua chave ao agente SSH (ssh-add) ou configure o acesso por chave e tente de novo.",
   pluginPermComments: "Ler e deixar notas na margem dos seus documentos",
   pluginPermAiModel:
     "Usar o seu modelo de IA (conta para o uso do seu serviço de IA)",

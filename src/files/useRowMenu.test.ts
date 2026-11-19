@@ -2,6 +2,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import en from "../i18n/locales/en";
+import { TreeSelection } from "./tree-selection";
 import { useRowMenu } from "./useRowMenu";
 
 const platform = vi.hoisted(() => ({ mobile: false }));
@@ -10,12 +11,26 @@ vi.mock("../platform/capabilities", async (real) => ({
   get isMobileApp() {
     return platform.mobile;
   },
+  // Android's: no Trash. iOS's is the Files app's Recently Deleted.
+  get canTrashFiles() {
+    return !platform.mobile;
+  },
 }));
 
 const labelsFor = (path: string, isDir: boolean) => {
   const noop = () => {};
   const { result } = renderHook(() =>
-    useRowMenu("/proj", "/proj", en, noop, noop, noop, noop, null),
+    useRowMenu(
+      "/proj",
+      "/proj",
+      en,
+      noop,
+      noop,
+      noop,
+      noop,
+      null,
+      new TreeSelection(),
+    ),
   );
   act(() => result.current.openRowMenu({ x: 0, y: 0 }, path, isDir));
   return {
@@ -35,7 +50,7 @@ describe("a tree row's menu", () => {
     expect(labelsFor("/proj/a.md", false).title).toBe("a.md");
   });
 
-  it("moves to the Trash on the desktop; a phone, with none, deletes documents only", () => {
+  it("moves to the Trash where there is one; without (Android), deletes documents only", () => {
     expect(labelsFor("/proj/a.md", false).labels).toContain(en.treeTrash);
     expect(labelsFor("/proj/sub", true).labels).toContain(en.treeTrash);
     platform.mobile = true;

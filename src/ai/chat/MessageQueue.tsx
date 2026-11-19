@@ -12,6 +12,9 @@ export interface QueuedMessage {
   message: string;
   images?: ImageAttachment[];
   options: AgentRequestOptions;
+  /** Sent into the reply in progress, which reads it at its next step:
+   *  it leaves the list once read, or goes after the reply if it wasn't. */
+  inserted?: boolean;
 }
 
 export interface MessageQueueLabels {
@@ -22,6 +25,8 @@ export interface MessageQueueLabels {
   queueContinue: string;
   queueEdit: string;
   queueRemove: string;
+  /** Into the reply in progress now, not after it. */
+  queueInsert: string;
 }
 
 /**
@@ -34,6 +39,7 @@ export function MessageQueue({
   labels,
   onEdit,
   onRemove,
+  onInsert,
   onContinue,
 }: {
   queue: QueuedMessage[];
@@ -41,6 +47,7 @@ export function MessageQueue({
   labels: MessageQueueLabels;
   onEdit: (id: number) => void;
   onRemove: (id: number) => void;
+  onInsert: (id: number) => void;
   onContinue: () => void;
 }) {
   if (queue.length === 0) return null;
@@ -59,7 +66,7 @@ export function MessageQueue({
         {paused && (
           <button
             type="button"
-            className="inline-chat-action"
+            className="tx-button small inline-chat-action"
             onClick={onContinue}
           >
             {labels.queueContinue}
@@ -69,6 +76,16 @@ export function MessageQueue({
       {queue.map((item) => (
         <div key={item.id} className="chat-queue-item" role="listitem">
           <span className="tx-truncate chat-queue-text">{item.typed}</span>
+          {!paused && !item.inserted && (
+            <button
+              type="button"
+              className="chat-queue-action"
+              aria-label={`${labels.queueInsert}: ${item.typed}`}
+              onClick={() => onInsert(item.id)}
+            >
+              {labels.queueInsert}
+            </button>
+          )}
           <button
             type="button"
             className="chat-queue-action"

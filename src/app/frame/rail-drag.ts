@@ -1,5 +1,6 @@
 import { clearSlides, passedCount, slideAside } from "../../engine/drag/row";
 import { trackDrag } from "../../engine/drag/pointer-drag";
+import { holdToDrag } from "../../engine/drag/hold-drag";
 import { liftedCopy } from "../../engine/drag/ghost";
 
 /** The line between Textus's own (and pinned) icons and the plugins'. */
@@ -51,7 +52,7 @@ export function railDrag(
     return staysAbove && line >= 0 ? Math.min(to, line) : to;
   };
 
-  trackDrag(down, {
+  const handlers = {
     start: () => {
       const items = nodes();
       const at = items.findIndex((item) => item.id === id);
@@ -102,5 +103,9 @@ export function railDrag(
       onDrop(order);
       requestAnimationFrame(land);
     },
-  });
+  } satisfies Parameters<typeof trackDrag>[1];
+  // A finger lifts the icon by holding still; a move before that scrolls.
+  if (down.pointerType === "touch")
+    holdToDrag(down, { ...handlers, lift: handlers.start });
+  else trackDrag(down, handlers);
 }

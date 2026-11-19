@@ -18,7 +18,10 @@ import { SettingRow, ToggleRow } from "../sections/controls";
 import { links, plugins as pluginsIpc } from "../../platform/ipc";
 import { AvailablePlugins } from "./AvailablePlugins";
 import { MarketPluginPage } from "./MarketPluginPage";
-import { isDesktopApp } from "../../platform/capabilities";
+import {
+  canInstallPluginFile,
+  canPickPluginFolder,
+} from "../../platform/capabilities";
 import type { Strings } from "../../i18n/strings";
 import {
   pluginName,
@@ -144,13 +147,17 @@ export function PluginsPage({ t }: SettingsPageProps) {
         label: t.createMakePlugin,
         onSelect: () => requestCreate("", "plugin"),
       }}
-      actions={
-        isDesktopApp
+      actions={[
+        ...(canInstallPluginFile
           ? [
               {
                 label: t.pluginsInstallFile,
                 onSelect: () => void installFile(false),
               },
+            ]
+          : []),
+        ...(canPickPluginFolder
+          ? [
               {
                 label: t.pluginsLoadFolder,
                 onSelect: () => void installFile(true),
@@ -160,8 +167,8 @@ export function PluginsPage({ t }: SettingsPageProps) {
                 onSelect: () => void attempt(() => pluginsIpc.openScriptsDir()),
               },
             ]
-          : []
-      }
+          : []),
+      ]}
       top={
         <>
           <ToggleRow
@@ -182,7 +189,7 @@ export function PluginsPage({ t }: SettingsPageProps) {
         updates.length > 1 && (
           <button
             type="button"
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             disabled={installing !== null}
             onClick={() => void updateAll(updates)}
           >
@@ -236,7 +243,7 @@ function MutedSuggestions({ t }: { t: Strings }) {
     <SettingRow label={fill(t.pluginCardsMuted, { n: String(count) })}>
       <button
         type="button"
-        className="text-button settings-inline-button"
+        className="tx-button text-button settings-inline-button"
         onClick={restore}
       >
         {t.pluginCardsRestore}
@@ -252,7 +259,7 @@ function ListYours({ t }: { t: Strings }) {
       {t.marketListYours}{" "}
       <button
         type="button"
-        className="text-button settings-inline-button"
+        className="tx-button text-button settings-inline-button"
         onClick={() => void links.openAboutLink("listing")}
       >
         {t.marketListingRules}

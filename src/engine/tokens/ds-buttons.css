@@ -1,19 +1,7 @@
 /* Buttons. Size, shape and every state are defined here only; a component
    keeps just layout and text colour. Two sizes, three kinds: secondary,
    primary (one per group) and quiet. */
-:is(
-  .close-prompt-buttons button,
-  .image-name-buttons button,
-  .insert-table-buttons button,
-  .language-welcome-continue,
-  .text-button,
-  .tx-button,
-  .inline-chat-action,
-  .corner-toast button,
-  .project-bar-naming button,
-  .missing-image-actions button,
-  .inline-chat-send
-) {
+.tx-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -39,80 +27,29 @@
     color var(--dur-fast) var(--ease-standard);
 }
 
-:is(
-  .inline-chat-action,
-  .corner-toast button,
-  .project-bar-naming button,
-  .missing-image-actions button,
-  .inline-chat-send,
-  .tx-button.small
-) {
+.tx-button.small {
   min-height: var(--control-height-sm);
   padding: 0 8px;
   font-size: var(--text-secondary);
 }
 
 /* The hover arrives in 80ms and leaves at the 120ms of the base rule. */
-@media (hover: hover) {
-  :is(
-      .close-prompt-buttons button,
-      .image-name-buttons button,
-      .insert-table-buttons button,
-      .text-button,
-      .tx-button,
-      .inline-chat-action,
-      .corner-toast button,
-      .project-bar-naming button,
-      .missing-image-actions button
-    ):not(:disabled):hover {
+@media (any-hover: hover) {
+  .tx-button:not(:disabled):hover {
     background: color-mix(in srgb, currentColor 8%, transparent);
     transition-duration: var(--dur-instant);
   }
 }
 
-:is(
-  .close-prompt-buttons button,
-  .image-name-buttons button,
-  .insert-table-buttons button,
-  .language-welcome-continue,
-  .inline-chat-action,
-  .corner-toast button,
-  .inline-chat-send,
-  .tx-button
-):is(
-  .close-prompt-primary,
-  .image-name-primary,
-  .language-welcome-continue,
-  .inline-chat-action-primary,
-  .corner-toast-primary,
-  .inline-chat-send,
-  .tx-button.primary
-) {
+.tx-button.primary {
   border-color: var(--ui-primary);
   background: var(--ui-primary);
   color: var(--ui-on-primary);
   font-weight: 600;
 }
 
-@media (hover: hover) {
-  :is(
-      .close-prompt-buttons button,
-      .image-name-buttons button,
-      .insert-table-buttons button,
-      .language-welcome-continue,
-      .inline-chat-action,
-      .corner-toast button,
-      .inline-chat-send,
-      .tx-button
-    ):is(
-      .close-prompt-primary,
-      .image-name-primary,
-      .language-welcome-continue,
-      .inline-chat-action-primary,
-      .corner-toast-primary,
-      .inline-chat-send,
-      .tx-button.primary
-    ):not(:disabled):hover {
+@media (any-hover: hover) {
+  .tx-button.primary:not(:disabled):hover {
     border-color: color-mix(
       in srgb,
       var(--ui-primary) 86%,
@@ -125,62 +62,33 @@
 
 /* Pressed: a shade darker, at once - and no scale (macOS buttons don't
    shrink). Let go, it eases back with the base rule's 120ms. */
-:is(
-    .close-prompt-buttons button,
-    .image-name-buttons button,
-    .insert-table-buttons button,
-    .text-button,
-    .tx-button,
-    .inline-chat-action,
-    .corner-toast button,
-    .project-bar-naming button,
-    .missing-image-actions button
-  ):not(:disabled):active {
-  background: color-mix(in srgb, currentColor 14%, transparent);
+.tx-button:not(:disabled):active {
+  background: var(--ui-pressed);
   transition-duration: 0s;
 }
 
-:is(
-    .close-prompt-buttons button,
-    .image-name-buttons button,
-    .insert-table-buttons button,
-    .language-welcome-continue,
-    .inline-chat-action,
-    .corner-toast button,
-    .inline-chat-send,
-    .tx-button
-  ):is(
-    .close-prompt-primary,
-    .image-name-primary,
-    .language-welcome-continue,
-    .inline-chat-action-primary,
-    .corner-toast-primary,
-    .inline-chat-send,
-    .tx-button.primary
-  ):not(:disabled):active {
-  border-color: color-mix(in srgb, var(--ui-primary) 78%, var(--ui-on-primary));
-  background: color-mix(in srgb, var(--ui-primary) 78%, var(--ui-on-primary));
+.tx-button.primary:not(:disabled):active {
+  border-color: var(--ui-primary-pressed);
+  background: var(--ui-primary-pressed);
   transition-duration: 0s;
 }
 
 /* A destructive confirm: the primary in the danger fill. The fill is its own
    token, as the dark palette's pale --ui-danger carries no white text. */
-.close-prompt-buttons button.close-prompt-primary.app-dialog-danger {
+.tx-button.primary.danger {
   border-color: var(--ui-danger-fill);
   background: var(--ui-danger-fill);
   color: var(--ui-on-fill);
 }
 
-@media (hover: hover) {
-  .close-prompt-buttons
-    button.close-prompt-primary.app-dialog-danger:not(:disabled):hover {
+@media (any-hover: hover) {
+  .tx-button.primary.danger:not(:disabled):hover {
     border-color: color-mix(in srgb, var(--ui-danger-fill) 86%, #000);
     background: color-mix(in srgb, var(--ui-danger-fill) 86%, #000);
   }
 }
 
-.close-prompt-buttons
-  button.close-prompt-primary.app-dialog-danger:not(:disabled):active {
+.tx-button.primary.danger:not(:disabled):active {
   border-color: color-mix(in srgb, var(--ui-danger-fill) 80%, #000);
   background: color-mix(in srgb, var(--ui-danger-fill) 80%, #000);
 }
@@ -193,11 +101,7 @@
     .window-bar-toggle,
     .window-bar-sidebar-toggle,
     .window-menu-button,
-    .tree-tool,
     .tx-icon-button,
-    .inline-chat-header-button,
-    .inline-chat-attach,
-    .inline-chat-toggle,
     .tab-bar-add,
     .sidebar-tab,
     .window-caption-button,
@@ -211,13 +115,7 @@
 
 /* Icon buttons: no frame, a muted glyph that darkens on hover; the composer
    toolbar's are framed to match its 26px controls. */
-:is(
-  .inline-chat-header-button,
-  .tree-tool,
-  .tx-icon-button,
-  .inline-chat-attach,
-  .inline-chat-toggle
-) {
+.tx-icon-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -228,69 +126,39 @@
   corner-shape: round;
   background: transparent;
   color: var(--ui-muted);
+  width: var(--icon-button-s);
+  height: var(--icon-button-s);
   cursor: pointer;
   transition:
     background-color var(--dur-fast) var(--ease-standard),
     color var(--dur-fast) var(--ease-standard);
 }
 
-:is(.inline-chat-header-button, .tree-tool, .tx-icon-button) {
-  width: var(--icon-button-s);
-  height: var(--icon-button-s);
-}
-
-/* They grow with the window as the chrome's other icons do. */
-:is(.inline-chat-attach, .inline-chat-toggle) {
+/* They grow with the window as the chrome's other icons do. Kept as light
+   as the base, so a surface can take the frame off. */
+.tx-icon-button:where(.framed) {
   width: var(--control-height-sm);
   height: var(--control-height-sm);
   border: 1px solid var(--ui-border);
 }
 
-@media (hover: hover) {
-  :is(
-      .inline-chat-header-button,
-      .tree-tool,
-      .tx-icon-button,
-      .inline-chat-attach,
-      .inline-chat-toggle
-    ):not(:disabled):hover {
+@media (any-hover: hover) {
+  .tx-icon-button:not(:disabled):hover {
     background: color-mix(in srgb, currentColor 10%, transparent);
     color: var(--ui-text);
     transition-duration: var(--dur-instant);
   }
 }
 
-:is(
-    .inline-chat-header-button,
-    .tree-tool,
-    .tx-icon-button,
-    .inline-chat-attach,
-    .inline-chat-toggle
-  ):not(:disabled):active {
-  background: color-mix(in srgb, currentColor 16%, transparent);
+.tx-icon-button:not(:disabled):active {
+  background: var(--ui-pressed);
   transition-duration: 0s;
 }
 
 /* A touch screen has no hover to give way to: the pressed button also
    dims, as an iOS button does while a finger is on it. */
-@media (hover: none) {
-  :is(
-      .close-prompt-buttons button,
-      .image-name-buttons button,
-      .insert-table-buttons button,
-      .text-button,
-      .tx-button,
-      .inline-chat-action,
-      .corner-toast button,
-      .project-bar-naming button,
-      .inline-chat-header-button,
-      .tree-tool,
-      .tx-icon-button,
-      .inline-chat-attach,
-      .inline-chat-toggle,
-      .inline-chat-send,
-      .language-welcome-continue
-    ):not(:disabled):active {
+@media (any-hover: none) {
+  :is(.tx-button, .tx-icon-button):not(:disabled):active {
     opacity: 0.6;
   }
 }

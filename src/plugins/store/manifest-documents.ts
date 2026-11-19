@@ -1,4 +1,7 @@
-import type { DocumentTypeContribution } from "./manifest-types";
+import type {
+  DocumentTypeContribution,
+  FolderDocumentContribution,
+} from "./manifest-types";
 import { ManifestError, list, object, text, type Json } from "./manifest-json";
 import { TEXT_DOCUMENT_EXTENSIONS } from "../../platform/bindings/files";
 
@@ -45,5 +48,27 @@ export function parseDocumentTypes(c: Json): DocumentTypeContribution[] {
           ? { blockStarts, braces, jsx }
           : null,
     };
+  });
+}
+
+/** `contributes.folderDocuments`: folders with an extension opened as one
+ *  document, the first of `documents` found in them. */
+export function parseFolderDocuments(c: Json): FolderDocumentContribution[] {
+  return list(c.folderDocuments, "contributes.folderDocuments").map((x, i) => {
+    const at = `contributes.folderDocuments[${i}]`;
+    const o = object(x, at);
+    const extension = text(o.extension, `${at}.extension`)
+      .replace(/^\./, "")
+      .toLowerCase();
+    if (!EXTENSION.test(extension))
+      throw new ManifestError(`${at}.extension isn't an extension.`);
+    const documents = list(o.documents, `${at}.documents`).map((d, j) => {
+      const name = text(d, `${at}.documents[${j}]`);
+      if (/[\\/]/.test(name) || name.startsWith("."))
+        throw new ManifestError(`${at}.documents[${j}] isn't a file name.`);
+      return name;
+    });
+    if (!documents.length) throw new ManifestError(`${at}.documents is empty.`);
+    return { extension, documents };
   });
 }

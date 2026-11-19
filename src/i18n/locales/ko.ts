@@ -596,6 +596,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "“{name}”을(를) 휴지통으로 옮길까요? 휴지통에서 되돌릴 수 있습니다.",
   treeTrashFolderConfirm:
     "폴더 “{name}”와(과) 그 안의 모든 항목을 휴지통으로 옮길까요? 휴지통에서 되돌릴 수 있습니다.",
+  treeTrashManyConfirm: {
+    other: "항목 {n}개를 휴지통으로 옮길까요? 휴지통에서 되돌릴 수 있습니다.",
+  },
   errorPermission:
     "Textus에 이 파일 또는 폴더에 접근할 권한이 없습니다. 권한을 확인하거나 다른 위치를 선택하세요.",
   errorNotFound:
@@ -617,8 +620,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "플러그인 스토어를 보려면 최신 Textus가 필요합니다. Textus를 업데이트하세요.",
   errorImageTooBig: "그림이 비어 있거나 25MB보다 큽니다.",
   errorNoFolder: "먼저 폴더를 여세요.",
-  errorPluginsNeedAllFiles:
-    "플러그인이 이 폴더를 읽을 수 없습니다: Textus에 모든 파일 접근 권한이 없습니다. 폴더를 다시 열고 '계속'을 고르세요.",
+  errorFarPictures:
+    "이 폴더에는 아직 그림을 저장할 수 없습니다. 이 기기의 문서에 붙여 넣으세요.",
   errorPdfUnsupported: "이 시스템에서는 PDF로 내보낼 수 없습니다.",
   errorNoText: "읽을 수 있는 텍스트가 없습니다.",
   errorUnreadable: "이 파일을 읽을 수 없습니다.",
@@ -901,6 +904,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   agentQueueContinue: "계속",
   agentQueueEdit: "편집",
   agentQueueRemove: "삭제",
+  agentQueueInsert: "지금 보내기",
   agentSend: "보내기",
   agentStop: "중지",
   agentRetry: "다시 시도",
@@ -1054,6 +1058,12 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   autoCloseBracketsLabel: "(), [], “” 짝 맞추기",
   plainTextMenuLabel: "컨텍스트 메뉴에 일반 텍스트로 복사/붙여넣기",
   pdfPageNumbersLabel: "내보낼 때 쪽 번호 표시",
+  pdfPaperLabel: "PDF 용지 크기",
+  pdfMarginLabel: "PDF 여백",
+  pdfMarginNarrow: "좁게",
+  pdfMarginNormal: "보통",
+  pdfMarginWide: "넓게",
+  pdfTextScaleLabel: "PDF 글자 크기",
   docxTemplateLabel: "Word 템플릿",
   docxTemplateHelp: "내보낸 Word 파일에 이 파일의 스타일, 글꼴, 여백을 씁니다.",
   docxTemplateNone: "Pandoc 기본값",
@@ -1821,6 +1831,13 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginPermNotifications: "시스템 알림 표시하기",
   pluginPermAppearance: "Textus와 문서의 색상 변경하기",
   pluginPermGitCommit: "내 Git으로 열린 폴더에 Git 커밋 만들기",
+  pluginPermSsh: "내 SSH 설정으로 서버에 연결 (허용한 서버만)",
+  pluginSshAsk:
+    "{plugin}이(가) 내 SSH 설정으로 {host}에 연결해 그곳의 파일을 읽고 쓰려고 합니다.",
+  pluginSshUnknownHost:
+    "{host}은(는) 아직 알려진 호스트가 아닙니다. 터미널에서 한 번 연결해(ssh {host}) 키를 확인하고 받아들인 뒤 다시 시도하세요.",
+  pluginSshNeedsLogin:
+    "{host}이(가) 비밀번호나 불러오지 않은 키를 요구했습니다. 키를 SSH 에이전트에 추가하거나(ssh-add) 키 로그인을 설정한 뒤 다시 시도하세요.",
   pluginPermComments: "문서 여백의 메모 읽기 및 남기기",
   pluginPermAiModel: "내 AI 모델 사용(AI 서비스 사용량에 포함됨)",
   pluginAiAsk:

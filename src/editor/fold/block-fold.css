@@ -37,13 +37,13 @@
 }
 
 /* No hover to bring it out: a drawn block's is always there. */
-@media (hover: none) {
+@media (any-hover: none) {
   .block-fold {
     opacity: 1;
   }
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .block-fold:hover {
     background: color-mix(in srgb, currentColor 12%, transparent);
   }
@@ -67,7 +67,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .block-folded-line:hover {
     color: var(--doc-accent-text);
   }
@@ -81,29 +81,13 @@
   display: none;
 }
 
-/* A heading's fold (heading-fold.ts): the same caret, in the margin before
-   the heading; folded, the section under it is gone and the heading ends
-   in "…". */
-.ProseMirror :is(h1, h2, h3, h4, h5, h6):has(> .heading-fold) {
-  position: relative;
-}
-
-/* On the heading's first line. */
-.ProseMirror .heading-fold {
-  height: 1.3em;
-  height: 1lh;
-  /* The heading's size and line, which em and lh above count in. */
-  font: inherit;
-}
-
+/* A heading's fold (heading-fold.ts): its caret beside ⋮⋮, outside the
+   text (block-handles.css); folded, the section under it is gone and the
+   heading ends in "…". */
 .ProseMirror .heading-folded-away,
 /* What a block draws after itself (a formula, a diagram, HTML) goes with
-   it. */
-.ProseMirror > .heading-folded-away + .ProseMirror-widget,
-.ProseMirror
-  > .heading-folded-away
-  + .ProseMirror-widget
-  + .ProseMirror-widget {
+   it (heading-fold-marks.ts marks it). */
+.ProseMirror > .ProseMirror-widget[data-folded-away] {
   display: none;
 }
 
@@ -112,19 +96,4 @@
   margin-inline-start: 0.3em;
   color: var(--doc-muted);
   font-weight: 400;
-}
-
-.ProseMirror [data-folded] > .heading-fold {
-  opacity: 1;
-}
-
-/* A touch screen has no hover: the caret shows on the heading being
-   written in, or while folded, never on every heading at once. */
-@media (hover: none) {
-  .ProseMirror
-    :is(h1, h2, h3, h4, h5, h6):not([data-folded], :has(> .heading-marker))
-    > .heading-fold {
-    opacity: 0;
-    pointer-events: none;
-  }
 }

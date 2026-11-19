@@ -64,6 +64,41 @@ pub(crate) async fn call(
     }
 }
 
+/// [`call`], its answer streamed: each piece of text to `on_text` as it
+/// comes, the whole returned. The agent's one step, without tools.
+pub(crate) async fn stream(
+    app: &AppHandle,
+    provider: &str,
+    instructions: String,
+    user_text: String,
+    model: Option<&str>,
+    on_text: &(dyn Fn(&str) + Send + Sync),
+) -> Result<String, String> {
+    use aicompat::agent::{AgentTurn, ProviderEvent, StepResult};
+    let entry = catalog::find(provider).ok_or_else(|| format!("unknown provider: {provider}"))?;
+    let agent = route::agent_provider(
+        app,
+        entry,
+        model.map(str::to_string),
+        aicompat::capabilities::ThinkingLevel::Auto,
+        None,
+    )
+    .await?
+    .ok_or_else(|| format!("unhandled dialect: {}", entry.dialect))?;
+    let sink = |event: ProviderEvent<'_>| {
+        if let ProviderEvent::Text(text) = event {
+            on_text(text);
+        }
+    };
+    let (result, _) = agent
+        .step(&instructions, &[AgentTurn::user(user_text)], &[], &sink)
+        .await?;
+    match result {
+        StepResult::Done(text) => Ok(text),
+        StepResult::ToolCalls(_) => Err("The model asked for a tool it wasn't given.".into()),
+    }
+}
+
 /// Live model list for the agent model picker in Settings. "custom" has
 /// fetch_custom_models instead.
 #[tauri::command]

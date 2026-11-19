@@ -161,6 +161,18 @@ export function createGhostTextPlugin(options: {
   // Set by an accept: inserting the suggestion isn't typing, and shouldn't
   // ask again at once. The next keystroke asks as usual.
   let accepted = false;
+  /** The suggestion written in, as the AI's change. */
+  const take = (
+    view: EditorView,
+    state: GhostState & { suggestion: string },
+  ) => {
+    const tr = view.state.tr.insertText(state.suggestion, state.from);
+    tr.setMeta(ghostTextKey, { type: "clear" });
+    markChangeSource(tr, "ai");
+    accepted = true;
+    view.dispatch(tr);
+    options.onAccept?.();
+  };
 
   return $prose(
     () =>
@@ -202,12 +214,22 @@ export function createGhostTextPlugin(options: {
               if (!state?.suggestion || !target?.closest?.(".ghost-text"))
                 return false;
               event.preventDefault();
-              const tr = view.state.tr.insertText(state.suggestion, state.from);
-              tr.setMeta(ghostTextKey, { type: "clear" });
-              markChangeSource(tr, "ai");
-              accepted = true;
-              view.dispatch(tr);
-              options.onAccept?.();
+              take(view, state);
+              return true;
+            },
+            // Tab takes a suggestion before anything else uses the key (a
+            // code block's indent, a table's next cell, a list's level):
+            // the DOM's keydown comes ahead of every plugin's key handler.
+            keydown(view, event) {
+              if (event.key !== "Tab" || event.shiftKey) return false;
+              if (event.ctrlKey || event.metaKey || event.altKey) return false;
+              if (isImeKeyEvent(view, event)) return false;
+              const state = ghostTextKey.getState(view.state);
+              const { selection } = view.state;
+              if (!state?.suggestion || !selection.empty) return false;
+              if (selection.from !== state.from) return false;
+              event.preventDefault();
+              take(view, state);
               return true;
             },
             compositionstart(view) {
@@ -284,15 +306,7 @@ export function createGhostTextPlugin(options: {
               view.dispatch(tr);
               return true;
             }
-            if (event.key !== "Tab") return false;
-            event.preventDefault();
-            const tr = view.state.tr.insertText(state.suggestion, state.from);
-            tr.setMeta(ghostTextKey, { type: "clear" });
-            markChangeSource(tr, "ai");
-            accepted = true;
-            view.dispatch(tr);
-            options.onAccept?.();
-            return true;
+            return false;
           },
         },
         view() {

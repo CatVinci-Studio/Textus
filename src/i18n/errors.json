@@ -63,9 +63,9 @@
     "en": "No folder is open.",
     "text": "errorNoFolder"
   },
-  "pluginsNeedAllFiles": {
-    "en": "Plugins can't read this folder: Textus wasn't given access to all files. Open the folder again and choose Continue.",
-    "text": "errorPluginsNeedAllFiles"
+  "farPictures": {
+    "en": "Pictures can't be saved into this folder yet.",
+    "text": "errorFarPictures"
   },
   "pluginTooBig": {
     "en": "The plugin is too big.",

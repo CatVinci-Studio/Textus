@@ -104,7 +104,8 @@
               "background",
               "agents",
               "appearance",
-              "git.commit"
+              "git.commit",
+              "ssh"
             ]
           },
           {
@@ -358,6 +359,26 @@
                     "description": "JSX tags: <Tag …>, </Tag>, <>."
                   }
                 }
+              }
+            }
+          }
+        },
+        "folderDocuments": {
+          "type": "array",
+          "description": "From 1.4.6: folders with an extension opened as one document, like .textbundle.",
+          "items": {
+            "type": "object",
+            "required": ["extension", "documents"],
+            "properties": {
+              "extension": {
+                "type": "string",
+                "description": "The folder's extension: \"textbundle\"."
+              },
+              "documents": {
+                "type": "array",
+                "items": { "type": "string" },
+                "minItems": 1,
+                "description": "File names inside it; the first found is opened: \"text.md\"."
               }
             }
           }

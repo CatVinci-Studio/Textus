@@ -71,7 +71,7 @@
     color var(--dur-fast) var(--ease-standard);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .activity-rail-item:hover {
     background: var(--ui-hover);
     color: var(--ui-text);

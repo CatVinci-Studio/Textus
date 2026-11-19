@@ -44,9 +44,6 @@ export function resolvedDocumentPath(stored: string, docs: string): string {
 const CONTAINER_DOCUMENTS =
   /^(?:\/private)?\/var\/mobile\/Containers\/Data\/Application\/[^/]+\/Documents(?=\/|$)/;
 
-/** The folder an earlier version kept whole, in the Documents of the
- *  container a reinstall left behind: this install's own folder of that
- *  name. Only for the app's open folder, which was always its own. */
 /** The app's open folder as stored: as storedDocumentPath, and Documents
  *  itself as "documents:". */
 export function storedOwnFolder(path: string, docs: string | null): string {
@@ -55,6 +52,9 @@ export function storedOwnFolder(path: string, docs: string | null): string {
   return storedDocumentPath(path, docs);
 }
 
+/** The folder an earlier version kept whole, in the Documents of the
+ *  container a reinstall left behind: this install's own folder of that
+ *  name. Only for the app's open folder, which was always its own. */
 export function ownFolderMoved(stored: string, docs: string): string {
   if (stored.startsWith(IN_DOCUMENTS) || insideDocuments(stored, docs) !== null)
     return resolvedDocumentPath(stored, docs);

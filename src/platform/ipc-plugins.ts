@@ -5,9 +5,23 @@ import type * as Access from "./bindings/plugin-access";
 export type PluginFile = Generated.PluginFile;
 import { Channel } from "@tauri-apps/api/core";
 import { call, command, desktopActionCommand } from "./ipc-call";
+import { isFarUrl } from "./far-files";
+import { canPickPluginFolder } from "./capabilities";
+import { nativeFiles } from "./native-files";
 import { dirname } from "../utils/path";
 
 /** Plugins and MCP servers: the calls Settings › Extensions and the plugin broker make. */
+
+/** A package picked in the Files app, copied where the install can read it
+ *  by path; null when cancelled. */
+async function pickFilesPackage(): Promise<string[] | null> {
+  const url = await nativeFiles.pickDocument(["textusplugin", "zip"]);
+  if (!url) return null;
+  const name = decodeURIComponent(url.slice(url.lastIndexOf("/") + 1));
+  const copy = await nativeFiles.scratchPath(name);
+  await command("write_base64_file", copy, await nativeFiles.readBase64(url));
+  return [copy];
+}
 
 // Plugins: what is installed and granted, and the calls a plugin makes
 // through the window.
@@ -17,11 +31,10 @@ export type PluginCatalogEntry = Generated.CatalogEntry_Serialize;
 export type StoreScope = Access.StoreScope;
 export type PluginDocumentMeta = Access.DocumentMeta_Serialize;
 
-/** An Android folder opened without access to all files: its files go
- *  through the native plugin (content-plugin-fs.ts), not Rust. */
-const inContent = (root: string) => root.startsWith("content://");
-const contentFs = () =>
-  import("./content-plugin-fs").then((m) => m.contentPluginFs);
+/** A folder the backend can't walk (an Android pick, a plugin's remote
+ *  folder): its files go through far-plugin-fs.ts, not Rust. */
+const inContent = (root: string) => isFarUrl(root);
+const contentFs = () => import("./far-plugin-fs").then((m) => m.farPluginFs);
 
 /** A raw IPC response's bytes, which specta can't type, so those commands
  *  go through `call`. */
@@ -75,8 +88,32 @@ export const plugins = {
   aiStatus: (plugin: string) => command("plugin_ai_status", plugin),
   aiAllow: (plugin: string, more: boolean) =>
     command("plugin_ai_allow", plugin, more),
-  aiComplete: (plugin: string, system: string, prompt: string) =>
-    command("plugin_ai_complete", plugin, system, prompt),
+  /** Stopped by httpCancel(plugin, cancelId). */
+  aiComplete: (
+    plugin: string,
+    system: string,
+    prompt: string,
+    cancelId: string | null,
+  ) => command("plugin_ai_complete", plugin, system, prompt, cancelId),
+  /** aiComplete, each piece of the answer to `onText` as it comes. */
+  aiStream: (
+    plugin: string,
+    system: string,
+    prompt: string,
+    onText: (text: string) => void,
+    cancelId: string | null,
+  ) => {
+    const channel = new Channel<string>();
+    channel.onmessage = onText;
+    return command(
+      "plugin_ai_stream",
+      plugin,
+      system,
+      prompt,
+      channel,
+      cancelId,
+    );
+  },
   setAll: (on: boolean) => command("plugins_set_all", on),
   set: (id: string, enabled: boolean, granted: string[]) =>
     command("plugin_set", id, enabled, granted),
@@ -114,7 +151,9 @@ export const plugins = {
   /** Install from file… (`folder` false) and Load a plugin folder…'s
    *  picker. Desktop only. */
   pickPackage: (folder: boolean, filterName: string) =>
-    desktopActionCommand("plugin_pick_package", folder, filterName),
+    canPickPluginFolder
+      ? desktopActionCommand("plugin_pick_package", folder, filterName)
+      : pickFilesPackage(),
   /** Settings › Plugins › Open Scripts Folder. Desktop only. */
   openScriptsDir: () => desktopActionCommand("plugin_open_scripts_dir"),
   file: (id: string, rel: string) =>
@@ -139,9 +178,13 @@ export const plugins = {
       : command("plugin_fs_list", id, root, path),
   /** The folder's Markdown documents with their text, in one call. */
   fsDocuments: (id: string, root: string) =>
-    command("plugin_fs_documents", id, root),
+    inContent(root)
+      ? contentFs().then((f) => f.documents(root))
+      : command("plugin_fs_documents", id, root),
   fsSearch: (id: string, root: string, query: string, limit: number | null) =>
-    command("plugin_fs_search", id, root, query, limit),
+    inContent(root)
+      ? contentFs().then((f) => f.search(root, query, limit))
+      : command("plugin_fs_search", id, root, query, limit),
   fsRename: (id: string, root: string, from: string, to: string) =>
     inContent(root)
       ? contentFs().then((f) => f.rename(root, from, to))
@@ -184,9 +227,13 @@ export const plugins = {
   /** The folder's documents and what they hold: those changed since
    *  generation `after`, with the paths gone, or every one (`whole`). */
   metadataAll: (id: string, root: string, after: number | null) =>
-    command("plugin_metadata_all", id, root, after),
+    inContent(root)
+      ? contentFs().then((f) => f.metadataAll(root, after))
+      : command("plugin_metadata_all", id, root, after),
   metadataGet: (id: string, root: string, path: string) =>
-    command("plugin_metadata_get", id, root, path),
+    inContent(root)
+      ? contentFs().then((f) => f.metadataGet(root, path))
+      : command("plugin_metadata_get", id, root, path),
   /** The folder's Git branch and changes; null outside a repository. */
   gitStatus: (id: string, root: string) =>
     command("plugin_git_status", id, root),

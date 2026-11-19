@@ -131,7 +131,7 @@
    grid of cards of one size - the screenshot, the name (a tag when in
    use), two lines about it, who made it, then the buttons. Hover tints a
    card; the one in use rings its screenshot. */
-.settings-group-body:has(> .theme-gallery-item) {
+.settings-group-body.settings-cards {
   display: grid;
   /* As many as fit, sharing the row: four in a full page, two in a narrow
      one, one in the narrowest. */
@@ -139,10 +139,10 @@
   gap: var(--space-3);
   padding: var(--space-3);
 }
-.settings-group-body:has(> .theme-gallery-item) > * + * {
+.settings-group-body.settings-cards > * + * {
   border-top: 0;
 }
-.settings-group-body:has(> .theme-gallery-item) > :not(.theme-gallery-item) {
+.settings-group-body.settings-cards > :not(.theme-gallery-item) {
   grid-column: 1 / -1;
 }
 .settings-group-body > .theme-gallery-item {
@@ -153,7 +153,7 @@
   border-radius: var(--shape-s);
   transition: background-color var(--dur-fast) var(--ease-standard);
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .settings-group-body > .theme-gallery-item:hover {
     background: var(--ui-hover);
   }

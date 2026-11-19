@@ -34,7 +34,7 @@ const ALLOWED = {
     "a cap on a block in the document",
   "src/editor/images/image-plugin.ts:BADGE_HEIGHT_PX":
     "the picture's own pixels",
-  "src/editor/lazy-blocks/estimate-height.ts:FIGURE_HEIGHT":
+  "src/editor/lazy/estimate-height.ts:FIGURE_HEIGHT":
     "the document's content: its zoom",
   "src/editor/markdown/task-list-plugin.ts:CHECKBOX_HIT_WIDTH":
     "the document's content: its zoom",

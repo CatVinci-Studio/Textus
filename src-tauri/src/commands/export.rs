@@ -1,5 +1,5 @@
-//! Export. Only `export_save_dialog` is shared with iOS; the rest needs
-//! processes, desktop webviews or a file manager.
+//! Export. `export_save_dialog` and the PDF are shared with iOS; the rest
+//! needs processes, desktop webviews or a file manager.
 
 #[cfg(desktop)]
 use std::io::Write;
@@ -259,6 +259,19 @@ pub async fn reveal_in_dir(app: tauri::AppHandle, path: String) -> Result<(), St
         .map_err(|e| e.to_string())
 }
 
+/// The sheet a PDF is printed on, in points: the paper, and the band left
+/// at its top and bottom (the sides are the page's own padding).
+#[derive(serde::Deserialize, Clone, Copy, Debug)]
+#[cfg_attr(test, derive(specta::Type))]
+pub struct PdfSheet {
+    pub width: f64,
+    pub height: f64,
+    /// Read on Linux only: elsewhere the pages are laid out with the band
+    /// already in them.
+    #[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+    pub margin: f64,
+}
+
 // macOS can't use window.print() (wry's NSPrintPanel flashes and dismisses
 // itself) or NSPrintOperation (no @page margins), so WKWebView's createPDF
 // renders the paginated page at 1 px = 1 pt and PDFKit cuts it into A4 sheets.
@@ -273,11 +286,12 @@ pub async fn export_pdf_native(
     base_dir: Option<String>,
     output_path: String,
     page_numbers: bool,
+    sheet: PdfSheet,
 ) -> Result<(), String> {
     let (tx, rx) = std::sync::mpsc::channel::<Result<(), String>>();
     let target = output_path.clone();
     app.run_on_main_thread(move || {
-        pdf_macos::start_pdf_export(html, base_dir, target, tx);
+        pdf_macos::start_pdf_export(html, base_dir, target, sheet, tx);
     })
     .map_err(|e| e.to_string())?;
     // Bounded wait so a hung render can never leave the frontend spinner stuck.
@@ -294,9 +308,36 @@ pub async fn export_pdf_native(
     add_page_numbers(output_path, page_numbers).await
 }
 
+/// Writes the themed, paginated document to a PDF at `output_path`, offscreen
+/// with no print dialog. Same text on every variant: it is the generated TS doc.
+#[cfg(target_os = "ios")]
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn export_pdf_native(
+    app: tauri::AppHandle,
+    html: String,
+    base_dir: Option<String>,
+    output_path: String,
+    page_numbers: bool,
+    sheet: PdfSheet,
+) -> Result<(), String> {
+    // iOS's WebKit and PDFKit draw it as macOS's do, from the app's native
+    // plugin (PdfExport.swift).
+    let args = serde_json::json!({
+        "html": html,
+        "baseDir": base_dir,
+        "outputPath": output_path,
+        "sheet": { "width": sheet.width, "height": sheet.height },
+    });
+    tokio::task::spawn_blocking(move || tauri_plugin_textus_files::export_pdf(&app, args))
+        .await
+        .map_err(|e| e.to_string())??;
+    add_page_numbers(output_path, page_numbers).await
+}
+
 /// Settings › "Page numbers in PDF": numbers the finished file's pages the
 /// same way whichever webview rendered it.
-#[cfg(any(target_os = "macos", windows, target_os = "linux"))]
+#[cfg(any(target_os = "macos", target_os = "ios", windows, target_os = "linux"))]
 async fn add_page_numbers(output_path: String, page_numbers: bool) -> Result<(), String> {
     if !page_numbers {
         return Ok(());
@@ -326,8 +367,9 @@ pub async fn export_pdf_native(
     _base_dir: Option<String>,
     output_path: String,
     page_numbers: bool,
+    sheet: PdfSheet,
 ) -> Result<(), String> {
-    pdf_offscreen::export(app, html, output_path.clone()).await?;
+    pdf_offscreen::export(app, html, output_path.clone(), sheet).await?;
     add_page_numbers(output_path, page_numbers).await
 }
 
@@ -343,6 +385,7 @@ pub async fn export_pdf_native(
     _base_dir: Option<String>,
     _output_path: String,
     _page_numbers: bool,
+    _sheet: PdfSheet,
 ) -> Result<(), String> {
     Err(crate::errors::error("pdfUnsupported"))
 }

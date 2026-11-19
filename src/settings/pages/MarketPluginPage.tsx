@@ -1,4 +1,4 @@
-import { HeadRow } from "../../engine/controls/HeadRow";
+import { MarketPage } from "./MarketPage";
 import { fill } from "../../i18n/fill";
 import { Byline } from "./CatalogRow";
 import { PluginIcon, PluginReadme } from "./PluginArt";
@@ -35,43 +35,35 @@ export function MarketPluginPage({
   const name = pluginName(record);
   const installs = installsText(item, t);
   return (
-    <div className="plugin-page market-plugin-page" data-market-page={item.id}>
-      {onBack && (
-        <button type="button" className="plugin-back" onClick={onBack}>
-          ‹ {t.pluginBackToList}
-        </button>
-      )}
-      <HeadRow
-        className="market-plugin-head"
-        mark={
-          <PluginIcon
-            id={item.id}
-            manifest={item.manifest}
-            url={item.icon}
-            large
-          />
-        }
-        tools={action}
-        title={
-          <div className="market-plugin-title">
-            <h2 className="plugin-page-title">{name}</h2>
-            <div className="settings-row-hint">
-              {pluginText(record, item.manifest.description)}
-            </div>
-            <Byline
-              t={t}
-              official={item.official}
-              author={item.manifest.author || item.manifest.publisher}
-              version={item.manifest.version}
-              installs={installs}
-            >
-              {item.updated && (
-                <span>{fill(t.pluginUpdatedOn, { date: item.updated })}</span>
-              )}
-            </Byline>
-          </div>
-        }
-      />
+    <MarketPage
+      data={{ "data-market-page": item.id }}
+      backLabel={t.pluginBackToList}
+      onBack={onBack}
+      mark={
+        <PluginIcon
+          id={item.id}
+          manifest={item.manifest}
+          url={item.icon}
+          large
+        />
+      }
+      name={name}
+      description={pluginText(record, item.manifest.description)}
+      byline={
+        <Byline
+          t={t}
+          official={item.official}
+          author={item.manifest.author || item.manifest.publisher}
+          version={item.manifest.version}
+          installs={installs}
+        >
+          {item.updated && (
+            <span>{fill(t.pluginUpdatedOn, { date: item.updated })}</span>
+          )}
+        </Byline>
+      }
+      action={action}
+    >
       {item.screenshots.length > 0 && (
         <div className="market-plugin-shots">
           {item.screenshots.map((shot) => (
@@ -101,6 +93,6 @@ export function MarketPluginPage({
           <SettingRow label={t.pluginNoPermissions} />
         )}
       </SettingsGroup>
-    </div>
+    </MarketPage>
   );
 }

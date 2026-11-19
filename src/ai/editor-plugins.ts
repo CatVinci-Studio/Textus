@@ -22,7 +22,7 @@ import { prefersReducedMotion } from "../engine/motion/motion";
 import type { TourAi } from "../utils/events";
 import type { RevisionDisplay, Settings } from "../prefs/SettingsContext";
 import { aiFeatures } from "../prefs/ai-features";
-import { aiRoot } from "../ai/workspace/ai-root";
+import { aiProject } from "../ai/workspace/ai-root";
 
 export interface PendingEditCallbacks {
   onAccept: (callId: string) => void;
@@ -86,10 +86,7 @@ export function withAiPlugins(
             ] || null,
           style: () => buildCompletionStyle(settings.current.completionTone),
           uiLanguage: () => settings.current.language,
-          project: () => ({
-            docPath: docPath.current,
-            workspaceRoot: aiRoot(settings.current),
-          }),
+          project: () => aiProject(docPath.current, settings.current),
         }),
       )
       .use(
@@ -103,10 +100,7 @@ export function withAiPlugins(
             ] || null,
           strictness: () => settings.current.grammarStrictness,
           uiLanguage: () => settings.current.language,
-          project: () => ({
-            docPath: docPath.current,
-            workspaceRoot: aiRoot(settings.current),
-          }),
+          project: () => aiProject(docPath.current, settings.current),
         }),
       )
       .use(

@@ -1,38 +1,41 @@
 import { useSyncExternalStore } from "react";
-import { createSubscribers } from "../../utils/store";
+import {
+  onOpenFolderChange,
+  openFolderOnDisk,
+} from "../../platform/open-folder";
+import { isFarUrl } from "../../platform/far-files";
 
 /**
  * The AI's project folder in this window, worked out in one place: the one
  * the user picked for it (Settings, the chat's project bar), else the
- * folder open in this window's sidebar. Nothing copies one into the other.
- * An Android folder opened without access to all files (content://) is
- * none: the AI's tools read the disk.
+ * folder open in this window's sidebar on disk (open-folder.ts). Nothing
+ * copies one into the other.
  */
-
-let open: string | null = null;
-const changed = createSubscribers();
-
-/** This window's open folder, as the sidebar has it (useOpenFolder). */
-export function setOpenFolder(path: string | null): void {
-  if (path === open) return;
-  open = path;
-  changed.publish();
-}
-
-const usable = (folder: string | null) =>
-  folder && !folder.startsWith("content://") ? folder : null;
 
 /** The AI's folder now, read as a call starts. */
 export function aiRoot(settings: {
   agentWorkspaceRoot: string;
 }): string | null {
-  return settings.agentWorkspaceRoot || usable(open);
+  return settings.agentWorkspaceRoot || openFolderOnDisk();
+}
+
+/** The document and folder a call on a document's text reads its project
+ *  from (conventions, library names). A document read through a plugin
+ *  or another app's storage has no path the backend could open. */
+export function aiProject(
+  docPath: string | null,
+  settings: { agentWorkspaceRoot: string },
+): { docPath: string | null; workspaceRoot: string | null } {
+  return {
+    docPath: docPath && !isFarUrl(docPath) ? docPath : null,
+    workspaceRoot: aiRoot(settings),
+  };
 }
 
 /** {@link aiRoot}, drawn again when the open folder changes. */
 export function useAiRoot(settings: {
   agentWorkspaceRoot: string;
 }): string | null {
-  const folder = useSyncExternalStore(changed.subscribe, () => open);
-  return settings.agentWorkspaceRoot || usable(folder);
+  const folder = useSyncExternalStore(onOpenFolderChange, openFolderOnDisk);
+  return settings.agentWorkspaceRoot || folder;
 }

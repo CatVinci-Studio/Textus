@@ -5,8 +5,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { openApp } from "../helpers";
 import { mixedDoc, plainDoc, type LargeDoc } from "./large-docs";
 
-// The large-document benchmark: measures opening, memory, typing, scrolling,
-// saving and tab switching per generated document. Asserts nothing about the
+// The large-document benchmark: measures opening, memory, typing, scrolling
+// (steady and a fling: frames, the longest, those painted with something
+// not drawn yet), saving and tab switching per generated document. Asserts nothing about the
 // numbers. Env: PERF_DOCS, PERF_CHARS (default 200), PERF_LABEL,
 // PERF_CPU_THROTTLE, PERF_SMOOTH_CARET.
 
@@ -367,20 +368,34 @@ async function typeWithIme(page: Page, count: number) {
   ]);
 }
 
-async function scrollThrough(page: Page) {
-  return page.evaluate(async () => {
+/** Scrolls from the top to the end, `screens` a frame: each frame's
+ *  interval, and how many were painted with something not drawn yet on
+ *  screen (a placeholder, a view still waiting). */
+async function scrollThrough(page: Page, screens = 0.4) {
+  return page.evaluate(async (screens) => {
     const scroller = document.querySelector<HTMLElement>(
       '[data-active-tab="true"] > .editor-scroll',
     )!;
     scroller.scrollTop = 0;
     await new Promise((r) => setTimeout(r, 300));
+    const box = scroller.getBoundingClientRect();
+    // Down the middle of the screen, a few places.
+    const blank = () =>
+      [0.1, 0.3, 0.5, 0.7, 0.9].some((at) =>
+        document
+          .elementFromPoint(box.left + box.width / 2, box.top + box.height * at)
+          ?.closest(".lazy-block, [data-draw-pending]"),
+      );
     const frames: number[] = [];
+    let blanks = 0;
     let last = performance.now();
-    const step = Math.max(200, scroller.clientHeight * 0.4);
+    const step = Math.max(200, scroller.clientHeight * screens);
     await new Promise<void>((resolve) => {
       const tick = (now: number) => {
         frames.push(now - last);
         last = now;
+        // What the last frame painted, before this one's drawing.
+        if (blank()) blanks++;
         const before = scroller.scrollTop;
         scroller.scrollTop += step;
         if (scroller.scrollTop === before || frames.length > 3000) resolve();
@@ -388,8 +403,8 @@ async function scrollThrough(page: Page) {
       };
       requestAnimationFrame(tick);
     });
-    return frames.slice(1);
-  });
+    return { frames: frames.slice(1), blanks };
+  }, screens);
 }
 
 /** Puts the caret in the last heading and scrolls it to the top, as the
@@ -599,7 +614,9 @@ for (const doc of docs) {
         ? await typeWithIme(page, 50)
         : [];
     const enter = await pressEnter(page, 20);
-    const frames = await scrollThrough(page);
+    const { frames, blanks } = await scrollThrough(page);
+    // A fling: two screens a frame.
+    const fling = await scrollThrough(page, 2);
     const scrolled = await memory(page, browserName);
     const jump = await jumpToEnd(page);
     await caretToMiddle(page);
@@ -641,6 +658,11 @@ for (const doc of docs) {
       scrollFrames: frames.length,
       scrollFpsMedian: Math.round(1000 / Math.max(1, pct(frames, 0.5))),
       scrollFramesOver50: frames.filter((f) => f > 50).length,
+      scrollLongestFrame: Math.round(Math.max(0, ...frames)),
+      scrollBlankFrames: blanks,
+      flingFrames: fling.frames.length,
+      flingLongestFrame: Math.round(Math.max(0, ...fling.frames)),
+      flingBlankFrames: fling.blanks,
       jumpMs: Math.round(jump.ms),
       saveP50: r1(pct(save, 0.5)),
       saveMax: r1(Math.max(...save)),

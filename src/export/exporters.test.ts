@@ -24,6 +24,7 @@ vi.mock("../platform/ipc", () => ({
 vi.mock("../platform/capabilities", () => ({
   canExportPdf: true,
   canExportWithPandoc: true,
+  isIOSApp: false,
 }));
 vi.mock("../engine/controls/app-dialog", () => ({
   showMessage: mocks.showMessage,
@@ -339,6 +340,21 @@ describe("exportPdf", () => {
     expect(calls.map(([args]) => args.pageNumbers)).toEqual([false, true]);
     // The page itself is rendered the same either way.
     expect(calls[0][0].html).toBe(calls[1][0].html);
+    // A4 with its 20 mm band by default; Settings' paper, margin and text
+    // size reach the sheet and the page.
+    expect(calls[0][0].sheet).toEqual({
+      width: 595,
+      height: 842,
+      margin: (20 / 25.4) * 72,
+    });
+    expect(calls[0][0].html).not.toContain("--doc-font-size:");
+    await exportPdf(tab, t, {
+      layout: { paper: "letter", margin: "wide", textScale: 1.15 },
+    });
+    const letter = mocks.exportDoc.exportPdfNative.mock.calls[2][0];
+    expect(letter.sheet).toEqual({ width: 612, height: 792, margin: 72 });
+    expect(letter.html).toContain("padding: 0px 96px 0;");
+    expect(letter.html).toMatch(/--doc-font-size: [\d.]+px !important/);
   });
 
   it("prints a dark theme in its light colours on macOS only when asked", async () => {

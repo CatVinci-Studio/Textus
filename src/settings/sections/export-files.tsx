@@ -71,13 +71,16 @@ export function ExportFileRow({
       <div className="settings-inline-buttons">
         {chosen && (
           <button
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             onClick={() => set("")}
           >
             {file.clear(t)}
           </button>
         )}
-        <button className="text-button settings-inline-button" onClick={pick}>
+        <button
+          className="tx-button text-button settings-inline-button"
+          onClick={pick}
+        >
           {t.agentWorkspaceRootPick}
         </button>
       </div>

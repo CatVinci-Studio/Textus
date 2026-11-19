@@ -16,11 +16,5 @@
 }
 
 .insert-table-buttons {
-  display: flex;
-  justify-content: flex-end;
   margin-top: 20px;
-}
-
-.insert-table-buttons button {
-  color: var(--ui-text);
 }

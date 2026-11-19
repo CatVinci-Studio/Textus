@@ -260,7 +260,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .project-bar-folder:hover {
     background: var(--ui-hover);
   }

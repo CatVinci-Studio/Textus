@@ -26,6 +26,10 @@ struct WriteArgs: Decodable {
 struct ShareArgs: Decodable {
   /// A plain path in the app's container or a picked file's URL.
   let path: String
+  /// Where the share was asked for (the last tap or click), in the page's
+  /// points: an iPad's popover points at it.
+  let x: Double?
+  let y: Double?
 }
 
 struct PickArgs: Decodable {
@@ -46,10 +50,12 @@ class TextusFilesPlugin: Plugin, UIDocumentPickerDelegate {
   private var pickingFolder = false
   private var keyboardFit: KeyboardFit?
   private var systemBars: SystemBars?
+  private var hardwareKeyboard: HardwareKeyboard?
 
   @objc public override func load(webview: WKWebView) {
     keyboardFit = KeyboardFit(webview: webview)
     systemBars = SystemBars(webview: webview)
+    hardwareKeyboard = HardwareKeyboard(webview: webview)
   }
 
   // MARK: Bookmarks
@@ -224,6 +230,31 @@ class TextusFilesPlugin: Plugin, UIDocumentPickerDelegate {
     }
   }
 
+  /// A file or folder to the Files app's Recently Deleted, from where it
+  /// can be put back: by path in the app's container, or a picked URL.
+  @objc public func trash(_ invoke: Invoke) throws {
+    let args = try invoke.parseArgs(ShareArgs.self)
+    let target = args.path.hasPrefix("file://")
+      ? URL(string: args.path) : URL(fileURLWithPath: args.path)
+    guard let target = target else { return invoke.reject("Invalid path") }
+    do {
+      try withAccess(to: target) {
+        var result: Result<Void, Error> = .success(())
+        var coordError: NSError?
+        NSFileCoordinator().coordinate(
+          writingItemAt: target, options: .forDeleting, error: &coordError
+        ) { u in
+          result = Result { try FileManager.default.trashItem(at: u, resultingItemURL: nil) }
+        }
+        if let coordError = coordError { throw coordError }
+        try result.get()
+      }
+      invoke.resolve()
+    } catch {
+      invoke.reject(error.localizedDescription)
+    }
+  }
+
   /// The system share sheet (AirDrop, Mail, Messages, Save to Files...) for
   /// a document. It gets a copy in the temporary folder, not the file
   /// itself: a picked file's security scope would have to stay open for as
@@ -256,20 +287,38 @@ class TextusFilesPlugin: Plugin, UIDocumentPickerDelegate {
         return invoke.reject("No view to present from")
       }
       let sheet = UIActivityViewController(activityItems: [copy], applicationActivities: nil)
-      // iPad shows the sheet as a popover, which needs an anchor: the top
-      // edge, under the title row's menu button. An iPhone has a popover
-      // controller too but shows a sheet from the bottom, with no anchor.
+      // iPad shows the sheet as a popover, which needs an anchor: where the
+      // share was asked for, else under the title row's menu button. An
+      // iPhone has a popover controller too but shows a sheet from the
+      // bottom, with no anchor.
       if UIDevice.current.userInterfaceIdiom == .pad,
         let popover = sheet.popoverPresentationController
       {
         popover.sourceView = host.view
-        popover.sourceRect = CGRect(x: 24, y: host.view.safeAreaInsets.top + 44, width: 1, height: 1)
+        let at =
+          args.x.flatMap { x in args.y.map { CGPoint(x: x, y: $0) } }
+          ?? CGPoint(x: 24, y: host.view.safeAreaInsets.top + 44)
+        popover.sourceRect = CGRect(origin: at, size: CGSize(width: 1, height: 1))
       }
       sheet.completionWithItemsHandler = { _, completed, _, _ in
         try? FileManager.default.removeItem(at: folder)
         invoke.resolve(["completed": completed])
       }
       host.present(sheet, animated: true)
+    }
+  }
+
+  /// File > Export as PDF: the paginated page drawn into a PDF at
+  /// `outputPath` (PdfExport.swift).
+  @objc public func exportPdf(_ invoke: Invoke) throws {
+    let args = try invoke.parseArgs(PdfExportArgs.self)
+    DispatchQueue.main.async {
+      PdfExport.start(args, in: self.manager.viewController?.view.window) { result in
+        switch result {
+        case .success: invoke.resolve()
+        case .failure(let error): invoke.reject(error.localizedDescription)
+        }
+      }
     }
   }
 

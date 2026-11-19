@@ -3,6 +3,7 @@ import { useModalDialog } from "../../engine/controls/useModalDialog";
 import { usePresenceProps } from "../../engine/motion/usePresence";
 import "./ImageNameDialog.css";
 import { isImeKeydown } from "../../utils/ime";
+import { DialogActions } from "../../engine/controls/DialogActions";
 
 export interface ImageNameRequest {
   stem: string;
@@ -76,16 +77,18 @@ export function ImageNameDialog({
           </span>
         </label>
         {!valid && <div className="image-name-error">{invalidLabel}</div>}
-        <div className="image-name-buttons">
-          <button onClick={() => onClose(null)}>{cancelLabel}</button>
+        <DialogActions className="image-name-buttons">
+          <button className="tx-button" onClick={() => onClose(null)}>
+            {cancelLabel}
+          </button>
           <button
-            className="image-name-primary"
+            className="tx-button primary image-name-primary"
             disabled={!valid}
             onClick={submit}
           >
             {uploadLabel}
           </button>
-        </div>
+        </DialogActions>
       </div>
     </div>
   );

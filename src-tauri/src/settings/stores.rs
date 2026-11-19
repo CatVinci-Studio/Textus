@@ -103,7 +103,60 @@ impl Stores {
         if new_profile {
             stores.seed_new_profile();
         }
+        stores.carry_kept_apart(config_dir);
         stores
+    }
+
+    /// What was kept in files of its own before (the last window's size and
+    /// place, the recent files and folders), moved into the UI state once:
+    /// the old files go only once the UI state holds them on disk.
+    fn carry_kept_apart(&self, config_dir: &Path) {
+        let (state, _) = self.ui_state.snapshot();
+        let mut patch = Map::new();
+        let mut old = Vec::new();
+        let prefs = config_dir.join(file_name("prefs"));
+        if prefs.exists() {
+            if let Some(Value::Object(kept)) = crate::json_file::read_or_set_aside::<Value>(&prefs)
+            {
+                for (from, to) in [
+                    ("editor_window_size", "editorWindowSize"),
+                    ("editor_window_position", "editorWindowPosition"),
+                ] {
+                    if let (Some(value), None) = (kept.get(from), state.get(to)) {
+                        patch.insert(to.into(), value.clone());
+                    }
+                }
+            }
+            old.push(prefs);
+        }
+        for (stem, to) in [
+            ("recent_files", "recentFiles"),
+            ("recent_folders", "recentFolders"),
+        ] {
+            let path = config_dir.join(file_name(stem));
+            if !path.exists() {
+                continue;
+            }
+            if let Some(list) = crate::json_file::read_or_set_aside::<Vec<String>>(&path) {
+                if state.get(to).is_none() {
+                    patch.insert(to.into(), json!(list));
+                }
+            }
+            old.push(path);
+        }
+        if old.is_empty() || self.ui_state.unreadable {
+            return;
+        }
+        if !patch.is_empty() {
+            self.ui_state.patch(&patch);
+            if let Err(e) = self.ui_state.flush() {
+                eprintln!("textus: cannot write {}: {e}", self.ui_state.path.display());
+                return;
+            }
+        }
+        for path in old {
+            let _ = std::fs::remove_file(path);
+        }
     }
 
     /// Marks a new profile as having no moved skills to bring over; an older

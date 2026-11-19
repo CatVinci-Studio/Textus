@@ -57,7 +57,7 @@
 }
 
 .action-sheet-item:active {
-  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  background: var(--ui-pressed-row);
   transition-duration: 0s;
 }
 

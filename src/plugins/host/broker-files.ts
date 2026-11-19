@@ -3,10 +3,10 @@ import { notesRoot } from "../../files/link-style";
 import { setFileBadge } from "../contributions/file-badges";
 import { inOpenFolder } from "../may-open";
 import { fs, plugins as pluginsIpc, type StoreScope } from "../../platform/ipc";
+import { farRelative, isFarUrl } from "../../platform/far-files";
 import {
   absoluteIn,
   basename,
-  contentRelative,
   dirname,
   isWithin,
   slashed,
@@ -434,8 +434,7 @@ export function fileHandlers(p: PluginScope) {
 
 /** `path` in the folder `root`, `/`-separated. */
 function relOf(root: string, path: string): string {
-  if (root.startsWith("content://"))
-    return contentRelative(root, path) ?? basename(path);
+  if (isFarUrl(root)) return farRelative(root, path);
   const r = slashed(root).replace(/\/$/, "");
   const full = slashed(path);
   return full.startsWith(`${r}/`) ? full.slice(r.length + 1) : basename(full);

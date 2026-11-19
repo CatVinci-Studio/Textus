@@ -145,7 +145,7 @@ export function emit(page: Page, name: string, payload?: unknown) {
 }
 
 /** Waits until nothing moves: no animation running and every scroll
- *  position the same for a few frames (at most 3 s). In place of a fixed
+ *  position the same for a few frames or a quarter second (at most 3 s). In place of a fixed
  *  pause before checking where things came to rest. */
 export function settled(page: Page) {
   return page.evaluate(
@@ -170,16 +170,34 @@ export function settled(page: Page) {
         const end = performance.now() + 3000;
         let last = positions();
         let still = 0;
+        let since = performance.now();
         const tick = () => {
           const now = positions();
-          still = now === last && !running() ? still + 1 : 0;
+          const at = performance.now();
+          if (now === last && !running()) still++;
+          else {
+            still = 0;
+            since = at;
+          }
           last = now;
-          if (still >= 4 || performance.now() > end) resolve();
+          // Four still frames; where a frame is slow (Linux WebKit draws
+          // one in up to half a second), two over a quarter second.
+          if (still >= 4 || (still >= 2 && at - since >= 250) || at > end)
+            resolve();
           else requestAnimationFrame(tick);
         };
         requestAnimationFrame(tick);
       }),
   );
+}
+
+/** A drag's pointer has rested on a place long enough to take it (the
+ *  drop's dwell, 150 ms at most: drop-intent.ts) and the room it opens has
+ *  stopped moving. */
+export async function restedOn(page: Page) {
+  // Real time: the dwell is a timer, with nothing drawn until it fires.
+  await page.waitForTimeout(200);
+  await settled(page);
 }
 
 export const HOME = process.platform === "darwin" ? "Meta+ArrowLeft" : "Home";

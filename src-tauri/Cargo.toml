@@ -1,6 +1,6 @@
 [package]
 name = "textus"
-version = "1.4.5"
+version = "1.4.6-rc.1"
 description = "Textus Markdown Editor"
 authors = ["CatVinci Studio"]
 edition = "2021"
@@ -76,6 +76,8 @@ serde_json = "1"
 tokio = { version = "1", features = ["fs", "sync", "macros", "rt", "rt-multi-thread", "net", "process", "io-util", "time"] }
 futures-util = { version = "0.3", default-features = false, features = ["alloc"] }
 base64 = "0.22"
+# SFTP over the user's own ssh (plugins/ssh): the protocol only, no SSH stack.
+russh-sftp = "3.0.1"
 sha2 = "0.10"
 reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls", "http2"] }
 aicompat = { path = "crates/aicompat" }

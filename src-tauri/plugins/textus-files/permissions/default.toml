@@ -14,6 +14,7 @@ permissions = [
   "allow-rename-entry",
   "allow-move-entry",
   "allow-delete-entry",
+  "allow-trash",
   "allow-remembered",
   "allow-begin-access",
   "allow-share",

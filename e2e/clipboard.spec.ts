@@ -43,7 +43,7 @@ async function paste(page: Page, flavors: Record<string, string>) {
       }),
     );
   }, flavors);
-  await page.waitForTimeout(300);
+  await settled(page);
 }
 
 // A 1x1 PNG.

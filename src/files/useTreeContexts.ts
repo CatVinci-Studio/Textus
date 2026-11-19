@@ -1,9 +1,5 @@
 import { useMemo } from "react";
-import { windowIpc } from "../platform/ipc";
 import type { TreeDraft, TreeRowActions, TreeShared } from "./tree-shared";
-
-const openInNewWindow = (path: string) =>
-  void windowIpc.openPathInNewWindow(path).catch(() => undefined);
 
 /** What the tree's rows read: the folders' state, and the row actions apart
  *  from it, which keep while the folders are read again. */
@@ -12,23 +8,18 @@ export function useTreeContexts(
     desktop: boolean;
     dropInto: string | null | undefined;
     onRowMenu: NonNullable<TreeRowActions["onRowMenu"]>;
-    /** Null where rows aren't touched (the desktop). */
-    onRowHold: TreeRowActions["onRowHold"];
     onRowPointerDown: NonNullable<TreeRowActions["onRowPointerDown"]>;
+    onRowPick: NonNullable<TreeRowActions["onRowPick"]>;
     newDocumentLabel: string;
     setDraft: (draft: TreeDraft) => void;
     root: string;
   },
 ): { rowActions: TreeRowActions; shared: TreeShared } {
-  const { desktop, onRowMenu, onRowHold, onRowPointerDown } = input;
+  const { desktop, onRowMenu, onRowPointerDown, onRowPick } = input;
+  // Every screen: a finger's hold lifts a row, a trackpad right-clicks it.
   const rowActions = useMemo<TreeRowActions>(
-    () => ({
-      onRowMenu: desktop ? onRowMenu : null,
-      onRowHold,
-      onRowPointerDown: desktop ? onRowPointerDown : null,
-      openInNewWindow: desktop ? openInNewWindow : null,
-    }),
-    [desktop, onRowMenu, onRowHold, onRowPointerDown],
+    () => ({ onRowMenu, onRowPointerDown, onRowPick }),
+    [onRowMenu, onRowPointerDown, onRowPick],
   );
   const {
     sort,

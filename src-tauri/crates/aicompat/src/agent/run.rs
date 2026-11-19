@@ -21,12 +21,59 @@ pub async fn run_agent_loop<Step, StepFut, ExecuteTool, ToolFut, Output, HowToRu
     history: Vec<AgentTurn>,
     user_turn: AgentTurn,
     max_steps: usize,
+    step: Step,
+    execute_tool: ExecuteTool,
+    tool_run: HowToRun,
+    on_event: OnEvent,
+) -> Result<Vec<AgentTurn>, String>
+where
+    Step: FnMut(Vec<AgentTurn>) -> StepFut,
+    StepFut: std::future::Future<Output = Result<StepResult, String>>,
+    ExecuteTool: Fn(ToolCall) -> ToolFut,
+    ToolFut: std::future::Future<Output = Output>,
+    Output: Into<ToolOutput>,
+    HowToRun: Fn(&str) -> ToolRun,
+    OnEvent: FnMut(LoopEvent<'_>),
+{
+    run_agent_loop_steered(
+        history,
+        user_turn,
+        max_steps,
+        step,
+        execute_tool,
+        tool_run,
+        on_event,
+        Vec::new,
+    )
+    .await
+}
+
+/// [`run_agent_loop`], with `steered` asked after each step's tool results
+/// for messages the user sent in meanwhile: each goes on as a user turn
+/// (reported as it lands), so the next step reads it. Left unread when the
+/// model answers first; the caller sends those on their own.
+#[allow(clippy::too_many_arguments)]
+pub async fn run_agent_loop_steered<
+    Step,
+    StepFut,
+    ExecuteTool,
+    ToolFut,
+    Output,
+    HowToRun,
+    OnEvent,
+    Steered,
+>(
+    history: Vec<AgentTurn>,
+    user_turn: AgentTurn,
+    max_steps: usize,
     mut step: Step,
     execute_tool: ExecuteTool,
     tool_run: HowToRun,
     mut on_event: OnEvent,
+    mut steered: Steered,
 ) -> Result<Vec<AgentTurn>, String>
 where
+    Steered: FnMut() -> Vec<AgentTurn>,
     Step: FnMut(Vec<AgentTurn>) -> StepFut,
     StepFut: std::future::Future<Output = Result<StepResult, String>>,
     ExecuteTool: Fn(ToolCall) -> ToolFut,
@@ -115,6 +162,11 @@ where
                 if let Some(reply) = reply.filter(|_| settled) {
                     new_turns.push(AgentTurn::assistant(reply));
                     return Ok(new_turns);
+                }
+                for turn in steered() {
+                    on_event(LoopEvent::Turn(&turn));
+                    turns.push(turn.clone());
+                    new_turns.push(turn);
                 }
             }
         }

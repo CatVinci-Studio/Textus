@@ -60,6 +60,8 @@ const API_PERMISSIONS: readonly {
       "files.root",
       "files.conventions",
       "files.appSettings",
+      "files.registerConventionReader",
+      "files.unregisterConventionReader",
       "files.list",
       "files.find",
       "files.stat",
@@ -136,10 +138,30 @@ const API_PERMISSIONS: readonly {
   { permission: "git.commit", methods: ["git.commit"] },
   // Checked when the window tells Rust the tools (contributions/ai-tools.ts).
   { permission: "ai.tools", methods: [], calls: ["ai.registerTool"] },
-  { permission: "ai.model", methods: ["ai.available", "ai.complete"] },
+  {
+    permission: "ai.model",
+    methods: ["ai.available", "ai.complete", "ai.stream"],
+  },
+  {
+    permission: "ssh",
+    methods: [
+      "ssh.hosts",
+      "ssh.connect",
+      "ssh.home",
+      "ssh.list",
+      "ssh.read",
+      "ssh.write",
+      "ssh.create",
+      "ssh.rename",
+      "ssh.delete",
+      "ssh.close",
+    ],
+    calls: ["ssh.readText"],
+  },
   {
     permission: "comments",
     methods: ["comments.list", "comments.add", "comments.resolve"],
+    calls: ["comments.onDidChange"],
   },
 ];
 

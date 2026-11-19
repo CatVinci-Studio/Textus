@@ -23,7 +23,10 @@ import {
 import { $prose } from "@milkdown/kit/utils";
 import { cachedDocument } from "../../editor/markdown/doc-markdown";
 import { touchesNode } from "../../editor/changed-ranges";
-import { drawWhileNear, stopDrawing } from "../../editor/draw-when-visible";
+import {
+  drawWhileNear,
+  stopDrawing,
+} from "../../editor/lazy/draw-when-visible";
 import { currentStrings } from "../../i18n/current";
 import {
   codeBlockFrameless,

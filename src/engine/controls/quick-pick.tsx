@@ -13,6 +13,7 @@ import "./quick-pick.css";
 import { isImeKeydown } from "../../utils/ime";
 import { listMove } from "./list-keys";
 import { useShownItems } from "./quick-pick-shown";
+import { DialogActions } from "./DialogActions";
 
 export function QuickPickHost({
   emptyLabel,
@@ -86,7 +87,7 @@ function QuickPick({
         aria-label={request.placeholder}
       >
         <input
-          className="quick-pick-input"
+          className="tx-input quick-pick-input"
           placeholder={request.placeholder}
           value={query}
           role="combobox"
@@ -163,12 +164,14 @@ function QuickPick({
           ))}
         </ul>
         {request.multiple && (
-          <div className="close-prompt-buttons">
-            <div className="close-prompt-spacer" />
-            <button className="close-prompt-primary" onClick={done}>
+          <DialogActions>
+            <button
+              className="tx-button primary close-prompt-primary"
+              onClick={done}
+            >
               {okLabel}
             </button>
-          </div>
+          </DialogActions>
         )}
       </div>
     </div>

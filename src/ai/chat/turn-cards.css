@@ -68,7 +68,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .agent-memory-chip-line:hover:not(:disabled) .agent-memory-chip-text {
     text-decoration: underline;
     text-underline-offset: 0.15em;
@@ -188,7 +188,7 @@
   color: var(--ui-text);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .skill-mode-choice-button:hover:not(:disabled) {
     background: color-mix(in srgb, var(--ui-text) 6%, transparent);
     color: var(--ui-text);
@@ -222,7 +222,7 @@
   color: var(--ui-muted);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .agent-memory-chip-actions > button:hover:not(:disabled),
   .agent-theme-chip button:hover:not(:disabled) {
     text-decoration: underline;
@@ -281,7 +281,7 @@
   transition: background var(--dur-fast) var(--ease-standard);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .agent-source:hover {
     background: var(--doc-code-bg);
   }
@@ -379,12 +379,6 @@
   padding: 0;
   background: none;
   color: inherit;
-}
-
-.agent-command-more {
-  min-height: 0;
-  padding: 0;
-  font-size: var(--text-caption);
 }
 
 /* An external agent's plan while it runs: quiet steps, the one it is on in

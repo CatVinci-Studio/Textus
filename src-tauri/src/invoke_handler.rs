@@ -4,25 +4,25 @@
 
 use super::*;
 use ai::client::{ai_complete, ai_grammar_check, fetch_agent_models};
-use ai::{agent::ai_agent_message, cancel::ai_cancel};
+use ai::{agent::ai_agent_message, cancel::ai_cancel, steer::ai_steer};
 use auth::claude::{claude_auth_status, claude_login, claude_logout};
 use auth::custom_endpoint::{
     clear_custom_endpoint, custom_endpoint_status, fetch_custom_models, set_custom_endpoint,
 };
 use auth::keys::{clear_provider_api_key, provider_api_key_status, set_provider_api_key};
 use auth::openai_codex::{codex_auth_status, codex_login, codex_logout};
-use commands::attachment::pick_attachment_files;
+use commands::attachment::{attach_pasted, pick_attachment_files};
 #[cfg(desktop)]
 use commands::cli::{cli_command_status, install_cli_command};
 use commands::drafts::{
     clear_all_drafts, clear_draft_snapshot, finish_draft_restore, keep_page_tabs, kept_page_tabs,
     save_draft_snapshot, take_draft_snapshots,
 };
+#[cfg(any(desktop, target_os = "ios"))]
+use commands::export::export_pdf_native;
 use commands::export::export_save_dialog;
 #[cfg(desktop)]
-use commands::export::{
-    detect_pandoc, export_pdf_native, export_via_pandoc, open_pandoc_install_page, reveal_in_dir,
-};
+use commands::export::{detect_pandoc, export_via_pandoc, open_pandoc_install_page, reveal_in_dir};
 use commands::fs::{
     file_mtime_ms, list_dir, migrate_draft_images, open_css_file_dialog, open_file_dialog,
     open_image_file_dialog, open_settings_file_dialog, read_binary_file_base64, read_text_file,
@@ -79,6 +79,9 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         commands::link_root::document_link_root,
         conventions::folder_conventions,
         conventions::project_settings_read,
+        conventions::plugin_readers::conventions_readers,
+        conventions::plugin_readers::conventions_pending,
+        conventions::plugin_readers::conventions_answer,
         upload_image,
         image_host_key_id,
         migrate_draft_images,
@@ -98,6 +101,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         ai_grammar_check,
         ai_agent_message,
         ai_cancel,
+        ai_steer,
         crate::ai::paper::ai_paper_run,
         crate::ai::paper::status::ai_paper_save_outline,
         crate::ai::paper::drafting::ai_paper_draft,
@@ -146,6 +150,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         crate::ai::kept_proposals::kept_proposals_read,
         crate::ai::kept_proposals::kept_proposals_write,
         pick_attachment_files,
+        attach_pasted,
         set_provider_api_key,
         provider_api_key_status,
         clear_provider_api_key,
@@ -166,6 +171,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         commands::doc_data::document_data_move,
         commands::own_notes::own_notes_read,
         commands::own_notes::own_notes_write,
+        commands::own_notes::own_notes_adopt,
         distribution::app_distribution,
         #[cfg(desktop)]
         background::tray::set_tray_plugin_items,
@@ -338,7 +344,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         #[cfg(desktop)]
         export_via_pandoc,
         commands::export::check_pandoc_args,
-        #[cfg(desktop)]
+        #[cfg(any(desktop, target_os = "ios"))]
         export_pdf_native,
         commands::links::open_community_page,
         commands::links::open_sponsor_page,

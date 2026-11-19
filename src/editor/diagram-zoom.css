@@ -24,7 +24,7 @@
 .mermaid-zoom[hidden] {
   display: none;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .mermaid-zoom:hover {
     color: var(--ui-text);
   }
@@ -116,4 +116,10 @@
 }
 .diagram-viewer-turn-on {
   right: 0.75rem;
+}
+
+/* A diagram's block (mermaid-plugin.ts): its fold's caret in the margin
+   beside the box; folded, its line where the box was. */
+.mermaid-block[data-folded] {
+  margin: var(--doc-gap-box) 0;
 }

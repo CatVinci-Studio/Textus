@@ -12,10 +12,16 @@ import {
   ownsMenuAccelerators,
 } from "../platform/window-chrome";
 import { runLocalMenuAction } from "./menu/app-menu-actions";
-import { canOpenFolder } from "../platform/capabilities";
+import {
+  canExportPdf,
+  canOpenFolder,
+  canUseWindows,
+  hasAppMenu,
+} from "../platform/capabilities";
 import { comboFromEvent } from "../utils/shortcuts";
 import { menuIpc } from "../platform/ipc";
-import { runMenuItemHere } from "../platform/menu-events";
+import { emitMenuEvent, runMenuItemHere } from "../platform/menu-events";
+import type { NativeMenuId } from "../registry/menu/app-menu-model";
 import { commandForCombo } from "../registry/commands";
 import {
   TRIGGER_COMPLETION_EVENT,
@@ -150,9 +156,17 @@ export function useGlobalShortcuts(opts: {
       }
 
       // The hidden native menu misses these while focus is in the webview, and
-      // WebView2 would print the window itself on Ctrl+P.
+      // WebView2 would print the window itself on Ctrl+P. With no menu at all
+      // (an iPad's keyboard) they go to the app's own menu handlers.
       const fileCommand =
         combo === NEW_TAB_TOO ? "new-file" : WEBVIEW_FILE_COMMANDS[combo];
+      if (fileCommand && !hasAppMenu) {
+        e.preventDefault();
+        if (canUseWindows || fileCommand !== "new-window")
+          if (canExportPdf || fileCommand !== "export-pdf")
+            emitMenuEvent(fileCommand as NativeMenuId);
+        return;
+      }
       if (fileCommand && (appDrawsWindowFrame || combo === NEW_TAB_TOO)) {
         e.preventDefault();
         void menuIpc.triggerMenuItem(fileCommand);

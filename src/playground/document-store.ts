@@ -19,8 +19,6 @@ export interface DocumentBackend {
   delete(id: string): Promise<void>;
 }
 
-/** The single document of the first web editor, moved in on first load. */
-export const LEGACY_KEY = "textus-playground:document";
 const CURRENT_KEY = "textus-playground:current";
 /** The open document's latest text, written at once: IndexedDB's write
  *  may not finish before the tab closes. */
@@ -94,13 +92,7 @@ export async function loadDocuments(
 ): Promise<{ docs: WebDocument[]; current: string }> {
   let docs = await backend.all().catch(() => [] as WebDocument[]);
   if (!docs.length) {
-    let legacy: string | null = null;
-    try {
-      legacy = store?.getItem(LEGACY_KEY) ?? null;
-    } catch {
-      // No storage: start from the sample.
-    }
-    const first = newDocument(legacy ?? sample);
+    const first = newDocument(sample);
     await backend.put(first).catch(() => {});
     docs = [first];
   }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { isMobileApp } from "../../platform/capabilities";
+import { usePhoneLayout } from "./usePhoneLayout";
 import { useSettings } from "../../prefs/SettingsContext";
 import { BottomCard } from "./BottomCard";
 import { Presence } from "../motion/usePresence";
@@ -27,10 +27,11 @@ interface ColorFieldProps {
   className?: string;
 }
 
-/** A colour setting: the system's picker on a computer; on a touch screen
- *  the app's own card, the palette's tones and a hex field. */
+/** A colour setting: the system's picker on a computer or a tablet; on a
+ *  phone the app's own card, the palette's tones and a hex field. */
 export function ColorField(props: ColorFieldProps) {
-  if (!isMobileApp)
+  const phone = usePhoneLayout();
+  if (!phone)
     return (
       <input
         className={props.className}
@@ -102,7 +103,7 @@ function TouchColorField({
               ))}
             </div>
             <input
-              className="settings-text-input color-hex"
+              className="tx-input settings-text-input color-hex"
               aria-label={label}
               value={draft}
               aria-invalid={!HEX.test(draft)}

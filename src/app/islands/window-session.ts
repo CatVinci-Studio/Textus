@@ -4,7 +4,6 @@ import { session } from "../../platform/ipc";
 import { takeWindowSession } from "../../document/launch-window";
 import { canUseWindows } from "../../platform/capabilities";
 import { trackWrite } from "../../storage/pending-writes";
-import { getUiState, setUiState } from "../../storage/ui-state";
 import { afterStartupRestore } from "../../document/reload-tabs";
 import {
   setSplitLayout,
@@ -58,7 +57,7 @@ export function useWindowSession(
   useEffect(() => {
     const restore = async () => {
       const taken = await takeWindowSession();
-      const raw = taken?.layout ?? olderSplit();
+      const raw = taken?.layout ?? null;
       const saved = readSavedSplit(raw);
       // One island: the restore already opened its front document in the
       // tab in use; nothing here pulls focus from what the user picked.
@@ -112,12 +111,4 @@ export function useWindowSession(
     ).catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- by its key
   }, [key, ready]);
-}
-
-/** The split an earlier version kept for every window at once: taken
- *  by the first window to restore, once. */
-function olderSplit(): unknown {
-  const old = getUiState("splitLayout");
-  if (old) setUiState("splitLayout", null);
-  return old ?? null;
 }

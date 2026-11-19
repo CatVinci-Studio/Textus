@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { linkPlanner, movedBy } from "./link-rewrite";
+import { relativePath } from "../utils/path";
 
 const FILES = [
   "/v/index.md",
@@ -198,5 +199,115 @@ describe("planning a rename's link updates", () => {
     expect(updates).toEqual([
       { path: "C:\\v\\x.md", text: "[a](b.md)", count: 1 },
     ]);
+  });
+});
+
+/** `doc`'s text after a rename in a folder /r holding `doc`, the renamed
+ *  file (now at `to`) and `others`. */
+function rw(
+  text: string,
+  doc: string,
+  from: string,
+  to: string,
+  others: string[] = [],
+  linkRoot: string | null = null,
+) {
+  const paths = [doc, to, ...others];
+  const update = linkPlanner(paths, { root: "/r", from, to, linkRoot })({
+    path: doc,
+    text,
+  });
+  return update?.text ?? text;
+}
+
+describe("links after a rename", () => {
+  it("spells a path relative to a folder", () => {
+    expect(relativePath("/r/notes", "/r/notes/a.md")).toBe("a.md");
+    expect(relativePath("/r/notes", "/r/other/a.md")).toBe("../other/a.md");
+    expect(relativePath("/r/notes/deep", "/r/a.md")).toBe("../../a.md");
+  });
+
+  it("follows a Markdown link and a picture to the new place", () => {
+    const text = "See [the plan](plan.md#goals) and ![x](img/a.png).";
+    expect(rw(text, "/r/index.md", "/r/plan.md", "/r/archive/plan 2.md")).toBe(
+      "See [the plan](archive/plan%202.md#goals) and ![x](img/a.png).",
+    );
+    expect(rw(text, "/r/index.md", "/r/img/a.png", "/r/pics/a.png")).toBe(
+      "See [the plan](plan.md#goals) and ![x](pics/a.png).",
+    );
+  });
+
+  it("follows a wiki link when the name changes, keeping its heading and label", () => {
+    const text = "[[Plan]] and [[plan#Goals|the goals]] and [[Other]]";
+    expect(rw(text, "/r/x.md", "/r/plan.md", "/r/Roadmap.md")).toBe(
+      "[[Roadmap]] and [[Roadmap#Goals|the goals]] and [[Other]]",
+    );
+  });
+
+  it("leaves web links, anchors and other files alone", () => {
+    const text = "[a](https://e.com/plan.md) [b](#plan) [c](other.md)";
+    expect(rw(text, "/r/x.md", "/r/plan.md", "/r/p.md")).toBe(text);
+  });
+
+  it.each([
+    ["inline code", "`[plan](plan.md) [[plan]] ![plan](plan.md)`"],
+    ["longer code spans", "``a ` [plan](plan.md) [[plan]]``"],
+    ["multiline code spans", "`example\n[plan](plan.md) [[plan]]`"],
+    ["backtick fences", "```md\n[plan](plan.md) [[plan]]\n```"],
+    ["tilde fences", "~~~md\n[plan](plan.md) [[plan]]\n~~~"],
+    ["longer fences", "````md\n```\n[plan](plan.md) [[plan]]\n````"],
+    ["indented code", "    [plan](plan.md) [[plan]]"],
+    ["quoted code", "> ```md\n> [plan](plan.md) [[plan]]\n> ```"],
+    [
+      "code in a list",
+      "- Example:\n\n  ```md\n  [plan](plan.md) [[plan]]\n  ```",
+    ],
+    ["Windows line endings", "```md\r\n[plan](plan.md) [[plan]]\r\n```"],
+  ])(
+    "keeps %s unchanged while links around it follow the rename",
+    (_, code) => {
+      const before = "See [计划](plan.md#goals).\n\n";
+      const after = "\n\nSee [[plan#Goals|the goals]].";
+      expect(
+        rw(before + code + after, "/r/x.md", "/r/plan.md", "/r/Roadmap.md"),
+      ).toBe(
+        "See [计划](Roadmap.md#goals).\n\n" +
+          code +
+          "\n\nSee [[Roadmap#Goals|the goals]].",
+      );
+    },
+  );
+
+  it("keeps an unclosed fence unchanged through the end of the document", () => {
+    const text = "[plan](plan.md)\n\n```md\n[plan](plan.md) [[plan]]";
+    expect(rw(text, "/r/x.md", "/r/plan.md", "/r/p.md")).toBe(
+      "[plan](p.md)\n\n```md\n[plan](plan.md) [[plan]]",
+    );
+  });
+
+  it("updates a link whose label contains code", () => {
+    const text = "[`plan`](plan.md) and `[[plan]]` and [[plan]]";
+    expect(rw(text, "/r/x.md", "/r/plan.md", "/r/Roadmap.md")).toBe(
+      "[`plan`](Roadmap.md) and `[[plan]]` and [[Roadmap]]",
+    );
+  });
+
+  it("updates links beside unmatched or escaped backticks", () => {
+    const text = "` [plan](plan.md) [[plan]]\n\n\\` [plan](plan.md) [[plan]]";
+    expect(rw(text, "/r/x.md", "/r/plan.md", "/r/p.md")).toBe(
+      "` [plan](p.md) [[p]]\n\n\\` [plan](p.md) [[p]]",
+    );
+  });
+});
+
+describe("a moved document's own links", () => {
+  it("lead where they led before, wiki links and links from / untouched", () => {
+    const text =
+      "![](assets/a.png) [b](../b.md#x) [[Note]] [r](/r.md) [w](https://e.com)";
+    const to = "/r/archive/2024/x.md";
+    const plan = { root: "/r", from: "/r/notes/x.md", to };
+    expect(linkPlanner([to], plan)({ path: to, text })?.text).toBe(
+      "![](../../notes/assets/a.png) [b](../../b.md#x) [[Note]] [r](/r.md) [w](https://e.com)",
+    );
   });
 });

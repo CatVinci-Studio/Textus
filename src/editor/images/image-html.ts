@@ -1,7 +1,7 @@
 import { $remark } from "@milkdown/kit/utils";
 import type { Attrs } from "@milkdown/kit/prose/model";
 import { escapeHtml } from "../../utils/html";
-import { sanitizeDimension, sanitizeStyle } from "../html/html-policy";
+import { sanitizeDimension, sanitizeStyle } from "../html/html-values";
 import { keepRotation, splitImageTitle } from "./image-rotation";
 
 /**

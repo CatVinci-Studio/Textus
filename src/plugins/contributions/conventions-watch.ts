@@ -1,5 +1,9 @@
 import { fs } from "../../platform/ipc";
 import { emitPluginEvent } from "../app-bridge";
+import {
+  onConventionReadersChange,
+  readPendingConventions,
+} from "./convention-readers";
 
 /**
  * Tells plugins (files.onDidChangeConventions) when the open folder's
@@ -13,6 +17,7 @@ let listening = false;
 async function check(): Promise<void> {
   const asked = root;
   if (!asked) return;
+  await readPendingConventions(asked);
   const now = JSON.stringify(
     await fs.folderConventions(asked).catch(() => null),
   );
@@ -30,3 +35,6 @@ export function watchConventions(path: string | null): void {
   listening = true;
   window.addEventListener("focus", () => void check());
 }
+
+// A plugin's reader came or went: its folders read again.
+onConventionReadersChange(() => void check());

@@ -1,3 +1,4 @@
+import { farEntries } from "../platform/far-files";
 import { emitPluginEvent } from "../plugins/app-bridge";
 import { ENTRY_TRASHED_EVENT, sendAppEvent } from "../utils/events";
 import { fill } from "../i18n/fill";
@@ -7,8 +8,8 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import { fs } from "../platform/ipc";
-import { isMobileApp } from "../platform/capabilities";
-import { iosFiles } from "../platform/ios-files";
+import { canTrashFiles, isMobileApp } from "../platform/capabilities";
+import { nativeFiles } from "../platform/native-files";
 
 import { basename, parentDir } from "../utils/path";
 import { type ContextMenuItem } from "../engine/controls/ContextMenu";
@@ -25,7 +26,10 @@ import type { Strings } from "../i18n/strings";
 import { failureText, type TreeDraft } from "./tree-shared";
 import { updateLinksAfterMove } from "./move-links";
 import { pathItems } from "../clipboard/copy-path";
+import { heldByFinger } from "../utils/gesture";
 import type { FileOpenHow } from "./tree-shared";
+import { counted } from "../i18n/current";
+import { outermost, type TreeRow, type TreeSelection } from "./tree-selection";
 
 /** A row's right-click menu, while it is open. */
 type TreeMenu = {
@@ -38,6 +42,10 @@ type TreeMenu = {
 
 /** The tree's menus: the one open, and a row's context menu - open, new
  *  document or folder, rename, move to Trash. */
+/** Whether `path` goes to a Trash; one in a phone's or a remote folder is
+ *  deleted for good. */
+const trashable = (path: string) => canTrashFiles && !farEntries(path);
+
 export function useRowMenu(
   root: string,
   linkBase: string,
@@ -49,6 +57,8 @@ export function useRowMenu(
   /** The tree narrowed to a folder inside it. */
   /** Null with a folder opened: the tree shows it whole. */
   onEnter: ((path: string) => void) | null,
+  /** The rows picked together, which a right-click on one of them acts on. */
+  selection: TreeSelection,
 ) {
   const [menu, setMenu] = useState<TreeMenu>(null);
   const rename = useCallback(
@@ -73,15 +83,17 @@ export function useRowMenu(
   const trash = useCallback(
     async (path: string, isDir: boolean) => {
       const name = basename(path);
-      // A phone has no Trash: the document is deleted for good.
+      // Without a Trash (Android, a remote folder) the document is deleted
+      // for good.
+      const hasTrash = trashable(path);
       const ok = await showConfirm(
-        isMobileApp
+        !hasTrash
           ? fill(t.docDeleteConfirm, { name })
           : fill(isDir ? t.treeTrashFolderConfirm : t.treeTrashConfirm, {
               name,
             }),
         {
-          okLabel: isMobileApp ? t.docDeleteOk : t.treeTrash,
+          okLabel: !hasTrash ? t.docDeleteOk : t.treeTrash,
           cancelLabel: t.cancel,
           danger: true,
         },
@@ -100,6 +112,55 @@ export function useRowMenu(
     [root, t, reload],
   );
 
+  /** Several rows to the Trash at once, after one question; a row inside a
+   *  picked folder goes with it. */
+  const trashMany = useCallback(
+    async (rows: readonly TreeRow[]) => {
+      const ok = await showConfirm(
+        counted(t.treeTrashManyConfirm, rows.length),
+        { okLabel: t.treeTrash, cancelLabel: t.cancel, danger: true },
+      );
+      if (!ok) return;
+      selection.clear();
+      for (const { path } of outermost(rows)) {
+        try {
+          await fs.trashEntry(path, root);
+          reload(parentDir(path) ?? root);
+          sendAppEvent(ENTRY_TRASHED_EVENT, path);
+          emitPluginEvent("fileDelete", { path });
+        } catch (err) {
+          await showMessage(failureText(t, err, basename(path)));
+          return;
+        }
+      }
+    },
+    [root, t, reload, selection],
+  );
+
+  /** The menu of several rows picked together: open its documents, or
+   *  move them all to the Trash. */
+  const openGroupMenu = useCallback(
+    (at: { x: number; y: number }, rows: readonly TreeRow[]) => {
+      const files = rows.filter((row) => !row.isDir).map((row) => row.path);
+      const items: (ContextMenuItem | "separator")[] = [];
+      if (files.length)
+        items.push(
+          {
+            label: t.treeOpen,
+            onSelect: () => files.forEach((path) => onFileSelect(path)),
+          },
+          "separator",
+        );
+      items.push({
+        label: t.treeTrash,
+        onSelect: () => void trashMany(rows),
+        danger: true,
+      });
+      setMenu({ ...at, items });
+    },
+    [t, onFileSelect, trashMany],
+  );
+
   const openRowMenu = useCallback(
     (at: { x: number; y: number }, path: string, isDir: boolean) => {
       // New things go into the folder clicked, or the one the file is in.
@@ -113,7 +174,7 @@ export function useRowMenu(
             ? [
                 {
                   label: t.menuShare,
-                  onSelect: () => void iosFiles.share(path).catch(() => {}),
+                  onSelect: () => void nativeFiles.share(path).catch(() => {}),
                 },
               ]
             : []),
@@ -140,10 +201,11 @@ export function useRowMenu(
           label: t.treeRenameItem,
           onSelect: () => void rename(path),
         });
-      // A phone deletes documents only: a folder's would be gone for good.
-      if (path !== root && !(isMobileApp && isDir))
+      // Without a Trash only documents are deleted: a folder's would be gone
+      // for good.
+      if (path !== root && (trashable(path) || !isDir))
         items.push({
-          label: isMobileApp ? t.docDelete : t.treeTrash,
+          label: trashable(path) ? t.treeTrash : t.docDelete,
           onSelect: () => void trash(path, isDir),
           danger: true,
         });
@@ -178,9 +240,15 @@ export function useRowMenu(
     (e: ReactMouseEvent, path: string, isDir: boolean) => {
       e.preventDefault();
       e.stopPropagation();
-      openRowMenu({ x: e.clientX, y: e.clientY }, path, isDir);
+      // Android's hold sends one too: a finger's hold is the drag's.
+      if (heldByFinger(e.nativeEvent)) return;
+      const at = { x: e.clientX, y: e.clientY };
+      const group = selection.groupOf(path);
+      if (group) return openGroupMenu(at, group);
+      selection.clear();
+      openRowMenu(at, path, isDir);
     },
-    [openRowMenu],
+    [openRowMenu, openGroupMenu, selection],
   );
   return { menu, setMenu, onRowMenu, openRowMenu };
 }

@@ -1,5 +1,5 @@
 import { tabElement } from "../engine/layout/tab-element";
-import { useCallback, useEffect, useLayoutEffect } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import {
   applySourceCaret,
   captureEditorCaret,
@@ -15,6 +15,7 @@ import {
 } from "../editor/modes/view-mode";
 import { keepReadOnly, tabReadOnly } from "../document/read-only";
 import { useSettings } from "../prefs/SettingsContext";
+import { focusTab } from "./islands/useIslandNumbers";
 /** View › Mode's four. */
 type ViewModeChoice = "default" | "source" | "split" | "read-only";
 import type { TabState } from "./tabs/useTabState";
@@ -58,6 +59,8 @@ export function useSourceModes(tabState: TabState) {
       }
     }
   }, [mode, tabs, activeTabId, liveTabs, updateTab]);
+
+  useKeysAcrossModes(mode, activeTabId);
 
   // View › Mode: one of four. The rendered editor, source mode and split
   // view are every window's; read-only is the document's, in the rendered
@@ -120,4 +123,17 @@ export function useSourceModes(tabState: TabState) {
   }, [activeSourceMode, activeTabId]);
 
   return { toggleSourceMode, toggleSplitView, toggleReadOnly, chooseViewMode };
+}
+
+/** The tab in front's view was rebuilt for another mode: the keys go to the
+ *  new one, where they went out with the old. */
+function useKeysAcrossModes(mode: string, activeTabId: string): void {
+  const front = useRef(activeTabId);
+  front.current = activeTabId;
+  const modeWas = useRef(mode);
+  useEffect(() => {
+    if (modeWas.current === mode) return;
+    modeWas.current = mode;
+    focusTab(front.current, false, true);
+  }, [mode]);
 }

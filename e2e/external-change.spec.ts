@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { emit, openApp, settled } from "./helpers";
 import { openPath } from "./plugin-helpers";
 
 // A file changed on disk while its tab is open and has nothing unsaved -
@@ -130,12 +130,12 @@ test("switching between documents leaves each where it was read", async ({
   const read = async (path: string, last: string, by: number) => {
     await openPath(page, path);
     await expect(active.locator(".ProseMirror")).toContainText(last);
-    await page.waitForTimeout(500);
+    await settled(page);
     await scroller.hover();
     await page.mouse.wheel(0, by);
     await expect.poll(top).toBeGreaterThan(by / 2);
     // Kept once the scrolling settles.
-    await page.waitForTimeout(600);
+    await settled(page);
     return top();
   };
   const a = await read("/work/a.md", "A line 199", 1500);
@@ -151,7 +151,7 @@ test("switching between documents leaves each where it was read", async ({
     await expect
       .poll(async () => Math.abs((await top()) - at))
       .toBeLessThan(40);
-    await page.waitForTimeout(500);
+    await settled(page);
     expect(Math.abs((await top()) - at)).toBeLessThan(40);
   }
 });
@@ -188,8 +188,20 @@ test("a narrower window keeps the paragraph that was at the top, not the offset"
   await scroller.hover();
   await page.mouse.wheel(0, 4000);
   await expect.poll(atTop).not.toBe("P0");
-  await page.waitForTimeout(600);
-  const before = await atTop();
+  await settled(page);
+  // The paragraph at the top is taken a pause after the scroll stops, not
+  // on every frame of it; a slow machine is still scrolling, so it is read
+  // once it stays put that long.
+  let before = await atTop();
+  await expect
+    .poll(async () => {
+      const was = before;
+      // Real time: longer than EditorPane's 300 ms pause.
+      await page.waitForTimeout(400);
+      before = await atTop();
+      return before === was;
+    })
+    .toBe(true);
   await page.setViewportSize({ width: 820, height: 760 });
   await expect.poll(atTop).toBe(before);
   await page.setViewportSize({ width: 1280, height: 760 });
@@ -212,10 +224,10 @@ test("a document comes back with its caret, its undo and its redo", async ({
   const away = async () => {
     await tab("b.md").click();
     await expect(editor).toContainText("B line 119");
-    await page.waitForTimeout(400);
+    await settled(page);
     await tab("a.md").click();
     await expect(editor).toContainText("A line 119");
-    await page.waitForTimeout(400);
+    await settled(page);
   };
   await openPath(page, "/work/b.md");
   await openPath(page, "/work/a.md");
@@ -224,10 +236,11 @@ test("a document comes back with its caret, its undo and its redo", async ({
   await line.click();
   await page.keyboard.press("End");
   await page.keyboard.type(" ONE");
+  // Past the editor's undo grouping (500 ms): the two words undo apart.
   await page.waitForTimeout(700);
   await page.keyboard.type(" TWO");
   await expect(line).toHaveText("A line 60. ONE TWO");
-  await page.waitForTimeout(400);
+  await settled(page);
   const read = await scroller.evaluate((el) => Math.round(el.scrollTop));
 
   // The caret is where it was: typing goes on after the last word, with
@@ -268,7 +281,7 @@ test("a document comes back with its caret, its undo and its redo", async ({
   await expect(tab("a.md")).toHaveCount(0);
   await openPath(page, "/work/a.md");
   await expect(editor).toContainText("A line 60. ONE");
-  await page.waitForTimeout(600);
+  await settled(page);
   await editor.locator("p", { hasText: "A line 0." }).click();
   await page.keyboard.press("ControlOrMeta+z");
   await expect(editor.locator("p", { hasText: "A line 60." })).toHaveText(
@@ -300,7 +313,7 @@ test("the editor taking the focus scrolls nothing; typing brings the caret into 
   await scroller.hover();
   await page.mouse.wheel(0, -20000);
   await expect.poll(() => scroller.evaluate((el) => el.scrollTop)).toBe(0);
-  await page.waitForTimeout(500);
+  await settled(page);
   // Focus given to the element itself, the page's selection gone meanwhile
   // (a menu or a dialog took it): the browser starts the caret at the top,
   // and the editor, putting its own back, must not scroll to it.
@@ -309,7 +322,7 @@ test("the editor taking the focus scrolls nothing; typing brings the caret into 
     getSelection()?.removeAllRanges();
     el.focus({ preventScroll: true });
   });
-  await page.waitForTimeout(500);
+  await settled(page);
   expect(await scroller.evaluate((el) => el.scrollTop)).toBe(0);
   await page.keyboard.type("!");
   await expect
@@ -334,13 +347,13 @@ test("a document shown again in the island not in use is where it was read", asy
   await openPath(page, "/work/a.md");
   const front = page.locator('[data-active-tab="true"]');
   await expect(front.locator(".ProseMirror")).toContainText("A line 199");
-  await page.waitForTimeout(500);
+  await settled(page);
   await front.locator(".editor-scroll").hover();
   await page.mouse.wheel(0, 1500);
   await expect
     .poll(() => front.locator(".editor-scroll").evaluate((el) => el.scrollTop))
     .toBeGreaterThan(1000);
-  await page.waitForTimeout(500);
+  await settled(page);
   await openPath(page, "/work/b.md");
   await expect(front.locator(".ProseMirror")).toContainText("B line 199");
   // b.md takes an island of its own: a.md comes back in the one left
@@ -349,10 +362,9 @@ test("a document shown again in the island not in use is where it was read", asy
   const a = page.locator(".editor-scroll:visible", { hasText: "A line 199" });
   await expect(a).toHaveCount(1);
   await expect(front.locator(".ProseMirror")).toContainText("B line 199");
-  await page.waitForTimeout(600);
-  expect(
-    Math.abs((await a.evaluate((el) => el.scrollTop)) - 1500),
-  ).toBeLessThan(40);
+  await expect
+    .poll(async () => Math.abs((await a.evaluate((el) => el.scrollTop)) - 1500))
+    .toBeLessThan(40);
 });
 
 test("a tracked document keeps its original while another tab is in front, through an autosave", async ({

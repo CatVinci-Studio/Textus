@@ -177,7 +177,11 @@ export function TextusAiOffNote({ className }: { className?: string }) {
   return (
     <div className={className ? `textus-ai-off ${className}` : "textus-ai-off"}>
       <p>{t.textusAiOff}</p>
-      <button type="button" className="text-button" onClick={() => set(true)}>
+      <button
+        type="button"
+        className="tx-button text-button"
+        onClick={() => set(true)}
+      >
         {t.textusAiTurnOn}
       </button>
     </div>

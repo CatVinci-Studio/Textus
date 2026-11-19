@@ -241,7 +241,11 @@ export function ProjectBar({
               }
             }}
           />
-          <button type="submit" disabled={!entryName.trim()}>
+          <button
+            type="submit"
+            className="tx-button small"
+            disabled={!entryName.trim()}
+          >
             {t.projectEntryCreate}
           </button>
         </form>

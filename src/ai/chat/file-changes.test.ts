@@ -2,7 +2,11 @@
 
 import { describe, expect, it, vi } from "vitest";
 import { FILE_CREATED_EVENT } from "../../utils/events";
-import { afterFileChanges } from "./file-changes";
+import {
+  afterFileChanges,
+  filesChanged,
+  textBeforeChanges,
+} from "./file-changes";
 
 vi.mock("../../platform/ipc", () => ({
   ai: {
@@ -33,5 +37,11 @@ describe("files Textus AI wrote", () => {
     await afterFileChanges("conv", turns as never, false);
     window.removeEventListener(FILE_CREATED_EVENT, heard);
     expect(made).toEqual(["/f/new.md"]);
+    expect(textBeforeChanges("/f/old.md")).toBe("a");
+  });
+
+  it("leave an external agent's writes unmarked", () => {
+    filesChanged([{ file: "/f/agent.md", applied: true }]);
+    expect(textBeforeChanges("/f/agent.md")).toBeUndefined();
   });
 });

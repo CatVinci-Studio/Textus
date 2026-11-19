@@ -145,7 +145,7 @@
   font-size: var(--text-caption);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .tour-link:hover {
     color: var(--ui-text);
   }

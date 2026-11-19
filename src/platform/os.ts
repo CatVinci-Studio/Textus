@@ -57,3 +57,11 @@ export function isDesktop(): boolean {
   if (typeof navigator === "undefined") return true;
   return !isIOSPlatform() && !isAndroidPlatform();
 }
+
+/** The WebKit engine (macOS, iOS, Linux's WebKitGTK) rather than Chromium
+ *  (Windows' WebView2, Android's WebView), which also names AppleWebKit. */
+export function isWebKitEngine(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  return /AppleWebKit/.test(ua) && !/Chrome|Chromium|Edg\//.test(ua);
+}

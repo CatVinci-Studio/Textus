@@ -169,7 +169,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .paper-outline-edit:hover:not(:disabled),
   .paper-outline-more:hover {
     color: var(--ui-accent, var(--ui-text));
@@ -428,14 +428,13 @@
   flex-direction: column;
   justify-content: flex-end;
   max-height: 7.5em;
-  overflow: hidden;
   margin-left: 16px;
   padding: 4px 8px;
   border-radius: var(--shape-s);
   background: var(--ui-subtle);
   font-size: var(--text-footnote);
   line-height: 1.5;
-  mask-image: linear-gradient(to bottom, transparent, black 45%);
+  --cut-fade: 55%;
   animation: motion-rise-in var(--dur-base) var(--ease-out) both;
 }
 

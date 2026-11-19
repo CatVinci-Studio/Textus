@@ -17,11 +17,11 @@
   },
   {
     "kind": "auth",
-    "pattern": "failed \\(401|401 unauthorized|invalid[_ -]?(x-)?api[_ -]?key|incorrect api key|authentication_error|invalid_api_key|unauthorized"
+    "pattern": "failed \\(40[13]|401 unauthorized|invalid[_ -]?(x-)?api[_ -]?key|incorrect api key|authentication_error|invalid_api_key|unauthorized"
   },
   {
     "kind": "rateLimit",
-    "pattern": "failed \\(429|rate[_ ]limit|too many requests|overloaded|failed \\(529"
+    "pattern": "failed \\(429|rate[_ ]limit|usage limit|too many requests|overloaded|failed \\(529"
   },
   {
     "kind": "model",

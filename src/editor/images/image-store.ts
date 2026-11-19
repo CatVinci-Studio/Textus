@@ -5,6 +5,7 @@ import { closeHistory } from "@milkdown/kit/prose/history";
 import { resolveStrings } from "../../i18n/strings";
 import { showMessage } from "../../engine/controls/app-dialog";
 import { fs } from "../../platform/ipc";
+import { nativeFiles, isScopedUrl } from "../../platform/native-files";
 import type { Settings, ImageNamingMode } from "../../prefs/SettingsContext";
 import { IMAGE_FILE_EXTENSIONS, imageMimeForPath } from "./pasted-files";
 import { unwrittenImageSrcs } from "../markdown/markdown-output";
@@ -14,6 +15,7 @@ import { explainError } from "../../utils/error-explain";
 import { LINK } from "../markdown/link-source";
 import { announceFileCreated } from "../../utils/events";
 import IMAGE_TYPES from "./image-types.json";
+import { blobToBase64 } from "../../utils/blob-base64";
 
 /** Pictures pasted, dropped or picked, saved where the writer keeps them. */
 
@@ -23,18 +25,6 @@ const EXT_BY_MIME: Record<string, string> = Object.entries(IMAGE_TYPES).reduce(
   (by, [ext, mime]) => ({ [mime]: ext, ...by }),
   {} as Record<string, string>,
 );
-
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const url = reader.result as string;
-      resolve(url.slice(url.indexOf(",") + 1));
-    };
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(blob);
-  });
-}
 
 export function safeImageStem(name: string): string {
   const withoutExtension = name.replace(/\.[^.]*$/, "");
@@ -300,14 +290,19 @@ export function pastedImages(sources: {
   ];
 }
 
-/** An image file on disk, read through the backend once it's stored. */
+/** An image file on disk, read through the backend once it's stored; one
+ *  picked in the Files app (a URL) through the native plugin, which holds
+ *  its scope. */
 export function fileImage(path: string): PastedImage {
+  const name = path.slice(
+    Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\")) + 1,
+  );
+  const picked = isScopedUrl(path);
   return {
-    name: path.slice(
-      Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\")) + 1,
-    ),
+    name: picked ? decodeURIComponent(name) : name,
     type: imageMimeForPath(path) ?? "",
-    base64: () => fs.readBinaryFileBase64(path),
+    base64: () =>
+      picked ? nativeFiles.readBase64(path) : fs.readBinaryFileBase64(path),
   };
 }
 

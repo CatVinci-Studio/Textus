@@ -567,6 +567,9 @@ export default {
   treeTrashConfirm: "要把「{name}」移到垃圾桶嗎？之後可以從垃圾桶放回。",
   treeTrashFolderConfirm:
     "要把資料夾「{name}」和其中的所有內容移到垃圾桶嗎？之後可以從垃圾桶放回。",
+  treeTrashManyConfirm: {
+    other: "要把這 {n} 項移到垃圾桶嗎？之後可以從垃圾桶放回。",
+  },
   errorPermission:
     "Textus 沒有權限存取這個檔案或資料夾。請檢查它的權限，或換一個位置。",
   errorNotFound: "檔案或資料夾已經不在了，可能被移動、重新命名或刪除。",
@@ -583,8 +586,7 @@ export default {
   errorCatalogNewer: "外掛商店需要較新版本的 Textus，請先更新 Textus。",
   errorImageTooBig: "圖片是空的，或超過了 25 MB。",
   errorNoFolder: "請先開啟一個資料夾。",
-  errorPluginsNeedAllFiles:
-    "外掛讀不了這個資料夾：Textus 沒有取得「所有檔案」的存取權。請重新打開這個資料夾，並選擇「繼續」。",
+  errorFarPictures: "暫時還不能把圖片存進這個資料夾。請貼到本機的文件裡。",
   errorPdfUnsupported: "此系統不支援匯出 PDF。",
   errorNoText: "裡面沒有可讀的文字。",
   errorUnreadable: "無法讀取這個檔案。",
@@ -858,6 +860,7 @@ export default {
   agentQueueContinue: "繼續",
   agentQueueEdit: "編輯",
   agentQueueRemove: "移除",
+  agentQueueInsert: "現在發",
   agentSend: "傳送",
   agentStop: "停止",
   agentRetry: "重試",
@@ -1006,6 +1009,12 @@ export default {
   autoCloseBracketsLabel: "補全 ()、[] 和 「」",
   plainTextMenuLabel: "選單中顯示純文字複製貼上",
   pdfPageNumbersLabel: "匯出時顯示頁碼",
+  pdfPaperLabel: "PDF 紙張大小",
+  pdfMarginLabel: "PDF 頁邊距",
+  pdfMarginNarrow: "窄",
+  pdfMarginNormal: "標準",
+  pdfMarginWide: "寬",
+  pdfTextScaleLabel: "PDF 字級",
   docxTemplateLabel: "Word 範本",
   docxTemplateHelp: "匯出的 Word 檔案沿用這個檔案的樣式、字型和邊界。",
   docxTemplateNone: "Pandoc 預設",
@@ -1748,6 +1757,12 @@ export default {
   pluginPermNotifications: "顯示系統通知",
   pluginPermAppearance: "變更 Textus 和文件的顏色",
   pluginPermGitCommit: "用你的 Git 在開啟的資料夾中提交",
+  pluginPermSsh: "用你的 SSH 設定連線伺服器（只連你允許的）",
+  pluginSshAsk: "{plugin} 想用你的 SSH 設定連線 {host}，在那裡讀寫檔案。",
+  pluginSshUnknownHost:
+    "{host} 還不是已知主機。請先在終端機裡連線一次（ssh {host}），核對並接受它的金鑰，然後再試。",
+  pluginSshNeedsLogin:
+    "{host} 需要密碼或一個尚未載入的金鑰。請把金鑰加入 SSH agent（ssh-add）或設定金鑰登入，然後再試。",
   pluginPermComments: "讀取和新增文件頁邊的註解",
   pluginPermAiModel: "使用你的 AI 模型（會計入你的 AI 服務用量）",
   pluginAiAsk:

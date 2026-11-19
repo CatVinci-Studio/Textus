@@ -7,15 +7,18 @@ import {
 } from "@milkdown/kit/prose/state";
 import { keydownHandler } from "@milkdown/kit/prose/keymap";
 import { $prose } from "@milkdown/kit/utils";
+import { isWebKitEngine } from "../../platform/os";
 import "./select-all.css";
 
 /** The highlight Select All paints itself: WebKit draws none for the
  *  whole document when it starts beside a heading's fold arrow or a code
- *  block's tools, or ends by a table. */
+ *  block's tools, or ends by a table. Chromium draws its own. */
 const HIGHLIGHT = "select-all";
+const PAINTS = isWebKitEngine();
 
 function paintedHighlight(): Highlight | null {
-  if (typeof Highlight === "undefined" || !CSS.highlights) return null;
+  if (!PAINTS || typeof Highlight === "undefined" || !CSS.highlights)
+    return null;
   let painted = CSS.highlights.get(HIGHLIGHT);
   if (!painted) CSS.highlights.set(HIGHLIGHT, (painted = new Highlight()));
   return painted;
@@ -75,7 +78,7 @@ export const selectAllKeyPlugin = $prose(
       },
       props: {
         attributes: (state): Record<string, string> =>
-          state.selection instanceof AllSelection
+          PAINTS && state.selection instanceof AllSelection
             ? { class: "is-all-selected" }
             : {},
         handleKeyDown: keydownHandler({

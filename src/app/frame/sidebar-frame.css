@@ -60,14 +60,14 @@
   corner-shape: round;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .sidebar-body:hover::-webkit-scrollbar-thumb,
   .sidebar-body:hover .plugin-list-rows::-webkit-scrollbar-thumb {
     background: color-mix(in srgb, var(--ui-text) 28%, transparent);
   }
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   :is(
       .sidebar-body,
       .sidebar-body .plugin-list-rows
@@ -124,7 +124,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .sidebar-view-action:hover {
     background: var(--ui-hover);
   }

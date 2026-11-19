@@ -19,6 +19,7 @@ import {
   type ReportFacts,
 } from "./report";
 import "./ReportProblem.css";
+import { DialogActions } from "../../engine/controls/DialogActions";
 
 const KIND_TEXT: Record<ReportChoice["kind"], TextKey> = {
   bug: "reportKindBug",
@@ -125,15 +126,20 @@ function ReportForm({
         <p className="report-problem-sent">
           {fill(t.reportSent, { number: String(phase.number) })}
         </p>
-        <div className="close-prompt-buttons">
-          <div className="close-prompt-spacer" />
-          <button onClick={() => void links.openWebLink(phase.url)}>
+        <DialogActions>
+          <button
+            className="tx-button"
+            onClick={() => void links.openWebLink(phase.url)}
+          >
             {t.reportView}
           </button>
-          <button className="close-prompt-primary" onClick={close}>
+          <button
+            className="tx-button primary close-prompt-primary"
+            onClick={close}
+          >
             {t.hoverClose}
           </button>
-        </div>
+        </DialogActions>
       </>
     );
 
@@ -218,21 +224,27 @@ function ReportForm({
           {phase.why}
         </p>
       )}
-      <div className="close-prompt-buttons">
+      <DialogActions
+        start={
+          <button
+            className="tx-button"
+            disabled={!facts}
+            onClick={() => {
+              const all = text.trim()
+                ? `${text.trim()}\n\n${details}`
+                : details;
+              void navigator.clipboard.writeText(all).then(
+                () => setPhase({ state: "copied" }),
+                () => {},
+              );
+            }}
+          >
+            {phase.state === "copied" ? t.codeBlockCopied : t.reportCopy}
+          </button>
+        }
+      >
         <button
-          disabled={!facts}
-          onClick={() => {
-            const all = text.trim() ? `${text.trim()}\n\n${details}` : details;
-            void navigator.clipboard.writeText(all).then(
-              () => setPhase({ state: "copied" }),
-              () => {},
-            );
-          }}
-        >
-          {phase.state === "copied" ? t.codeBlockCopied : t.reportCopy}
-        </button>
-        <div className="close-prompt-spacer" />
-        <button
+          className="tx-button"
           disabled={!facts}
           onClick={() => {
             if (!facts) return;
@@ -243,13 +255,13 @@ function ReportForm({
           {t.reportOnGithub}
         </button>
         <button
-          className="close-prompt-primary"
+          className="tx-button primary close-prompt-primary"
           disabled={!ready || phase.state === "sending"}
           onClick={() => void send()}
         >
           {phase.state === "sending" ? t.reportSending : t.reportSend}
         </button>
-      </div>
+      </DialogActions>
     </>
   );
 }

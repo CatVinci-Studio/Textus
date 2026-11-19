@@ -231,6 +231,11 @@ function useMenuBridgeFor(
     t,
     pdfPageNumbers: settings.pdfPageNumbers,
     pdfLightColors: settings.pdfLightColors,
+    pdfLayout: {
+      paper: settings.pdfPaper,
+      margin: settings.pdfMargin,
+      textScale: settings.pdfTextScale,
+    },
     diagramEngine: settings.diagramEngine,
     pandocSettings: settings,
     onOpenSettings: shell.settingsOpening.openSettings,

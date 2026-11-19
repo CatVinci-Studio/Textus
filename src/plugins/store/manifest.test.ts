@@ -123,6 +123,19 @@ describe("a plugin's manifest", () => {
     expect(() =>
       types([{ extensions: ["q"], keep: { braces: "yes" } }]),
     ).toThrow(/true or false/);
+    // A folder opened as one document: by its extension, the names inside.
+    const folders = (folderDocuments: unknown) =>
+      parseManifest({ ...base, contributes: { folderDocuments } }).contributes
+        .folderDocuments;
+    expect(
+      folders([{ extension: ".TextBundle", documents: ["text.md"] }]),
+    ).toEqual([{ extension: "textbundle", documents: ["text.md"] }]);
+    expect(() =>
+      folders([{ extension: "textbundle", documents: ["../x.md"] }]),
+    ).toThrow(/file name/);
+    expect(() => folders([{ extension: "textbundle", documents: [] }])).toThrow(
+      /empty/,
+    );
     // Traditional Chinese reads the English, not the Simplified.
     expect(localize(m, m.contributes.commands[0].title, "zh-Hant")).toBe(
       "Say hello",

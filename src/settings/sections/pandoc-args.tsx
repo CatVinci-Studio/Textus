@@ -44,7 +44,7 @@ function ArgsInput({ t, format }: { t: Strings; format: PandocArgsFormat }) {
       <input
         type="text"
         {...VERBATIM_INPUT}
-        className="settings-text-input"
+        className="tx-input settings-text-input"
         aria-label={`${t.pandocArgsLabel}: ${formatName(t, format)}`}
         placeholder="--toc-depth=2"
         value={text}

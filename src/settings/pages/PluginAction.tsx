@@ -133,7 +133,7 @@ function PluginAction({
     <div className="plugin-action">
       <button
         type="button"
-        className={`text-button plugin-action-main${menu.length ? " is-split" : ""}${main.danger ? " danger" : ""}`}
+        className={`tx-button text-button plugin-action-main${menu.length ? " is-split" : ""}${main.danger ? " danger" : ""}`}
         disabled={installing || main.unavailable}
         onClick={main.run}
       >
@@ -142,7 +142,7 @@ function PluginAction({
       {menu.length > 0 && (
         <button
           type="button"
-          className="text-button plugin-action-more"
+          className="tx-button text-button plugin-action-more"
           aria-label={fill(t.pluginMoreFor, { name })}
           disabled={installing}
           {...more.button}

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp, pasteMarkdown } from "./helpers";
+import { emit, openApp, pasteMarkdown, restedOn } from "./helpers";
 
 // A tab dragged in from another window: the native side sends where the
 // pointer is (drag-hover) and then the tab itself (receive-detached-tab).
@@ -44,7 +44,7 @@ test("let go over the documents' right edge, it opens an island there", async ({
     ...at,
     row: false,
   });
-  await page.waitForTimeout(300);
+  await restedOn(page);
   // Before it lands: its island is only a dashed room, nothing drawn in it.
   const room = page.locator(".main-pane > section.island").last();
   await expect(room).toHaveCSS("background-image", /svg/);
@@ -76,7 +76,7 @@ test("let go over the row, it joins the row", async ({ page }) => {
     ...at,
     row: true,
   });
-  await page.waitForTimeout(300);
+  await restedOn(page);
   await emit(page, "receive-detached-tab", {
     ...doc("Elsewhere"),
     ...at,
@@ -102,7 +102,7 @@ test("in a split, let go over an island's row, it joins that island at that slot
     ...at,
     row: true,
   });
-  await page.waitForTimeout(300);
+  await restedOn(page);
   await emit(page, "receive-detached-tab", {
     ...doc("Elsewhere"),
     ...at,

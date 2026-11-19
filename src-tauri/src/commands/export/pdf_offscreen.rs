@@ -6,12 +6,7 @@ use std::sync::Arc;
 use tauri::webview::PageLoadEvent;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 
-/// A4 in inches; Chromium lays it out at 794 x 1122 CSS px. Keep in step with
-/// WINDOWS_PAGE in paginate.ts.
-#[cfg(windows)]
-const PAGE_WIDTH_IN: f64 = 8.27;
-#[cfg(windows)]
-const PAGE_HEIGHT_IN: f64 = 11.69;
+use super::PdfSheet;
 
 type Done = Sender<Result<(), String>>;
 
@@ -52,6 +47,7 @@ pub async fn export(
     app: tauri::AppHandle,
     html: String,
     output_path: String,
+    sheet: PdfSheet,
 ) -> Result<(), String> {
     let id = crate::editor_windows::next_window_id();
     // Removed when `page` drops, however this returns.
@@ -72,7 +68,8 @@ pub async fn export(
                 // editor's input method broken on Windows (wry#1908).
                 .focused(false)
                 .skip_taskbar(true)
-                .inner_size(794.0, 1123.0)
+                // The sheet in CSS px, 96 an inch.
+                .inner_size(sheet.width / 0.75, sheet.height / 0.75)
                 .on_page_load(move |window, payload| {
                     // Once: a page can report Finished more than once.
                     if payload.event() != PageLoadEvent::Finished
@@ -80,7 +77,7 @@ pub async fn export(
                     {
                         return;
                     }
-                    render_to_file(&window, &output_path, tx.clone());
+                    render_to_file(&window, &output_path, sheet, tx.clone());
                 })
                 .build()
                 .inspect(|_window| {
@@ -116,7 +113,7 @@ pub async fn export(
 }
 
 #[cfg(windows)]
-fn render_to_file(window: &tauri::WebviewWindow, output_path: &str, done: Done) {
+fn render_to_file(window: &tauri::WebviewWindow, output_path: &str, sheet: PdfSheet, done: Done) {
     use webview2_com::Microsoft::Web::WebView2::Win32::{
         ICoreWebView2Environment6, ICoreWebView2_7,
     };
@@ -134,8 +131,10 @@ fn render_to_file(window: &tauri::WebviewWindow, output_path: &str, done: Done) 
                 let core: ICoreWebView2_7 = core.cast()?;
                 let environment: ICoreWebView2Environment6 = webview.environment().cast()?;
                 let settings = environment.CreatePrintSettings()?;
-                settings.SetPageWidth(PAGE_WIDTH_IN)?;
-                settings.SetPageHeight(PAGE_HEIGHT_IN)?;
+                // Chromium lays the sheet out at 96 CSS px an inch, as the
+                // frontend paginated it (pdf-page.ts).
+                settings.SetPageWidth(sheet.width / 72.0)?;
+                settings.SetPageHeight(sheet.height / 72.0)?;
                 settings.SetMarginTop(0.0)?;
                 settings.SetMarginBottom(0.0)?;
                 settings.SetMarginLeft(0.0)?;
@@ -173,7 +172,7 @@ fn file_printer_name() -> String {
 }
 
 #[cfg(target_os = "linux")]
-fn render_to_file(window: &tauri::WebviewWindow, output_path: &str, done: Done) {
+fn render_to_file(window: &tauri::WebviewWindow, output_path: &str, sheet: PdfSheet, done: Done) {
     use webkit2gtk::{PrintOperation, PrintOperationExt};
 
     let output_path = output_path.to_string();
@@ -191,11 +190,17 @@ fn render_to_file(window: &tauri::WebviewWindow, output_path: &str, done: Done) 
         settings.set(gtk::PRINT_SETTINGS_OUTPUT_FILE_FORMAT.as_str(), Some("pdf"));
         settings.set(gtk::PRINT_SETTINGS_OUTPUT_URI.as_str(), Some(uri.as_str()));
         let setup = gtk::PageSetup::new();
-        setup.set_paper_size(&gtk::PaperSize::new(Some(gtk::PAPER_NAME_A4.as_str())));
+        setup.set_paper_size(&gtk::PaperSize::new_custom(
+            "textus",
+            "Textus",
+            sheet.width,
+            sheet.height,
+            gtk::Unit::Points,
+        ));
         // Top and bottom margins here, not in CSS: WebKitGTK ignores the CSS top margin
         // and keeps the bottom only while @page is `auto`. The sides are the page's padding.
-        setup.set_top_margin(20.0, gtk::Unit::Mm);
-        setup.set_bottom_margin(20.0, gtk::Unit::Mm);
+        setup.set_top_margin(sheet.margin, gtk::Unit::Points);
+        setup.set_bottom_margin(sheet.margin, gtk::Unit::Points);
         setup.set_left_margin(0.0, gtk::Unit::Mm);
         setup.set_right_margin(0.0, gtk::Unit::Mm);
         operation.set_print_settings(&settings);

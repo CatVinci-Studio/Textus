@@ -1,5 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp, pasteMarkdown } from "./helpers";
+import {
+  emit,
+  mockInvoke,
+  openApp,
+  pasteMarkdown,
+  restedOn,
+  settled,
+} from "./helpers";
 import { openPath } from "./plugin-helpers";
 
 // Textus AI's conversations are tabs: the AI button opens one in an island
@@ -89,6 +96,7 @@ test("messages sent during a reply wait their turn; a failure holds them until t
   // The second fails: the third waits, and says why.
   await expect(queue.locator(".chat-queue-text")).toHaveText(["third"]);
   await expect(queue.locator(".inline-chat-action")).toBeVisible();
+  // Real time: long enough for a send that must not happen to show.
   await page.waitForTimeout(500);
   await expect(turns).not.toContainText("third");
   // Going on sends it.
@@ -105,8 +113,49 @@ test("messages sent during a reply wait their turn; a failure holds them until t
   await box.press("Enter");
   await expect(queue.locator(".chat-queue-text")).toHaveText(["fourth"]);
   await expect(queue.locator(".inline-chat-action")).toBeVisible();
+  // Real time: long enough for a send that must not happen to show.
   await page.waitForTimeout(500);
   await expect(turns).not.toContainText("fourth");
+  // Going on, then two more wait behind it; one is sent now, into the
+  // reply running, and the other keeps its place.
+  await queue.locator(".inline-chat-action").click();
+  await box.fill("one more question");
+  await box.press("Enter");
+  await box.fill("mind the tone");
+  await box.press("Enter");
+  await queue.getByRole("button", { name: "现在发: mind the tone" }).click();
+  await expect(queue).toHaveCount(0);
+  // Sent in that order, however quickly the reply ends.
+  await expect(turns).toContainText(/mind the tone[\s\S]*one more question/);
+});
+
+test("a message sent now that the reply can't take stops it and goes next", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { menuBarShown: false } });
+  await mockInvoke(page, { ai_steer: false, ai_cancel: null });
+  await aiButton(page).click();
+  const box = page.locator(".ai-tab textarea").first();
+  const turns = page.locator(".ai-tab .inline-chat-messages");
+  const queue = page.locator(".ai-tab .chat-queue");
+  await box.fill(
+    "a long first question for the reply to take a while, and longer still so that it is stopped well before its end",
+  );
+  await box.press("Enter");
+  await box.fill("mind the tone");
+  await box.press("Enter");
+  await queue.getByRole("button", { name: "现在发: mind the tone" }).click();
+  await expect(queue).toHaveCount(0);
+  await expect(turns).toContainText("mind the tone");
+  await expect(page.locator(".ai-tab .agent-streaming")).toHaveCount(0);
+  const cancels = await page.evaluate(
+    () =>
+      (
+        (window as unknown as { __devInvokeCalls?: { cmd: string }[] })
+          .__devInvokeCalls ?? []
+      ).filter((call) => call.cmd === "ai_cancel").length,
+  );
+  expect(cancels).toBe(1);
 });
 
 test("pressed again in front of its own island, it collapses; again, it comes back", async ({
@@ -142,7 +191,7 @@ test("dragged into the document's island, it stays there and the button leaves i
     steps: 20,
   });
   // The room opens before the drop takes it.
-  await page.waitForTimeout(500);
+  await restedOn(page);
   await page.mouse.up();
   await expect(islands(page)).toHaveCount(1);
   await expect(tabs(page)).toHaveText(["未命名", "Textus AI"]);
@@ -202,7 +251,7 @@ test("with Alt held, a tab's drag moves its whole island", async ({ page }) => {
   await page.mouse.move(sheet.x + sheet.width - 8, sheet.y + sheet.height / 2, {
     steps: 20,
   });
-  await page.waitForTimeout(500);
+  await restedOn(page);
   await page.mouse.up();
   await page.keyboard.up("Alt");
   await expect(rows.first().locator(".tab-pill")).toHaveText(["Textus AI"]);
@@ -221,14 +270,14 @@ test("with Alt held, a tab's drag moves its whole island", async ({ page }) => {
   await page.mouse.down();
   await page.mouse.move(back.x - 40, back.y + 160, { steps: 10 });
   await page.mouse.move(left.x + 8, left.y + left.height / 2, { steps: 20 });
-  await page.waitForTimeout(500);
+  await restedOn(page);
   await page.mouse.up();
   await page.keyboard.up("Alt");
   await expect(rows.first().locator(".tab-pill")).toHaveText([
     "未命名",
     "设置：通用",
   ]);
-  await page.waitForTimeout(600);
+  await settled(page);
   const corners = await page.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>(".island-row")].map((row) => {
       const bar = row.querySelector(".tab-bar");
@@ -291,7 +340,7 @@ test("let go in the middle of the document's island, it joins it; near its edge,
         steps: 20,
       },
     );
-    await page.waitForTimeout(500);
+    await restedOn(page);
     await page.mouse.up();
   };
   await drag(0.5);
@@ -314,18 +363,18 @@ test("let go in the middle of the document's island, it joins it; near its edge,
         steps: 20,
       },
     );
-    await page.waitForTimeout(500);
+    await restedOn(page);
     await expect(page.locator("section.island")).toHaveCount(2);
     const room = (await page.locator("section.island").first().boundingBox())!;
     await page.mouse.move(sheet.x + sheet.width / 2, room.y + room.height / 2, {
       steps: 10,
     });
-    await page.waitForTimeout(500);
+    await restedOn(page);
     await expect(page.locator("section.island")).toHaveCount(2);
     await page.mouse.move(sheet.x + sheet.width / 3, row.y + row.height / 2, {
       steps: 10,
     });
-    await page.waitForTimeout(500);
+    await restedOn(page);
     await expect(page.locator("section.island")).toHaveCount(1);
     await page.mouse.up();
     await expect(islands(page)).toHaveCount(1);
@@ -426,7 +475,7 @@ test("with the title on a row of its own, one document is a clean sheet under it
   expect(button.y + button.height).toBeLessThanOrEqual(bar.y + bar.height);
 });
 
-test("however many tabs, the bar keeps bare room before its controls to move the window by", async ({
+test("however many tabs, the bar keeps bare room before its controls to move the window by, and the sidebar's name row moves it too", async ({
   page,
 }) => {
   const names = Array.from(
@@ -459,30 +508,21 @@ test("however many tabs, the bar keeps bare room before its controls to move the
   await aiButton(page).click();
   await expect(tabs(page).last()).toHaveText("Textus AI");
   expect(await grabbed()).toBe(true);
-});
-
-test("the sidebar's name row at the window's top moves the window too", async ({
-  page,
-}) => {
-  await page.addInitScript(() =>
-    Object.defineProperty(navigator, "platform", { get: () => "Win32" }),
-  );
-  await page.setViewportSize({ width: 1200, height: 760 });
-  await openApp(page);
+  // The sidebar's name row at the window's top moves it too: its name, and
+  // the bare room before it.
   await page.locator(".activity-rail-item").first().click();
-  const header = page.locator(".sidebar-header");
-  await expect(header).toBeVisible();
+  await expect(page.locator(".sidebar-header")).toBeVisible();
   const title = (await page.locator(".sidebar-title").boundingBox())!;
   const moves = (x: number, y: number) =>
     page.evaluate(
-      ([x, y]) =>
-        !!document
-          .elementFromPoint(x, y)
-          ?.closest("[data-tauri-drag-region]") &&
-        !document.elementFromPoint(x, y)?.closest("button"),
+      ([x, y]) => {
+        const hit = document.elementFromPoint(x, y);
+        return (
+          !!hit?.closest("[data-tauri-drag-region]") && !hit.closest("button")
+        );
+      },
       [x, y],
     );
-  // Its name, and the bare room before it.
   expect(await moves(title.x + 4, title.y + title.height / 2)).toBe(true);
   expect(await moves(title.x - 6, title.y + title.height / 2)).toBe(true);
 });

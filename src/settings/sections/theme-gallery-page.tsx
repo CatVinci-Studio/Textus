@@ -1,4 +1,5 @@
 import type { Strings } from "../../i18n/strings";
+import { MarketPage } from "../pages/MarketPage";
 import { useSettings } from "../../prefs/SettingsContext";
 import { installedCopy, type GalleryTheme } from "../../theme/theme-gallery";
 import {
@@ -26,7 +27,7 @@ export function ThemeGalleryPage({
   const action = !copy ? (
     <button
       type="button"
-      className="text-button settings-inline-button"
+      className="tx-button text-button settings-inline-button"
       disabled={install.busy === theme.id}
       onClick={() => void install.install(theme)}
     >
@@ -37,27 +38,22 @@ export function ThemeGalleryPage({
   ) : (
     <button
       type="button"
-      className="text-button settings-inline-button"
+      className="tx-button text-button settings-inline-button"
       onClick={() => setSettings({ themeId: copy.id })}
     >
       {t.themeGalleryUse}
     </button>
   );
   return (
-    <div className="plugin-page market-plugin-page" data-theme-page={theme.id}>
-      <button type="button" className="plugin-back" onClick={onBack}>
-        ‹ {t.themeBackToList}
-      </button>
-      <div className="market-plugin-head">
-        <div className="market-plugin-title">
-          <h2 className="plugin-page-title">{theme.name}</h2>
-          {theme.description && (
-            <div className="settings-row-hint">{theme.description}</div>
-          )}
-          <ThemeByline t={t} theme={theme} />
-        </div>
-        {action}
-      </div>
+    <MarketPage
+      data={{ "data-theme-page": theme.id }}
+      backLabel={t.themeBackToList}
+      onBack={onBack}
+      name={theme.name}
+      description={theme.description}
+      byline={<ThemeByline t={t} theme={theme} />}
+      action={action}
+    >
       {install.error && (
         <div className="settings-error" role="alert">
           {install.error}
@@ -74,6 +70,6 @@ export function ThemeGalleryPage({
           />
         ))}
       </div>
-    </div>
+    </MarketPage>
   );
 }

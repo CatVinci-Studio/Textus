@@ -225,7 +225,7 @@ function ServerCard({
           <span className="mcp-actions">
             <button
               type="button"
-              className="text-button settings-inline-button"
+              className="tx-button text-button settings-inline-button"
               onClick={onEdit}
             >
               {t.mcpEdit}
@@ -233,7 +233,7 @@ function ServerCard({
             {server.enabled && (
               <button
                 type="button"
-                className="text-button settings-inline-button"
+                className="tx-button text-button settings-inline-button"
                 onClick={onRestart}
               >
                 {t.mcpRestart}
@@ -241,7 +241,7 @@ function ServerCard({
             )}
             <button
               type="button"
-              className="text-button settings-inline-button"
+              className="tx-button text-button settings-inline-button"
               onClick={onRemove}
             >
               {t.mcpRemove}
@@ -352,7 +352,7 @@ function McpForm({
           {t.mcpFormName}
           <input
             aria-label={t.mcpFormName}
-            className="settings-text-input"
+            className="tx-input settings-text-input"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
@@ -373,7 +373,7 @@ function McpForm({
               {t.mcpFormCommand}
               <input
                 aria-label={t.mcpFormCommand}
-                className="settings-text-input mcp-mono"
+                className="tx-input settings-text-input mcp-mono"
                 value={commandLine}
                 spellCheck={false}
                 autoCapitalize="off"
@@ -386,7 +386,7 @@ function McpForm({
               {t.mcpFormEnv}
               <textarea
                 aria-label={t.mcpFormEnv}
-                className="settings-text-input mcp-mono"
+                className="tx-input settings-text-input mcp-mono"
                 rows={3}
                 value={env}
                 spellCheck={false}
@@ -402,7 +402,7 @@ function McpForm({
               {t.mcpFormUrl}
               <input
                 aria-label={t.mcpFormUrl}
-                className="settings-text-input mcp-mono"
+                className="tx-input settings-text-input mcp-mono"
                 value={url}
                 spellCheck={false}
                 autoCapitalize="off"
@@ -414,7 +414,7 @@ function McpForm({
               {t.mcpFormHeaders}
               <textarea
                 aria-label={t.mcpFormHeaders}
-                className="settings-text-input mcp-mono"
+                className="tx-input settings-text-input mcp-mono"
                 rows={3}
                 value={headers}
                 spellCheck={false}
@@ -438,7 +438,7 @@ function McpForm({
         <div className="mcp-form-actions">
           <button
             type="button"
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             disabled={!ready || trying}
             onClick={() => void tryServer(built())}
           >
@@ -447,14 +447,14 @@ function McpForm({
           <span className="mcp-form-spacer" />
           <button
             type="button"
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             onClick={onCancel}
           >
             {t.cancel}
           </button>
           <button
             type="button"
-            className="text-button settings-inline-button"
+            className="tx-button text-button settings-inline-button"
             disabled={!ready}
             onClick={() => onSave(built())}
           >

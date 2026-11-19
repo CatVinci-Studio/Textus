@@ -2,7 +2,7 @@
 // inside one function): the link to the window, shared helpers, webviews,
 // storage and the plugin's context.
 
-var API_VERSION = "1.8";
+var API_VERSION = "1.9";
 var app = null;
 var waiting = [];
 var module = { exports: {} };
@@ -18,6 +18,15 @@ var blockTypes = new Map();
 var menuProviders = {};
 var historySources = new Map();
 var inlineCompletions = new Map();
+// Each database view's provider, by its id.
+var databaseViews = new Map();
+// Each folder convention reader, by its id.
+var conventionReaders = new Map();
+// Each file provider, by its scheme.
+var fileProviders = new Map();
+// Each ai.stream call's onText, by its number, while it runs.
+var aiStreams = new Map();
+var aiStreamCount = 0;
 var exportFormats = new Map();
 var pickSearches = {};
 var pickSearchCount = 0;
@@ -70,15 +79,6 @@ function notify(method, params) {
     waiting.push(function () {
       app.notify(method, params);
     });
-}
-// net.fetch's requests given a signal, each named to cancel it by; the
-// runtime's own mark keeps them apart from another runtime's of the plugin.
-var fetches = 0;
-var fetchMark = Math.random().toString(36).slice(2);
-function aborted() {
-  var err = new Error("The request was cancelled.");
-  err.name = "AbortError";
-  return err;
 }
 // A call whose failure is no one's business - but a refused permission
 // goes to the plugin's log, where its author finds why nothing happens.

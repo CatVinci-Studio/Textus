@@ -8,7 +8,7 @@ import {
   toggleSourceFence,
   toggleSourceMark,
 } from "./source-format";
-import { sourceKeys } from "./source-keys";
+import { sourceKeys, sourceTab } from "./source-keys";
 import { modIsMeta } from "../../platform/os";
 
 /** A view of `doc`, "|" marking the caret or "[…]" the selection. */
@@ -253,5 +253,23 @@ describe("toggleSourceFence", () => {
     // The inner ``` is text of the ```` block.
     expect(toggled("````\n```\n|x\n```\n````")).toBe("```\nx\n```");
     expect(toggled("~~~\n|x\n~~~")).toBe("x");
+  });
+});
+
+describe("Tab in source mode", () => {
+  it("takes a list's line in a level wherever the caret is in it", () => {
+    const view = viewOf("- one\n- tw|o");
+    sourceTab(view);
+    // By the view's indent unit (source mode's is a tab).
+    expect(view.state.doc.toString()).toMatch(/^- one\n\s+- two$/);
+    const numbered = viewOf("1. a\n2. b|");
+    sourceTab(numbered);
+    expect(numbered.state.doc.toString()).toMatch(/^1\. a\n\s+2\. b$/);
+  });
+
+  it("writes a tab at the caret anywhere else", () => {
+    const view = viewOf("a|b");
+    sourceTab(view);
+    expect(view.state.doc.toString()).toBe("a\tb");
   });
 });

@@ -26,9 +26,9 @@ import {
   ownFolderMoved,
   storedOwnFolder,
 } from "../platform/documents-path";
-import { SHOW_FOLDER_EVENT } from "../utils/events";
+import { OPEN_FOLDER_EVENT, SHOW_FOLDER_EVENT } from "../utils/events";
 import { nextTreeRoot, rootAfterClose } from "../files/tree-root";
-import { setOpenFolder } from "../ai/workspace/ai-root";
+import { setOpenFolder } from "../platform/open-folder";
 
 /** The folder the last session had open, where there are no windows (an
  *  iPad); a desktop window's comes with its session (launch-window.ts). */
@@ -46,15 +46,6 @@ function restoredFolder(restoreSession: boolean): string | null {
   const docs = knownDocumentsDir();
   if (!saved || (!docs && saved.startsWith(IN_DOCUMENTS))) return null;
   return docs ? ownFolderMoved(saved, docs) : saved;
-}
-
-/** The folder an earlier version kept for the whole app: taken by the first
- *  window to restore, once. */
-function olderFolder(): string | null {
-  const saved = getUiState("openFolder");
-  if (!saved) return null;
-  setUiState("openFolder", null);
-  return typeof saved === "string" ? saved : null;
 }
 
 /** The AI's folder that opening a folder once copied into the setting:
@@ -251,6 +242,19 @@ function useFolderActions({
   return { openFolder, closeFolder, openFolderDialog };
 }
 
+/** A folder a plugin provides (`ssh://host/…`), opened at its asking. */
+function useProvidedFolder(openFolder: (path: string) => void) {
+  const open = useLatest(openFolder);
+  useEffect(() => {
+    const take = (event: Event) => {
+      const url = (event as CustomEvent<unknown>).detail;
+      if (typeof url === "string") open.current(url);
+    };
+    window.addEventListener(OPEN_FOLDER_EVENT, take);
+    return () => window.removeEventListener(OPEN_FOLDER_EVENT, take);
+  }, [open]);
+}
+
 /** A recent folder chosen while no window was open (this window was
  *  opened to show it), else the folder its session had open. Taken once. */
 function useTakePendingFolder(openFolder: (path: string) => void) {
@@ -260,8 +264,7 @@ function useTakePendingFolder(openFolder: (path: string) => void) {
       windowIpc.takePendingOpenFolder().catch(() => null),
       canUseWindows ? takeWindowSession() : null,
     ]).then(([pending, window]) => {
-      const path =
-        pending ?? (window ? (window.folder ?? olderFolder()) : null);
+      const path = pending ?? window?.folder ?? null;
       if (path) open.current(path);
     });
   }, [open]);
@@ -314,6 +317,7 @@ export function useOpenFolder({
   });
 
   useTakePendingFolder(openFolder);
+  useProvidedFolder(openFolder);
 
   return {
     folder,

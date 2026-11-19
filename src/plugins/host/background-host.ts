@@ -1,11 +1,11 @@
 import { grants } from "../grants";
-import { readableRoot } from "./scoped-root";
 import { guarded } from "../api-permissions";
 import { connectFrame, hostsContainer, sandboxedFrame } from "./frames";
 import { hostDocument } from "./host-document";
 import { fileHandlers } from "./broker-files";
 import { scheduleHandlers } from "./broker-schedule";
-import { withTimeout, type BrokerDeps, type PluginRuntimeInfo } from "./broker";
+import { type BrokerDeps, type PluginRuntimeInfo } from "./broker";
+import { withTimeout } from "../../utils/with-timeout";
 import { str, type Params, type PluginScope } from "./broker-scope";
 import type { Endpoint } from "./rpc";
 import { readPluginFile } from "../store/files";
@@ -71,7 +71,7 @@ function scopeOf(run: BackgroundRun): PluginScope {
     root: () => {
       need("files.read");
       if (!run.root) throw new Error("The job was set with no folder open.");
-      return readableRoot(run.root);
+      return run.root;
     },
     ownWebview: () => {
       throw new Error("Background code has no webviews.");

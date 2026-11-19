@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 // must see a key before others: the open / panel first, then a plugin
 // holding the keyboard, the
 // table's arrows before gfm's own, the inline delimiters before the block
-// keys, Read Only last of all.
+// keys, Read Only last of all. The stages run in the order listed below.
 const ORDER = [
   "createCompletionPlugin",
   "editorExtensions().keyInput",
@@ -36,7 +36,14 @@ const ORDER = [
 
 describe("the editor's key handlers", () => {
   it("are registered in the order they must see keys", () => {
-    const source = readFileSync("src/editor/editor-extensions.ts", "utf8");
+    // The stages as withEditorCore puts them together.
+    const source = [
+      "editor-extensions.ts",
+      "editor-core-syntax.ts",
+      "editor-core-input.ts",
+    ]
+      .map((file) => readFileSync(`src/editor/${file}`, "utf8"))
+      .join("\n");
     // A writing-only plugin is registered as `.use(editing(name))`.
     const used = (name: string) =>
       [`.use(${name}`, `.use(editing(${name}`]

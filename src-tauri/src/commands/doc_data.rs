@@ -3,7 +3,7 @@
 //! history - follows it when it, or its folder, moves in Textus.
 
 use crate::app_dirs::AppDirs;
-use crate::commands::own_notes::{part_file_in, OwnPart};
+use crate::commands::own_notes::{adopt_old_notes, kept_file_in, part_file_in, OwnPart};
 use crate::commands::undo_files;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
@@ -48,15 +48,22 @@ fn carry(old: &Path, new: &Path) {
     }
 }
 
-/// Moves what is kept under `data` for `from` (a document or a folder) to `to`.
-pub(crate) fn move_in(data: &Path, from: &str, to: &str) -> Result<(), String> {
+/// Moves what is kept under `data` for `from` (a document or a folder) to
+/// `to`, and its notes in its project (`folder`: the window's open one).
+pub(crate) fn move_in(
+    data: &Path,
+    from: &str,
+    to: &str,
+    folder: Option<&str>,
+) -> Result<(), String> {
     for (old, new) in moved_pairs(from, to) {
-        for part in [OwnPart::Notes, OwnPart::Revisions] {
-            carry(
-                &part_file_in(data, &old, part),
-                &part_file_in(data, &new, part),
-            );
-        }
+        let notes = kept_file_in(data, &new, OwnPart::Notes, folder);
+        carry(&kept_file_in(data, &old, OwnPart::Notes, folder), &notes);
+        adopt_old_notes(data, &old, &notes);
+        carry(
+            &part_file_in(data, &old, OwnPart::Revisions),
+            &part_file_in(data, &new, OwnPart::Revisions),
+        );
         let (was, now) = (
             crate::ai::kept_proposals::pending_file_in(data, &old),
             crate::ai::kept_proposals::pending_file_in(data, &new),
@@ -73,10 +80,15 @@ pub(crate) fn move_in(data: &Path, from: &str, to: &str) -> Result<(), String> {
 /// What is kept for `from` follows it to `to` (both already moved on disk).
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn document_data_move(app: AppHandle, from: String, to: String) -> Result<(), String> {
+pub async fn document_data_move(
+    app: AppHandle,
+    from: String,
+    to: String,
+    folder: Option<String>,
+) -> Result<(), String> {
     let data = app.path().own_data_dir().map_err(|e| e.to_string())?;
     tauri::async_runtime::spawn_blocking(move || {
-        move_in(&data, &from, &to)?;
+        move_in(&data, &from, &to, folder.as_deref())?;
         // Its conversations too, every document of a moved folder's.
         let stores = app.state::<crate::settings::Stores>();
         crate::settings::move_conversations(&app, &stores, &[(from, to)]);
@@ -106,7 +118,7 @@ mod tests {
         std::fs::write(&pending, "{}").unwrap();
         undo_files::save_in(&data.path().join("undo"), &a, "h", "[]").unwrap();
 
-        move_in(data.path(), &a, &b).unwrap();
+        move_in(data.path(), &a, &b, None).unwrap();
         assert!(part_file_in(data.path(), &b, OwnPart::Notes).is_file());
         assert!(crate::ai::kept_proposals::pending_file_in(data.path(), &b).is_file());
         assert!(undo_files::load_in(&data.path().join("undo"), &b, "h").is_some());
@@ -114,7 +126,7 @@ mod tests {
         // The folder moves: its documents' notes go with it.
         let moved = format!("{root}/moved");
         std::fs::rename(docs.path().join("kept"), &moved).unwrap();
-        move_in(data.path(), &format!("{root}/kept"), &moved).unwrap();
+        move_in(data.path(), &format!("{root}/kept"), &moved, None).unwrap();
         let c = format!("{moved}/b.md");
         assert!(part_file_in(data.path(), &c, OwnPart::Notes).is_file());
         assert!(!notes.exists());

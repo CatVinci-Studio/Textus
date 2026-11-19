@@ -18,6 +18,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { SettingsPageProps } from "./pages/types";
+import { isPhoneLayout } from "../platform/phone-layout";
 
 const NAV_ICON = 15;
 
@@ -104,20 +105,20 @@ const BUILT_IN: SettingsPageDef[] = [
     available: () => hasTextusAi && !isMobileApp,
     label: (t) => t.navExternalTools,
   },
-  // A phone's or tablet's: there plugins, themes and skills are managed
-  // in Settings; the desktop has the sidebar's plugins and these pages.
+  // A phone's: there plugins, themes and skills are managed in Settings;
+  // the desktop and a tablet have the sidebar's plugins and these pages.
   {
     id: "extensions",
     label: (t) => t.navExtensions,
     Icon: lucide(Puzzle, NAV_ICON),
-    available: () => isMobileApp,
+    available: () => isPhoneLayout(),
   },
   {
     id: "shortcuts",
     label: (t) => t.navShortcuts,
     Icon: lucide(Keyboard, NAV_ICON),
-    // A phone has no keyboard to bind shortcuts on.
-    available: () => !isMobileApp,
+    // A phone has no keyboard to bind shortcuts on; a tablet may.
+    available: () => !isPhoneLayout(),
   },
   {
     id: "privacy",

@@ -11,7 +11,7 @@
     color var(--dur-fast) var(--ease-standard);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   :is(.tab-pill, .sidebar-tab):hover {
     background: var(--ui-hover);
   }
@@ -66,7 +66,7 @@
   font-size: var(--text-secondary);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   :is(.settings-select, .inline-chat-mode, .paper-outline-kind):hover {
     border-color: color-mix(in srgb, var(--ui-muted) 45%, var(--ui-border));
   }
@@ -157,7 +157,11 @@
   font-size: var(--text-body);
 }
 
+/* A row: its label, then its keys, its check or its chevron at the end. */
 .context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
   width: 100%;
   padding: 4px 8px;
   border: none;
@@ -204,17 +208,6 @@
 }
 
 .find-replace-field:focus-within {
-  border-color: var(--ui-accent);
-}
-
-/* Text fields: one focus look - the border takes the accent - instead of
-   a mix of rings and borders. */
-:is(
-  .settings-text-input,
-  .settings-code-input,
-  .image-name-input-row input
-):focus-visible {
-  outline: none;
   border-color: var(--ui-accent);
 }
 
@@ -269,7 +262,16 @@ input[type="checkbox"].ui-check:checked {
   background: color-mix(in srgb, var(--ui-muted) 35%, transparent) padding-box;
 }
 
-@media (hover: hover) {
+/* A long document would shrink the thumb to a sliver too thin to grab. */
+::-webkit-scrollbar-thumb:vertical {
+  min-height: var(--control-height);
+}
+
+::-webkit-scrollbar-thumb:horizontal {
+  min-width: var(--control-height);
+}
+
+@media (any-hover: hover) {
   ::-webkit-scrollbar-thumb:hover {
     background-color: color-mix(in srgb, var(--ui-muted) 55%, transparent);
   }

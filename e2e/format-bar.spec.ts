@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { emit, openApp, settled } from "./helpers";
 
 const doc = (page: Page) => page.locator(".ProseMirror:visible").first();
 const bar = (page: Page) => page.getByRole("toolbar");
@@ -27,6 +27,13 @@ test("the format bar's styles wrap what is selected", async ({ page }) => {
     await bar(page).getByRole("button", { name, exact: true }).click();
     await expect(doc(page).locator(tag)).toHaveText("gamma");
   }
+  // A highlight keeps the text's colour, not the browser's black for <mark>.
+  const colour = (sel: string) =>
+    doc(page)
+      .locator(sel)
+      .last()
+      .evaluate((el) => getComputedStyle(el).color);
+  expect(await colour("mark")).toBe(await colour("p"));
 });
 
 test("the format bar's heading button picks a level", async ({ page }) => {
@@ -74,21 +81,17 @@ test("brought back to the top, the document's first block shows below the format
   await doc(page).click();
   await page.keyboard.type("one line");
   await page.mouse.wheel(0, 200);
-  await page.waitForTimeout(300);
+  await settled(page);
   expect(
     (await doc(page).locator("> *").first().boundingBox())!.y,
   ).toBeGreaterThanOrEqual(barBox!.y + barBox!.height);
-});
-
-test("in typewriter mode too, a document's first line starts below the format bar", async ({
-  page,
-}) => {
-  await openApp(page, { settings: { typewriterMode: true } });
-  await doc(page).click();
-  await page.keyboard.type("first line");
-  const barBox = (await bar(page).boundingBox())!;
-  const first = (await doc(page).locator("> *").first().boundingBox())!;
-  expect(first.y).toBeGreaterThanOrEqual(barBox.y + barBox.height);
+  // In typewriter mode too, which centres the caret's line.
+  await emit(page, "menu-toggle-typewriter-mode");
+  await page.keyboard.type(" and more");
+  await settled(page);
+  expect(
+    (await doc(page).locator("> *").first().boundingBox())!.y,
+  ).toBeGreaterThanOrEqual(barBox!.y + barBox!.height);
 });
 
 test("View › Format Bar puts the bar on a side of the sheet, the text beside it, or hides it", async ({

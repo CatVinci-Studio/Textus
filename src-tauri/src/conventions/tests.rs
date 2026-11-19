@@ -104,15 +104,13 @@ fn reads_template_formats_and_periodic_notes_and_puts_unset_daily_notes_at_the_t
 
 #[test]
 fn reads_logseq_foam_and_our_own_settings() {
-    let logseq = folder_with(&[(
-        "logseq/config.edn",
-        "{:journals-directory \"days\"\n :journal/file-name-format \"yyyy-MM-dd\"}",
-    )]);
-    let c = detected(&of_folder(logseq.path()));
-    let daily = value(&c.daily).unwrap();
-    assert!(daily.folder.ends_with("days"));
-    assert_eq!(daily.format, "YYYY-MM-DD");
-    assert_eq!(value(&c.attachments).as_deref(), Some("assets"));
+    // A Logseq graph is found, its links resolved from it; its settings are
+    // a plugin's to read.
+    let logseq = folder_with(&[("logseq/config.edn", "{:journals-directory \"days\"}")]);
+    let found = of_folder(&logseq.path().join("notes"));
+    assert_eq!(found.sources[0].app, "logseq");
+    assert!(found.detected.is_none());
+    assert_eq!(found.notes_root().as_deref(), Some(logseq.path()));
 
     let foam = folder_with(&[(
         ".vscode/settings.json",
@@ -282,4 +280,68 @@ fn never_writes_a_settings_file() {
     let before = stamps(dir.path());
     let _ = of_folder(&dir.path().join("notes"));
     assert_eq!(stamps(dir.path()), before);
+}
+
+#[test]
+fn a_plugins_reader_is_handed_its_marker_and_its_answer_offered() {
+    use super::plugin_readers::{answer, pending, set_readers, Found, FoundNotes, PluginReader};
+    let dir = folder_with(&[("zettel/zettel.cfg", "days=journal")]);
+    let reader = |app: &str, marker: &str| PluginReader {
+        app: app.into(),
+        marker: marker.into(),
+        notes: true,
+    };
+    set_readers(
+        "test-readers",
+        vec![
+            reader("example.zettel#zettel", "zettel/zettel.cfg"),
+            // A core app's name, or a marker out of the folder, is refused.
+            reader("obsidian", "zettel/zettel.cfg"),
+            reader("example.out#out", "../zettel.cfg"),
+        ],
+    );
+    let notes = dir.path().join("notes");
+    let asked = pending(&notes);
+    assert_eq!(asked.len(), 1);
+    assert_eq!(asked[0].app, "example.zettel#zettel");
+    assert_eq!(asked[0].text, "days=journal");
+    // Found before it answers, its links resolved from it.
+    let before = of_folder(&notes);
+    assert_eq!(before.sources[0].app, "example.zettel#zettel");
+    assert_eq!(before.notes_root().as_deref(), Some(dir.path()));
+    assert!(before.detected.is_none());
+
+    answer(
+        "example.zettel#zettel",
+        dir.path(),
+        "days=journal",
+        Some(Found {
+            link_style: Some("wiki".into()),
+            link_path: Some("sideways".into()),
+            attachments: Some("../outside".into()),
+            templates: Some("../../etc".into()),
+            daily: Some(FoundNotes {
+                folder: "journal".into(),
+                format: "YYYY-MM-DD".into(),
+                template: None,
+            }),
+            ..Default::default()
+        }),
+    );
+    assert!(pending(&notes).is_empty());
+    let after = of_folder(&notes);
+    // Offered, never applied by itself; what leaves the folder is dropped.
+    assert!(after.link_style.is_none());
+    let c = detected(&after);
+    assert_eq!(value(&c.link_style).as_deref(), Some("wiki"));
+    assert!(c.link_path.is_none() && c.attachments.is_none() && c.templates.is_none());
+    let daily = value(&c.daily).unwrap();
+    assert_eq!(Path::new(&daily.folder), dir.path().join("journal"));
+    assert_eq!(c.link_style.unwrap().root, dir.path().to_string_lossy());
+
+    // Its marker edited: asked again.
+    fs::write(dir.path().join("zettel/zettel.cfg"), "days=daily").unwrap();
+    assert_eq!(pending(&notes).len(), 1);
+    set_readers("test-readers", vec![]);
+    assert!(pending(&notes).is_empty());
 }

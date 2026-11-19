@@ -24,9 +24,15 @@ export const commands = {
 	plugin_ai_allow: (plugin: string, more: boolean) => __TAURI_INVOKE<null>("plugin_ai_allow", { plugin, more }),
 	/**
 	 *  The writing model's answer to `prompt`, for a plugin with `ai.model`
-	 *  that the user allowed and that has tokens left this month.
+	 *  that the user allowed and that has tokens left this month. Cancelled
+	 *  by `cancel_id` (plugin_http_cancel), only the question is counted.
 	 */
-	plugin_ai_complete: (plugin: string, system: string, prompt: string) => __TAURI_INVOKE<string>("plugin_ai_complete", { plugin, system, prompt }),
+	plugin_ai_complete: (plugin: string, system: string, prompt: string, cancelId: string | null) => __TAURI_INVOKE<string>("plugin_ai_complete", { plugin, system, prompt, cancelId }),
+	/**
+	 *  [`plugin_ai_complete`], the answer streamed to `on_text` as it comes;
+	 *  the whole returned. Cancelled, what was written so far is counted.
+	 */
+	plugin_ai_stream: (plugin: string, system: string, prompt: string, onText: Channel<string>, cancelId: string | null) => __TAURI_INVOKE<string>("plugin_ai_stream", { plugin, system, prompt, onText, cancelId }),
 	/**
 	 *  Turns a plugin on or off with the permissions the user granted it. A
 	 *  developer-mode folder is kept.

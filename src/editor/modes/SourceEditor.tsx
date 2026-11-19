@@ -20,7 +20,6 @@ import {
   historyField,
   historyKeymap,
   indentLess,
-  insertTab,
   redo,
   selectAll,
   standardKeymap,
@@ -37,11 +36,12 @@ import {
 } from "./source-view-registry";
 import { SOURCE_EDIT_EVENT } from "../../utils/events";
 import { followFormatMenu, formatSource } from "./source-format-events";
-import { sourceKeys } from "./source-keys";
+import { sourceKeys, sourceTab } from "./source-keys";
 import { tellCopied } from "../../clipboard/copied";
 import { elasticOverscroll } from "../../engine/controls/elastic-overscroll";
 import { leaveSource, sourceLeftBy } from "../tab-left";
 import { registerTabEditor } from "../tab-editor";
+import { mayTakeKeys } from "../take-keys";
 import "./source-editor.css";
 import { sharedEnds } from "../../utils/lcs";
 import { registerZoomPane } from "../../engine/zoom/zoom-panes";
@@ -156,7 +156,7 @@ export function SourceEditor({
       keymap.of([
         { key: "Mod-b", run: (v) => formatSource(v, "bold") },
         { key: "Mod-i", run: (v) => formatSource(v, "italic") },
-        { key: "Tab", run: insertTab, shift: indentLess },
+        { key: "Tab", run: sourceTab, shift: indentLess },
         ...standardKeymap,
         ...historyKeymap,
       ]),
@@ -219,6 +219,12 @@ export function SourceEditor({
     const stopFlush = tabId
       ? registerTabEditor(tabId, "flush", report)
       : undefined;
+    // The keys can go to it once built, as to the rendered editor.
+    const stopFocus = tabId
+      ? registerTabEditor(tabId, "focus", () => {
+          if (mayTakeKeys()) view.focus();
+        })
+      : undefined;
     const onEdit = (event: Event) => {
       const action = (event as CustomEvent<SourceEdit>).detail;
       if (action === "undo" || action === "redo" || action === "select-all")
@@ -247,6 +253,7 @@ export function SourceEditor({
           scroll: place ?? view.scrollSnapshot(),
         });
       stopFlush?.();
+      stopFocus?.();
       stopZoomPane?.();
       stopElastic();
       stopFormat();

@@ -12,6 +12,17 @@ export function hasPlugin(id: string): boolean {
   return root != null && existsSync(join(root, "plugins", id));
 }
 
+/** Whether the app runs `id`: a plugin made for the next version of
+ *  Textus is set aside until the version bump. */
+export async function pluginRuns(page: Page, id: string): Promise<boolean> {
+  const status = await page.waitForFunction(async (id) => {
+    const path = "/src/plugins/store/plugin-records.ts";
+    const records = await import(/* @vite-ignore */ path);
+    return records.pluginRecord(id)?.status ?? false;
+  }, id);
+  return (await status.jsonValue()) !== "incompatible";
+}
+
 /** A Word document of one paragraph, base64. */
 export async function minimalDocx(text: string): Promise<string> {
   const zip = new JSZip();

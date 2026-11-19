@@ -2,6 +2,37 @@
 // AI tools, other plugins, export, links, jobs, notices, text, paths and
 // the app.
 
+// net.fetch's requests given a signal, each named to cancel it by; the
+// runtime's own mark keeps them apart from another runtime's of the plugin.
+var fetches = 0;
+var fetchMark = Math.random().toString(36).slice(2);
+function aborted() {
+  var err = new Error("The request was cancelled.");
+  err.name = "AbortError";
+  return err;
+}
+// call(method, params) stopped in the app too when `signal` aborts: a
+// fetch, or a question to the AI model.
+function callWithSignal(method, params, signal) {
+  if (!signal) return call(method, params);
+  if (signal.aborted) return Promise.reject(aborted());
+  var cancelId = fetchMark + ":" + ++fetches;
+  var stop = function () {
+    notify("net.cancel", { cancelId: cancelId });
+  };
+  signal.addEventListener("abort", stop, { once: true });
+  return call(method, Object.assign({}, params, { cancelId: cancelId })).then(
+    function (r) {
+      signal.removeEventListener("abort", stop);
+      return r;
+    },
+    function (err) {
+      signal.removeEventListener("abort", stop);
+      throw signal.aborted ? aborted() : err;
+    },
+  );
+}
+
 textus.metadata = {
   get: function (path) {
     return call("metadata.get", { path: String(path) });
@@ -79,32 +110,16 @@ textus.git = {
 textus.net = {
   fetch: function (url, init) {
     init = init || {};
-    var signal = init.signal;
-    if (signal && signal.aborted) return Promise.reject(aborted());
-    var cancelId = signal ? fetchMark + ":" + ++fetches : undefined;
-    var sent = call("net.fetch", {
-      url: String(url),
-      method: init.method,
-      headers: init.headers,
-      body: init.body === undefined ? undefined : bytesOf(init.body),
-      cancelId: cancelId,
-    });
-    if (signal) {
-      var stop = function () {
-        notify("net.cancel", { cancelId: cancelId });
-      };
-      signal.addEventListener("abort", stop, { once: true });
-      sent = sent.then(
-        function (r) {
-          signal.removeEventListener("abort", stop);
-          return r;
-        },
-        function (err) {
-          signal.removeEventListener("abort", stop);
-          throw signal.aborted ? aborted() : err;
-        },
-      );
-    }
+    var sent = callWithSignal(
+      "net.fetch",
+      {
+        url: String(url),
+        method: init.method,
+        headers: init.headers,
+        body: init.body === undefined ? undefined : bytesOf(init.body),
+      },
+      init.signal,
+    );
     return sent.then(function (r) {
       return {
         status: r.status,
@@ -193,11 +208,33 @@ textus.ai = {
   available: function () {
     return call("ai.available");
   },
-  complete: function (request) {
+  complete: function (request, options) {
     var r = request || {};
-    return call("ai.complete", {
-      system: r.system == null ? undefined : String(r.system),
-      messages: plain(r.prompt != null ? String(r.prompt) : r.messages),
+    return callWithSignal(
+      "ai.complete",
+      {
+        system: r.system == null ? undefined : String(r.system),
+        messages: plain(r.prompt != null ? String(r.prompt) : r.messages),
+      },
+      options && options.signal,
+    );
+  },
+  stream: function (request, onText, options) {
+    var r = request || {};
+    var stream = String(++aiStreamCount);
+    aiStreams.set(stream, function (text) {
+      if (typeof onText === "function") onText(text);
+    });
+    return callWithSignal(
+      "ai.stream",
+      {
+        system: r.system == null ? undefined : String(r.system),
+        messages: plain(r.prompt != null ? String(r.prompt) : r.messages),
+        stream: stream,
+      },
+      options && options.signal,
+    ).finally(function () {
+      aiStreams.delete(stream);
     });
   },
 };
@@ -340,14 +377,16 @@ textus.history = {
 };
 
 // Paths as Textus writes them: "/" between parts on every system (a "\\"
-// is read as one), no permission, nothing leaves the frame.
+// is read as one), no permission, nothing leaves the frame. A provider's
+// path is a whole address: its "scheme://host/" stays its root.
 textus.path = (function () {
+  var ROOT = /^([A-Za-z][A-Za-z0-9+.-]+:\/\/[^/]*\/?|\/|[A-Za-z]:\/)/;
   var parts = function (path) {
     return String(path).replace(/\\/g, "/").split("/");
   };
   var normalize = function (path) {
     var text = String(path).replace(/\\/g, "/");
-    var lead = text.match(/^(\/|[A-Za-z]:\/)/);
+    var lead = text.match(ROOT);
     var out = [];
     parts(text.slice(lead ? lead[0].length : 0)).forEach(function (part) {
       if (part === "" || part === ".") return;
@@ -379,9 +418,9 @@ textus.path = (function () {
       var norm = normalize(path);
       var at = norm.lastIndexOf("/");
       if (at < 0) return ".";
-      return at === 0 || /^[A-Za-z]:\/$/.test(norm.slice(0, at + 1))
-        ? norm.slice(0, at + 1)
-        : norm.slice(0, at);
+      var lead = norm.match(ROOT);
+      if (lead && at < lead[0].length) return lead[0];
+      return norm.slice(0, at);
     },
     basename: basename,
     extname: function (path) {

@@ -1,7 +1,7 @@
-//! `textus.ai.complete`: a plugin asking the user's writing model, with the
-//! `ai.model` permission, the user's yes on its first call, and a monthly
-//! allowance of tokens kept here, in `plugins/ai.json`, where the plugin
-//! can't reach it.
+//! `textus.ai.complete` and `textus.ai.stream`: a plugin asking the user's
+//! writing model, with the `ai.model` permission, the user's yes on its
+//! first call, and a monthly allowance of tokens kept here, in
+//! `plugins/ai.json`, where the plugin can't reach it.
 
 use super::{plugins_root, require_id};
 use serde::{Deserialize, Serialize};
@@ -149,33 +149,32 @@ pub fn plugin_ai_allow(app: tauri::AppHandle, plugin: String, more: bool) -> Res
     })
 }
 
-/// The writing model's answer to `prompt`, for a plugin with `ai.model`
-/// that the user allowed and that has tokens left this month.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn plugin_ai_complete(
-    app: tauri::AppHandle,
-    plugin: String,
-    system: String,
-    prompt: String,
-) -> Result<String, String> {
-    require_id(&plugin)?;
-    crate::ai::ensure_on(&app)?;
-    let state = super::state::read(&app);
+/// The writing model a plugin's call goes to, once the plugin may make it:
+/// `ai.model` granted, the user's yes, tokens left this month, and an
+/// input within bounds.
+async fn checked_model(
+    app: &tauri::AppHandle,
+    plugin: &str,
+    system: &str,
+    prompt: &str,
+) -> Result<(String, Option<String>), String> {
+    require_id(plugin)?;
+    crate::ai::ensure_on(app)?;
+    let state = super::state::read(app);
     let granted = state
         .plugins
-        .get(&plugin)
+        .get(plugin)
         .is_some_and(|p| p.enabled && p.granted.iter().any(|g| g == "ai.model"));
     if !state.all_on || !granted {
         return Err("This plugin may not use your AI model (ai.model).".into());
     }
-    if let Some(no) = refusal(read(&app).plugins.get(&plugin)) {
+    if let Some(no) = refusal(read(app).plugins.get(plugin)) {
         return Err(no.into());
     }
     if system.chars().count() + prompt.chars().count() > LONGEST_INPUT {
         return Err(format!("At most {LONGEST_INPUT} characters can be sent."));
     }
-    let setting = |key: &str| crate::settings::read_setting(&app, key);
+    let setting = |key: &str| crate::settings::read_setting(app, key);
     let provider = [setting("writingProvider"), setting("aiProvider")]
         .into_iter()
         .flatten()
@@ -188,13 +187,83 @@ pub async fn plugin_ai_complete(
                 .map(str::to_string)
         })
         .filter(|m| !m.is_empty());
-    let spent = tokens(&system) + tokens(&prompt);
-    let answer = crate::ai::client::call(&app, &provider, system, prompt, model.as_deref()).await?;
-    let spent = spent + tokens(&answer);
-    update(&app, |usage| {
+    Ok((provider, model))
+}
+
+/// Counts a call's tokens against the plugin's month.
+fn spend(
+    app: &tauri::AppHandle,
+    plugin: String,
+    sent: &[&str],
+    answer: &str,
+) -> Result<(), String> {
+    let spent = sent.iter().map(|text| tokens(text)).sum::<u64>() + tokens(answer);
+    update(app, |usage| {
         usage.plugins.entry(plugin).or_default().used += spent;
-    })?;
-    Ok(answer)
+    })
+}
+
+/// The writing model's answer to `prompt`, for a plugin with `ai.model`
+/// that the user allowed and that has tokens left this month. Cancelled
+/// by `cancel_id` (plugin_http_cancel), only the question is counted.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn plugin_ai_complete(
+    app: tauri::AppHandle,
+    plugin: String,
+    system: String,
+    prompt: String,
+    cancel_id: Option<String>,
+) -> Result<String, String> {
+    let (provider, model) = checked_model(&app, &plugin, &system, &prompt).await?;
+    let (sent_system, sent_prompt) = (system.clone(), prompt.clone());
+    let call = crate::ai::client::call(&app, &provider, system, prompt, model.as_deref());
+    let answer = super::http::cancellable(&plugin, cancel_id, call).await;
+    if let Some(written) = counted(&answer, String::new()) {
+        spend(&app, plugin, &[&sent_system, &sent_prompt], &written)?;
+    }
+    answer
+}
+
+/// What a call spent: its answer, or what was written of it when it was
+/// cancelled; nothing when it failed.
+fn counted(answer: &Result<String, String>, so_far: String) -> Option<String> {
+    match answer {
+        Ok(text) => Some(text.clone()),
+        Err(e) if e == "cancelled" => Some(so_far),
+        Err(_) => None,
+    }
+}
+
+/// [`plugin_ai_complete`], the answer streamed to `on_text` as it comes;
+/// the whole returned. Cancelled, what was written so far is counted.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn plugin_ai_stream(
+    app: tauri::AppHandle,
+    plugin: String,
+    system: String,
+    prompt: String,
+    on_text: tauri::ipc::Channel<String>,
+    cancel_id: Option<String>,
+) -> Result<String, String> {
+    let (provider, model) = checked_model(&app, &plugin, &system, &prompt).await?;
+    let (sent_system, sent_prompt) = (system.clone(), prompt.clone());
+    let written = Mutex::new(String::new());
+    let send = |text: &str| {
+        if let Ok(mut so_far) = written.lock() {
+            so_far.push_str(text);
+        }
+        let _ = on_text.send(text.to_string());
+    };
+    let stream =
+        crate::ai::client::stream(&app, &provider, system, prompt, model.as_deref(), &send);
+    let answer = super::http::cancellable(&plugin, cancel_id, stream).await;
+    let so_far = written.lock().map(|s| s.clone()).unwrap_or_default();
+    if let Some(written) = counted(&answer, so_far) {
+        spend(&app, plugin, &[&sent_system, &sent_prompt], &written)?;
+    }
+    answer
 }
 
 #[cfg(test)]

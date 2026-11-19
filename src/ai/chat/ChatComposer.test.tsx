@@ -21,6 +21,7 @@ import { installTestLocalStorage } from "../../dev/test-local-storage";
 import type { ChatAttachment } from "../types";
 
 const pickAttachmentFiles = vi.fn();
+const attachPasted = vi.fn();
 const listSkills = vi.fn();
 const listProjectFiles = vi.fn();
 let supportsVision = true;
@@ -51,6 +52,7 @@ vi.mock("../../platform/ipc", async () => {
       listSkills: (...args: unknown[]) => listSkills(...args),
       listProjectFiles: (...args: unknown[]) => listProjectFiles(...args),
       pickAttachmentFiles: (id: string) => pickAttachmentFiles(id),
+      attachPasted: (...args: unknown[]) => attachPasted(...args),
     },
   };
 });
@@ -138,6 +140,7 @@ const imageAttachment: ChatAttachment = {
 beforeAll(installTestLocalStorage);
 beforeEach(() => {
   pickAttachmentFiles.mockReset();
+  attachPasted.mockReset();
   listSkills.mockReset().mockResolvedValue(null);
   listProjectFiles.mockReset().mockResolvedValue([]);
   supportsVision = true;
@@ -570,12 +573,48 @@ describe("ChatComposer attachments", () => {
     expect(screen.queryByText("chart.png")).not.toBeInTheDocument();
   });
 
-  it("stages an image when the provider can read one", async () => {
+  it("stages an image when the provider can read one, picked or pasted", async () => {
     pickAttachmentFiles.mockResolvedValue([imageAttachment]);
     renderComposer();
 
     fireEvent.click(screen.getByLabelText("Attach a file"));
     expect(await screen.findByText("chart.png")).toBeInTheDocument();
+
+    // A screenshot's bytes, and an image file copied in a file manager.
+    attachPasted.mockResolvedValue([{ ...imageAttachment, name: "shot.png" }]);
+    const shot = new File([new Uint8Array([1, 2, 3])], "image.png", {
+      type: "image/png",
+    });
+    const pasted = (data: Record<string, unknown>) =>
+      fireEvent.paste(screen.getByPlaceholderText("Ask anything"), {
+        clipboardData: { items: [], files: [], getData: () => "", ...data },
+      });
+    pasted({ files: [shot] });
+    expect(await screen.findByText("shot.png")).toBeInTheDocument();
+    expect(attachPasted).toHaveBeenLastCalledWith("c1", [
+      { kind: "bytes", name: "image.png", dataBase64: "AQID" },
+    ]);
+    // A PDF copied in a file manager, its name in the text as Finder has it.
+    pasted({
+      getData: (type: string) =>
+        type === "text/uri-list"
+          ? "file:///Users/me/report%202.pdf"
+          : type === "text/plain"
+            ? "report 2.pdf"
+            : "",
+    });
+    await waitFor(() =>
+      expect(attachPasted).toHaveBeenLastCalledWith("c1", [
+        { kind: "path", path: "/Users/me/report 2.pdf" },
+      ]),
+    );
+    // Text copied in Word, a picture of it alongside: pasted as text.
+    attachPasted.mockClear();
+    pasted({
+      files: [shot],
+      getData: (type: string) => (type === "text/plain" ? "Q3 numbers" : ""),
+    });
+    expect(attachPasted).not.toHaveBeenCalled();
   });
 
   it("says so when an attachment was cut at the extraction cap", async () => {

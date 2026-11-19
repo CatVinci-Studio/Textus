@@ -144,16 +144,16 @@ export function PluginReadme({
   }, [installed, open, text]);
   if (!text?.trim()) return null;
   const t = currentStrings();
+  const cut = installed && !open && long;
   return (
     <section
       className="plugin-readme"
       aria-label={label}
       data-folded={installed && !open ? "" : undefined}
-      data-cut={installed && !open && long ? "" : undefined}
     >
       {/* Tabbing into the hidden part opens it, rather than scroll it. */}
       <div
-        className="plugin-readme-body"
+        className={`plugin-readme-body${cut ? " tx-cut-fade" : ""}`}
         ref={bodyRef}
         onFocus={(e) =>
           long && !open && e.target.matches(":focus-visible") && setOpen(true)
@@ -170,7 +170,7 @@ export function PluginReadme({
       {long && (
         <button
           type="button"
-          className="text-button plugin-readme-more"
+          className="tx-button text-button plugin-readme-more"
           aria-expanded={open}
           onClick={() => setOpen(!open)}
         >

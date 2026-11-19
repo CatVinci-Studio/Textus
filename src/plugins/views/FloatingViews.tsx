@@ -10,7 +10,7 @@ import {
   type ContextMenuEntry,
 } from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
-import { PluginWebviewPanel } from "./PluginWebview";
+import { PluginWebviewPanel } from "./plugin-webview-hosts";
 import { DesktopFloating, DOT_SIZE as DOT } from "./desktop-floating";
 import { ResizeGrip } from "./ResizeGrip";
 import {

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { MAC, openApp, pasteMarkdown } from "./helpers";
+import { MAC, openApp, pasteMarkdown, settled } from "./helpers";
 
 // A table's own tools at its top right: they show on hover and while the
 // caret is in it, and change what the file says.
@@ -71,7 +71,7 @@ test("a table's tools align the caret's column, size it, and delete it", async (
 
   // Over a narrow column the tools give way rather than run past the table.
   await page.setViewportSize({ width: 330, height: 760 });
-  await page.waitForTimeout(400);
+  await settled(page);
   await table.locator("th").last().hover();
   const box = (await table.boundingBox())!;
   for (const pill of await table.locator(".block-pill:visible").all())
@@ -243,7 +243,7 @@ test("a click below a table that ends the document starts a paragraph there", as
   page,
 }) => {
   const table = await open(page);
-  await page.waitForTimeout(400);
+  await settled(page);
   const box = (await table.boundingBox())!;
   await page.mouse.click(box.x + 40, box.y + box.height + 40);
   await page.keyboard.type("after");
@@ -427,4 +427,23 @@ test.describe("on a touch screen", () => {
     await page.waitForTimeout(300);
     expect(await gripAtCaret()).toBe("at caret");
   });
+});
+
+test("Tab takes a waiting suggestion before it moves on a cell", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, {
+    settings: { menuBarShown: false, language: "en", enableCompletion: true },
+  });
+  await page.locator(".ProseMirror:visible").first().click();
+  await pasteMarkdown(page, TABLE);
+  const table = page.locator(".table-wrapper").first();
+  await table.locator("td").first().click();
+  await page.keyboard.press("End");
+  await page.keyboard.type(" more words here");
+  await expect(page.locator(".ghost-text")).toBeVisible({ timeout: 10_000 });
+  await page.keyboard.press("Tab");
+  await expect(table.locator("td").first()).toContainText("canned dev-shim");
+  await expect(page.locator(".ghost-text")).toHaveCount(0);
 });

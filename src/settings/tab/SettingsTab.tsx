@@ -81,7 +81,7 @@ export function SettingsTab({
         {!listShown && (
           <button
             type="button"
-            className="text-button settings-back-button"
+            className="tx-button text-button settings-back-button"
             onClick={showSettingsList}
           >
             <ChevronIcon className="settings-back-chevron" />

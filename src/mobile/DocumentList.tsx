@@ -23,7 +23,7 @@ import { fs } from "../platform/ipc";
 import { getUiState, setUiState } from "../storage/ui-state";
 import { basename, dirname } from "../utils/path";
 import { useLongPress } from "../utils/hooks/useLongPress";
-import { iosFiles } from "../platform/ios-files";
+import { nativeFiles } from "../platform/native-files";
 import {
   forgetIOSDocument,
   inIOSDocuments,
@@ -187,7 +187,7 @@ export function DocumentList({
       { label: t.treeOpen, onSelect: () => onOpen(entry.path) },
       {
         label: t.menuShare,
-        onSelect: () => void iosFiles.share(entry.path).catch(fail),
+        onSelect: () => void nativeFiles.share(entry.path).catch(fail),
       },
       ...(entry.local
         ? [

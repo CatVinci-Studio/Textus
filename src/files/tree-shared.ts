@@ -33,13 +33,11 @@ export interface TreeShared {
    *  read again, as another app may have changed it. */
   refreshed: number;
   dropInto: string | null;
-  /** Desktop only: touch has onRowHold. */
+  /** A right-click (a computer's, or an iPad's trackpad). */
   onRowMenu:
     ((e: ReactMouseEvent, path: string, isDir: boolean) => void) | null;
-  /** Touch only: a row held down opens the same menu, as a sheet. */
-  onRowHold:
-    | ((at: { x: number; y: number }, path: string, isDir: boolean) => void)
-    | null;
+  /** A press: a mouse's drag, or a finger held still to lift the row and
+   *  drag it, or let go in place for its menu. */
   onRowPointerDown:
     | ((
         e: ReactPointerEvent,
@@ -48,8 +46,9 @@ export interface TreeShared {
         isDir: boolean,
       ) => void)
     | null;
-  /** ⌘/Ctrl-click on a file opens it in a window of its own. Desktop only. */
-  openInNewWindow: ((path: string) => void) | null;
+  /** A click on a row, which a ⌘/Ctrl or Shift makes a pick of several
+   *  rows (tree-selection.ts): true when it was one. Desktop only. */
+  onRowPick: ((e: ReactMouseEvent, path: string) => boolean) | null;
   /** A new document or folder being named in place, in `dir`. */
   draft: TreeDraft | null;
   /** Its name, or null when it was given up. */
@@ -72,7 +71,7 @@ export const TreeContext = createContext<TreeShared | null>(null);
  *  folders are read again, so a re-read doesn't draw every row. */
 export type TreeRowActions = Pick<
   TreeShared,
-  "onRowMenu" | "onRowHold" | "onRowPointerDown" | "openInNewWindow"
+  "onRowMenu" | "onRowPointerDown" | "onRowPick"
 >;
 
 export const TreeRowActionsContext = createContext<TreeRowActions | null>(null);

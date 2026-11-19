@@ -17,7 +17,7 @@
   margin: 0 2px;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .agent-reply-files > summary:hover {
     text-decoration: underline;
   }

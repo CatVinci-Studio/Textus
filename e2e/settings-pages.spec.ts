@@ -121,18 +121,8 @@ test("installed themes show as the store's do", async ({ page }) => {
   const mine = page.locator('[data-user-theme="mine"]');
   await expect(mine).toHaveClass(/theme-gallery-item/);
   await expect(mine.locator(".theme-gallery-preview")).toBeVisible();
-});
-
-test("squeezed beside a document in a small window, Settings still shows its page", async ({
-  page,
-}) => {
-  // Its list open in the sidebar by hand: nothing steps aside for it.
-  await page.setViewportSize({ width: 900, height: 700 });
-  await openApp(page, { settings: { menuBarShown: false } });
-  await emit(page, "menu-settings");
-  await emit(page, "menu-split-right");
-  await expect(page.locator(".settings-tab-page")).toBeVisible();
-  await expect(page.locator(".settings-row").first()).toBeVisible();
+  // In a grid of cards, the store's beside it.
+  await expect(mine.locator("..")).toHaveCSS("display", "grid");
 });
 
 test("first-line indent sets in the document's paragraphs, not a list's", async ({

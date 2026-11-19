@@ -90,11 +90,19 @@ export function SplitDivider({
   const grip = useGrip({
     start: () => {
       const { origin } = frameLayout();
-      return { origin: row ? origin.x : origin.y };
+      return {
+        origin: row ? origin.x : origin.y,
+        share: current,
+        width: fixed === "before" || fixed === "after" ? drawn() : 0,
+      };
     },
     move: (e, held) => moveTo((row ? e.clientX : e.clientY) - held.origin),
-    end: (_held, how) => {
-      if (fixed === "before" || fixed === "after")
+    end: (held, how) => {
+      const panel = fixed === "before" || fixed === "after";
+      if (how === "cancelled") {
+        if (panel) setPanelWidth(held.width, true);
+        else share(held.share);
+      } else if (panel)
         setPanelWidth(how === "gone" ? panelWidth() : drawn(), true);
     },
   });

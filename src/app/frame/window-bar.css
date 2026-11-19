@@ -147,7 +147,7 @@
   pointer-events: auto;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .window-bar-lock:hover {
     color: var(--ui-text);
   }

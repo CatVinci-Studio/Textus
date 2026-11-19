@@ -3,6 +3,7 @@ import { ActionSheet } from "../engine/controls/ActionSheet";
 import { Presence, PresenceDiv } from "../engine/motion/usePresence";
 import type { useModalDialog } from "../engine/controls/useModalDialog";
 import type { Strings } from "../i18n/strings";
+import { DialogActions } from "../engine/controls/DialogActions";
 
 /** The save/discard/cancel prompt: a dialog on the desktop, an action sheet
  *  on a phone. */
@@ -64,20 +65,27 @@ export function ClosePrompt({
               aria-label={message}
             >
               <p>{message}</p>
-              <div className="close-prompt-buttons">
-                <button className="close-prompt-discard" onClick={onDiscard}>
-                  {t.closePromptDiscard}
+              <DialogActions
+                start={
+                  <button
+                    className="tx-button close-prompt-discard"
+                    onClick={onDiscard}
+                  >
+                    {t.closePromptDiscard}
+                  </button>
+                }
+              >
+                <button className="tx-button" onClick={onCancel}>
+                  {t.cancel}
                 </button>
-                <div className="close-prompt-spacer" />
-                <button onClick={onCancel}>{t.cancel}</button>
                 <button
-                  className="close-prompt-primary"
+                  className="tx-button primary close-prompt-primary"
                   autoFocus
                   onClick={onSave}
                 >
                   {t.closePromptSave}
                 </button>
-              </div>
+              </DialogActions>
             </div>
           </PresenceDiv>
         )}

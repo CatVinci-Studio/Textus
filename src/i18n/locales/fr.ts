@@ -652,6 +652,11 @@ utiliser une.
     "Mettre « {name} » à la corbeille ? Vous pourrez l’en sortir.",
   treeTrashFolderConfirm:
     "Mettre le dossier « {name} » et tout son contenu à la corbeille ? Vous pourrez l’en sortir.",
+  treeTrashManyConfirm: {
+    one: "Mettre {n} élément à la corbeille ? Vous pourrez l’en sortir.",
+    many: "Mettre {n} éléments à la corbeille ? Vous pourrez les en sortir.",
+    other: "Mettre {n} éléments à la corbeille ? Vous pourrez les en sortir.",
+  },
   errorPermission:
     "Textus n'a pas l'autorisation d'ouvrir ce fichier ou ce dossier. Vérifiez ses autorisations ou choisissez un autre emplacement.",
   errorNotFound:
@@ -676,8 +681,8 @@ utiliser une.
     "La boutique de plugins nécessite une version plus récente de Textus. Mettez Textus à jour pour la voir.",
   errorImageTooBig: "L'image est vide ou dépasse 25 Mo.",
   errorNoFolder: "Ouvrez d'abord un dossier.",
-  errorPluginsNeedAllFiles:
-    "Les plugins ne peuvent pas lire ce dossier : Textus n'a pas accès à tous les fichiers. Rouvrez le dossier et choisissez « Continuer ».",
+  errorFarPictures:
+    "Les images ne peuvent pas encore être enregistrées dans ce dossier. Collez-les dans un document de cet appareil.",
   errorPdfUnsupported: "L'export PDF n'est pas disponible sur ce système.",
   errorNoText: "Il ne contient aucun texte lisible.",
   errorUnreadable: "Ce fichier ne peut pas être lu.",
@@ -983,6 +988,7 @@ utiliser une.
   agentQueueContinue: "Continuer",
   agentQueueEdit: "Modifier",
   agentQueueRemove: "Retirer",
+  agentQueueInsert: "Envoyer maintenant",
   agentSend: "Envoyer",
   agentStop: "Arrêter",
   agentRetry: "Réessayer",
@@ -1164,6 +1170,12 @@ utiliser une.
   autoCloseBracketsLabel: "Fermer (), [] et « »",
   plainTextMenuLabel: "Copier/coller en texte brut dans le menu contextuel",
   pdfPageNumbersLabel: "Afficher les numéros de page à l’export",
+  pdfPaperLabel: "Format de papier du PDF",
+  pdfMarginLabel: "Marges du PDF",
+  pdfMarginNarrow: "Étroites",
+  pdfMarginNormal: "Normales",
+  pdfMarginWide: "Larges",
+  pdfTextScaleLabel: "Taille du texte du PDF",
   docxTemplateLabel: "Modèle Word",
   docxTemplateHelp:
     "Les fichiers Word exportés reprennent les styles, polices et marges de ce fichier.",
@@ -1975,6 +1987,14 @@ utiliser une.
   pluginPermAppearance: "Modifier les couleurs de Textus et de vos documents",
   pluginPermGitCommit:
     "Faire des commits Git dans le dossier ouvert avec votre Git",
+  pluginPermSsh:
+    "Se connecter à des serveurs avec vos réglages SSH (seulement ceux que vous autorisez)",
+  pluginSshAsk:
+    "{plugin} veut se connecter à {host} avec vos réglages SSH, pour y lire et écrire des fichiers.",
+  pluginSshUnknownHost:
+    "{host} n'est pas encore un hôte connu. Connectez-vous-y une fois dans un terminal (ssh {host}) pour vérifier et accepter sa clé, puis réessayez.",
+  pluginSshNeedsLogin:
+    "{host} a demandé un mot de passe ou une clé non chargée. Ajoutez votre clé à l'agent SSH (ssh-add) ou configurez la connexion par clé, puis réessayez.",
   pluginPermComments:
     "Lire et laisser des notes dans la marge de vos documents",
   pluginPermAiModel:

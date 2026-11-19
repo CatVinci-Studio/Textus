@@ -2,9 +2,10 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-// Two kinds of rule make Chromium restyle the whole page whenever an element
-// is added anywhere: a sibling rule onto anything ("a + *") and ":root:has(...)".
-// Kept out of the app's own stylesheets here.
+// Rules that make Chromium restyle the whole page whenever an element is
+// added anywhere: a sibling rule onto anything ("a + *"), ":root:has(...)",
+// and in the editor a sibling rule onto its top-level blocks, which restyles
+// all of them on each one added. Kept out of the app's own stylesheets here.
 
 const root = join(__dirname, "../..");
 
@@ -31,18 +32,30 @@ function selectors(css: string): string[] {
 const bareSiblingOntoAnything = (sel: string) =>
   /\+ ?\*$/.test(sel) && !/>/.test(sel);
 const rootHas = (sel: string) => /^:root:has\(/.test(sel);
+const siblingOntoBlocks = (sel: string) =>
+  /\.ProseMirror ?> ?[^ ]+ ?[+~]/.test(sel) ||
+  /[+~] ?\.ProseMirror-widget\b[^ ]*$/.test(sel);
 
 describe("the app's stylesheets", () => {
   it("have no rule that makes adding an element restyle the page", () => {
     const found: string[] = [];
     for (const file of cssFiles(root))
       for (const sel of selectors(readFileSync(file, "utf8")))
-        if (bareSiblingOntoAnything(sel) || rootHas(sel))
+        if (
+          bareSiblingOntoAnything(sel) ||
+          rootHas(sel) ||
+          siblingOntoBlocks(sel)
+        )
           found.push(`${file.slice(root.length + 1)}: ${sel}`);
     expect(found).toEqual([]);
   });
 
-  it("catch both kinds", () => {
+  it("catch each kind", () => {
+    expect(siblingOntoBlocks(".ProseMirror > .a + .ProseMirror-widget")).toBe(
+      true,
+    );
+    expect(siblingOntoBlocks(".ProseMirror > p + p")).toBe(true);
+    expect(siblingOntoBlocks(".ProseMirror li + li")).toBe(false);
     expect(bareSiblingOntoAnything(".a + *")).toBe(true);
     expect(bareSiblingOntoAnything(".shell > .a + *")).toBe(false);
     expect(rootHas(":root:has(.x) .y")).toBe(true);

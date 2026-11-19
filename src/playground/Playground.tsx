@@ -245,7 +245,7 @@ function WebEditor({
         </div>
         <button
           type="button"
-          className="text-button playground-documents"
+          className="tx-button text-button playground-documents"
           aria-haspopup="menu"
           aria-label={t.playgroundDocuments}
           onClick={(e) => {
@@ -261,7 +261,7 @@ function WebEditor({
           <Tooltip text={t.menuToggleSourceMode}>
             <button
               type="button"
-              className="text-button"
+              className="tx-button text-button"
               aria-pressed={source}
               onClick={toggleSource}
             >
@@ -270,14 +270,14 @@ function WebEditor({
           </Tooltip>
           <button
             type="button"
-            className="text-button"
+            className="tx-button text-button"
             onClick={() => void openFiles()}
           >
             {t.playgroundOpen}
           </button>
           <button
             type="button"
-            className="text-button"
+            className="tx-button text-button"
             onClick={() => void save()}
           >
             {t.playgroundSave}

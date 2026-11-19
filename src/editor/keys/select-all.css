@@ -1,7 +1,7 @@
 /* Select All's highlight, painted by select-all.ts in place of the
-   selection the web view leaves undrawn. */
+   selection the web view leaves undrawn, in a theme's selection colour. */
 ::highlight(select-all) {
-  background-color: Highlight;
+  background-color: var(--select-text-bg-color, Highlight);
 }
 
 /* Where the web view draws some of it after all, it doesn't draw twice. */

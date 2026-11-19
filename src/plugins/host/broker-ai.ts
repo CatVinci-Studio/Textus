@@ -54,8 +54,9 @@ export function stopPluginAi(plugin: string): void {
     }
 }
 
-/** `textus.ai.complete` and `textus.ai.available`: the user's writing
- *  model, asked once per plugin and within its monthly tokens. */
+/** `textus.ai.complete`, `textus.ai.stream` and `textus.ai.available`:
+ *  the user's writing model, asked once per plugin and within its monthly
+ *  tokens. */
 export function aiModelHandlers(p: PluginScope) {
   const ask = async (more: boolean, limit: number) => {
     const t = p.t();
@@ -70,6 +71,28 @@ export function aiModelHandlers(p: PluginScope) {
     });
     if (ok) await pluginsIpc.aiAllow(p.id, more);
     return ok;
+  };
+  /** `run` with the request's instructions and prompt, the user asked
+   *  first where Rust refuses until they answer. */
+  const gated = async (
+    system: unknown,
+    messages: unknown,
+    run: (instructions: string, prompt: string) => Promise<string>,
+  ): Promise<string> => {
+    if (!hasTextusAi) throw new Error("Textus AI isn't available here.");
+    const prompt = str(promptOf(messages), "messages");
+    const instructions = optionalStr(system) ?? "";
+    let refusal: string;
+    try {
+      return await run(instructions, prompt);
+    } catch (error) {
+      refusal = String(error);
+      if (refusal !== NOT_ALLOWED && refusal !== OVER_LIMIT) throw error;
+    }
+    const { limit } = await pluginsIpc.aiStatus(p.id);
+    if (!(await ask(refusal === OVER_LIMIT, limit)))
+      throw new Error("The user didn't allow it.");
+    return run(instructions, prompt);
   };
   return {
     "ai.registerInlineCompletion": ({ id, label }: Params) => {
@@ -101,23 +124,28 @@ export function aiModelHandlers(p: PluginScope) {
     },
     "ai.available": async () =>
       hasTextusAi && (await pluginsIpc.aiStatus(p.id)).on,
-    "ai.complete": async ({ system, messages }: Params) => {
-      if (!hasTextusAi) throw new Error("Textus AI isn't available here.");
-      const prompt = promptOf(messages);
-      const instructions = optionalStr(system) ?? "";
-      const run = () =>
-        pluginsIpc.aiComplete(p.id, instructions, str(prompt, "messages"));
-      let refusal: string;
-      try {
-        return await run();
-      } catch (error) {
-        refusal = String(error);
-        if (refusal !== NOT_ALLOWED && refusal !== OVER_LIMIT) throw error;
-      }
-      const { limit } = await pluginsIpc.aiStatus(p.id);
-      if (!(await ask(refusal === OVER_LIMIT, limit)))
-        throw new Error("The user didn't allow it.");
-      return run();
+    "ai.complete": ({ system, messages, cancelId }: Params) =>
+      gated(system, messages, (instructions, prompt) =>
+        pluginsIpc.aiComplete(
+          p.id,
+          instructions,
+          prompt,
+          optionalStr(cancelId) ?? null,
+        ),
+      ),
+    "ai.stream": ({ system, messages, stream, cancelId }: Params) => {
+      const id = str(stream, "stream");
+      return gated(system, messages, (instructions, prompt) =>
+        pluginsIpc.aiStream(
+          p.id,
+          instructions,
+          prompt,
+          (text) => {
+            void p.request("$aiStreamText", { stream: id, text });
+          },
+          optionalStr(cancelId) ?? null,
+        ),
+      );
     },
   };
 }

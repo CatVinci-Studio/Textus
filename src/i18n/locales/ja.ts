@@ -605,6 +605,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeTrashConfirm: "「{name}」をゴミ箱に入れますか？ゴミ箱から元に戻せます。",
   treeTrashFolderConfirm:
     "フォルダ「{name}」とその中身をすべてゴミ箱に入れますか？ゴミ箱から元に戻せます。",
+  treeTrashManyConfirm: {
+    other: "{n} 項目をゴミ箱に入れますか？ゴミ箱から元に戻せます。",
+  },
   errorPermission:
     "Textus にはこのファイルまたはフォルダへのアクセス権がありません。権限を確認するか、別の場所を選んでください。",
   errorNotFound:
@@ -628,8 +631,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "プラグインストアには新しい Textus が必要です。Textus をアップデートしてください。",
   errorImageTooBig: "画像が空か、25 MB を超えています。",
   errorNoFolder: "先にフォルダを開いてください。",
-  errorPluginsNeedAllFiles:
-    "プラグインはこのフォルダを読めません：Textus にすべてのファイルへのアクセスが許可されていません。フォルダを開き直して「続ける」を選んでください。",
+  errorFarPictures:
+    "このフォルダーにはまだ画像を保存できません。この端末の書類に貼り付けてください。",
   errorPdfUnsupported: "このシステムでは PDF を書き出せません。",
   errorNoText: "読み取れるテキストがありません。",
   errorUnreadable: "このファイルは読み込めません。",
@@ -915,6 +918,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   agentQueueContinue: "続ける",
   agentQueueEdit: "編集",
   agentQueueRemove: "削除",
+  agentQueueInsert: "今すぐ送信",
   agentSend: "送信",
   agentStop: "停止",
   agentRetry: "再試行",
@@ -1067,6 +1071,12 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   autoCloseBracketsLabel: "()、[]、「」を補完",
   plainTextMenuLabel: "コンテキストメニューにプレーンテキストでコピー/ペースト",
   pdfPageNumbersLabel: "書き出し時にページ番号を表示",
+  pdfPaperLabel: "PDF の用紙サイズ",
+  pdfMarginLabel: "PDF の余白",
+  pdfMarginNarrow: "狭い",
+  pdfMarginNormal: "標準",
+  pdfMarginWide: "広い",
+  pdfTextScaleLabel: "PDF の文字サイズ",
   docxTemplateLabel: "Word テンプレート",
   docxTemplateHelp:
     "書き出した Word ファイルに、このファイルのスタイル・フォント・余白を使います。",
@@ -1839,6 +1849,13 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   pluginPermNotifications: "システム通知を表示する",
   pluginPermAppearance: "Textus と文書の色を変更する",
   pluginPermGitCommit: "自分の Git で、開いているフォルダにコミットする",
+  pluginPermSsh: "自分の SSH 設定でサーバーに接続する（許可したものだけ）",
+  pluginSshAsk:
+    "{plugin} があなたの SSH 設定で {host} に接続し、そこのファイルを読み書きしようとしています。",
+  pluginSshUnknownHost:
+    "{host} はまだ既知のホストではありません。一度ターミナルで接続し（ssh {host}）、鍵を確かめて受け入れてから、もう一度お試しください。",
+  pluginSshNeedsLogin:
+    "{host} がパスワードか、読み込まれていない鍵を求めました。鍵を SSH エージェントに追加する（ssh-add）か鍵ログインを設定してから、もう一度お試しください。",
   pluginPermComments: "文書の余白のメモを読み、書き加える",
   pluginPermAiModel:
     "あなたの AI モデルを使う（AI サービスの使用量に含まれます）",

@@ -59,6 +59,8 @@ export function installDevTauriShim(): void {
   const w = window as unknown as Record<string, unknown>;
   if ("__TAURI_INTERNALS__" in w) return; // real Tauri runtime present
 
+  /** The running dev-shim replies' inboxes, by request id (ai_steer). */
+  const steerInboxes = new Map<string, string[]>();
   let nextCallbackId = 1;
   // event name -> handler callback ids (as registered via transformCallback)
   const listeners = new Map<string, number[]>();
@@ -286,6 +288,14 @@ export function installDevTauriShim(): void {
         else kept[key] = String(args.value);
         return Promise.resolve(null);
       }
+      case "own_notes_adopt":
+        return Promise.resolve(null);
+      // Folder conventions are reimplemented here without plugin readers.
+      case "conventions_readers":
+      case "conventions_answer":
+        return Promise.resolve(null);
+      case "conventions_pending":
+        return Promise.resolve([]);
       case "undo_file_save": {
         const kept = (w.__devUndoFiles ??= {}) as Record<string, string[]>;
         kept[String(args.path)] = [String(args.hash), String(args.history)];
@@ -873,7 +883,7 @@ export function installDevTauriShim(): void {
             }
             return Promise.resolve({
               ...applied,
-              sources: [{ app: "obsidian", root: dir }],
+              sources: [{ app: "obsidian", root: dir, notes: true }],
               detected: ours?.detected
                 ? null
                 : {
@@ -1587,10 +1597,21 @@ export function installDevTauriShim(): void {
         return Promise.resolve(agentShim(cmd, args ?? {}));
       // Null here crashes the tree when the reply is spread into turns. The reply
       // is drip-fed through `onEvent` (the live Channel here) to exercise streaming.
+      // A message sent into the reply running: taken at its next tick, as
+      // the agent loop takes one between steps.
+      if (cmd === "ai_steer") {
+        const { requestId, message } = (args ?? {}) as {
+          requestId?: string;
+          message?: string;
+        };
+        const inbox = requestId ? steerInboxes.get(requestId) : undefined;
+        if (inbox && message) inbox.push(message);
+        return Promise.resolve(!!inbox);
+      }
       if (cmd === "ai_agent_message") {
         const { request, onEvent } =
           (args as unknown as {
-            request?: { message?: string };
+            request?: { message?: string; requestId?: string };
             onEvent?: { onmessage?: (event: unknown) => void };
           }) ?? {};
         const message = request?.message ?? "";
@@ -1598,9 +1619,18 @@ export function installDevTauriShim(): void {
         // A message saying "fail" fails, as a provider's error would.
         if (/\bfail\b/i.test(message))
           return Promise.reject(new Error("Dev-shim failure."));
+        const inbox: string[] = [];
+        const id = request?.requestId ?? "";
+        steerInboxes.set(id, inbox);
+        const read: { kind: "User"; text: string }[] = [];
         return new Promise((resolve) => {
           let sent = 0;
           const timer = setInterval(() => {
+            for (const text of inbox.splice(0)) {
+              const turn = { kind: "User" as const, text };
+              read.push(turn);
+              onEvent?.onmessage?.({ type: "turn", turn });
+            }
             const next = Math.min(sent + 3, reply.length);
             onEvent?.onmessage?.({
               type: "delta",
@@ -1609,8 +1639,10 @@ export function installDevTauriShim(): void {
             sent = next;
             if (sent >= reply.length) {
               clearInterval(timer);
+              steerInboxes.delete(id);
               resolve([
                 { kind: "User", text: message },
+                ...read,
                 { kind: "Assistant", text: reply },
               ]);
             }

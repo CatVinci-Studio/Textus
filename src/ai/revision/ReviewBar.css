@@ -172,7 +172,7 @@
   transition: background var(--dur-fast) var(--ease-standard);
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .review-bar-button:hover {
     background: color-mix(in srgb, var(--ui-on-primary) 12%, transparent);
   }
@@ -185,7 +185,7 @@
   background: var(--ui-on-primary);
   color: var(--ui-primary);
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .review-bar-accept:hover,
   .review-bar-primary:hover {
     border-color: var(--ui-on-primary);

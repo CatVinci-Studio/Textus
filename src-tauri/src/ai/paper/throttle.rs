@@ -21,7 +21,7 @@ const FIRST_WAIT: Duration = Duration::from_secs(2);
 /// being wrong: a rate limit or an overload, or the server failing.
 pub(crate) fn is_busy(error: &str) -> bool {
     matches!(
-        crate::ai::error_kind::kind(error),
+        aicompat::error_kind::kind(error),
         Some("rateLimit" | "server")
     )
 }

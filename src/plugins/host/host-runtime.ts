@@ -2,6 +2,7 @@ import core from "./runtime/host-core.js?raw";
 import apiUi from "./runtime/host-api-ui.js?raw";
 import apiEditor from "./runtime/host-api-editor.js?raw";
 import apiData from "./runtime/host-api-data.js?raw";
+import apiRemote from "./runtime/host-api-remote.js?raw";
 import handlers from "./runtime/host-handlers.js?raw";
 
 /**
@@ -21,6 +22,7 @@ export const HOST_RUNTIME = [
   apiUi,
   apiEditor,
   apiData,
+  apiRemote,
   handlers,
   "})();",
 ].join("\n");

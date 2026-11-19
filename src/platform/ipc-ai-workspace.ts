@@ -1,6 +1,6 @@
 import type { AgentMode_Serialize as AgentMode } from "./bindings/ai-skills";
 import { isIOSApp } from "./capabilities";
-import { iosFiles } from "./ios-files";
+import { nativeFiles } from "./native-files";
 import { command, desktopActionCommand } from "./ipc-call";
 import type { SkillListItem } from "./ipc-ai-types";
 
@@ -10,7 +10,7 @@ export const aiWorkspace = {
   /** Folder picker behind "Choose project folder…". */
   pickWorkspaceRoot: (): Promise<string | null> =>
     isIOSApp
-      ? iosFiles.pickProjectFolder()
+      ? nativeFiles.pickProjectFolder()
       : desktopActionCommand("pick_open_folder"),
   /** Reveals the global config folder, creating it with `template` as its
    *  agent.md on first use. */

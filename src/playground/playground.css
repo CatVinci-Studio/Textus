@@ -99,7 +99,7 @@ body {
   text-decoration: none;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .playground-download:hover {
     background: color-mix(in srgb, var(--ui-primary) 85%, var(--ui-bg));
   }

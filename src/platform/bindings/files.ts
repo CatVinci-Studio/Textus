@@ -127,6 +127,12 @@ export const commands = {
 	 *  when it isn't there or is empty, null when it doesn't read as settings.
 	 */
 	project_settings_read: (root: string) => __TAURI_INVOKE<Value>("project_settings_read", { root }),
+	/**  The plugins' convention readers in this window. */
+	conventions_readers: (readers: PluginReader_Deserialize[]) => __TAURI_INVOKE<void>("conventions_readers", { readers }),
+	/**  Marker files above `path` a plugin should read. */
+	conventions_pending: (path: string) => __TAURI_INVOKE<PendingRead[]>("conventions_pending", { path }),
+	/**  A plugin's answer for the marker it was handed. */
+	conventions_answer: (app: string, root: string, text: string, found: Found_Deserialize | null) => __TAURI_INVOKE<void>("conventions_answer", { app, root, text, found }),
 	open_word_document: (path: string) => __TAURI_INVOKE<WordDocument>("open_word_document", { path }),
 	upload_image: (host: ImageHost, dataBase64: string, mime: string, filename: string, endpoint: string, urlField: string) => __TAURI_INVOKE<UploadedImage>("upload_image", { host, dataBase64, mime, filename, endpoint, urlField }),
 	/**  Where `host`'s token is kept, for Settings to save or clear it. */
@@ -172,17 +178,19 @@ export const commands = {
 	/**  The history kept for `path`, if it ends at the text hashing to `hash`. */
 	undo_file_load: (path: string, hash: string) => __TAURI_INVOKE<string | null>("undo_file_load", { path, hash }),
 	/**  What is kept for `from` follows it to `to` (both already moved on disk). */
-	document_data_move: (from: string, to: string) => __TAURI_INVOKE<null>("document_data_move", { from, to }),
+	document_data_move: (from: string, to: string, folder: string | null) => __TAURI_INVOKE<null>("document_data_move", { from, to, folder }),
 	/**
 	 *  What is kept of `part` for the document at `path`, as the JSON it was
 	 *  written as - none when nothing is.
 	 */
-	own_notes_read: (path: string, part: OwnPart) => __TAURI_INVOKE<string | null>("own_notes_read", { path, part }),
+	own_notes_read: (path: string, part: OwnPart, folder: string | null) => __TAURI_INVOKE<string | null>("own_notes_read", { path, part, folder }),
 	/**
 	 *  Keeps `value` (JSON: a list of notes, or the revisions' object) as
 	 *  `part` for the document at `path`; an empty one removes its file.
 	 */
-	own_notes_write: (path: string, part: OwnPart, value: string) => __TAURI_INVOKE<null>("own_notes_write", { path, part, value }),
+	own_notes_write: (path: string, part: OwnPart, value: string, folder: string | null) => __TAURI_INVOKE<null>("own_notes_write", { path, part, value, folder }),
+	/**  Brings the notes of the documents under `folder`, just opened, into it. */
+	own_notes_adopt: (folder: string) => __TAURI_INVOKE<null>("own_notes_adopt", { folder }),
 	/**  The live settings, for a window to correct its boot snapshot with. */
 	settings_get: () => __TAURI_INVOKE<Snapshot>("settings_get"),
 	/**
@@ -420,6 +428,52 @@ export type FolderIndex = {
 	truncated: boolean,
 };
 
+/**  What a plugin's reader says the app sets; folders from the app's root. */
+export type Found = Found_Serialize | Found_Deserialize;
+
+/**  Periodic notes as a plugin gives them: the folder from the app's root. */
+export type FoundNotes = FoundNotes_Serialize | FoundNotes_Deserialize;
+
+/**  Periodic notes as a plugin gives them: the folder from the app's root. */
+export type FoundNotes_Deserialize = {
+	folder: string,
+	format: string,
+	template?: string | null,
+};
+
+/**  Periodic notes as a plugin gives them: the folder from the app's root. */
+export type FoundNotes_Serialize = {
+	folder: string,
+	format: string,
+	template: string | null,
+};
+
+/**  What a plugin's reader says the app sets; folders from the app's root. */
+export type Found_Deserialize = {
+	linkStyle?: string | null,
+	linkPath?: string | null,
+	updateLinks?: string | null,
+	attachments?: string | null,
+	softBreaks?: boolean | null,
+	templates?: string | null,
+	daily?: FoundNotes_Deserialize | null,
+	newNotes?: string | null,
+	ignore?: string[],
+};
+
+/**  What a plugin's reader says the app sets; folders from the app's root. */
+export type Found_Serialize = {
+	linkStyle: string | null,
+	linkPath: string | null,
+	updateLinks: string | null,
+	attachments: string | null,
+	softBreaks: boolean | null,
+	templates: string | null,
+	daily: FoundNotes_Serialize | null,
+	newNotes: string | null,
+	ignore: string[],
+};
+
 /**
  *  The two histories. Their caps match the frontend's and are enforced here
  *  too, as the one writer.
@@ -486,6 +540,41 @@ export type NoteLinkTarget = {
  *  (an object).
  */
 export type OwnPart = "notes" | "revisions";
+
+/**  A marker file no plugin has answered yet. */
+export type PendingRead = {
+	app: string,
+	root: string,
+	text: string,
+};
+
+/**
+ *  A plugin's reader: its app (`<plugin id>#<reader id>`) and the file,
+ *  from a folder, that says the app keeps the folder.
+ */
+export type PluginReader = PluginReader_Serialize | PluginReader_Deserialize;
+
+/**
+ *  A plugin's reader: its app (`<plugin id>#<reader id>`) and the file,
+ *  from a folder, that says the app keeps the folder.
+ */
+export type PluginReader_Deserialize = {
+	app: string,
+	marker: string,
+	/**  The app keeps notes linked by name, found from its folder. */
+	notes?: boolean,
+};
+
+/**
+ *  A plugin's reader: its app (`<plugin id>#<reader id>`) and the file,
+ *  from a folder, that says the app keeps the folder.
+ */
+export type PluginReader_Serialize = {
+	app: string,
+	marker: string,
+	/**  The app keeps notes linked by name, found from its folder. */
+	notes: boolean,
+};
 
 export type SavedImage = SavedImage_Serialize | SavedImage_Deserialize;
 
@@ -561,6 +650,8 @@ export type Snapshot = {
 export type Source = {
 	app: string,
 	root: string,
+	/**  The app keeps notes linked by name, found from its folder. */
+	notes: boolean,
 };
 
 /**  How a template's {{date}} and {{time}} are written, in moment.js tokens. */

@@ -77,7 +77,6 @@
   flex-basis: 0;
 }
 
-.settings-text-input,
 .tx-input {
   flex: 1;
   min-width: 0;
@@ -89,14 +88,12 @@
   font-size: var(--text-body);
 }
 
-.settings-text-input:focus,
 .tx-input:focus {
   outline: none;
   border-color: var(--ui-accent);
 }
 
 /* Text in lines is a container, not a control. */
-textarea.settings-text-input,
 textarea.tx-input {
   border-radius: var(--shape-s);
   corner-shape: superellipse(1.25);
@@ -221,7 +218,7 @@ textarea.tx-input {
 .tx-reveal:focus-visible {
   opacity: 1;
 }
-@media (hover: none) {
+@media (any-hover: none) {
   .tx-reveal {
     opacity: 1;
   }

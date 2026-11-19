@@ -84,9 +84,6 @@ function useKeptScroll(
   content: string,
 ) {
   const el = useRef<HTMLDivElement | null>(null);
-  // The path now, for the scroll handler: a saved draft gets one.
-  const path = useRef(filePath);
-  path.current = filePath;
   // Read once, as the pane mounts with its document.
   const [opened] = useState<Reading | null>(() => {
     if (leftBy(tabId, content)) return readingLeft(tabId);
@@ -97,11 +94,73 @@ function useKeptScroll(
   // the editor goes, its tab is already drawn as one out of sight.
   const reading = useRef<Reading>(opened ?? { top: 0, width: 0, place: null });
   const pending = useRef(opened);
+  const saveNow = useReadingFollowed(el, tabId, filePath, reading, pending);
+  // Left for the tab's next editor as this pane goes.
+  useLayoutEffect(
+    () => () => {
+      saveNow.current();
+      leaveReading(tabId, reading.current);
+    },
+    [tabId, saveNow],
+  );
+  useLayoutEffect(() => {
+    const scroller = el.current;
+    // Shown is enough, in whichever island: only one kept out of sight
+    // waits to come back.
+    if (!scroller || (!isActive && scroller.clientHeight === 0)) return;
+    const goBack = () => {
+      const to = pending.current;
+      const root = scroller.querySelector(".ProseMirror");
+      if (!to || !root) return;
+      pending.current = null;
+      // The same document at the same width reads at the same offset;
+      // otherwise by the block that was at the top.
+      if (to.width === scroller.clientWidth) scroller.scrollTop = to.top;
+      else if (to.place) scrollToPlace(scroller, root, to.place);
+      reading.current = {
+        ...to,
+        top: scroller.scrollTop,
+        width: scroller.clientWidth,
+      };
+    };
+    // Its cleanup runs while the pane is still drawn, before it is hidden.
+    const leaving = () => saveNow.current();
+    if (pending.current) {
+      goBack();
+      if (!pending.current) return leaving;
+      const cancel = whenEditorBuilt(tabId, goBack);
+      return () => {
+        cancel();
+        leaving();
+      };
+    }
+    const { top } = reading.current;
+    if (scroller.scrollTop !== top) scroller.scrollTop = top;
+    return leaving;
+  }, [isActive, tabId, saveNow]);
+  return el;
+}
+
+/** The reading followed as the reader scrolls, its place taken a pause
+ *  after (the place is dearer to read than the offset). Returns what takes
+ *  a place still to be taken now, as the pane goes out of sight. */
+function useReadingFollowed(
+  el: RefObject<HTMLDivElement | null>,
+  tabId: string,
+  filePath: string | null,
+  reading: RefObject<Reading>,
+  pending: RefObject<Reading | null>,
+): RefObject<() => void> {
+  // The path now, for the scroll handler: a saved draft gets one.
+  const path = useRef(filePath);
+  path.current = filePath;
+  const saveNow = useRef(() => {});
   useEffect(() => {
     const scroller = el.current;
     if (!scroller) return;
     let timer: number | undefined;
     const save = () => {
+      window.clearTimeout(timer);
       timer = undefined;
       const root = scroller.querySelector(".ProseMirror");
       if (!root || scroller.clientHeight === 0) return;
@@ -145,42 +204,16 @@ function useKeptScroll(
     });
     rewrapped.observe(scroller);
     scroller.addEventListener("scroll", keep, { passive: true });
+    saveNow.current = () => {
+      if (timer !== undefined) save();
+    };
     return () => {
       rewrapped.disconnect();
       scroller.removeEventListener("scroll", keep);
       window.clearTimeout(timer);
     };
-  }, [tabId]);
-  // Left for the tab's next editor as this pane goes.
-  useLayoutEffect(() => () => leaveReading(tabId, reading.current), [tabId]);
-  useLayoutEffect(() => {
-    const scroller = el.current;
-    // Shown is enough, in whichever island: only one kept out of sight
-    // waits to come back.
-    if (!scroller || (!isActive && scroller.clientHeight === 0)) return;
-    const goBack = () => {
-      const to = pending.current;
-      const root = scroller.querySelector(".ProseMirror");
-      if (!to || !root) return;
-      pending.current = null;
-      // The same document at the same width reads at the same offset;
-      // otherwise by the block that was at the top.
-      if (to.width === scroller.clientWidth) scroller.scrollTop = to.top;
-      else if (to.place) scrollToPlace(scroller, root, to.place);
-      reading.current = {
-        ...to,
-        top: scroller.scrollTop,
-        width: scroller.clientWidth,
-      };
-    };
-    if (pending.current) {
-      goBack();
-      return pending.current ? whenEditorBuilt(tabId, goBack) : undefined;
-    }
-    const { top } = reading.current;
-    if (scroller.scrollTop !== top) scroller.scrollTop = top;
-  }, [isActive, tabId]);
-  return el;
+  }, [el, tabId, reading, pending]);
+  return saveNow;
 }
 
 /** A Mac's page gives at either end, short documents too. The iPhone's web

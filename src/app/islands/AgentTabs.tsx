@@ -168,7 +168,7 @@ export function AgentIslandTools({
   return (
     <div className="agent-island-tools" ref={ref}>
       <IconButton
-        className="inline-chat-header-button"
+        className="tx-icon-button inline-chat-header-button"
         label={t.chatNewConversation}
         onClick={() => {
           panel.setTab("chat");
@@ -178,12 +178,12 @@ export function AgentIslandTools({
         <PlusIcon />
       </IconButton>
       <ChatHistoryMenu
-        buttonClassName="inline-chat-header-button"
+        buttonClassName="tx-icon-button inline-chat-header-button"
         onReopen={(entry) => void reopenConversation(entry, t)}
       />
       {panel.tab === "memory" && (
         <IconButton
-          className="inline-chat-header-button"
+          className="tx-icon-button inline-chat-header-button"
           label={t.memoryBack}
           onClick={() => panel.setTab("chat")}
         >

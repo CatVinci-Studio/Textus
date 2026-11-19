@@ -6,7 +6,8 @@ import {
   untrackCodeBlock,
 } from "../contributions/code-blocks";
 import { PluginProblem } from "./PluginProblem";
-import { PluginWebview, useResolvedWebview } from "./PluginWebview";
+import { PluginWebview } from "./PluginWebview";
+import { useResolvedWebview } from "./plugin-webview-hosts";
 
 const MAX_CODE_BLOCK_HEIGHT = 1200;
 const CODE_BLOCK_SHARE = 0.7;

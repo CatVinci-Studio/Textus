@@ -47,7 +47,7 @@ interface TriggerProps {
  *  late or not at all. Never on touch; never takes focus or the pointer. In a
  *  portal on <body>, so no ancestor's transform or clip traps it. */
 /** A screen with no pointer that hovers: a phone's. */
-const noHover = () => !!window.matchMedia?.("(hover: none)").matches;
+const noHover = () => !!window.matchMedia?.("(any-hover: none)").matches;
 
 /** Its text, or a line inside it, cut short ("…" or clamped). */
 function isCut(el: Element): boolean {

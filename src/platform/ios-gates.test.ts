@@ -18,9 +18,12 @@ const ALLOWED: Record<string, string> = {
   "ai/chat/panel/agent-panel.tsx": "a docked panel drawn at its width",
   "editor/click-below-end.ts":
     "a tap beside a table: its caret went astray, onto a word it selected",
+  "export/exporters.ts":
+    "its PDF is WebKit's, as a Mac's, and goes to the share sheet",
   "document/word-import.ts":
     "Files' security-scoped URLs the converter can't read",
-  "platform/ios-files.ts": "the Files app's documents",
+  "platform/far-files.ts": "the Files app's documents",
+  "platform/native-files.ts": "the Files app's documents",
   "platform/ipc-files.ts": "the Files app's documents",
   "platform/ipc-ai-workspace.ts": "the project folder is picked in Files",
   "platform/mobile-viewport.ts":

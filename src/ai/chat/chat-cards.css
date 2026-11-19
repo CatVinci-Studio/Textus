@@ -112,7 +112,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .agent-comment-row-quote:hover:not(:disabled) {
     color: var(--ui-text);
   }
@@ -166,7 +166,7 @@ button.chat-queue-action {
   font: inherit;
   cursor: pointer;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   button.chat-queue-action:hover {
     color: var(--ui-text);
   }
@@ -234,7 +234,7 @@ button.chat-queue-action {
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .agent-proposal-group-fold:hover {
     color: var(--ui-text);
   }
@@ -268,7 +268,7 @@ button.chat-queue-action {
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .agent-file-changes-path:hover:not(:disabled) {
     color: var(--ui-accent-text);
   }

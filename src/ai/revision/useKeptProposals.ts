@@ -109,7 +109,7 @@ export function useKeptProposals({
       const doc = ctx.get(editorViewCtx).state.doc;
       return keptFrom(
         previews,
-        fnv1a(cachedDocumentMarkdown(ctx, doc)),
+        () => fnv1a(cachedDocumentMarkdown(ctx, doc)),
         (from, to) => serializeRange(ctx, doc, from, to),
         (id) => pictureState(id) === "ready",
       );

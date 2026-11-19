@@ -1,5 +1,6 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { trackDrag } from "../../engine/drag/pointer-drag";
+import { holdToDrag } from "../../engine/drag/hold-drag";
 import { passedCount, shiftAt } from "../../engine/drag/row";
 import {
   CellSelection,
@@ -154,7 +155,10 @@ export function attachGrips(options: {
   function drag(axis: Axis, e: PointerEvent) {
     const index = axis === "row" ? at.row : at.col;
     if (index < 0 || (axis === "row" && index < 1)) return;
-    e.preventDefault();
+    // A finger lifts it only once held, so a press there stays the
+    // system's (a long press for the paste bar, a scroll).
+    const touch = e.pointerType === "touch";
+    if (!touch) e.preventDefault();
     // Rows: the body's, the head row staying first. Columns: the head
     // row's cells stand for theirs.
     const items =
@@ -192,13 +196,13 @@ export function attachGrips(options: {
         : `${scope} > tr > :nth-child(${i + 1})`;
     const translate = axis === "row" ? "translateY" : "translateX";
     let to = from;
-    trackDrag(e, {
+    const handlers = {
       start: () => {
         dragging = axis;
         wrapper.setAttribute("data-dragging", axis);
         wrapper.classList.add("tx-making-room");
       },
-      move: (x, y) => {
+      move: (x: number, y: number) => {
         // Where it lands goes by the pointer; where it is drawn stays inside.
         const pulled = ((axis === "row" ? y : x) - start) / zoom;
         to = passedCount(centers, mine.mid + pulled);
@@ -217,7 +221,7 @@ export function attachGrips(options: {
         });
         sheet.textContent = rules.join("\n");
       },
-      end: (_x, _y, dropped) => {
+      end: (_x: number, _y: number, dropped: boolean) => {
         // Where the lifted cells are drawn as the hand lets go.
         const cells = (i: number) => [
           ...document.querySelectorAll<HTMLElement>(
@@ -254,7 +258,9 @@ export function attachGrips(options: {
         land();
         view.focus();
       },
-    });
+    };
+    if (touch) holdToDrag(e, { lift: handlers.start, ...handlers });
+    else trackDrag(e, handlers);
   }
   for (const axis of ["row", "col"] as const) {
     grips[axis].addEventListener("pointerdown", (e) => drag(axis, e));

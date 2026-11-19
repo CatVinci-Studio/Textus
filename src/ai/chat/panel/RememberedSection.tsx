@@ -76,7 +76,9 @@ export function RememberedSection({
     <section className="memory-section memory-remembered">
       <h4>
         {t.memoryRemembered}
-        {all.length > 0 && <span className="memory-count">{all.length}</span>}
+        {all.length > 0 && (
+          <span className="tx-badge memory-count">{all.length}</span>
+        )}
       </h4>
       {all.length === 0 ? (
         <div className="memory-empty">
@@ -143,7 +145,7 @@ export function RememberedSection({
         <details className="memory-forgotten">
           <summary>
             {t.memoryForgotten}
-            <span className="memory-count">{forgotten.length}</span>
+            <span className="tx-badge memory-count">{forgotten.length}</span>
           </summary>
           <ul className="memory-card memory-remembered-list">
             {forgotten.map((f) => (
@@ -237,13 +239,15 @@ function RememberedItem({
         {text}
       </button>
       {notSent && !open && (
-        <span className="memory-badge">{t.memoryNotSent}</span>
+        <span className="tx-badge memory-badge">{t.memoryNotSent}</span>
       )}
       {open && (
         <>
           <div className="memory-remembered-meta">
             {meta.join(" · ")}
-            {notSent && <span className="memory-badge">{t.memoryNotSent}</span>}
+            {notSent && (
+              <span className="tx-badge memory-badge">{t.memoryNotSent}</span>
+            )}
           </div>
           <div className="memory-remembered-actions">
             <button type="button" onClick={onEdit}>

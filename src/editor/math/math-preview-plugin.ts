@@ -13,8 +13,8 @@ import {
   type RevealState,
   type Touches,
 } from "../reveal-state";
-import { drawWhileNear, stopDrawing } from "../draw-when-visible";
-import { isLargeDoc } from "../large-doc";
+import { drawWhileNear, stopDrawing } from "../lazy/draw-when-visible";
+import { viewsWaitForScreen } from "../lazy/lazy-rules";
 import { katexNow, mathSourceHtml, onKatexReady } from "./katex-loader";
 import { renderFormula } from "./matrix-rows";
 import { revealSelection } from "../pointer-hold";
@@ -129,7 +129,7 @@ function decorateMath(
         // until it nears the screen.
         const now =
           renderCache.has(cacheKeyOf(source, displayMode)) ||
-          !isLargeDoc(view.state.doc);
+          !viewsWaitForScreen(view.state.doc);
         if (!now) el.innerHTML = mathSourceHtml(source);
         drawWhileNear(el, view.dom, draw, () => el.replaceChildren(), now);
         caretToSourceOnClick(el, view, getPos);

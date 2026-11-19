@@ -213,10 +213,9 @@ help guides in English, Chinese and Japanese, all ten languages with
 Layout and motion are checked as numbers in the engine's unit tests (the
 solver, the tab strip, the row insets, the drop zones): an e2e flow checks
 what a user sees happen - where a tab lands, which island it joins - not
-pixels or styles. There are no screenshot baselines. The WebKit project
-covers the few flows where WebKit differs (`WEBKIT_SPECS` in
-`playwright.config.ts`); CI runs it in the full suite, in the
-`e2e-webkit` job. `playwright.webview.config.ts` runs the flows in an old Chromium you
+pixels or styles. There are no screenshot baselines. Every flow runs in
+WebKit too (`E2E_WEBKIT=1`), in CI's `e2e-webkit` job, which the `e2e`
+check requires. `playwright.webview.config.ts` runs the flows in an old Chromium you
 point it at, the oldest WebView2 Textus supports
 ([webview-support.md](webview-support.md#testing)); CI doesn't run it.
 
@@ -260,7 +259,7 @@ job they stand for passed, or when all of them were skipped.
 | `ci-config`                         | `scripts/guard-ci-config.mjs`: fails a change to CI or test configuration                                                        | a pull request from a fork; skipped (passed) otherwise |
 | `check`                             | `npm run check`, then `vite build` of the app and of the playground; for a light change only `format:check` and the README check | always                                                 |
 | `e2e (1/2)` and `e2e (2/2)`         | `npm run test:e2e -- --shard=N/2`, with a pinned textus-plugins checkout                                                         | the full suite                                         |
-| `e2e-webkit`                        | the `WEBKIT_SPECS` flows in WebKit (not required)                                                                                | the full suite                                         |
+| `e2e-webkit`                        | every flow in WebKit; `e2e` passes only when it does                                                                             | the full suite                                         |
 | `native (ubuntu-22.04)`             | `npm run check:native`                                                                                                           | the change reaches Rust                                |
 | `native (macos-26)`                 | `npm test`, then `npm run check:native`                                                                                          | the full suite                                         |
 | `native (windows-2025)`             | `npm run check:native`                                                                                                           | the full suite                                         |
@@ -470,6 +469,10 @@ entry (takes files, claims Markdown); the app starting on a file; a second
 launch handing its file to the running instance and exiting. Runs with
 throwaway config/data directories. Window checks need niri; `--screenshot`
 also needs the screen unlocked.
+
+`scripts/drive-linux.mjs <binary>` drives the debug build through
+`tauri-driver` (WebKitWebDriver): it starts on a document, takes typing and
+saves it to disk. CI's `linux-app` job runs it under xvfb.
 
 `scripts/smoke-ios-sim.sh <Textus.app>` does the same for iOS in the
 simulator: past onboarding, so the window loads its plugins and menus as at

@@ -3,6 +3,7 @@ import { useModalDialog } from "./useModalDialog";
 import { usePresence } from "../motion/usePresence";
 import { isImeKeydown } from "../../utils/ime";
 import { createRequestQueue } from "../../utils/store";
+import { DialogActions } from "./DialogActions";
 
 /**
  * The app's own alert, confirm and prompt boxes, in place of OS dialogs.
@@ -169,7 +170,7 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
         {shown.input !== undefined && (
           <input
             ref={inputRef}
-            className="app-dialog-input"
+            className="tx-input app-dialog-input"
             defaultValue={shown.input}
             placeholder={shown.placeholder}
             onKeyDown={(e) => {
@@ -177,28 +178,30 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
             }}
           />
         )}
-        <div className="close-prompt-buttons">
-          <div className="close-prompt-spacer" />
+        <DialogActions>
           {shown.confirm && (
             <button
-              className="app-dialog-cancel"
+              className="tx-button app-dialog-cancel"
               onClick={() => current && answer(current, false)}
             >
               {shown.cancelLabel}
             </button>
           )}
           {shown.altLabel && (
-            <button onClick={() => current && answer(current, true, ALT)}>
+            <button
+              className="tx-button"
+              onClick={() => current && answer(current, true, ALT)}
+            >
               {shown.altLabel}
             </button>
           )}
           <button
-            className={`close-prompt-primary${shown.danger ? " app-dialog-danger" : ""}`}
+            className={`tx-button primary close-prompt-primary${shown.danger ? " danger app-dialog-danger" : ""}`}
             onClick={ok}
           >
             {shown.confirm ? shown.okLabel : okLabel}
           </button>
-        </div>
+        </DialogActions>
       </div>
     </div>
   );

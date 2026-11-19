@@ -8,7 +8,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import { isMobileApp } from "../../platform/capabilities";
+import { usePhoneLayout } from "./usePhoneLayout";
 import { useDropdown } from "./useDropdown";
 import { ContextMenu, type ContextMenuEntry } from "./ContextMenu";
 import { Presence } from "../motion/usePresence";
@@ -100,10 +100,11 @@ function textOf(node: ReactNode): string {
 }
 
 export function Select(props: SelectProps) {
-  return isMobileApp ? <SheetSelect {...props} /> : <DrawnSelect {...props} />;
+  const phone = usePhoneLayout();
+  return phone ? <SheetSelect {...props} /> : <DrawnSelect {...props} />;
 }
 
-/** A touch screen's: the app's own menu, an action sheet on a phone, not
+/** A phone's: the app's own menu as an action sheet, not
  *  the system's picker. */
 function SheetSelect({
   value,

@@ -26,7 +26,7 @@
   min-width: 0;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .inline-chat-skill-item:hover {
     background: var(--ui-hover);
   }
@@ -302,12 +302,10 @@
   flex: 1;
   min-width: 0;
   max-height: 8.2em;
-  overflow: hidden;
+  --cut-fade: 28%;
   font-size: var(--text-body);
   line-height: 1.6;
   color: var(--ui-text);
-  -webkit-mask-image: linear-gradient(to bottom, #000 72%, transparent);
-  mask-image: linear-gradient(to bottom, #000 72%, transparent);
 }
 
 .quick-ask-transcript {

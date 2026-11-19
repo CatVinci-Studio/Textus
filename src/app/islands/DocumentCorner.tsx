@@ -10,7 +10,7 @@ import type { Lang } from "../../i18n/langs";
 import type { Strings } from "../../i18n/strings";
 import { createPortal } from "react-dom";
 import { useDocEnd } from "../../document-view/doc-end";
-import { isMobileApp } from "../../platform/capabilities";
+import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import { SlipCount } from "./SlipCount";
 import "./document-corner.css";
 
@@ -53,6 +53,7 @@ function DocumentCorner({
   const large = content.length > PAUSE_FEATURES_THRESHOLD;
   const shown = BY_CHARACTERS.has(lang) ? count.characters : count.words;
   const end = useDocEnd(tabId);
+  const phone = usePhoneLayout();
   const detail = fill(t.wordCountDetail, {
     words: String(count.words),
     characters: String(count.characters),
@@ -71,8 +72,8 @@ function DocumentCorner({
         </Tooltip>
       )}
       {shown > 0 &&
-        (isMobileApp ? (
-          // A touch screen has no margin to spare: under the last block.
+        (phone ? (
+          // A phone has no margin to spare: under the last block.
           end &&
           createPortal(
             <p className="word-count">{inWords(t.wordCount, shown)}</p>,

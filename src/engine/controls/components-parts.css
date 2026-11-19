@@ -28,7 +28,7 @@
   white-space: nowrap;
   cursor: pointer;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .tx-chip:not(:disabled):hover {
     background: color-mix(in srgb, var(--ui-selected) 80%, var(--ui-text) 6%);
   }
@@ -121,6 +121,7 @@
   font-weight: 500;
   line-height: calc(18px * var(--ui-text-scale, 1));
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 .tx-badge[data-tone="accent"] {
   --badge: var(--ui-accent-text);
@@ -184,7 +185,7 @@
 .tx-table th .tx-icon {
   margin-right: var(--space-1);
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .tx-table tbody tr:hover > td {
     background: var(--ui-hover);
   }
@@ -280,7 +281,7 @@
   cursor: grab;
   touch-action: none;
 }
-@media (hover: hover) {
+@media (any-hover: hover) {
   .tx-table-grip:hover {
     border-color: var(--ui-accent);
     background: var(--ui-accent);

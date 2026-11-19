@@ -43,7 +43,7 @@ vi.mock("../store/plugin-records", async (importOriginal) => {
 import { offered } from "./ai-tools";
 
 describe("plugin AI tools", () => {
-  it("tells the model the translated description, not its key", () => {
+  it("offers only a granted plugin's tools, with the translated description, not its key", () => {
     expect(offered()).toEqual([
       expect.objectContaining({
         plugin: "catvinci.tasks",
@@ -51,13 +51,6 @@ describe("plugin AI tools", () => {
         description: "List the tasks in the open folder.",
       }),
     ]);
-  });
-});
-
-describe("a plugin's tools", () => {
-  it("are offered to Textus AI only with the ai.tools grant", async () => {
-    const { offered } = await import("./ai-tools");
-    expect(offered().map((t) => t.name)).toEqual(["list_tasks"]);
   });
 });
 

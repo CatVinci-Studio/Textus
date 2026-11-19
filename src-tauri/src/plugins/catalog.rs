@@ -8,10 +8,16 @@ use crate::ext_stats;
 
 mod download;
 mod fitting;
-use download::{checked, download, download_counted, fetch, hex};
+pub(crate) mod pages;
+pub(crate) mod skills;
+use download::{checked, download_counted, fetch, hex};
+#[cfg(test)]
+use pages::readme_for;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
+#[cfg(test)]
+use skills::{install_skill_in, SKILL_EXISTS};
 use std::sync::Mutex;
 
 /// Where the catalog names its files: the textus-plugins repository's
@@ -185,16 +191,6 @@ fn parse(text: &str) -> Result<Vec<CatalogEntry>, String> {
     Ok(plugins)
 }
 
-/// The skills the catalog last fetched (or kept) lists.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub fn skill_catalog() -> Vec<SkillEntry> {
-    FETCHED_SKILLS
-        .lock()
-        .unwrap_or_else(|e| e.into_inner())
-        .clone()
-}
-
 /// The catalog as last fetched, kept in the cache folder so Get plugins can
 /// list it at once, even offline.
 fn cache_file(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
@@ -235,179 +231,6 @@ pub fn plugin_catalog_cached(app: tauri::AppHandle) -> Option<Vec<CatalogEntry>>
         *fetched = entries.clone();
     }
     Some(entries)
-}
-
-/// A README this large is not a README.
-const MAX_README: usize = 512 * 1024;
-
-/// The README of plugin `id` in the catalog last fetched, in `language`
-/// where it has one ("zh-Hant", then "zh"), else in English; None when it
-/// has none.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn plugin_catalog_readme(id: String, language: String) -> Result<Option<String>, String> {
-    let readme = FETCHED
-        .lock()
-        .unwrap_or_else(|e| e.into_inner())
-        .iter()
-        .find(|e| e.id == id)
-        .map(|e| e.readme.clone())
-        .unwrap_or_default();
-    let Some(url) = readme_for(&readme, &language) else {
-        return Ok(None);
-    };
-    let bytes = download(&url, &id).await?;
-    if bytes.len() > MAX_README {
-        return Err(format!("{id}'s README is too large to show."));
-    }
-    Ok(Some(String::from_utf8_lossy(&bytes).into_owned()))
-}
-
-/// An icon larger than this is no icon.
-const MAX_ICON: usize = 256 * 1024;
-
-/// Plugin `id`'s icon in the catalog last fetched, as a data: URL; None when
-/// it has none. Fetched here: GitHub serves release files as
-/// application/octet-stream, which an <img> won't draw as an SVG.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn plugin_catalog_icon(id: String) -> Result<Option<String>, String> {
-    use base64::{engine::general_purpose::STANDARD, Engine};
-    let icon = FETCHED
-        .lock()
-        .unwrap_or_else(|e| e.into_inner())
-        .iter()
-        .find(|e| e.id == id)
-        .and_then(|e| e.icon.clone());
-    let Some(url) = icon else {
-        return Ok(None);
-    };
-    let mime = if url.ends_with(".svg") {
-        "image/svg+xml"
-    } else {
-        "image/png"
-    };
-    let bytes = download(&url, &id).await?;
-    if bytes.len() > MAX_ICON {
-        return Ok(None);
-    }
-    Ok(Some(format!(
-        "data:{mime};base64,{}",
-        STANDARD.encode(bytes)
-    )))
-}
-
-/// The README for `language` among `readme`'s: the language itself, its
-/// base ("pt" for "pt-BR"), then English. Traditional Chinese reads the
-/// English, never the Simplified.
-fn readme_for(
-    readme: &std::collections::BTreeMap<String, String>,
-    language: &str,
-) -> Option<String> {
-    let base = match language {
-        "zh-Hant" => "en",
-        _ => language.split('-').next().unwrap_or(language),
-    };
-    [language, base, "en"]
-        .iter()
-        .find_map(|lang| readme.get(*lang))
-        .cloned()
-}
-
-/// The error when a skill of that name exists already; it is never overwritten.
-/// Its error code (errors.json).
-pub const SKILL_EXISTS: &str = "skillExists";
-
-/// Installs skill `name` from the catalog last fetched into the global skills/
-/// folder, after checking it. Returns its path.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn skill_install_catalog(app: tauri::AppHandle, name: String) -> Result<String, String> {
-    let entry = FETCHED_SKILLS
-        .lock()
-        .unwrap_or_else(|e| e.into_inner())
-        .iter()
-        .find(|s| s.name == name)
-        .cloned()
-        .ok_or_else(|| format!("{name} isn't in the catalog."))?;
-    let skills = crate::ai::workspace::global_agent_dir(&app)?.join("skills");
-    let present = installed_skill_version(&skills, &entry.name);
-    let package = ext_stats::Download {
-        kind: ext_stats::Kind::Skill,
-        id: &entry.name,
-        version: &entry.version,
-        update: present
-            .as_ref()
-            .is_some_and(|v| is_newer(&v.to_string(), &entry.version)),
-        present: present.is_some(),
-        direct: &entry.url,
-    };
-    let bytes = download_counted(&app, package, &name).await?;
-    if bytes.len() as u64 != entry.size
-        || !hex(&Sha256::digest(&bytes)).eq_ignore_ascii_case(&entry.sha256)
-    {
-        return Err(format!(
-            "The download of {name} isn't the file the catalog lists - it was not installed."
-        ));
-    }
-    let text = String::from_utf8(bytes).map_err(|_| format!("{name} isn't a skill file."))?;
-    let path = install_skill_in(&skills, &entry.name, &text)?;
-    ext_stats::installed(&app, ext_stats::Kind::Skill, &entry.name);
-    Ok(path.to_string_lossy().into_owned())
-}
-
-/// Whether `offered` is a later version than `have`, both semver; a version
-/// either can't be read as is never newer.
-fn is_newer(have: &str, offered: &str) -> bool {
-    match (
-        semver::Version::parse(have.trim()),
-        semver::Version::parse(offered.trim()),
-    ) {
-        (Ok(have), Ok(offered)) => offered > have,
-        _ => false,
-    }
-}
-
-/// The version of the catalog skill `name` installed in `dir`, when one of
-/// that name is there with a version (one the user wrote has none).
-fn installed_skill_version(dir: &std::path::Path, name: &str) -> Option<semver::Version> {
-    crate::ai::workspace::read_skill_files(dir)
-        .into_iter()
-        .find(|(_, s)| s.name.eq_ignore_ascii_case(name))
-        .and_then(|(_, s)| semver::Version::parse(s.version?.trim()).ok())
-}
-
-/// Writes a skill file named `name` into `dir`: never over one there, but
-/// over an older version of the same catalog skill (an update).
-fn install_skill_in(
-    dir: &std::path::Path,
-    name: &str,
-    text: &str,
-) -> Result<std::path::PathBuf, String> {
-    let skill = crate::ai::workspace::parse_skill_file(name, text);
-    if skill.prompt.is_empty() {
-        return Err(format!("{name} isn't a skill file."));
-    }
-    let taken = crate::ai::workspace::read_skill_files(dir)
-        .into_iter()
-        .find(|(_, s)| s.name.eq_ignore_ascii_case(&skill.name));
-    let Some((path, _)) = taken else {
-        return crate::ai::workspace::write_skill_file(
-            dir,
-            name,
-            crate::ai::workspace::OnTaken::Refuse(SKILL_EXISTS),
-            |_| text.to_string(),
-        );
-    };
-    let newer = match (installed_skill_version(dir, &skill.name), &skill.version) {
-        (Some(have), Some(offered)) => is_newer(&have.to_string(), offered),
-        _ => false,
-    };
-    if !newer {
-        return Err(crate::errors::error(SKILL_EXISTS));
-    }
-    crate::atomic::write_sync(&path, text).map_err(|e| e.to_string())?;
-    Ok(path)
 }
 
 /// Installs `id` from the catalog last fetched after checking its package,
@@ -468,6 +291,18 @@ pub async fn plugin_install_catalog(
     })?;
     ext_stats::installed(&app, ext_stats::Kind::Plugin, &id);
     Ok(installed)
+}
+
+/// Whether `offered` is a later version than `have`, both semver; a version
+/// either can't be read as is never newer.
+fn is_newer(have: &str, offered: &str) -> bool {
+    match (
+        semver::Version::parse(have.trim()),
+        semver::Version::parse(offered.trim()),
+    ) {
+        (Ok(have), Ok(offered)) => offered > have,
+        _ => false,
+    }
 }
 
 /// The version of plugin `id` installed in `root`, if one is.

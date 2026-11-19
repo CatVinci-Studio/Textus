@@ -43,6 +43,7 @@ import { islandKeyOf } from "./island-key";
 import { APP_ACTIONS, type AppActionHandlers } from "./app-actions";
 import { copyPath } from "../../clipboard/copy-path";
 import { openReportProblem } from "../report/report-open";
+import type { PdfLayout } from "../../export/pdf-page";
 
 interface MenuBridgeHandlers extends AppActionHandlers {
   activeTabId: string;
@@ -53,6 +54,7 @@ interface MenuBridgeHandlers extends AppActionHandlers {
   liveTabs: () => DocTab[];
   t: Strings;
   pdfPageNumbers: boolean;
+  pdfLayout: PdfLayout;
   pdfLightColors: boolean;
   diagramEngine: DiagramEngine;
   /** Settings › Editor › Export, for a Pandoc export. */
@@ -186,6 +188,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
             m.exportPdf(tab, h().t, {
               pageNumbers: h().pdfPageNumbers,
               lightColors: h().pdfLightColors,
+              layout: h().pdfLayout,
             }),
           );
       }),

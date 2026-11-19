@@ -105,7 +105,7 @@ export function DateField({
       </div>
       <input
         id={id}
-        className="settings-text-input"
+        className="tx-input settings-text-input"
         value={value}
         placeholder="YYYY-MM-DD"
         inputMode="numeric"
@@ -176,7 +176,7 @@ export function ColorField({
       </div>
       <input
         id={id}
-        className="settings-text-input"
+        className="tx-input settings-text-input"
         value={value}
         placeholder="#rrggbb"
         spellCheck={false}

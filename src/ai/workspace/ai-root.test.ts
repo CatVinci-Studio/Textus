@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { aiRoot, setOpenFolder } from "./ai-root";
+import { aiRoot } from "./ai-root";
+import { setOpenFolder } from "../../platform/open-folder";
 
 describe("the AI's project folder", () => {
   it("is the user's pick, else the folder open in this window", () => {

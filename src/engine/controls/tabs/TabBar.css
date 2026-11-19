@@ -182,7 +182,7 @@
   corner-shape: round;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .tab-bar-add:hover {
     background: var(--ui-hover);
   }
@@ -196,10 +196,24 @@
 
 /* With no pointer to bring it, an unopened tab's × only takes its name's
    room: the name has it, the pill's width the same. */
-@media (hover: none) {
+@media (any-hover: none) {
   .tab-pill:not(.tab-pill-active, :focus-visible) .tab-pill-close {
     display: none;
   }
+}
+
+/* A touch row scrolls under a finger's drag; its + stays at the row's end
+   rather than riding after the tabs.
+   The strip fills the room, not a margin: the fit reads the +'s margin as
+   room it takes (tab-room.ts). */
+.tab-bar[data-touch] .tab-strip {
+  flex-grow: 1;
+}
+
+.tab-bar[data-touch] .tab-bar-add {
+  position: sticky;
+  right: 0;
+  z-index: 2;
 }
 
 /* Overflowing, the + stays beside the list at the row's end as the tabs
@@ -244,7 +258,7 @@
   z-index: 2;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .tab-bar-list:hover {
     background: color-mix(
       in srgb,

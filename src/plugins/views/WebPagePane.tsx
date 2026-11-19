@@ -115,12 +115,16 @@ function NativeWebPage({
           <div className="web-page-failed" role="alert">
             <p>{t.webPageFailed}</p>
             <div className="web-page-failed-actions">
-              <button type="button" className="text-button" onClick={retry}>
+              <button
+                type="button"
+                className="tx-button text-button"
+                onClick={retry}
+              >
                 {t.webPageReload}
               </button>
               <button
                 type="button"
-                className="text-button"
+                className="tx-button text-button"
                 onClick={() => void links.openWebLink(shown)}
               >
                 {t.webPageOpenInBrowser}

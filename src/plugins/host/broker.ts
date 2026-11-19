@@ -1,45 +1,41 @@
 import { ownError } from "../../utils/error-text";
 import { commentHandlers } from "./broker-comments";
-import { onNotesChanged } from "../../ai/margin/notes-by-path";
-import { readableRoot } from "./scoped-root";
 import type { QuickPickItem } from "../../engine/controls/quick-pick-queue";
 import { logPluginError, logPluginMessage } from "../store/plugin-log";
 import type { Strings } from "../../i18n/strings";
 import {
   getWindowAccess,
-  emitPluginEvent,
   onPluginEvent,
   type PluginEventMap,
-  type PluginTabInfo,
 } from "../app-bridge";
 import { connectFrame, hostsContainer, sandboxedFrame } from "./frames";
 import { hostDocument } from "./host-document";
 import { readPluginFile, type PluginOrigin } from "../store/files";
 import { localize, type Permission } from "../store/manifest";
 import { type PluginManifest } from "../store/manifest-types";
-import { aiModelHandlers, stopPluginAi } from "./broker-ai";
-import { exportFormatHandlers, stopPluginExport } from "./broker-export";
+import { databaseViewHandlers } from "./broker-database-views";
+import { conventionReaderHandlers } from "./broker-conventions";
 import { fileHandlers } from "./broker-files";
-import { layoutHandlers, seenBy } from "./broker-layout";
-import { editorHandlers, stopPluginEditor } from "./broker-editor";
-import { historyHandlers, stopPluginHistory } from "./broker-history";
+import { aiModelHandlers } from "./broker-ai";
+import { exportFormatHandlers } from "./broker-export";
+import { providerHandlers } from "./broker-providers";
+import { sshHandlers } from "./broker-ssh";
+import { layoutHandlers } from "./broker-layout";
+import { editorHandlers } from "./broker-editor";
+import { historyHandlers } from "./broker-history";
+import { uiHandlers } from "./broker-ui";
+import { watchMetadata } from "../workspace/metadata-cache";
+import { ENV_EVENTS, eventNeeds, listenFor } from "./broker-events";
+import { forgetPlugin } from "./broker-stop";
+import { withTimeout } from "../../utils/with-timeout";
 import { metadataHandlers } from "./broker-metadata";
 import { gitHandlers } from "./broker-git";
-import { stopPluginUi, uiHandlers } from "./broker-ui";
 import { viewHandlers } from "./broker-views";
 import { scheduleHandlers } from "./broker-schedule";
 import { appearanceHandlers } from "./broker-appearance";
 import { textHandlers } from "./broker-text";
-import { forgetPluginColors } from "../../theme/plugin-colors";
 import { currentAppState } from "../background/app-state";
-import { forgetListViews } from "../contributions/list-views";
-import { forgetEmbeds } from "../contributions/embeds";
-import { forgetWillExport } from "../contributions/will-export";
-import { forgetWillSave } from "../contributions/will-save";
-import { unwatchMetadata, watchMetadata } from "../workspace/metadata-cache";
 import { str, type Params, type PluginScope } from "./broker-scope";
-import { inOpenFolder } from "../may-open";
-import { absoluteIn } from "../../utils/path";
 import type { Endpoint, Handlers } from "./rpc";
 import { guarded } from "../api-permissions";
 import { grants } from "../grants";
@@ -107,89 +103,6 @@ const PING_MS = 2_000;
 const PING_EVERY_MS = 15_000;
 /** Errors in a minute past which a plugin is turned off. */
 const MAX_ERRORS_PER_MINUTE = 10;
-
-export function withTimeout<T>(
-  promise: Promise<T>,
-  ms: number,
-  what: string,
-): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(
-      () => reject(new Error(`${what} took too long`)),
-      ms,
-    );
-    promise.then(
-      (value) => {
-        clearTimeout(timer);
-        resolve(value);
-      },
-      (err) => {
-        clearTimeout(timer);
-        reject(err);
-      },
-    );
-  });
-}
-
-/** Events about one file (or a move), told only to a plugin that can read
- *  it: in the window's folder, not in a hidden folder of it. */
-const FILE_EVENTS = new Set<keyof PluginEventMap>([
-  "didSave",
-  "fileCreate",
-  "fileChange",
-  "fileChangeOnDisk",
-  "comments",
-  "fileRename",
-  "fileDelete",
-]);
-
-// Margin notes are written by the editor or a plugin; plugins hear of both.
-onNotesChanged((path) => emitPluginEvent("comments", { path }));
-
-/** Whether the files a file event is about are ones plugins read. */
-export function fileEventReadable(data: unknown, root: string | null): boolean {
-  if (!root || typeof data !== "object" || data === null) return false;
-  const paths = ["path", "from", "to"]
-    .map((key) => (data as Record<string, unknown>)[key])
-    .filter((path): path is string => typeof path === "string");
-  return paths.some((path) => inOpenFolder(root, absoluteIn(root, path)));
-}
-
-/** The events that keep a plugin's `textus.env` current. */
-const ENV_EVENTS = ["language", "theme", "appState"] as const;
-
-/** The events a plugin can listen to, and the permission each needs.
- *  `settings` and `editorKey` are told to one plugin only. */
-const PLUGIN_EVENT_NEEDS: Record<keyof PluginEventMap, Permission | null> = {
-  didSave: "files.read",
-  activeDocument: "editor.read",
-  documentChange: "editor.read",
-  selection: "editor.read",
-  visible: "editor.read",
-  copy: "clipboard",
-  activeTab: null,
-  layout: null,
-  root: "files.read",
-  conventions: "files.read",
-  fileCreate: "files.read",
-  fileChange: "files.read",
-  fileChangeOnDisk: "files.read",
-  comments: "comments",
-  fileRename: "files.read",
-  fileDelete: "files.read",
-  metadata: "files.read",
-  theme: null,
-  appearance: null,
-  language: null,
-  settings: null,
-  editorKey: "editor.input",
-  appState: null,
-  aiState: null,
-  panels: null,
-  activity: null,
-  floating: null,
-  floatingTouch: null,
-};
 
 export class PluginHost {
   private frame: HTMLIFrameElement | null = null;
@@ -274,17 +187,7 @@ export class PluginHost {
     endpoint?.call("$deactivate").catch(() => {});
     for (const stop of this.subscriptions.values()) stop();
     this.subscriptions.clear();
-    stopPluginUi(this.id);
-    stopPluginEditor(this.id);
-    stopPluginHistory(this.id);
-    stopPluginAi(this.id);
-    stopPluginExport(this.id);
-    forgetListViews(this.id);
-    forgetEmbeds(this.id);
-    forgetWillSave(this.id);
-    forgetWillExport(this.id);
-    unwatchMetadata(this.id);
-    forgetPluginColors(this.id);
+    forgetPlugin(this.id);
     setTimeout(() => {
       this.disconnect?.();
       this.frame?.remove();
@@ -376,7 +279,7 @@ export class PluginHost {
         this.need("files.read");
         const root = getWindowAccess()?.rootPath();
         if (!root) throw new Error(ownError("noFolder"));
-        return readableRoot(root);
+        return root;
       },
       ownWebview: (id) => {
         const record = webview(id);
@@ -412,37 +315,17 @@ export class PluginHost {
       },
       "events.subscribe": ({ name }: Params) => {
         const event = str(name, "name") as keyof PluginEventMap;
-        if (!(event in PLUGIN_EVENT_NEEDS))
-          throw new Error(`No event ${event}.`);
-        const needs = PLUGIN_EVENT_NEEDS[event];
+        const needs = eventNeeds(event);
         if (needs) this.need(needs);
         if (this.subscriptions.has(event)) return;
         if (event === "metadata") watchMetadata(this.id);
         this.subscriptions.set(
           event,
-          event === "settings" || event === "editorKey"
-            ? () => {}
-            : event === "floating" || event === "floatingTouch"
-              ? onPluginEvent(event, (data) => {
-                  if (data.plugin === this.id) this.event(event, data);
-                })
-              : FILE_EVENTS.has(event)
-                ? onPluginEvent(event, (data) => {
-                    const root = getWindowAccess()?.rootPath() ?? null;
-                    if (fileEventReadable(data, root)) this.event(event, data);
-                  })
-                : event === "activeTab"
-                  ? onPluginEvent(event, (data) =>
-                      this.event(
-                        event,
-                        seenBy(
-                          this.id,
-                          this.info.granted,
-                          data as PluginTabInfo,
-                        ),
-                      ),
-                    )
-                  : onPluginEvent(event, (data) => this.event(event, data)),
+          listenFor(event, {
+            id: this.id,
+            granted: this.info.granted,
+            tell: (n, data) => this.event(n, data),
+          }),
         );
       },
       "plugin.readFile": ({ path }: Params) =>
@@ -479,6 +362,10 @@ export class PluginHost {
       ...aiModelHandlers(scope),
       ...commentHandlers(scope),
       ...exportFormatHandlers(scope),
+      ...databaseViewHandlers(scope),
+      ...conventionReaderHandlers(scope),
+      ...providerHandlers(scope),
+      ...sshHandlers(scope),
     };
   }
 }

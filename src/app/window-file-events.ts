@@ -7,9 +7,10 @@ import {
 import { fs } from "../platform/ipc";
 import { DROP_IMAGE_FILES_EVENT, sendAppEvent } from "../utils/events";
 import { openDocument } from "../utils/open-document";
-import { isMobileApp } from "../platform/capabilities";
+import { filesDropAsContents, isMobileApp } from "../platform/capabilities";
 import { isWindowsPlatform } from "../platform/os";
 import { dropPointInPage, sortDroppedPaths } from "./dropped-files";
+import { watchFilesFromApps } from "./files-from-apps";
 import type { OpenOptions } from "./useFileOpening";
 
 /**
@@ -45,6 +46,7 @@ export function useFileDrop(
   openFolder: (path: string) => void,
 ): void {
   useEffect(() => {
+    if (filesDropAsContents) return watchFilesFromApps(openPathInTab);
     if (isMobileApp) return;
     const unlisten = listenToThisWebview<{
       paths: string[];

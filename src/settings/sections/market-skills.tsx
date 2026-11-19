@@ -146,7 +146,7 @@ export function AvailableSkills({
             action={
               <button
                 type="button"
-                className="text-button plugin-action-main"
+                className="tx-button text-button plugin-action-main"
                 disabled={busy === skill.name}
                 onClick={() => void install(skill)}
               >

@@ -12,7 +12,8 @@ import {
   canPickImageFile,
   canRevealInFileManager,
 } from "../../platform/capabilities";
-import { isScopedUrl, scopedImageSrc } from "../../platform/ios-files";
+import { scopedImageSrc } from "../../platform/native-files";
+import { isFarUrl } from "../../platform/far-files";
 import {
   MISSING_IMAGE_CLASS,
   imageDisplayName,
@@ -91,14 +92,14 @@ export function showDocImage(
   // Loaded only as it comes near the screen (set before the src, or it
   // loads at once): a short note can hold many large photos.
   img.loading = "lazy";
-  if (doc && isScopedUrl(doc) && !hasUrlScheme(src) && !src.startsWith("/")) {
+  if (doc && isFarUrl(doc) && !hasUrlScheme(src) && !src.startsWith("/")) {
     img.removeAttribute("src");
     void scopedImageSrc(src, doc)
       .then((url) => {
         if (stillWanted()) img.src = url;
       })
       .catch(() => {});
-  } else if (doc && !isScopedUrl(doc) && /^\/(?!\/)/.test(src)) {
+  } else if (doc && !isFarUrl(doc) && /^\/(?!\/)/.test(src)) {
     img.removeAttribute("src");
     void rootedImagePath(src, doc)
       .then((path) => {

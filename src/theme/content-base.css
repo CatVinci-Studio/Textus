@@ -141,7 +141,7 @@
     text-decoration: none;
   }
 
-  @media (hover: hover) {
+  @media (any-hover: hover) {
     .milkdown a:hover {
       text-decoration: underline;
     }
@@ -364,7 +364,7 @@
     text-underline-offset: 0.2em;
   }
 
-  @media (hover: hover) {
+  @media (any-hover: hover) {
     :root:not([data-user-theme]) .milkdown a:hover {
       text-decoration-color: currentColor;
     }

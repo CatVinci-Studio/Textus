@@ -651,6 +651,12 @@ export default {
   treeTrashConfirm: "Переместить «{name}» в корзину? Оттуда его можно вернуть.",
   treeTrashFolderConfirm:
     "Переместить папку «{name}» со всем содержимым в корзину? Оттуда её можно вернуть.",
+  treeTrashManyConfirm: {
+    one: "Переместить {n} объект в корзину? Оттуда его можно вернуть.",
+    few: "Переместить {n} объекта в корзину? Оттуда их можно вернуть.",
+    many: "Переместить {n} объектов в корзину? Оттуда их можно вернуть.",
+    other: "Переместить {n} объекта в корзину? Оттуда их можно вернуть.",
+  },
   errorPermission:
     "У Textus нет доступа к этому файлу или папке. Проверьте права доступа или выберите другое место.",
   errorNotFound:
@@ -673,8 +679,8 @@ export default {
     "Для магазина плагинов нужна более новая версия Textus. Обновите Textus.",
   errorImageTooBig: "Изображение пустое или больше 25 МБ.",
   errorNoFolder: "Сначала откройте папку.",
-  errorPluginsNeedAllFiles:
-    "Плагины не могут прочитать эту папку: у Textus нет доступа ко всем файлам. Откройте папку снова и выберите «Продолжить».",
+  errorFarPictures:
+    "В эту папку пока нельзя сохранять картинки. Вставьте их в документ на этом устройстве.",
   errorPdfUnsupported: "Экспорт в PDF недоступен в этой системе.",
   errorNoText: "В нём нет читаемого текста.",
   errorUnreadable: "Не удаётся прочитать этот файл.",
@@ -979,6 +985,7 @@ export default {
   agentQueueContinue: "Продолжить",
   agentQueueEdit: "Изменить",
   agentQueueRemove: "Убрать",
+  agentQueueInsert: "Отправить сейчас",
   agentSend: "Отправить",
   agentStop: "Остановить",
   agentRetry: "Повторить",
@@ -1163,6 +1170,12 @@ export default {
   autoCloseBracketsLabel: "Закрывать (), [] и «»",
   plainTextMenuLabel: "Копировать/вставить как текст в контекстном меню",
   pdfPageNumbersLabel: "Показывать номера страниц при экспорте",
+  pdfPaperLabel: "Размер бумаги PDF",
+  pdfMarginLabel: "Поля PDF",
+  pdfMarginNarrow: "Узкие",
+  pdfMarginNormal: "Обычные",
+  pdfMarginWide: "Широкие",
+  pdfTextScaleLabel: "Размер текста PDF",
   docxTemplateLabel: "Шаблон Word",
   docxTemplateHelp:
     "Экспортированные файлы Word берут стили, шрифты и поля из этого файла.",
@@ -1959,6 +1972,14 @@ export default {
   pluginPermNotifications: "Показывать системные уведомления",
   pluginPermAppearance: "Менять цвета Textus и ваших документов",
   pluginPermGitCommit: "Делать коммиты Git в открытой папке вашим Git",
+  pluginPermSsh:
+    "Подключаться к серверам с вашими настройками SSH (только к разрешённым)",
+  pluginSshAsk:
+    "{plugin} хочет подключиться к {host} с вашими настройками SSH, чтобы читать и записывать там файлы.",
+  pluginSshUnknownHost:
+    "{host} ещё не известный хост. Подключитесь к нему один раз в терминале (ssh {host}), проверьте и примите его ключ, затем попробуйте снова.",
+  pluginSshNeedsLogin:
+    "{host} запросил пароль или незагруженный ключ. Добавьте ключ в агент SSH (ssh-add) или настройте вход по ключу, затем попробуйте снова.",
   pluginPermComments: "Читать и оставлять заметки на полях ваших документов",
   pluginPermAiModel:
     "Использовать вашу модель ИИ (учитывается в расходе вашего сервиса ИИ)",

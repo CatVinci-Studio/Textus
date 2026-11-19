@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, mockInvoke, openApp, pasteMarkdown } from "./helpers";
+import { emit, mockInvoke, openApp, pasteMarkdown, settled } from "./helpers";
 
 // Closing: a tab or the window with unsaved changes asks first, Keep
 // unsaved changes closes without asking, closed tabs come back, and the
@@ -150,14 +150,32 @@ test("a middle click closes a tab, and the tab menu closes those to its right, l
     settings: { language: "en", newDocumentMode: "tab" },
   });
   await openFiles(page, ["a.md", "b.md", "c.md", "d.md", "e.md"]);
-  await tab(page, "e.md").click({ button: "middle" });
+  // Text selected in a field, then the caret at e.md's end: Linux pastes
+  // the last selection where the caret is on a middle click anywhere.
+  await page.evaluate(() => {
+    const field = document.body.appendChild(document.createElement("textarea"));
+    field.id = "seed";
+    field.value = "seeded";
+  });
+  await page.locator("#seed").focus();
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.locator("#seed").evaluate((field) => field.remove());
+  const front = page.locator('[data-active-tab="true"] .ProseMirror');
+  await front.click();
+  await page.keyboard.press("ControlOrMeta+End");
+  await settled(page);
+  const was = await front.innerText();
+  await tab(page, "d.md").click({ button: "middle" });
   // The window's untouched first tab gave way to a.md.
   await expect(page.locator(titles)).toHaveText([
     "a.md",
     "b.md",
     "c.md",
-    "d.md",
+    "e.md",
   ]);
+  // It closed d.md and pasted nothing into e.md.
+  await settled(page);
+  expect(await front.innerText()).toBe(was);
   await fromMenu(page, "c.md", "Close Tabs to the Right");
   await expect(page.locator(titles)).toHaveText(["a.md", "b.md", "c.md"]);
   await fromMenu(page, "b.md", "Close Tabs to the Left");

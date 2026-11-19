@@ -225,7 +225,7 @@ export function ThemeSection({ t }: { t: Strings }) {
       <SettingRow label={t.themeImportLabel}>
         <button
           type="button"
-          className="text-button settings-inline-button"
+          className="tx-button text-button settings-inline-button"
           disabled={busy}
           onClick={() => void importTheme()}
         >
@@ -267,7 +267,7 @@ export function CustomCssRow({ t }: { t: Strings }) {
         <RowHelp label={t.customCssLabel}>{t.customCssHint}</RowHelp>
       </div>
       <textarea
-        className="settings-code-input"
+        className="tx-input settings-code-input"
         aria-labelledby={labelId}
         spellCheck={false}
         rows={5}
@@ -340,6 +340,7 @@ export function ThemesTab({ t }: { t: Strings }) {
       error={error}
       installedTitle={t.extensionsThemesInstalled}
       installedCount={settings.userThemes.length}
+      installedCards={mine.length > 0}
       installed={
         mine.length ? (
           mine.map((theme) => {
@@ -367,7 +368,7 @@ export function ThemesTab({ t }: { t: Strings }) {
                 {updates.has(theme.id) && (
                   <button
                     type="button"
-                    className="text-button settings-inline-button"
+                    className="tx-button text-button settings-inline-button"
                     disabled={install.busy === theme.id}
                     onClick={() => void install.install(updates.get(theme.id)!)}
                   >
@@ -377,7 +378,7 @@ export function ThemesTab({ t }: { t: Strings }) {
                 {settings.themeId !== theme.id && (
                   <button
                     type="button"
-                    className="text-button settings-inline-button"
+                    className="tx-button text-button settings-inline-button"
                     disabled={busy}
                     onClick={() => setSettings({ themeId: theme.id })}
                   >
@@ -386,7 +387,7 @@ export function ThemesTab({ t }: { t: Strings }) {
                 )}
                 <button
                   type="button"
-                  className="text-button settings-inline-button"
+                  className="tx-button text-button settings-inline-button"
                   disabled={busy}
                   onClick={() => void remove(theme.id, theme.name)}
                 >

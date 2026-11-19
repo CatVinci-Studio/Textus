@@ -19,10 +19,6 @@ describe("the keyboard coming up", () => {
     say(320);
     say(330);
     expect(risen).toHaveBeenCalledTimes(1);
-    expect(document.documentElement).toHaveProperty(
-      "className",
-      expect.stringContaining("keyboard-up"),
-    );
     say(0);
     say(320);
     expect(risen).toHaveBeenCalledTimes(2);

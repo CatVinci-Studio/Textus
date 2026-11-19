@@ -224,6 +224,7 @@ export function editorHandlers(p: PluginScope) {
         p.manifest().contributes.hovers.length > 0,
       );
     },
+    "editor.unregisterHover": () => removeHoverProvider(p.id),
     "editor.registerDecorations": () => {
       addDecorationProvider(p.id, (blocks, all, path) =>
         p.request<PluginDecoration[]>("$decorate", {

@@ -74,7 +74,7 @@ export function ActivityRail({
   };
   const drag = (e: React.PointerEvent<HTMLElement>, id: string) => {
     const rail = e.currentTarget.closest<HTMLElement>(".activity-rail");
-    if (!rail || e.pointerType === "touch") return;
+    if (!rail) return;
     railDrag(e.nativeEvent, {
       rail,
       id,

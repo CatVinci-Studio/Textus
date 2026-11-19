@@ -11,9 +11,11 @@ import { openEditors, pulledDecorations, type Pulled } from "./block-lift";
 import { dragBlock } from "./block-drag";
 import { boxIn, handlePlace } from "./block-handle-place";
 import { GRIP_ICON_HTML } from "../../engine/controls/icons";
+import { foldCaret, labelFoldCaret } from "../fold/block-fold";
+import { headingFold } from "../fold/heading-fold";
 import { TOUCH_SLOP_PX } from "../../utils/gesture";
 import { canHaptic } from "../../platform/capabilities";
-import { iosFiles } from "../../platform/ios-files";
+import { nativeFiles } from "../../platform/native-files";
 import "./block-handles.css";
 
 /** Room a list item's marker takes left of its text, in ems. */
@@ -75,6 +77,8 @@ class BlockHandles {
   private readonly root: HTMLElement;
   private readonly handle = document.createElement("div");
   private readonly grip = button("block-handle-grip", GRIP_ICON_HTML);
+  /** A top-level heading's fold, left of ⋮⋮ (heading-fold.ts). */
+  private readonly fold = foldButton();
   private block: HandledBlock | null = null;
   /** The fold caret shown for the block the mouse is near. */
   private caret: HTMLElement | null = null;
@@ -97,7 +101,7 @@ class BlockHandles {
     this.handle.className = "block-handle";
     this.handle.hidden = true;
     this.handle.setAttribute("aria-hidden", "true");
-    this.handle.append(this.grip);
+    this.handle.append(this.fold, this.grip);
     this.root.append(this.handle);
     openEditors.set(view, this.root);
     this.area.addEventListener("pointerdown", this.onPress, true);
@@ -106,7 +110,13 @@ class BlockHandles {
     view.dom.addEventListener("keydown", this.leave);
     this.grip.addEventListener("click", this.onClick);
     this.grip.addEventListener("pointerdown", this.onGrip);
+    this.fold.addEventListener("click", this.onFold);
   }
+
+  private readonly onFold = (e: MouseEvent) => {
+    e.preventDefault();
+    if (this.block) headingFold(this.view, this.block.pos)?.toggle();
+  };
 
   private readonly onPress = (e: PointerEvent) => {
     const touch = e.pointerType !== "mouse";
@@ -156,8 +166,7 @@ class BlockHandles {
     const block = this.blockOnLine();
     if (!block) return this.leave();
     this.markCaret(this.pointer.y);
-    if (this.enabled() && this.view.editable) this.show(block);
-    else this.hide();
+    this.show(block);
   }
 
   /** Shows the fold caret of the block on line `y`, and no other. */
@@ -193,9 +202,19 @@ class BlockHandles {
     this.handle.hidden = true;
   };
 
+  /** ⋮⋮ for `block` where it can be moved, and a heading's fold caret
+   *  where it has one and isn't folded (folded, its own caret stands
+   *  there: heading-fold-marks.ts). */
   private show(block: HandledBlock) {
     const dom = this.view.nodeDOM(block.pos) as HTMLElement | null;
     if (!dom?.isConnected) return this.hide();
+    const grip = this.enabled() && this.view.editable;
+    const fold = headingFold(this.view, block.pos);
+    const caret = !!fold && !fold.folded;
+    if (!grip && !caret) return this.hide();
+    this.grip.hidden = !grip;
+    this.fold.hidden = !caret;
+    if (caret) labelFoldCaret(this.fold, false, dom.textContent ?? "");
     this.block = block;
     this.handle.hidden = false;
     // Beside a fold caret (a drawn block's, a heading's), a finger's ⋮⋮
@@ -295,7 +314,7 @@ class BlockHandles {
     };
     const timer = setTimeout(() => {
       stop();
-      if (canHaptic) iosFiles.haptic();
+      if (canHaptic) nativeFiles.haptic();
       drag(true);
     }, HOLD_MS);
     window.addEventListener("pointermove", moved);
@@ -308,18 +327,19 @@ class BlockHandles {
     // Under a finger: beside the block with the caret, while writing.
     if (this.touch) {
       const { view } = this;
-      const block =
-        this.enabled() && view.editable && view.hasFocus()
-          ? blockAround(view.state.doc, view.state.selection.from)
-          : null;
+      const block = view.hasFocus()
+        ? blockAround(view.state.doc, view.state.selection.from)
+        : null;
       if (block) this.show(block);
       else this.hide();
       return;
     }
-    // The block moved or went: placed again on the next move.
+    // The block moved or went, or its fold changed: placed again on the
+    // next move.
     if (
       this.block &&
-      this.view.state.doc.nodeAt(this.block.pos) !== this.block.node
+      (this.view.state.doc.nodeAt(this.block.pos) !== this.block.node ||
+        (!this.fold.hidden && headingFold(this.view, this.block.pos)?.folded))
     )
       this.hide();
   }
@@ -384,6 +404,16 @@ function button(className: string, icon: string): HTMLButtonElement {
   // same from the keyboard.
   el.tabIndex = -1;
   // Pressed, the text keeps the keyboard (and a finger's handle its block).
+  el.addEventListener("mousedown", (e) => e.preventDefault());
+  return el;
+}
+
+/** The fold caret ⋮⋮ carries for a heading, drawn as the drawn blocks'. */
+function foldButton(): HTMLButtonElement {
+  const el = foldCaret();
+  el.className = "block-handle-button block-handle-fold";
+  el.tabIndex = -1;
+  el.hidden = true;
   el.addEventListener("mousedown", (e) => e.preventDefault());
   return el;
 }

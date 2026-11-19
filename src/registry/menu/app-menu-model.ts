@@ -21,7 +21,15 @@ import {
   type TableNode,
   type TableSection,
 } from "./menu-table";
-import { canLinkSponsor, hasDocumentsList } from "../../platform/capabilities";
+import {
+  canAutoUpdate,
+  canExportPdf,
+  canLinkSponsor,
+  canToggleFullscreen,
+  canUseWindows,
+  hasDocumentsList,
+  isMobileApp,
+} from "../../platform/capabilities";
 /**
  * The app-drawn menu, as data, for windows with no native menu bar. Entries
  * that reach the backend use the same ids as the native menu.
@@ -195,8 +203,17 @@ export interface RecentLists {
 export const NO_RECENTS: RecentLists = { files: [], folders: [] };
 
 /** Entries this platform leaves out: the sponsor link on iOS, whose store
- *  rules keep payment outside the app from being linked to. */
-const LEFT_OUT: Record<string, boolean> = { "help-sponsor": !canLinkSponsor };
+ *  rules keep payment outside the app from being linked to, and on an
+ *  iPad what it can't do (windows, quitting, updating itself). */
+const LEFT_OUT: Record<string, boolean> = {
+  "help-sponsor": !canLinkSponsor,
+  "new-window": !canUseWindows,
+  "close-window": !canUseWindows,
+  quit: !canUseWindows,
+  "check-updates": !canAutoUpdate,
+  "export-pdf": !canExportPdf,
+  fullscreen: !canToggleFullscreen,
+};
 
 /** Entries that stay off unless something is open or on. */
 const DISABLED: Record<string, (checks: MenuChecks) => boolean> = {
@@ -249,6 +266,9 @@ export function buildAppMenu(
       items.flatMap((node): MenuNode[] => {
         if (isSeparator(node)) return ["separator"];
         if (isSection(node)) return section(node.section);
+        // iOS keeps no recent list: its Documents list is that.
+        if (isMenu(node) && node.menu === "open-recent" && isMobileApp)
+          return [];
         if (isMenu(node))
           return [
             {
@@ -257,11 +277,11 @@ export function buildAppMenu(
             },
           ];
         const item = node as TableItem;
+        if (LEFT_OUT[item.id ?? item.predefined ?? ""]) return [];
         if (item.drawn?.in) {
           moved[item.drawn.in].push(entry(item));
           return [];
         }
-        if (LEFT_OUT[item.id ?? ""]) return [];
         return shown && (!item.on || item.drawn) ? [entry(item)] : [];
       }),
     );
@@ -272,8 +292,30 @@ export function buildAppMenu(
       : [{ label: menuText(t, menu.label!), submenu: items }];
   });
   const file = menus[0] as MenuEntry;
-  file.submenu = [...file.submenu!, ...moved.file];
+  file.submenu = [...mobileFirst(t), ...file.submenu!, ...moved.file];
+  if (isMobileApp) {
+    // An iPad shares the document where a desktop shows it in its folder.
+    const at = file.submenu.findIndex(
+      (node) =>
+        node !== "separator" &&
+        node.action !== undefined &&
+        "native" in node.action &&
+        node.action.native === "save-file-as",
+    );
+    file.submenu.splice(at + 1, 0, {
+      label: t.menuShare,
+      action: { native: "share" },
+      disabled: checks.noDocument,
+    });
+  }
   return [...menus, "separator", ...moved.end];
+}
+
+/** The documents list first, where the app has one (iOS). */
+function mobileFirst(t: Strings): MenuNode[] {
+  return hasDocumentsList
+    ? [{ label: t.menuDocuments, action: { native: "documents" } }, "separator"]
+    : [];
 }
 
 /** No separator first, last or twice in a row. */

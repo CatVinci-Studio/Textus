@@ -78,10 +78,30 @@ export function placeRoom(room: HTMLElement, inList: boolean) {
 
 /** The blocks that move aside as the room opens and closes: an editor's
  *  own, and list items. */
-export const movingBlocks = (view: EditorView): Element[] => [
-  ...view.dom.children,
-  ...view.dom.querySelectorAll("li"),
-];
+export function movingBlocks(view: EditorView): Element[] {
+  // Only those within a screen of what shows: the rest move out of sight,
+  // and measuring every block of a long document stalls each step.
+  const children = [...view.dom.children];
+  const reach = window.innerHeight;
+  const from = firstReaching(children, -reach);
+  const to = firstReaching(children, 2 * reach, true);
+  const near = children.slice(from, to);
+  return [...near, ...near.flatMap((el) => [...el.querySelectorAll("li")])];
+}
+
+/** The first of `blocks`, in page order, whose bottom (`top`: top) is
+ *  past `y` on screen. */
+function firstReaching(blocks: Element[], y: number, top = false): number {
+  let lo = 0;
+  let hi = blocks.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    const box = blocks[mid]!.getBoundingClientRect();
+    if ((top ? box.top : box.bottom) < y) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
 
 /** What gives a lifted block its look off the page: its list (for its
  *  marker, numbered as it was) and the editor's rules and type. */

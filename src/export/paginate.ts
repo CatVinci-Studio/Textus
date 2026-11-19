@@ -1,31 +1,16 @@
+import {
+  DEFAULT_PDF_LAYOUT,
+  pageGeometry,
+  type PageGeometry,
+} from "./pdf-page";
 // Page-seam layout for the PDF export. WebKit never paints an @page margin,
 // so the sheet has none and the margin is laid out: blocks that would cross
 // a seam or start in a margin band are pushed down by spacers.
 
-/** The sheet as the PDF renderer lays it out, in CSS px. */
-export interface PageGeometry {
-  width: number;
-  height: number;
-  /** ~20mm band at the top and bottom of each sheet, matching the sides. */
-  margin: number;
-}
-
-/** macOS: A4 (595 × 842 pt) at 96 CSS px an inch, as on Windows: the
- *  export's web view is zoomed to 3/4 pt a CSS px (pdf_macos.rs). Not cut
- *  to whole pixels, so its sheets meet createPDF's exactly. */
-export const MAC_PAGE: PageGeometry = {
-  width: 595 / 0.75,
-  height: 842 / 0.75,
-  margin: 76,
-};
-
-/** Windows: PrintToPdf lays out at 96 CSS px per inch, cutting pages at
- *  whole pixels. */
-export const WINDOWS_PAGE: PageGeometry = {
-  width: 794,
-  height: 1122,
-  margin: 76,
-};
+/** The default sheet, A4 with its 20 mm margin, as macOS and Windows lay
+ *  it out. */
+export const MAC_PAGE = pageGeometry(DEFAULT_PDF_LAYOUT, "mac");
+export const WINDOWS_PAGE = pageGeometry(DEFAULT_PDF_LAYOUT, "windows");
 
 const SPACER_CLASS = "textus-page-spacer";
 

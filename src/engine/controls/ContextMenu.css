@@ -16,13 +16,6 @@
   animation: motion-pop-out var(--dur-fast) var(--ease-in) forwards;
 }
 
-/* A row: its label, then its keys, its check or its chevron at the end. */
-.context-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
 .context-menu-label {
   flex: 1;
 }

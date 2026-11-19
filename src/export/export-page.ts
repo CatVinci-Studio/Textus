@@ -1,6 +1,6 @@
 import type { DocTab } from "../document/doc-tabs";
 import { katexLoaded, loadKatex } from "../editor/math/katex-loader";
-import { drawEverything } from "../editor/draw-when-visible";
+import { drawEverything } from "../editor/lazy/draw-when-visible";
 import { resolveNoteLinks } from "./note-links";
 import { lightDiagrams } from "./diagram-images";
 import { markDrawnPictures } from "./drawn-blocks";

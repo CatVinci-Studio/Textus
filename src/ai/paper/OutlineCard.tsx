@@ -84,7 +84,7 @@ export function OutlineCard({
   const doneButton = (
     <button
       type="button"
-      className="inline-chat-action"
+      className="tx-button small inline-chat-action"
       disabled={untitled}
       onClick={() => setEditing(null)}
     >
@@ -139,7 +139,7 @@ export function OutlineCard({
               <div className="paper-outline-row paper-outline-actions">
                 <button
                   type="button"
-                  className="inline-chat-action"
+                  className="tx-button small inline-chat-action"
                   disabled={i === 0}
                   onClick={() => {
                     setOutline(moveSection(outline, i, -1));
@@ -150,7 +150,7 @@ export function OutlineCard({
                 </button>
                 <button
                   type="button"
-                  className="inline-chat-action"
+                  className="tx-button small inline-chat-action"
                   disabled={i === last}
                   onClick={() => {
                     setOutline(moveSection(outline, i, 1));
@@ -161,7 +161,7 @@ export function OutlineCard({
                 </button>
                 <button
                   type="button"
-                  className="inline-chat-action"
+                  className="tx-button small inline-chat-action"
                   disabled={last === 0}
                   onClick={() => {
                     setOutline(removeSection(outline, i));
@@ -202,7 +202,7 @@ export function OutlineCard({
         <span className="paper-card-spacer" />
         <button
           type="button"
-          className="inline-chat-action inline-chat-action-primary"
+          className="tx-button small inline-chat-action primary inline-chat-action-primary"
           disabled={busy || untitled}
           onClick={() => {
             setEditing(null);
@@ -384,7 +384,7 @@ function SectionEditor({
           />
           <button
             type="button"
-            className="inline-chat-action"
+            className="tx-button small inline-chat-action"
             onClick={() => figures((all) => all.filter((_, j) => j !== f))}
           >
             {t.paperOutlineRemoveFigure}

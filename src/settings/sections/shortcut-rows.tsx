@@ -198,7 +198,7 @@ function ShortcutRecorder({
 
           {combo && !recording && (
             <button
-              className="text-button settings-inline-button shortcut-clear"
+              className="tx-button text-button settings-inline-button shortcut-clear"
               aria-label={`${t.shortcutClear}: ${label}`}
               onClick={() => {
                 setError("");
@@ -211,7 +211,7 @@ function ShortcutRecorder({
           {fallback && combo !== fallback && !recording && (
             <Tooltip text={formatCombo(fallback)}>
               <button
-                className="text-button settings-inline-button"
+                className="tx-button text-button settings-inline-button"
                 aria-label={`${t.shortcutReset}: ${label}`}
                 onClick={() => bind(fallback)}
               >
@@ -220,7 +220,7 @@ function ShortcutRecorder({
             </Tooltip>
           )}
           <button
-            className={`text-button settings-inline-button shortcut-capture-button ${recording ? "shortcut-capture-active" : ""}`}
+            className={`tx-button text-button settings-inline-button shortcut-capture-button ${recording ? "shortcut-capture-active" : ""}`}
             aria-label={`${label}: ${recording ? t.shortcutRecording : combo ? formatCombo(combo) : t.shortcutUnset}`}
             aria-pressed={recording}
             onClick={() => {

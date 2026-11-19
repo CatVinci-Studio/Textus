@@ -188,3 +188,59 @@ test("Reject leaves the text as it was; an accepted rewrite is what the file get
     )
     .toBe(`# 笔记\n\n${REWRITE}\n`);
 });
+
+test("a rewrite whose settled call names less than its draft did lands without a crash", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  page.on("console", (m) => {
+    if (m.type() === "error") errors.push(m.text());
+  });
+  await openApp(page, {
+    animations: true,
+    settings: { language: "en" },
+    storage: { "textus-agent-panel-open": "1" },
+  });
+  const first = "第一段说起点。它有两句话。";
+  const rest = Array.from(
+    { length: 20 },
+    (_, i) => `第 ${i} 段写了很多很多的内容。又一句话在这里。`,
+  );
+  await pasteMarkdown(page, `# 笔记\n\n${first}\n\n${rest.join("\n\n")}`);
+  // Settled, the call names only the first paragraph, while the draft's
+  // rewrite of them all is still typing in: laid out anew, not crashed.
+  await page.evaluate((anchor) => {
+    const w = window as unknown as {
+      __devSettle: (blocks: unknown, name: string, json: string) => string;
+      __devNameCall: (blocks: unknown, args: object) => object;
+    };
+    const settle = w.__devSettle;
+    w.__devSettle = (blocks, name, json) => {
+      const { text } = JSON.parse(settle(blocks, name, json));
+      const args = w.__devNameCall(blocks, { action: "replace", anchor, text });
+      return settle(blocks, name, JSON.stringify(args));
+    };
+  }, first);
+  const rewrite = [first, ...rest.map((p) => p.replace("很多很多", "许多"))];
+  await streamRevise(
+    page,
+    [
+      {
+        id: "s1",
+        args: {
+          action: "replace",
+          anchor: [first, ...rest].join("\n\n"),
+          text: rewrite.join("\n\n"),
+        },
+      },
+    ],
+    { chunk: 40, every: 10 },
+  );
+  const composer = page.locator(".agent-panel-view textarea");
+  await composer.fill("Polish this");
+  await composer.press("Enter");
+  await expect(page.locator(".agent-panel-view")).toContainText("Tightened.");
+  await expect(page.locator(".milkdown .pending-reading").first()).toBeHidden();
+  expect(errors).toEqual([]);
+});

@@ -30,7 +30,7 @@ export function ErrorRow({
       </div>
       {onRetry && (
         <button
-          className="inline-chat-action agent-error-retry"
+          className="tx-button small inline-chat-action agent-error-retry"
           onClick={onRetry}
         >
           {retryLabel}

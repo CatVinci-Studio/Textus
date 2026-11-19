@@ -24,7 +24,7 @@ export function PluginWalkthroughs({ record }: { record: PluginRecord }) {
           {step.command && (
             <button
               type="button"
-              className="text-button settings-inline-button"
+              className="tx-button text-button settings-inline-button"
               onClick={() => runCommand(step.command!)}
             >
               {text(

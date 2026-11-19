@@ -70,7 +70,7 @@
 /* Under the pointer; the keyboard's row only while the keys move it (the
    list or its filter focused from the keyboard), so the row the pointer
    left last doesn't stay lit. */
-@media (hover: hover) {
+@media (any-hover: hover) {
   .plugin-list-row:hover {
     background: var(--ui-hover);
   }

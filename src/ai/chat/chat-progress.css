@@ -27,7 +27,7 @@
   cursor: pointer;
 }
 
-@media (hover: hover) {
+@media (any-hover: hover) {
   .agent-thought-toggle:hover {
     color: var(--ui-text);
   }

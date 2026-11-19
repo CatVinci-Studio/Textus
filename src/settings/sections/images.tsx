@@ -139,7 +139,7 @@ function ImageFolderRow({
         {!same && (
           <input
             {...VERBATIM_INPUT}
-            className="settings-text-input image-folder-input"
+            className="tx-input settings-text-input image-folder-input"
             aria-label={t.imageFolderNameLabel}
             aria-invalid={!valid}
             placeholder={DEFAULT_IMAGE_SUBFOLDER}
@@ -262,7 +262,7 @@ function TextFieldRow({
         id={id}
         aria-labelledby={`${id}-label`}
         {...VERBATIM_INPUT}
-        className="settings-text-input image-settings-input"
+        className="tx-input settings-text-input image-settings-input"
         type={type}
         placeholder={placeholder}
         value={value}

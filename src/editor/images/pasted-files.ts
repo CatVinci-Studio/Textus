@@ -72,14 +72,7 @@ export function clipboardImageSources(
   data: DataTransfer | null,
   linkHrefs: string[] = [],
 ): { files: File[]; paths: string[] } {
-  const isImage = (file: File | null): file is File =>
-    file !== null && file.type.startsWith("image/");
-  let files = Array.from(data?.items ?? [])
-    .filter((item) => item.kind === "file")
-    .map((item) => item.getAsFile())
-    .filter(isImage);
-  // Some webviews list a pasted file under `files` alone.
-  if (files.length === 0) files = Array.from(data?.files ?? []).filter(isImage);
+  const files = pastedFiles(data, (file) => file.type.startsWith("image/"));
   if (files.length > 0) return { files, paths: [] };
   const paths = imageFilesFromClipboard({
     uriList: data?.getData("text/uri-list"),
@@ -87,4 +80,40 @@ export function clipboardImageSources(
     linkHrefs,
   });
   return { files: [], paths };
+}
+
+/** The files a paste carries that `wanted` takes. */
+function pastedFiles(
+  data: DataTransfer | null,
+  wanted: (file: File) => boolean,
+): File[] {
+  const kept = (file: File | null): file is File =>
+    file !== null && wanted(file);
+  const files = Array.from(data?.items ?? [])
+    .filter((item) => item.kind === "file")
+    .map((item) => item.getAsFile())
+    .filter(kept);
+  // Some webviews list a pasted file under `files` alone.
+  return files.length ? files : Array.from(data?.files ?? []).filter(kept);
+}
+
+/**
+ * What a paste carries as files of any kind (a PDF, a spreadsheet, a
+ * picture), read while the paste event lasts: their bytes where the web
+ * view gives them, else the files copied in a file manager, by path.
+ */
+export function clipboardFiles(data: DataTransfer | null): {
+  files: File[];
+  paths: string[];
+} {
+  const files = pastedFiles(data, () => true);
+  if (files.length > 0) return { files, paths: [] };
+  let uris = uriLines(data?.getData("text/uri-list") ?? "");
+  if (uris.length === 0)
+    uris = uriLines(data?.getData("x-special/gnome-copied-files") ?? "");
+  const paths = uris.map(fileUrlToPath);
+  return {
+    files: [],
+    paths: paths.every((path): path is string => path !== null) ? paths : [],
+  };
 }

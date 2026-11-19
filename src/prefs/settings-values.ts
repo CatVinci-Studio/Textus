@@ -31,6 +31,15 @@ export const PROXY_TYPES: ProxyType[] = [
   "https",
   "socks5",
 ];
+/** The paper a PDF export prints on. */
+export type PdfPaper = "a4" | "letter" | "a5";
+export const PDF_PAPERS: PdfPaper[] = ["a4", "letter", "a5"];
+/** The band left around a PDF's text. */
+export type PdfMargin = "narrow" | "normal" | "wide";
+export const PDF_MARGINS: PdfMargin[] = ["narrow", "normal", "wide"];
+/** A PDF's text size, as a factor on the document's. */
+export type PdfTextScale = 0.85 | 1 | 1.15 | 1.3;
+export const PDF_TEXT_SCALES: PdfTextScale[] = [0.85, 1, 1.15, 1.3];
 /** Which edge of a document the format bar sits on (not on a phone). */
 export type FormatBarSide = "top" | "left" | "right";
 

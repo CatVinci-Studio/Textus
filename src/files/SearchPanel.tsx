@@ -171,7 +171,7 @@ function TextMatches({
               <span className="tx-truncate tree-label">
                 {basename(hits[0].path)}
               </span>
-              <span className="found-count">{hits.length}</span>
+              <span className="tx-badge found-count">{hits.length}</span>
             </button>
             {hits.map((hit) => (
               <button

@@ -30,3 +30,16 @@ export function dropPointInPage(
   const scale = physicalPixels && devicePixelRatio > 0 ? devicePixelRatio : 1;
   return { x: position.x / scale, y: position.y / scale };
 }
+
+/** `name`, or `name 2`, `name 3`… before its extension, as Files names a
+ *  copy. */
+export function freeName(name: string, taken: ReadonlySet<string>): string {
+  if (!taken.has(name)) return name;
+  const dot = name.lastIndexOf(".");
+  const [stem, ext] =
+    dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ""];
+  for (let n = 2; ; n++) {
+    const next = `${stem} ${n}${ext}`;
+    if (!taken.has(next)) return next;
+  }
+}

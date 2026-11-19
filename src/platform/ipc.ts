@@ -4,7 +4,7 @@ import type { SentBlock } from "../editor/markdown/doc-blocks";
 import type { AgentTurn, ImageAttachment, ThinkingLevel } from "../ai/types";
 import type { GrammarIssue } from "../ai/writing/grammar-check-plugin";
 import type { AgentMode_Serialize as AgentMode } from "./bindings/ai-skills";
-import type { StreamEvent_Deserialize } from "./bindings/ai-agent";
+import type { Pasted, StreamEvent_Deserialize } from "./bindings/ai-agent";
 import type { Value, SkillOffer } from "./bindings/ai-memory";
 import { aiCommand, command } from "./ipc-call";
 import type {
@@ -220,6 +220,10 @@ export const ai = {
     searxngUrl: string,
   ) => command("web_search_status", provider, model, searchService, searxngUrl),
   cancelAgentMessage: (requestId: string) => command("ai_cancel", requestId),
+  /** Into the reply in progress, read at its next step; false when none
+   *  of that id is running. */
+  steerAgentMessage: (requestId: string, message: string) =>
+    command("ai_steer", requestId, message),
   ...aiPaper,
 
   loadAgentWorkspace: (docPath: string | null, rootOverride: string | null) =>
@@ -379,4 +383,6 @@ export const ai = {
   ...aiWorkspace,
   pickAttachmentFiles: (conversation: string) =>
     command("pick_attachment_files", conversation),
+  attachPasted: (conversation: string, pasted: Pasted[]) =>
+    command("attach_pasted", conversation, pasted),
 };
