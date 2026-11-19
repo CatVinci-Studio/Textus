@@ -21,6 +21,18 @@ it("* and *** start a list and a rule, as - and --- do; seven #s are no heading"
   expect(t.markdown()).toBe("- item\n\n---\n\n####### seven");
 });
 
+it("Backspace on the empty line under a rule takes the line and goes up to the text", async () => {
+  const t = await open();
+  t.type("text");
+  t.press("Enter");
+  t.type("---");
+  t.press("Enter");
+  t.press("Backspace");
+  expect(t.view.state.doc.childCount).toBe(2);
+  expect(t.caretLine()).toBe("text|");
+  expect(t.markdown()).toBe("text\n\n---");
+});
+
 it("Shift+Enter in a heading starts a new line below it, in a code block a new line in it", async () => {
   const t = await open("# Title\n\n```\ncode\n```");
   t.caretAt("Title", 5);

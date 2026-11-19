@@ -1,4 +1,5 @@
 import {
+  NodeSelection,
   Plugin,
   Selection,
   TextSelection,
@@ -99,6 +100,24 @@ export const backspaceKeepingApart: Command = (state, dispatch) => {
   return true;
 };
 
+/** Backspace on an empty line under a rule (any block with no text): the
+ *  line goes and the caret goes up to the text above. The default only
+ *  picked the rule, so the first press seemed to do nothing. */
+const backspaceUnderLeaf: Command = (state, dispatch) => {
+  const { $from, empty } = state.selection;
+  if (!empty || !isEmptyLine($from.parent) || $from.depth !== 1) return false;
+  const leaf = state.doc.resolve($from.before()).nodeBefore;
+  if (!leaf?.isAtom || !leaf.isBlock) return false;
+  if (!dispatch) return true;
+  const tr = state.tr;
+  if (!deleteBlock(tr, $from)) return false;
+  const rule = $from.before() - leaf.nodeSize;
+  const above = Selection.findFrom(tr.doc.resolve(rule), -1, true);
+  tr.setSelection(above ?? NodeSelection.create(tr.doc, rule));
+  dispatch(tr.scrollIntoView());
+  return true;
+};
+
 /** Delete at the end of a line kept apart from the next, as Backspace. */
 export const deleteKeepingApart: Command = (state, dispatch) => {
   const { $from, empty } = state.selection;
@@ -165,7 +184,11 @@ export const deleteSelectionKeepingApart: Command = (state, dispatch) => {
 };
 
 const onKey: Record<string, Command[]> = {
-  Backspace: [deleteSelectionKeepingApart, backspaceKeepingApart],
+  Backspace: [
+    deleteSelectionKeepingApart,
+    backspaceKeepingApart,
+    backspaceUnderLeaf,
+  ],
   Delete: [deleteSelectionKeepingApart, deleteKeepingApart, deleteJoiningText],
 };
 
