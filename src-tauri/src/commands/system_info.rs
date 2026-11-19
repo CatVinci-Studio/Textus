@@ -80,15 +80,29 @@ fn os_version() -> String {
 }
 
 #[cfg(windows)]
+fn current_version() -> Option<windows_registry::Key> {
+    windows_registry::LOCAL_MACHINE
+        .open(r"SOFTWARE\Microsoft\Windows NT\CurrentVersion")
+        .ok()
+}
+
+/// Windows 10, not 11: Windows 11 still names itself Windows 10 in the
+/// registry; its builds start at 22000.
+#[cfg(windows)]
+pub fn is_windows_10() -> bool {
+    current_version()
+        .and_then(|key| key.get_string("CurrentBuild").ok())
+        .and_then(|build| build.parse::<u32>().ok())
+        .is_some_and(|build| build < 22000)
+}
+
+#[cfg(windows)]
 fn os_version() -> String {
-    let Ok(key) =
-        windows_registry::LOCAL_MACHINE.open(r"SOFTWARE\Microsoft\Windows NT\CurrentVersion")
-    else {
+    let Some(key) = current_version() else {
         return "Windows".into();
     };
     let build = key.get_string("CurrentBuild").unwrap_or_default();
     let release = key.get_string("DisplayVersion").unwrap_or_default();
-    // Windows 11 still names itself Windows 10 here; its builds start at 22000.
     let name = if build.parse::<u32>().unwrap_or(0) >= 22000 {
         "Windows 11"
     } else {

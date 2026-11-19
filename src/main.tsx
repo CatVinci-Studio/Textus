@@ -10,7 +10,7 @@ import { installDevTauriShim } from "./dev/tauri-shim";
 import { installPolyfills } from "./utils/polyfills";
 import { watchMemory } from "./app/watch-memory";
 import { publishWindowChrome } from "./platform/window-chrome";
-import { WindowEdges } from "./app/frame/WindowEdges";
+import { WindowEdges, WindowOutline } from "./app/frame/WindowEdges";
 import { installWebviewGuards } from "./engine/controls/webview-guards";
 import { installLinkGuard } from "./app/link-guard";
 import { installTextFieldMenu } from "./engine/controls/text-field-menu";
@@ -108,6 +108,7 @@ if (view === "background") {
                 <App />
               )}
               {view !== "floating" && <WindowEdges />}
+              {view !== "floating" && <WindowOutline />}
             </SettingsProvider>
           </AppErrorBoundary>
         </React.StrictMode>,

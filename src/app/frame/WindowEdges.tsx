@@ -1,7 +1,12 @@
 import { useWindowState } from "../../platform/window-state";
 import { thisWindow } from "../../platform/this-window";
-import { drawsWindowEdges } from "../../platform/window-chrome";
+import {
+  drawsWindowEdges,
+  drawsWindowOutline,
+} from "../../platform/window-chrome";
+import { useEffect, useState } from "react";
 import "./window-edges.css";
+import "./window-outline.css";
 
 type ResizeDirection =
   | "North"
@@ -52,4 +57,20 @@ export function WindowEdges() {
       ))}
     </>
   );
+}
+
+/** The window's edge in the theme's colour where the page draws it
+ *  (drawsWindowOutline); none while it fills the screen. */
+export function WindowOutline() {
+  const { maximized, fullscreen } = useWindowState();
+  const [drawn, setDrawn] = useState(false);
+  useEffect(() => {
+    let live = true;
+    void drawsWindowOutline().then((yes) => live && setDrawn(yes));
+    return () => {
+      live = false;
+    };
+  }, []);
+  if (!drawn || maximized || fullscreen) return null;
+  return <div className="window-outline" aria-hidden="true" />;
 }
