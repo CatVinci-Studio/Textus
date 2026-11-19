@@ -3,6 +3,9 @@ import { isIOSApp } from "../../platform/capabilities";
 import { isMacPlatform } from "../../platform/os";
 import { fingerDown, onTrackpadTouch } from "../../platform/trackpad";
 
+/** On the scroll box while its content is pulled past an end or springs
+ *  back: its scroll position doesn't say so (hold-still.ts). */
+export const STRETCHED_ATTR = "data-stretched";
 /** How far the page can be pulled past an end, at most. */
 const MAX_PULL = 80;
 /** With no word from the native side of the finger (trackpad.rs), how
@@ -41,6 +44,24 @@ export function elasticOverscroll(
   let shrinking = 0;
   let bounced = false;
 
+  const mark = () => {
+    const on = pull !== 0 || settling !== null;
+    if (on === scroller.hasAttribute(STRETCHED_ATTR)) return;
+    scroller.toggleAttribute(STRETCHED_ATTR, on);
+    // At rest again: what is on screen changed with no scroll, so those
+    // waiting for one to end (the drawing of blocks) hear one.
+    if (!on) scroller.dispatchEvent(new Event("scroll"));
+  };
+  const settle = (spring: Animation | null) => {
+    settling = spring;
+    if (spring)
+      spring.onfinish = spring.oncancel = () => {
+        if (settling !== spring) return;
+        settling = null;
+        mark();
+      };
+    mark();
+  };
   // A spring under way stopped where it is now, its place taken up as the
   // finger's travel, so a new pull goes on from there without a jump.
   const stopSettling = () => {
@@ -48,8 +69,9 @@ export function elasticOverscroll(
     const now = parseFloat(
       (getComputedStyle(content).translate || "").split(" ")[1] ?? "",
     );
-    settling.cancel();
+    const spring = settling;
     settling = null;
+    spring.cancel();
     if (!Number.isFinite(now) || !now) return;
     const share = Math.min(Math.abs(now) / MAX_PULL, 0.99);
     travel = Math.sign(now) * -MAX_PULL * Math.log(1 - share);
@@ -60,6 +82,7 @@ export function elasticOverscroll(
       MAX_PULL *
       (1 - Math.exp(-Math.abs(travel) / MAX_PULL));
     content.style.translate = pull ? `0 ${pull.toFixed(1)}px` : "";
+    mark();
   };
   const letGo = () => {
     if (!pull) return;
@@ -67,20 +90,28 @@ export function elasticOverscroll(
     travel = 0;
     pull = 0;
     content.style.translate = "";
-    settling = animate(content, [{ translate: from }, { translate: "0 0" }], {
-      duration: "--dur-settle",
-      easing: "--ease-out",
-    });
+    settle(
+      animate(content, [{ translate: from }, { translate: "0 0" }], {
+        duration: "--dur-settle",
+        easing: "--ease-out",
+      }),
+    );
   };
   // Momentum that runs into an end bounces off it once, as far as it was
   // going fast.
   const bounce = (deltaY: number) => {
     const out =
       -Math.sign(deltaY) * Math.min(Math.abs(deltaY) * 4, MAX_PULL / 2);
-    settling = animate(
-      content,
-      [{ translate: "0 0" }, { translate: `0 ${out}px` }, { translate: "0 0" }],
-      { duration: "--dur-land", easing: "--ease-out" },
+    settle(
+      animate(
+        content,
+        [
+          { translate: "0 0" },
+          { translate: `0 ${out}px` },
+          { translate: "0 0" },
+        ],
+        { duration: "--dur-land", easing: "--ease-out" },
+      ),
     );
   };
 
@@ -115,6 +146,11 @@ export function elasticOverscroll(
     // Past an end it stretches; back the other way it gives the stretch
     // back first, before the box scrolls again.
     if (!pastEnd && travel === 0) return;
+    // Lifted, as the native side says: what comes now is the swipe's
+    // momentum, often after a pause that reads as a new swipe. It never
+    // pulls the page out again; only once it is plainly coasting may it
+    // bounce.
+    if (fingerDown() === false && !coasting) return;
     // The finger has lifted: spring back now rather than ride the momentum.
     if (coasting) {
       window.clearTimeout(release);
@@ -146,5 +182,6 @@ export function elasticOverscroll(
     window.clearTimeout(release);
     settling?.cancel();
     content.style.translate = "";
+    scroller.removeAttribute(STRETCHED_ATTR);
   };
 }

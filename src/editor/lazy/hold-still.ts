@@ -1,3 +1,4 @@
+import { STRETCHED_ATTR } from "../../engine/controls/elastic-overscroll";
 import { PENDING_ATTR, PLACEHOLDER_CLASS } from "./lazy-rules";
 
 // What the reader sees stays where it is while blocks or views above it
@@ -63,11 +64,13 @@ export function stillPoint(root: Element, scroller: Element): Still | null {
   return below ?? first ?? any;
 }
 
-/** Pulled past an end (macOS's rubber band): the page is the hand's until
+/** Pulled past an end (macOS's rubber band, the system's or the page's
+ *  own): the page is the hand's until
  *  it springs back, so nothing is drawn, let go or scrolled meanwhile - a
  *  block drawn, at its own height, and the page put back by it, cut the
  *  stretch short, and the page jumped between the two. */
 export function pastAnEnd(scroller: Element): boolean {
+  if (scroller.hasAttribute(STRETCHED_ATTR)) return true;
   const top = scroller.scrollTop;
   return top < 0 || top > scroller.scrollHeight - scroller.clientHeight + 0.5;
 }
