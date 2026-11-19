@@ -11,19 +11,13 @@
   flex-direction: column;
   overflow: hidden;
 }
-.quick-pick-input {
+/* The shared field (tx-input), roomier. */
+.tx-input.quick-pick-input {
+  flex: initial;
   margin: var(--space-3);
   padding: var(--space-2) var(--space-3);
   font: inherit;
   font-size: var(--text-body);
-  color: var(--ui-text);
-  background: var(--ui-bg);
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-s);
-}
-.quick-pick-input:focus {
-  outline: 2px solid var(--ui-accent);
-  outline-offset: -1px;
 }
 .quick-pick-list {
   list-style: none;

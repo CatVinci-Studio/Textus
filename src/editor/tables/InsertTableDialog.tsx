@@ -4,6 +4,7 @@ import { SizeGrid } from "../../engine/controls/SizeGrid";
 import { fill } from "../../i18n/fill";
 import type { Strings } from "../../i18n/strings";
 import "./InsertTableDialog.css";
+import { DialogActions } from "../../engine/controls/DialogActions";
 
 interface InsertTableDialogProps {
   t: Strings;
@@ -47,11 +48,11 @@ export function InsertTableDialog({
             onClose();
           }}
         />
-        <div className="insert-table-buttons">
+        <DialogActions className="insert-table-buttons">
           <button className="tx-button" onClick={onClose}>
             {t.cancel}
           </button>
-        </div>
+        </DialogActions>
       </div>
     </div>
   );

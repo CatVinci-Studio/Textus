@@ -143,14 +143,14 @@ export function CustomProviderPanel({
           type="text"
           inputMode="url"
           {...VERBATIM_INPUT}
-          className="settings-text-input"
+          className="tx-input settings-text-input"
           placeholder={t.customBaseUrlPlaceholder}
           value={baseUrl}
           onChange={(e) => setBaseUrl(e.target.value)}
         />
         <label className="settings-field-label">{t.customApiKeyLabel}</label>
         <MaskedKeyInput
-          className="settings-text-input"
+          className="tx-input settings-text-input"
           label={t.customApiKeyLabel}
           placeholder={keySaved ? t.customApiKeySaved : t.apiKeyPlaceholder}
           value={apiKey}
@@ -176,7 +176,7 @@ export function CustomProviderPanel({
               aria-label={t.customModelLabel}
               type="text"
               {...VERBATIM_INPUT}
-              className="settings-text-input"
+              className="tx-input settings-text-input"
               placeholder={t.customModelPlaceholder}
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}

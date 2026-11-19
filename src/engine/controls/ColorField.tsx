@@ -103,7 +103,7 @@ function TouchColorField({
               ))}
             </div>
             <input
-              className="settings-text-input color-hex"
+              className="tx-input settings-text-input color-hex"
               aria-label={label}
               value={draft}
               aria-invalid={!HEX.test(draft)}

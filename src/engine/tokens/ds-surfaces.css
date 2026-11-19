@@ -207,17 +207,6 @@
   border-color: var(--ui-accent);
 }
 
-/* Text fields: one focus look - the border takes the accent - instead of
-   a mix of rings and borders. */
-:is(
-  .settings-text-input,
-  .settings-code-input,
-  .image-name-input-row input
-):focus-visible {
-  outline: none;
-  border-color: var(--ui-accent);
-}
-
 /* Checkboxes: drawn, so they match the buttons rather than the platform. */
 input[type="checkbox"].ui-check {
   /* Its size, for a row that centres it on its first line:

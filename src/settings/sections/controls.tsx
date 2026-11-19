@@ -179,7 +179,7 @@ export function MaskedKeyInput({
   placeholder,
   value,
   onChange,
-  className = "settings-text-input api-key-input",
+  className = "tx-input settings-text-input api-key-input",
 }: {
   label: string;
   placeholder: string;

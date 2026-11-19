@@ -170,7 +170,7 @@ function ProviderModelRow({
         <input
           type="text"
           {...VERBATIM_INPUT}
-          className="settings-text-input"
+          className="tx-input settings-text-input"
           aria-label={label}
           placeholder={t.customModelPlaceholder}
           value={current}

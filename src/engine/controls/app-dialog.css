@@ -46,25 +46,16 @@
   color: var(--ui-text);
 }
 
-/* showPrompt's text field (a new file name). */
-.app-dialog-input {
+/* showPrompt's text field (a new file name): the shared one (tx-input),
+   a line of its own. */
+.tx-input.app-dialog-input {
   display: block;
   box-sizing: border-box;
   width: 100%;
   min-height: var(--control-height);
   margin: 0 0 16px;
-  padding: 4px 8px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-s);
-  background: var(--ui-bg);
-  color: var(--ui-text);
   font: inherit;
   font-size: var(--text-body);
-}
-
-.app-dialog-input:focus-visible {
-  border-color: var(--ui-accent);
-  outline: none;
 }
 
 .app-dialog-title {
@@ -87,10 +78,6 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-}
-
-.close-prompt-buttons button {
-  white-space: nowrap;
 }
 
 .close-prompt-spacer {

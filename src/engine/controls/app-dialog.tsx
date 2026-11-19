@@ -3,6 +3,7 @@ import { useModalDialog } from "./useModalDialog";
 import { usePresence } from "../motion/usePresence";
 import { isImeKeydown } from "../../utils/ime";
 import { createRequestQueue } from "../../utils/store";
+import { DialogActions } from "./DialogActions";
 
 /**
  * The app's own alert, confirm and prompt boxes, in place of OS dialogs.
@@ -169,7 +170,7 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
         {shown.input !== undefined && (
           <input
             ref={inputRef}
-            className="app-dialog-input"
+            className="tx-input app-dialog-input"
             defaultValue={shown.input}
             placeholder={shown.placeholder}
             onKeyDown={(e) => {
@@ -177,8 +178,7 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
             }}
           />
         )}
-        <div className="close-prompt-buttons">
-          <div className="close-prompt-spacer" />
+        <DialogActions>
           {shown.confirm && (
             <button
               className="tx-button app-dialog-cancel"
@@ -201,7 +201,7 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
           >
             {shown.confirm ? shown.okLabel : okLabel}
           </button>
-        </div>
+        </DialogActions>
       </div>
     </div>
   );

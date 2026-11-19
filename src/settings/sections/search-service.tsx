@@ -85,7 +85,7 @@ export function SearchServiceSection({ t }: { t: Strings }) {
           <input
             type="url"
             {...VERBATIM_INPUT}
-            className="settings-text-input"
+            className="tx-input settings-text-input"
             aria-label={t.searxngUrlLabel}
             placeholder="https://searx.example.org"
             value={settings.searxngUrl}

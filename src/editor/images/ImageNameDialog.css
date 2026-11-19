@@ -31,12 +31,5 @@
 }
 
 .image-name-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
   margin-top: 28px;
-}
-
-.image-name-buttons button {
-  color: var(--ui-text);
 }

@@ -195,7 +195,7 @@ function LetterSpacingRow({ t, settings, setSettings }: Props) {
         {adjustable && (
           <label className="settings-letter-spacing-by">
             <input
-              className="settings-text-input"
+              className="tx-input settings-text-input"
               inputMode="decimal"
               aria-label={t.docLetterSpacingBy}
               value={by}

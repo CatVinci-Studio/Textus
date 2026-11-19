@@ -252,18 +252,14 @@
   gap: 8px;
 }
 
-.settings-code-input {
+.tx-input.settings-code-input {
+  flex: initial;
   width: 100%;
   min-height: 7.5em;
   resize: vertical;
   box-sizing: border-box;
   padding: 8px 12px;
-  border: 1px solid var(--ui-border);
-  border-radius: var(--shape-s);
-  background: var(--ui-bg);
-  color: var(--ui-text);
   font-family: var(--font-mono);
-  font-size: var(--text-body);
   line-height: 1.5;
   tab-size: 2;
 }

@@ -152,7 +152,7 @@ export function ImageModelSection({ t }: { t: Strings }) {
             <input
               type="url"
               {...VERBATIM_INPUT}
-              className="settings-text-input"
+              className="tx-input settings-text-input"
               aria-label={t.imageModelEndpointLabel}
               placeholder="https://api.example.com/v1"
               value={settings.imageModelEndpoint}
@@ -165,7 +165,7 @@ export function ImageModelSection({ t }: { t: Strings }) {
             <input
               type="text"
               {...VERBATIM_INPUT}
-              className="settings-text-input"
+              className="tx-input settings-text-input"
               aria-label={t.imageModelNameLabel}
               placeholder={t.customModelPlaceholder}
               value={settings.imageModel}

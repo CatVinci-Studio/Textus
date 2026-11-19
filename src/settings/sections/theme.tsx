@@ -267,7 +267,7 @@ export function CustomCssRow({ t }: { t: Strings }) {
         <RowHelp label={t.customCssLabel}>{t.customCssHint}</RowHelp>
       </div>
       <textarea
-        className="settings-code-input"
+        className="tx-input settings-code-input"
         aria-labelledby={labelId}
         spellCheck={false}
         rows={5}

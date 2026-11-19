@@ -167,7 +167,7 @@ function PluginSettingRow({
         <textarea
           // A new layer's value, a new field.
           key={`${scope}:${JSON.stringify(value ?? "")}`}
-          className="settings-text-input plugin-setting-textarea"
+          className="tx-input settings-text-input plugin-setting-textarea"
           aria-label={label}
           rows={5}
           defaultValue={
@@ -214,7 +214,7 @@ function PluginSettingRow({
           // A new layer's value, a new field: the old one's text is not
           // this one's.
           key={`${scope}:${String(value ?? "")}`}
-          className="settings-text-input plugin-setting-input"
+          className="tx-input settings-text-input plugin-setting-input"
           aria-label={label}
           type={setting.type === "number" ? "number" : "text"}
           min={setting.min}

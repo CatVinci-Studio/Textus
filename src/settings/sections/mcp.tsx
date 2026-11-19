@@ -352,7 +352,7 @@ function McpForm({
           {t.mcpFormName}
           <input
             aria-label={t.mcpFormName}
-            className="settings-text-input"
+            className="tx-input settings-text-input"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
@@ -373,7 +373,7 @@ function McpForm({
               {t.mcpFormCommand}
               <input
                 aria-label={t.mcpFormCommand}
-                className="settings-text-input mcp-mono"
+                className="tx-input settings-text-input mcp-mono"
                 value={commandLine}
                 spellCheck={false}
                 autoCapitalize="off"
@@ -386,7 +386,7 @@ function McpForm({
               {t.mcpFormEnv}
               <textarea
                 aria-label={t.mcpFormEnv}
-                className="settings-text-input mcp-mono"
+                className="tx-input settings-text-input mcp-mono"
                 rows={3}
                 value={env}
                 spellCheck={false}
@@ -402,7 +402,7 @@ function McpForm({
               {t.mcpFormUrl}
               <input
                 aria-label={t.mcpFormUrl}
-                className="settings-text-input mcp-mono"
+                className="tx-input settings-text-input mcp-mono"
                 value={url}
                 spellCheck={false}
                 autoCapitalize="off"
@@ -414,7 +414,7 @@ function McpForm({
               {t.mcpFormHeaders}
               <textarea
                 aria-label={t.mcpFormHeaders}
-                className="settings-text-input mcp-mono"
+                className="tx-input settings-text-input mcp-mono"
                 rows={3}
                 value={headers}
                 spellCheck={false}
