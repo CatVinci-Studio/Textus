@@ -100,8 +100,11 @@ class DrawnCaret {
     // At a line's end after a formula or a picture, the editor keeps a
     // break; the browser's caret may stand after it, on the line below,
     // and the editor's own place too: the side before it. Outside a
-    // composition, the line is the editor's to say.
-    const atEnd = $head.parentOffset === $head.parent.content.size;
+    // composition, the line is the editor's to say. After a code block's
+    // last newline, the side before is still the line above.
+    const atEnd =
+      $head.parentOffset === $head.parent.content.size &&
+      !$head.nodeBefore?.text?.endsWith("\n");
     const own = view.coordsAtPos($head.pos, atEnd ? -1 : 1);
     const offLine =
       !!live &&

@@ -14,6 +14,14 @@ const WRAPPABLE = new Set(["md_code_span", "math_inline", LINK]);
 
 const isSpan = (node: ProseNode) => node.type.name === "md_span";
 
+/** Text in `node` can be wrapped in a span: a paragraph or heading, or
+ *  another style's span (bold inside a highlight). Not code, maths or a
+ *  link's source. */
+export const holdsSpans = (node: ProseNode) =>
+  node.inlineContent &&
+  !node.type.spec.code &&
+  (isSpan(node) || !isEnclosureName(node.type.name));
+
 /** A span that already gives `spec`: the same, or `***` for bold or italic. */
 export const gives = (node: ProseNode, spec: FormatSpec) =>
   isSpan(node) &&

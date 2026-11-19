@@ -69,6 +69,19 @@ describe("Ctrl+B and Ctrl+I over a selection", () => {
     });
   });
 
+  // "x ==abcd== y": x(0) space(1) highlight(2), its text 3-7.
+  it("makes text inside another style bold or italic, nested in it", async () => {
+    expect((await pressOver("x ==abcd== y\n", 3, 7)).saved).toBe(
+      "x ==**abcd**== y\n",
+    );
+    expect((await pressOver("x ==abcd== y\n", 4, 6)).saved).toBe(
+      "x ==a**bc**d== y\n",
+    );
+    expect((await pressOver("x **abcd** y\n", 4, 6, "i")).saved).toBe(
+      "x **a*bc*d** y\n",
+    );
+  });
+
   // "a **b** c **d** e": a(0) sp(1) span(2-5) sp(5) c(6) sp(7) span(8-11) sp(11) e(12).
   it("merges bold already in the selection into one span", async () => {
     expect((await pressOver("a **b** c **d** e\n", 0, 13)).saved).toBe(
