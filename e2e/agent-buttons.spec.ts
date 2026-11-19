@@ -19,6 +19,7 @@ const manifest = {
   main: "host.js",
   permissions: ["agents"],
   contributes: {
+    statusItems: [{ id: "path", text: "Study › Dissertation_Committee" }],
     agents: [
       {
         id: "example.agent.coder",
@@ -76,6 +77,19 @@ test("an outside agent's button starts a conversation with it, each press a new 
   // Pressed again: another conversation with it, beside the first.
   await agent.click();
   await expect(coder).toHaveCount(2);
+  // Short of room, the bar's status gives way to its icon before the tabs
+  // under it lose theirs: nothing laid over them.
+  const bar = page.locator(".window-bar");
+  const status = page.locator(".plugin-status-item").first();
+  await expect(bar).not.toHaveAttribute("data-fit", /status|agents/);
+  await page.setViewportSize({ width: 560, height: 760 });
+  await expect(bar).toHaveAttribute("data-fit", /status|agents/);
+  await expect(status.locator(".plugin-status-text")).toBeHidden();
+  const lastTab = (await coder.last().boundingBox())!;
+  expect((await status.boundingBox())!.x).toBeGreaterThanOrEqual(
+    lastTab.x + lastTab.width,
+  );
+
   // Listed in Settings' External tools, Manage opening its plugin's page.
   await page.evaluate(() =>
     window.dispatchEvent(

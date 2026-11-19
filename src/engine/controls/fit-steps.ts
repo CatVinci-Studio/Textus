@@ -1,5 +1,6 @@
 import { useLayoutEffect, type RefObject } from "react";
 import { onAppearance } from "../tokens/appearance";
+import { useLatest } from "../../utils/hooks/useLatest";
 
 /**
  * A bar that gives way as its room shrinks: `data-fit` set to the first of
@@ -10,8 +11,12 @@ import { onAppearance } from "../tokens/appearance";
 export function useFitSteps(
   el: RefObject<HTMLElement | null>,
   steps: readonly string[],
+  /** What else must hold at a step (the window bar: the tabs under it
+   *  keep their room); read with that step drawn. */
+  holds: () => boolean = () => true,
 ): void {
   const key = steps.join(" ");
+  const check = useLatest(holds);
   useLayoutEffect(() => {
     const bar = el.current;
     if (!bar) return;
@@ -19,7 +24,7 @@ export function useFitSteps(
     const fit = () => {
       for (const step of ["", ...all]) {
         bar.dataset.fit = step;
-        if (bar.scrollWidth <= bar.clientWidth) return;
+        if (bar.scrollWidth <= bar.clientWidth && check.current()) return;
       }
     };
     fit();
@@ -37,7 +42,7 @@ export function useFitSteps(
       changed.disconnect();
       restyled();
     };
-  }, [el, key]);
+  }, [el, key, check]);
 }
 
 /**

@@ -62,10 +62,37 @@
   display: none;
 }
 
-.window-bar[data-fit="menu"] .window-menu-bar {
+/* Each fit step keeps the ones before it. */
+.window-bar:is([data-fit="menu"], [data-fit="status"], [data-fit="agents"])
+  .window-menu-bar {
   display: none;
 }
 
-.window-bar[data-fit="menu"] .window-menu-fallback {
+.window-bar:is([data-fit="menu"], [data-fit="status"], [data-fit="agents"])
+  .window-menu-fallback {
   display: contents;
+}
+
+/* Plugins' status as their icons, the words in the tooltip. */
+.plugin-status-icon,
+.window-bar-agent.window-bar-agents-more {
+  display: none;
+}
+
+.window-bar:is([data-fit="status"], [data-fit="agents"]) .plugin-status-text,
+.window-bar:is([data-fit="status"], [data-fit="agents"]) .plugin-status-more {
+  display: none;
+}
+
+.window-bar:is([data-fit="status"], [data-fit="agents"]) .plugin-status-icon {
+  display: inline-flex;
+}
+
+/* The agents' buttons as one menu. */
+.window-bar[data-fit="agents"] .window-bar-agent {
+  display: none;
+}
+
+.window-bar[data-fit="agents"] .window-bar-agent.window-bar-agents-more {
+  display: inline-flex;
 }

@@ -111,11 +111,20 @@
 /* A plugin's status in the window bar: read like the word count beside it,
    a button only when it runs something. */
 .plugin-status-item {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
   font-size: var(--text-footnote);
   color: var(--ui-muted);
   /* A long one (a deep page's path) is cut short, never run into the
      title beside it. */
   max-width: 24vw;
+}
+
+.plugin-status-icon {
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
 }
 .plugin-status-button {
   /* The status group lets clicks through to the drag region; this one

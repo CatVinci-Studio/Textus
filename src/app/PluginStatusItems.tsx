@@ -1,5 +1,5 @@
 import { useMenuButton } from "../engine/controls/useMenuButton";
-import { Fragment, useMemo, useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { Tooltip } from "../engine/controls/Tooltip";
 import { ChevronIcon } from "../engine/controls/icons";
 import { runCommand } from "../registry/commands";
@@ -13,8 +13,10 @@ import {
   groupStatusItems,
   type StatusGroup,
 } from "../plugins/contributions/status-groups";
+import { PluginTabIcon } from "../plugins/views/plugin-views";
 import {
   pluginName,
+  pluginRecord,
   pluginsSnapshot,
   subscribePlugins,
   windowInfo,
@@ -63,27 +65,51 @@ function nameOf(
   return record ? pluginName(record) : id;
 }
 
-/** One item alone: a text, its tooltip, and a command a click runs. */
+/** What a status shows: its words, or, the bar short of room
+ *  (window-controls.css), its plugin's icon. */
+function StatusFace({ plugin, text }: { plugin: string; text: string }) {
+  const record = pluginRecord(plugin);
+  return (
+    <>
+      <span className="plugin-status-icon" aria-hidden="true">
+        {record?.manifest?.icon ? (
+          <PluginTabIcon
+            plugin={plugin}
+            origin={record.origin}
+            icon={record.manifest.icon}
+          />
+        ) : (
+          (record ? pluginName(record) : plugin).charAt(0)
+        )}
+      </span>
+      <span className="tx-truncate plugin-status-text">{text}</span>
+    </>
+  );
+}
+
+/** One item alone: a text, its tooltip (the words, if it has none: shown
+ *  as an icon, they are only there), and a command a click runs. */
 function StatusEntry({ item }: { item: StatusItem }) {
   const shown = item.command ? (
     <button
       type="button"
-      className="tx-truncate plugin-status-item plugin-status-button"
+      className="plugin-status-item plugin-status-button"
       data-status={item.key}
+      aria-label={item.text}
       onClick={() => runCommand(item.command!)}
     >
-      {item.text}
+      <StatusFace plugin={item.plugin} text={item.text} />
     </button>
   ) : (
-    <span className="tx-truncate plugin-status-item" data-status={item.key}>
-      {item.text}
+    <span
+      className="plugin-status-item"
+      data-status={item.key}
+      aria-label={item.text}
+    >
+      <StatusFace plugin={item.plugin} text={item.text} />
     </span>
   );
-  return item.tooltip ? (
-    <Tooltip text={item.tooltip}>{shown}</Tooltip>
-  ) : (
-    <Fragment>{shown}</Fragment>
-  );
+  return <Tooltip text={item.tooltip ?? item.text}>{shown}</Tooltip>;
 }
 
 function StatusGroupButton({
@@ -113,11 +139,12 @@ function StatusGroupButton({
       <Tooltip text={name}>
         <button
           type="button"
-          className="tx-truncate plugin-status-item plugin-status-button"
+          className="plugin-status-item plugin-status-button"
           data-status-plugin={group.plugin}
+          aria-label={group.items[0].text}
           {...button}
         >
-          {group.items[0].text}
+          <StatusFace plugin={group.plugin} text={group.items[0].text} />
           <ChevronIcon className="plugin-status-more" />
         </button>
       </Tooltip>
