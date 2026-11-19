@@ -555,7 +555,8 @@ editor, at once; else in the file Textus keeps them in. It needs
 columns, types, group, date }` and answers HTML, shown without scripts or
   `<style>`; an element with `data-row="<path>"` opens that row. The plugin
   that draws databases lists them with `views.databaseViews()` and draws one
-  with `views.renderDatabaseView(id, data)`.
+  with `views.renderDatabaseView(id, data)`. [A database view, step by
+  step](#a-database-view-step-by-step) builds one.
 - `ssh` (`ssh`, API 1.9 preview, desktop): `hosts()` from `~/.ssh/config`,
   `connect(host)` → a session (the user is asked once per host), `home`,
   `list`, `read` / `readText`, `write`, `create`, `rename`, `delete`,
@@ -591,6 +592,140 @@ columns, types, group, date }` and answers HTML, shown without scripts or
   headings, a print footer) or `{ html }` to change its content. Scripts
   in it are taken out. A code block's picture comes from its page instead
   ([Code blocks in an export](pages.md#code-blocks-in-an-export)).
+
+## A database view, step by step
+
+A database view draws a base's rows in a layout of its own, offered beside
+the table, board and other views of Wiki (`catvinci.database`), the plugin
+that draws bases. This one shows each row as a card that opens the row's
+note. It needs Textus `1.4.6` (API 1.9) and Wiki `0.8.0`; the
+Timeline plugin's
+[database-view.js](https://github.com/CatVinci-Studio/textus-plugins/blob/main/plugins/catvinci.timeline/database-view.js)
+is a larger one.
+
+### 1. The manifest
+
+In an empty folder, `cards`, write `textus-plugin.json`:
+
+```json
+{
+  "id": "jane.cards",
+  "name": "Cards",
+  "version": "0.1.0",
+  "publisher": "jane",
+  "description": "A base's rows as cards.",
+  "engines": { "textus": ">=1.4.6" },
+  "main": "host.js",
+  "platforms": ["desktop", "ios"],
+  "activationEvents": ["onStartupFinished"]
+}
+```
+
+A database view needs no permission: Textus gives it the rows of the
+base the user shows it in, and only then. Its code has to run before Wiki
+asks which views there are, so it starts with `onStartupFinished`, and it
+needs no `contributes`.
+
+### 2. Register the view
+
+Write `host.js` beside it:
+
+```js
+exports.activate = function (ctx) {
+  ctx.subscriptions.push(
+    textus.views.registerDatabaseView("cards", {
+      label: "Cards",
+      icon: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><rect x="2" y="3" width="12" height="10" rx="2"/></svg>',
+      render: (data) => cardsHtml(data),
+    }),
+  );
+};
+```
+
+- `"cards"` is the view's own id. Textus names it `jane.cards#cards`,
+  and a base keeps that as the view's `type`.
+- `label` is its name in Wiki's view menus (`textus.l10n.t` gives it in
+  the user's language). `icon`, an SVG's markup in the text's colour, is
+  optional; Wiki doesn't show it yet.
+- `render` is asked each time the base shows the view, and has five seconds
+  to answer.
+
+### 3. The rows it gets
+
+`render` gets the rows as the view has them, filtered and sorted:
+
+```js
+{
+  rows: [
+    { path: "notes/plan.md", name: "plan", props: { due: "2026-11-01", status: "Doing" } },
+  ],
+  columns: ["status", "due"], // the properties the view shows, in order
+  types: { status: "text", due: "date" }, // each property's type
+  group: "status", // the property it is grouped by, when it is
+  date: "due", // the property its dates come from, when it has one
+}
+```
+
+`path` is the note's path in the open folder, and `name` its name without
+`.md`.
+
+### 4. The HTML it answers
+
+Add the drawing to `host.js`:
+
+```js
+const ENTITIES = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"']/g, (c) => ENTITIES[c]);
+}
+
+function cardsHtml(data) {
+  if (!data.rows.length) return "<p>No rows.</p>";
+  const cards = data.rows.map((row) => {
+    const props = data.columns
+      .filter((key) => row.props[key] != null && row.props[key] !== "")
+      .map(
+        (key) =>
+          `<div style="font-size:0.85em;color:var(--ui-muted)">${escapeHtml(key)}: ${escapeHtml(row.props[key])}</div>`,
+      );
+    return (
+      `<div data-row="${escapeHtml(row.path)}" style="padding:0.6em 0.8em;border:1px solid var(--ui-border);border-radius:8px;cursor:pointer">` +
+      `<div style="font-weight:600">${escapeHtml(row.name)}</div>${props.join("")}</div>`
+    );
+  });
+  return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(12em,1fr));gap:0.75em;margin-top:0.75em">${cards.join("")}</div>`;
+}
+```
+
+- Textus takes scripts, event attributes (`onclick`) and `<style>` out of
+  the HTML before Wiki shows it, so it is styled inline, with the page's
+  colours: `--ui-muted`, `--ui-border`.
+- Every name and value is escaped: they are the user's text.
+- An element with `data-row` set to a row's `path` opens that note when
+  clicked; no script is needed for it.
+
+### 5. Try it
+
+1. In **Settings › Extensions › Plugins**, install Wiki from **Available**,
+   then **More** › **Load a plugin folder…** and choose `cards`. Turn it on.
+2. Open a folder with a few notes that have front matter, and a `.base`
+   file among them:
+
+   ```yaml
+   views:
+     - type: table
+       name: Table
+   ```
+
+3. Open the `.base` file, click **+** after its view tabs and choose
+   **Cards**. The cards show the notes; click one to open it.
 
 ## What a plugin can't do
 
