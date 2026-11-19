@@ -43,6 +43,7 @@ export function SettingsGroup({
   actions,
   className,
   evenRows = false,
+  cards = false,
   note,
   children,
 }: {
@@ -56,6 +57,8 @@ export function SettingsGroup({
   /** Rows alike (a list of shortcuts): one row's control under its name
    *  puts every row's there. */
   evenRows?: boolean;
+  /** A grid of cards (themes), not a list of rows. */
+  cards?: boolean;
   /** A line under the list, about the section as a whole. */
   note?: ReactNode;
   /** None while the section is folded: only its head shows. */
@@ -84,7 +87,12 @@ export function SettingsGroup({
         </div>
       )}
       {children && (
-        <div ref={body} className="settings-group-body">
+        <div
+          ref={body}
+          className={
+            cards ? "settings-group-body settings-cards" : "settings-group-body"
+          }
+        >
           {children}
         </div>
       )}

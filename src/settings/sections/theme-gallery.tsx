@@ -116,6 +116,7 @@ export function AvailableThemes({
     <AvailableSection
       t={t}
       kind="themes"
+      cards
       searching={!!query.trim()}
       message={message}
       note={

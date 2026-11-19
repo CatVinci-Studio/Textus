@@ -149,10 +149,11 @@ function holdSizes(boxes: HTMLElement[]) {
 /** Where each reported element is now: gone and back within one batch (a
  *  section folded and opened), only the last report counts. Ones taken out
  *  of the document are let go. */
-function latest(entries: IntersectionObserverEntry[]): Map<Element, boolean> {
-  const now = new Map<Element, boolean>();
-  for (const { isIntersecting, target } of entries)
-    now.set(target, isIntersecting);
+function latest(
+  entries: IntersectionObserverEntry[],
+): Map<Element, IntersectionObserverEntry> {
+  const now = new Map<Element, IntersectionObserverEntry>();
+  for (const entry of entries) now.set(entry.target, entry);
   for (const target of now.keys())
     if (!target.isConnected) {
       stopDrawing(target);
@@ -176,10 +177,18 @@ const onNear = (
   observer: IntersectionObserver,
 ) => {
   const coming = [...latest(entries)].filter(
-    ([target, near]) => near && !kept.get(target)?.drawn,
+    ([target, entry]) => entry.isIntersecting && !kept.get(target)?.drawn,
   );
-  if (coming.length)
-    stillWhile(observer, () => coming.forEach(([target]) => drawNow(target)));
+  if (!coming.length) return;
+  const draw = () => coming.forEach(([target]) => drawNow(target));
+  // Drawn below the screen, nothing on it moves: no layout read to hold
+  // it still, which in a long document costs a whole frame.
+  const screen = (observer.root as Element | null)?.getBoundingClientRect();
+  const below =
+    screen &&
+    coming.every(([, entry]) => entry.boundingClientRect.top >= screen.bottom);
+  if (below) draw();
+  else stillWhile(observer, draw);
   for (const [target] of coming) askAgain(target, "far");
 };
 
@@ -196,23 +205,20 @@ function askAgain(target: Element, which: keyof Watchers) {
  *  to hold: it stays drawn. */
 const wraps = (el: Element) => el.getClientRects().length > 1;
 
-const onFar = (
-  entries: IntersectionObserverEntry[],
-  observer: IntersectionObserver,
-) => {
+/** Let go far away, each holding its exact size: nothing on screen moves,
+ *  so nothing is measured after. */
+const onFar = (entries: IntersectionObserverEntry[]) => {
   const leaving: HTMLElement[] = [];
-  for (const [target, inKeep] of latest(entries))
-    if (!inKeep && kept.get(target)?.drawn && !wraps(target))
+  for (const [target, entry] of latest(entries))
+    if (!entry.isIntersecting && kept.get(target)?.drawn && !wraps(target))
       leaving.push(target as HTMLElement);
   if (!leaving.length) return;
-  stillWhile(observer, () => {
-    holdSizes(leaving);
-    for (const target of leaving) {
-      kept.get(target)!.drawn = false;
-      target.setAttribute(PENDING_ATTR, "");
-      kept.get(target)!.undraw();
-    }
-  });
+  holdSizes(leaving);
+  for (const target of leaving) {
+    kept.get(target)!.drawn = false;
+    target.setAttribute(PENDING_ATTR, "");
+    kept.get(target)!.undraw();
+  }
   for (const target of leaving) askAgain(target, "near");
 };
 

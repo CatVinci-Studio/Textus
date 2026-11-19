@@ -340,6 +340,7 @@ export function ThemesTab({ t }: { t: Strings }) {
       error={error}
       installedTitle={t.extensionsThemesInstalled}
       installedCount={settings.userThemes.length}
+      installedCards={mine.length > 0}
       installed={
         mine.length ? (
           mine.map((theme) => {

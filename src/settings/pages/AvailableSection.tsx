@@ -25,6 +25,7 @@ export function AvailableSection({
   note,
   message,
   searching,
+  cards = false,
 }: {
   t: Strings;
   kind: string;
@@ -35,6 +36,8 @@ export function AvailableSection({
   message?: ReactNode;
   /** A search shows every match at once. */
   searching: boolean;
+  /** Shown as cards (themes), not rows. */
+  cards?: boolean;
 }) {
   const [folded, setFolded] = useState(() => foldedKinds().includes(kind));
   const [limit, setLimit] = useState(FIRST);
@@ -58,6 +61,7 @@ export function AvailableSection({
   return (
     <SettingsGroup
       className="extensions-available"
+      cards={cards && shown.length > 0}
       title={t.extensionsAvailable}
       count={message ? undefined : rows.length}
       actions={

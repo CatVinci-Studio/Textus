@@ -31,6 +31,7 @@ export function ExtensionsTabLayout({
   installedCount,
   installedAction,
   installed,
+  installedCards = false,
   available,
   footer,
   advanced,
@@ -52,6 +53,8 @@ export function ExtensionsTabLayout({
   /** Beside the installed list's title, while there is something to do. */
   installedAction?: ReactNode;
   installed: ReactNode;
+  /** The installed ones shown as cards (themes). */
+  installedCards?: boolean;
   available?: ReactNode;
   footer?: ReactNode;
   advanced?: ReactNode;
@@ -63,6 +66,7 @@ export function ExtensionsTabLayout({
         <SettingsGroup
           title={installedTitle}
           count={installedCount || undefined}
+          cards={installedCards}
           actions={
             <>
               {onQuery && (

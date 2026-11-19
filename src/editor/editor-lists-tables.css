@@ -259,7 +259,7 @@
 
 /* Zen focus: everything but the current block recedes, changing only per
    block. The fade is in content-base.css's layer, so leaving zen fades back. */
-.zen .milkdown .ProseMirror:has(> .zen-current) > :not(.zen-current) {
+.zen .milkdown .ProseMirror[data-zen-focus] > :not(.zen-current) {
   opacity: 0.32;
 }
 

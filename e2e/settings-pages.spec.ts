@@ -121,6 +121,8 @@ test("installed themes show as the store's do", async ({ page }) => {
   const mine = page.locator('[data-user-theme="mine"]');
   await expect(mine).toHaveClass(/theme-gallery-item/);
   await expect(mine.locator(".theme-gallery-preview")).toBeVisible();
+  // In a grid of cards, the store's beside it.
+  await expect(mine.locator("..")).toHaveCSS("display", "grid");
 });
 
 test("first-line indent sets in the document's paragraphs, not a list's", async ({
