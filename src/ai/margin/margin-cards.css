@@ -290,8 +290,7 @@
 /* A card of a crowded run cut to the room beside its passage: it fades
    out where it is cut. */
 .review-note-cut {
-  overflow: hidden;
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
+  --cut-fade: 20px;
 }
 
 /* Opened, a cut card is whole, over the cards below: none of them moves. */

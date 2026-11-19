@@ -143,6 +143,15 @@
   --ui-island-contact: rgb(0 0 0 / 5%);
   --ui-island-shadow: rgb(0 0 0 / 7%);
   --ui-hover: color-mix(in srgb, var(--ui-text) 7%, transparent);
+  /* Held down: a button's own colour deepened (currentColor is the
+     button's), a row's a shade of the text, a primary darker. */
+  --ui-pressed: color-mix(in srgb, currentColor 14%, transparent);
+  --ui-pressed-row: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  --ui-primary-pressed: color-mix(
+    in srgb,
+    var(--ui-primary) 78%,
+    var(--ui-on-primary)
+  );
   --ui-selected: color-mix(in srgb, var(--ui-accent) 13%, transparent);
   --ui-selected-text: var(--ui-text);
   --ui-danger: #be364b;

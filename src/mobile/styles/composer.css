@@ -96,12 +96,12 @@
       .inline-chat-action:not(.inline-chat-action-primary),
       .inline-chat-skill-item
     ):active {
-    background: color-mix(in srgb, var(--ui-text) 12%, transparent);
+    background: var(--ui-pressed);
   }
 
   :root[data-window-chrome="mobile"]
     :is(.inline-chat-send, .inline-chat-action-primary):not(:disabled):active {
-    background: color-mix(in srgb, var(--ui-primary) 86%, var(--ui-on-primary));
+    background: var(--ui-primary-pressed);
   }
 }
 

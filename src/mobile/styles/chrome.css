@@ -124,7 +124,7 @@
     .app-dialog.close-prompt
     .close-prompt-buttons
     button:active {
-    background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+    background: var(--ui-pressed-row);
     transition-duration: 0s;
   }
 
@@ -228,7 +228,7 @@
   }
 
   :root[data-window-chrome="mobile"] .context-menu-item:not(:disabled):active {
-    background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+    background: var(--ui-pressed-row);
     transition-duration: 0s;
   }
 

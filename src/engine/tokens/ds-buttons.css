@@ -63,13 +63,13 @@
 /* Pressed: a shade darker, at once - and no scale (macOS buttons don't
    shrink). Let go, it eases back with the base rule's 120ms. */
 .tx-button:not(:disabled):active {
-  background: color-mix(in srgb, currentColor 14%, transparent);
+  background: var(--ui-pressed);
   transition-duration: 0s;
 }
 
 .tx-button.primary:not(:disabled):active {
-  border-color: color-mix(in srgb, var(--ui-primary) 78%, var(--ui-on-primary));
-  background: color-mix(in srgb, var(--ui-primary) 78%, var(--ui-on-primary));
+  border-color: var(--ui-primary-pressed);
+  background: var(--ui-primary-pressed);
   transition-duration: 0s;
 }
 
@@ -151,7 +151,7 @@
 }
 
 .tx-icon-button:not(:disabled):active {
-  background: color-mix(in srgb, currentColor 16%, transparent);
+  background: var(--ui-pressed);
   transition-duration: 0s;
 }
 

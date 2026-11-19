@@ -321,7 +321,7 @@ export function ChatBody({
               )}
               {!quickExpanded && !error && summaryText && (
                 <div className="quick-ask-summary-row">
-                  <div className="quick-ask-summary">
+                  <div className="tx-cut-fade quick-ask-summary">
                     <MarkdownText text={summaryText} />
                   </div>
                 </div>

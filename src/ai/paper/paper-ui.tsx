@@ -285,7 +285,7 @@ function PaperActivityView({ run, t }: { run: PaperRunState; t: Strings }) {
                 </span>
               </div>
               {text && (
-                <div className="paper-card-preview">
+                <div className="tx-cut-fade from-top paper-card-preview">
                   <p>{text}</p>
                 </div>
               )}

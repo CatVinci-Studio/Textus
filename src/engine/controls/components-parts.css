@@ -121,6 +121,7 @@
   font-weight: 500;
   line-height: calc(18px * var(--ui-text-scale, 1));
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 .tx-badge[data-tone="accent"] {
   --badge: var(--ui-accent-text);

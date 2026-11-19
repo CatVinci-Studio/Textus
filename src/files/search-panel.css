@@ -29,16 +29,6 @@
   flex: 1;
 }
 
-.found-count {
-  flex-shrink: 0;
-  padding: 0 8px;
-  border-radius: var(--shape-pill);
-  corner-shape: round;
-  background: var(--ui-hover);
-  font-size: var(--text-caption);
-  color: var(--ui-muted);
-}
-
 .search-text-line {
   padding-left: 36px;
 }

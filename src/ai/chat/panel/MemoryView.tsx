@@ -156,12 +156,16 @@ export function MemorySections({
                 <div className="memory-empty-actions">
                   <button
                     type="button"
-                    className="primary"
+                    className="tx-button small primary"
                     onClick={onLearnStyle}
                   >
                     {t.projectLearnStyle}
                   </button>
-                  <button type="button" onClick={onOpenStyle}>
+                  <button
+                    type="button"
+                    className="tx-button small"
+                    onClick={onOpenStyle}
+                  >
                     {t.projectCreateStyle}
                   </button>
                 </div>
@@ -210,7 +214,9 @@ export function MemorySections({
             <h4>
               {t.memoryLibrary}
               {info.library.length > 0 && (
-                <span className="memory-count">{info.library.length}</span>
+                <span className="tx-badge memory-count">
+                  {info.library.length}
+                </span>
               )}
               <button type="button" onClick={onNewEntry}>
                 {t.memoryNew}

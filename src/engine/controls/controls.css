@@ -438,3 +438,23 @@ input[type="range"].tx-slider {
   border-radius: var(--shape-xs);
   corner-shape: initial;
 }
+
+/* Text cut short fades out over --cut-fade where it is cut: at its end, or
+   (from-top) at its start. */
+.tx-cut-fade {
+  --cut-fade-to: to bottom;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    var(--cut-fade-to),
+    #000 calc(100% - var(--cut-fade, 2em)),
+    transparent
+  );
+  mask-image: linear-gradient(
+    var(--cut-fade-to),
+    #000 calc(100% - var(--cut-fade, 2em)),
+    transparent
+  );
+}
+.tx-cut-fade.from-top {
+  --cut-fade-to: to top;
+}
