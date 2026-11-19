@@ -189,10 +189,19 @@ test("a narrower window keeps the paragraph that was at the top, not the offset"
   await page.mouse.wheel(0, 4000);
   await expect.poll(atTop).not.toBe("P0");
   await settled(page);
-  // Real time: the paragraph at the top is taken a pause after the scroll
-  // stops (EditorPane's 300 ms), not on every frame of it.
-  await page.waitForTimeout(400);
-  const before = await atTop();
+  // The paragraph at the top is taken a pause after the scroll stops, not
+  // on every frame of it; a slow machine is still scrolling, so it is read
+  // once it stays put that long.
+  let before = await atTop();
+  await expect
+    .poll(async () => {
+      const was = before;
+      // Real time: longer than EditorPane's 300 ms pause.
+      await page.waitForTimeout(400);
+      before = await atTop();
+      return before === was;
+    })
+    .toBe(true);
   await page.setViewportSize({ width: 820, height: 760 });
   await expect.poll(atTop).toBe(before);
   await page.setViewportSize({ width: 1280, height: 760 });

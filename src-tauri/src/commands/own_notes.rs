@@ -233,14 +233,16 @@ mod tests {
         assert_eq!(kept_file_in(data.path(), &doc, OwnPart::Notes, None), kept);
         std::fs::create_dir_all(docs.path().join("ch/.textus")).unwrap();
         assert_eq!(kept_file_in(data.path(), &doc, OwnPart::Notes, None), kept);
-        let b = format!("{root}/ch/b.md");
+        // Named as the folder is, with its own separator, as the app does.
+        let b = docs.path().join("ch").join("b.md");
+        let b = b.to_str().unwrap();
         assert_eq!(
-            kept_file_in(data.path(), &b, OwnPart::Notes, None),
+            kept_file_in(data.path(), b, OwnPart::Notes, None),
             docs.path().join("ch/.textus/notes/b.md.json")
         );
         // A folder opened brings its documents' old notes in.
-        std::fs::write(&b, "b").unwrap();
-        let old = part_file_in(data.path(), &b, OwnPart::Notes);
+        std::fs::write(b, "b").unwrap();
+        let old = part_file_in(data.path(), b, OwnPart::Notes);
         std::fs::write(&old, "[2]").unwrap();
         adopt_folder_in(data.path(), root);
         assert!(!old.exists());

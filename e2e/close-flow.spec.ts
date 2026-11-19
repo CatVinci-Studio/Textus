@@ -163,6 +163,7 @@ test("a middle click closes a tab, and the tab menu closes those to its right, l
   const front = page.locator('[data-active-tab="true"] .ProseMirror');
   await front.click();
   await page.keyboard.press("ControlOrMeta+End");
+  await settled(page);
   const was = await front.innerText();
   await tab(page, "d.md").click({ button: "middle" });
   // The window's untouched first tab gave way to a.md.
