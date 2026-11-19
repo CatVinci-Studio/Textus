@@ -94,10 +94,15 @@ function wholeStrike(p: PendingPreview): { from: number; to: number } | null {
 }
 
 /** A streaming rewrite's sentence layout, started when first drawn; null
- *  where it streams in whole. A settled one keeps it until its sentences come. */
+ *  where it streams in whole. A settled one keeps it until its sentences come.
+ *  A layout is of the originals it was made for: the call's final arguments
+ *  can name other ones than its draft did, and are laid out anew. */
 function streamFor(p: PendingPreview, animate: boolean): StreamState | null {
   if (!animate || prefersReducedMotion()) return null;
   let anim = animations.get(p.callId);
+  const originals = p.streamSource!.sentences;
+  if (anim?.stream && !sameUnits(anim.stream.sentences, originals))
+    anim.stream = null;
   if (!p.streaming) return anim?.stream ?? null;
   if (!anim) {
     anim = newAnimation(p.callId, p.proposal.text ?? "", false);
@@ -105,7 +110,7 @@ function streamFor(p: PendingPreview, animate: boolean): StreamState | null {
   }
   if (!anim.stream) {
     anim.stream = {
-      sentences: p.streamSource!.sentences,
+      sentences: originals,
       layout: { pieces: [], reached: 0, partial: null },
       reached: 0,
       alignedFor: null,
@@ -412,3 +417,6 @@ export function syncWidgetClasses(
       el.classList.toggle("pending-sentence-focus", is(el, focused));
   }
 }
+
+const sameUnits = (a: readonly string[], b: readonly string[]) =>
+  a.length === b.length && a.every((unit, i) => unit === b[i]);

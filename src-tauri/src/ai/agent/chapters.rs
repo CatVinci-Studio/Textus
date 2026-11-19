@@ -217,11 +217,12 @@ impl ChapterRun<'_, '_> {
         };
         let chapters = chapters(self.document);
         let of = chapters.len();
+        let parent = call.call_id.as_str();
         let results: Vec<(String, Result<Vec<AgentTurn>, String>)> = stream::iter(chapters)
             .map(|chapter| {
                 let message = helper_message(&instruction, &glossary, &chapter, of);
                 async move {
-                    let turns = self.chapter(&chapter, message).await;
+                    let turns = self.chapter(parent, &chapter, message).await;
                     (chapter.title, turns)
                 }
             })
@@ -256,7 +257,12 @@ impl ChapterRun<'_, '_> {
 
     /// One chapter's helper: the chapter as the document it sees. Returns its
     /// turns, without its message and its closing line.
-    async fn chapter(&self, chapter: &Chapter, message: String) -> Result<Vec<AgentTurn>, String> {
+    async fn chapter(
+        &self,
+        parent: &str,
+        chapter: &Chapter,
+        message: String,
+    ) -> Result<Vec<AgentTurn>, String> {
         let part = Document::from_blocks(
             self.document.blocks[chapter.first..=chapter.last]
                 .iter()
@@ -292,9 +298,9 @@ impl ChapterRun<'_, '_> {
         let specs = self.tools.specs();
         let channel = self.channel;
         // Its calls' ids marked as its own: a server that numbers its calls
-        // from call_0 does so for every helper, and the window told them
-        // apart by id.
-        let tag = format!("ch{}-", chapter.first);
+        // from call_0 does so for every helper, and in every edit_chapters
+        // call, and the window tells them apart by id.
+        let tag = format!("{parent}-ch{}-", chapter.first);
         let own = |id: &str| format!("{tag}{id}");
         // Only its edits reach the window: its prose and thinking are for
         // the request's model, which says what was done.

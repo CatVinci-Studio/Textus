@@ -54,7 +54,9 @@ fn a_call_needs_an_instruction_and_keeps_a_clean_glossary() {
 }
 
 /// A chapter's helper steps through `Model`, as the chat and
-/// Research do: here a scripted one, each chapter seeing only its own.
+/// Research do: here a scripted one, each chapter seeing only its own. A
+/// server numbers every helper's calls from call_0; their ids stay apart,
+/// also from a second edit_chapters call's.
 #[tokio::test]
 async fn each_chapter_s_helper_steps_the_model_it_is_given() {
     use aicompat::agent::StepResult;
@@ -69,10 +71,18 @@ async fn each_chapter_s_helper_steps_the_model_it_is_given() {
             _tools: &'a [ToolSpec],
         ) -> BoxFuture<'a, Result<StepResult, String>> {
             Box::pin(async move {
+                if turns.len() > 1 {
+                    return Ok(StepResult::Done("Done.".into()));
+                }
                 if let Some(AgentTurn::User { text, .. }) = turns.first() {
                     self.0.lock().unwrap().push(text.clone());
                 }
-                Ok(StepResult::Done("Nothing to change.".into()))
+                Ok(StepResult::ToolCalls(vec![AgentTurn::ToolCall {
+                    call_id: "call_0".into(),
+                    name: crate::ai::tools::PROPOSE_EDIT_TOOL_NAME.into(),
+                    arguments: r#"{"action": "append", "text": "More."}"#.into(),
+                    reasoning: None,
+                }]))
             })
         }
     }
@@ -104,16 +114,29 @@ async fn each_chapter_s_helper_steps_the_model_it_is_given() {
         channel: &Quiet,
         helpers: &helpers,
     };
-    let call = ToolCall {
-        call_id: "c1".into(),
+    let call = |id: &str| ToolCall {
+        call_id: id.into(),
         name: "edit_chapters".into(),
         arguments: r#"{"instruction": "Tighten it."}"#.into(),
     };
-    let ToolOutput { text: said, .. } = run.run(call).await;
-    assert!(said.contains("\"Chapter 1\": 0 edits proposed"), "{said}");
-    assert!(said.contains("\"Chapter 2\": 0 edits proposed"), "{said}");
+    let ToolOutput { text: said, .. } = run.run(call("c1")).await;
+    assert!(said.contains("\"Chapter 1\": 1 edits proposed"), "{said}");
+    assert!(said.contains("\"Chapter 2\": 1 edits proposed"), "{said}");
+    run.run(call("c2")).await;
+    let ids: Vec<String> = helpers
+        .lock()
+        .unwrap()
+        .iter()
+        .flat_map(|(_, turns)| turns.iter())
+        .filter_map(|t| match t {
+            AgentTurn::ToolCall { call_id, .. } => Some(call_id.clone()),
+            _ => None,
+        })
+        .collect();
+    let unique: std::collections::HashSet<_> = ids.iter().collect();
+    assert_eq!((ids.len(), unique.len()), (4, 4), "{ids:?}");
     let seen = model.0.lock().unwrap();
-    assert_eq!(seen.len(), 2);
+    assert_eq!(seen.len(), 4);
     assert!(seen
         .iter()
         .any(|m| m.contains("Body 1.") && !m.contains("Body 2.")));
