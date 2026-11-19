@@ -31,3 +31,9 @@ specta = ["dep:specta"]
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt-multi-thread"] }
+
+# Reading the proxy the Windows settings carry ourselves (see
+# http.rs::system_proxy_from_registry): already in the tree through
+# hyper-util, so no new crates.
+[target.'cfg(windows)'.dependencies]
+windows-registry = "0.6"

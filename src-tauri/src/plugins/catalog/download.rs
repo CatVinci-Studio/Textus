@@ -47,8 +47,12 @@ pub(super) async fn fetch() -> Result<String, String> {
     twice(|| async {
         let response = client.get(&url).send().await.map_err(|e| {
             format!(
-                "Couldn't reach the plugin catalog: {}",
-                crate::net::error_text(&e)
+                // Where requests were pointed: on an intranet the difference
+                // between "the proxy's address failed" and "direct but the
+                // site's name cannot resolve" is the whole diagnosis.
+                "Couldn't reach the plugin catalog: {} (proxy: {})",
+                crate::net::error_text(&e),
+                aicompat::http::proxy_display()
             )
         })?;
         if !response.status().is_success() {

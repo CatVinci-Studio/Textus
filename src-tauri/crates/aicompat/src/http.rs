@@ -98,6 +98,13 @@ fn system_proxy() -> Option<String> {
 }
 
 fn system_proxy_now() -> Option<String> {
+    // Fork: the Windows settings carry the proxy in forms hyper-util's
+    // registry reader drops (see parse_windows_proxy_server); read them
+    // ourselves first.
+    #[cfg(windows)]
+    if let Some(url) = system_proxy_from_registry() {
+        return Some(url);
+    }
     let matcher = hyper_util::client::proxy::matcher::Matcher::from_system();
     let probe: http::Uri = "https://example.com/".parse().ok()?;
     let found = matcher.intercept(&probe)?;
@@ -121,6 +128,94 @@ fn system_proxy_now() -> Option<String> {
         let _ = url.set_password(Some(pass));
     }
     Some(url.to_string())
+}
+
+/// The proxy a Windows machine's IE settings carry, read ourselves: the
+/// `ProxyServer` value has two shapes, and hyper-util's registry reader
+/// hands the raw string to a URI parser that drops one of them -
+/// `http=host:port;https=host:port` (the per-protocol form) fails to parse
+/// and the request then goes direct, which on an intranet whose own DNS
+/// cannot resolve a site's name fails with a name error, while the browser
+/// reads the same setting and works. Fork-only; keep when syncing upstream.
+#[cfg(windows)]
+fn system_proxy_from_registry() -> Option<String> {
+    let settings = windows_registry::CURRENT_USER
+        .open("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings")
+        .ok()?;
+    if settings.get_u32("ProxyEnable").unwrap_or(0) == 0 {
+        return None;
+    }
+    let raw = settings.get_string("ProxyServer").ok()?;
+    parse_windows_proxy_server(&raw)
+}
+
+/// The proxy URL in a Windows `ProxyServer` value: either `host:port`
+/// (one proxy for every protocol) or the per-protocol form
+/// `http=host:port;https=host:port;...`, from which https wins, then http.
+/// A scheme already present stays.
+#[cfg_attr(not(windows), allow(dead_code))]
+fn parse_windows_proxy_server(raw: &str) -> Option<String> {
+    let raw = raw.trim();
+    if raw.is_empty() {
+        return None;
+    }
+    if ["http://", "https://", "socks5h://", "socks5://"]
+        .iter()
+        .any(|scheme| raw.starts_with(scheme))
+    {
+        return Some(raw.to_string());
+    }
+    let host_port = if raw.contains(';') || raw.contains('=') {
+        // https wins, then http, then socks (mapped to socks5h: names are
+        // looked up at the proxy).
+        ["https=", "http=", "socks="].iter().find_map(|protocol| {
+            raw.split(';')
+                .map(str::trim)
+                .find_map(|entry| entry.strip_prefix(protocol).map(str::to_string))
+        })?
+    } else {
+        raw.to_string()
+    };
+    if host_port.is_empty() {
+        return None;
+    }
+    if raw
+        .split(';')
+        .any(|entry| entry.trim().starts_with("socks="))
+    {
+        return Some(format!("socks5h://{host_port}"));
+    }
+    Some(format!("http://{host_port}"))
+}
+
+/// Where requests go now, for an error message: the route and the proxy,
+/// its credentials masked.
+pub fn proxy_display() -> String {
+    let route = current_route();
+    let proxy = match &route {
+        Route::System => system_proxy(),
+        Route::Direct => None,
+        Route::Via(url) => Some(url.clone()),
+    };
+    let proxy = match proxy {
+        None => "none (direct)".to_string(),
+        Some(url) => match reqwest::Url::parse(&url) {
+            Ok(mut parsed) => {
+                if !parsed.username().is_empty() {
+                    let _ = parsed.set_username("***");
+                    let _ = parsed.set_password(Some("***"));
+                }
+                parsed.to_string()
+            }
+            Err(_) => url,
+        },
+    };
+    let route = match route {
+        Route::System => "system",
+        Route::Direct => "direct",
+        Route::Via(_) => "manual",
+    };
+    format!("{route}: {proxy}")
 }
 
 fn builder() -> reqwest::ClientBuilder {
@@ -293,6 +388,50 @@ mod tests {
         let found = system_proxy_now();
         std::env::remove_var("HTTPS_PROXY");
         assert_eq!(found.as_deref(), Some("http://ann:pw@proxy.example:3128/"));
+    }
+
+    #[test]
+    fn a_windows_proxy_server_value_is_normalized() {
+        // The two shapes the IE settings carry, and the traps: the
+        // per-protocol form (https wins, then http), a value without a
+        // port, and one with a scheme already.
+        assert_eq!(
+            parse_windows_proxy_server("192.168.10.5:8080").as_deref(),
+            Some("http://192.168.10.5:8080")
+        );
+        assert_eq!(
+            parse_windows_proxy_server("proxy.company.com:8080").as_deref(),
+            Some("http://proxy.company.com:8080")
+        );
+        assert_eq!(
+            parse_windows_proxy_server("http=10.0.0.2:81;https=10.0.0.2:444").as_deref(),
+            Some("http://10.0.0.2:444")
+        );
+        assert_eq!(
+            parse_windows_proxy_server("https=10.0.0.2:444;http=10.0.0.2:81").as_deref(),
+            Some("http://10.0.0.2:444")
+        );
+        assert_eq!(
+            parse_windows_proxy_server("socks=127.0.0.1:1080").as_deref(),
+            Some("socks5h://127.0.0.1:1080")
+        );
+        assert_eq!(
+            parse_windows_proxy_server("http://p.example:3128").as_deref(),
+            Some("http://p.example:3128")
+        );
+        assert_eq!(parse_windows_proxy_server(""), None);
+        assert_eq!(parse_windows_proxy_server("  "), None);
+    }
+
+    #[test]
+    fn the_proxy_message_masks_its_credentials() {
+        set_route(Route::Via("http://ann:pw@proxy.example:3128".into())).unwrap();
+        let shown = proxy_display();
+        set_route(Route::Direct).unwrap();
+        assert!(
+            shown.contains("manual: http://***:***@proxy.example:3128/"),
+            "{shown}"
+        );
     }
 
     fn collect(buffer: &mut SseLineBuffer, chunk: &[u8]) -> Vec<String> {
