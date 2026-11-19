@@ -9,7 +9,7 @@ pkgver=1.0.0
 # (1.0.0-rc.1), because pkgver cannot contain "-".
 _version=$pkgver
 pkgrel=1
-pkgdesc="AI-native WYSIWYG Markdown editor"
+pkgdesc="Integrated Writing Environment, designed for professional writing"
 arch=('x86_64')
 url="https://github.com/CatVinci-Studio/Textus"
 license=('MIT')

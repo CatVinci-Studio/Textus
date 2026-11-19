@@ -314,7 +314,7 @@ async function start(
     );
   } catch (err) {
     session.connection.stop();
-    throw explain(agent, err);
+    throw explain(agent, err, true);
   }
   return session;
 }

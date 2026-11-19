@@ -38,7 +38,7 @@
   WriteRegStr HKCU "${TEXTUS_APPKEY}" "FriendlyAppName" "${PRODUCTNAME}"
   WriteRegStr HKCU "${TEXTUS_APPKEY}\shell\open\command" "" '"$INSTDIR\${MAINBINARYNAME}.exe" "%1"'
   WriteRegStr HKCU "${TEXTUS_CAPABILITIES}" "ApplicationName" "${PRODUCTNAME}"
-  WriteRegStr HKCU "${TEXTUS_CAPABILITIES}" "ApplicationDescription" "Markdown editor"
+  WriteRegStr HKCU "${TEXTUS_CAPABILITIES}" "ApplicationDescription" "Integrated Writing Environment"
   WriteRegStr HKCU "Software\RegisteredApplications" "${PRODUCTNAME}" "${TEXTUS_CAPABILITIES}"
   !insertmacro TEXTUS_REGISTER_EXT ".md"
   !insertmacro TEXTUS_REGISTER_EXT ".markdown"

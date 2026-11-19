@@ -76,7 +76,7 @@ def sidebar() -> Image.Image:
 
     centred(draw, 146, "Textus", font(SERIF, 30), GOLD, 164)
     draw.line([(52, 190), (112, 190)], fill=GOLD, width=1)
-    centred(draw, 204, "Markdown Editor", font(SANS, 11), MUTED, 164)
+    centred(draw, 204, "Writing Environment", font(SANS, 11), MUTED, 164)
 
     # The icon's ribbon, continued across the foot of the panel: a slice of
     # an ellipse far wider than the frame, so what shows is one shallow rise

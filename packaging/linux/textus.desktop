@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
 Name=Textus
-Comment=AI-native WYSIWYG Markdown editor
+Comment=Integrated Writing Environment, designed for professional writing
 Exec=textus %F
 Icon=textus
 StartupWMClass=textus
