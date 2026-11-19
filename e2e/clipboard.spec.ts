@@ -178,9 +178,16 @@ async function pasteHere(page: Page, text: string) {
 async function caretAt(page: Page, n: number, select = 0) {
   await page.locator(`${editor} p`).first().click();
   await page.keyboard.press(HOME);
-  for (let i = 0; i < n; i++) await page.keyboard.press("ArrowRight");
-  for (let i = 0; i < select; i++)
-    await page.keyboard.press("Shift+ArrowRight");
+  // One key a frame, as a hand types: the editor reads each move of the
+  // selection (and opens a link's Markdown) before the next key lands.
+  const press = async (key: string) => {
+    await page.keyboard.press(key);
+    await page.evaluate(
+      () => new Promise((done) => requestAnimationFrame(() => done(null))),
+    );
+  };
+  for (let i = 0; i < n; i++) await press("ArrowRight");
+  for (let i = 0; i < select; i++) await press("Shift+ArrowRight");
 }
 
 test("a URL pasted inside a link's text joins it instead of splitting it", async ({
