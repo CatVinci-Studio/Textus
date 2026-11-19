@@ -15,6 +15,13 @@ export interface UiState {
   sidebarOpen: boolean;
   /** The sidebar tab last shown: files, outline or clipboard. */
   sidebarTab: string;
+  /** Rust's (commands/prefs.rs, recents.rs): the last editor window's
+   *  inner size and place, in logical pixels, and the recent files and
+   *  folders of File › Open Recent, newest first. */
+  editorWindowSize: [number, number];
+  editorWindowPosition: [number, number];
+  recentFiles: string[];
+  recentFolders: string[];
   /** iOS: recently opened documents, newest first. */
   iosRecentDocuments: unknown;
   /** iOS: the document list's layout. */

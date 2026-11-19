@@ -1,37 +1,23 @@
-//! prefs.json: the last editor window's size and place, written by Rust on
-//! close. Settings Rust needs early come from settings.json instead.
+//! The last editor window's size and place, kept in the UI state by Rust
+//! on close. Settings Rust needs early come from settings.json instead.
 
-use crate::app_dirs::AppDirs;
-use std::path::PathBuf;
+use crate::settings::Stores;
+use serde_json::{json, Map, Value};
 use tauri::{AppHandle, Manager};
 
-fn prefs_path(app: &AppHandle) -> Result<PathBuf, String> {
-    app.path()
-        .own_config_dir()
-        .map_err(|e| e.to_string())
-        .map(|p| p.join(crate::settings::file_name("prefs")))
+/// A pair of numbers kept under `key` in the UI state.
+fn kept_pair(app: &AppHandle, key: &str) -> Option<(f64, f64)> {
+    let (state, _) = app.try_state::<Stores>()?.ui_state.snapshot();
+    let pair = state.get(key)?;
+    Some((pair.get(0)?.as_f64()?, pair.get(1)?.as_f64()?))
 }
 
-fn read_prefs(app: &AppHandle) -> serde_json::Value {
-    let Ok(path) = prefs_path(app) else {
-        return serde_json::json!({});
-    };
-    crate::json_file::read_or_set_aside(&path).unwrap_or_else(|| serde_json::json!({}))
-}
-
-/// Merges `value` into prefs.json under `key`, keeping its other keys; a
-/// file that isn't an object (edited by hand) starts again empty.
-fn write_pref(app: &AppHandle, key: &str, value: serde_json::Value) -> Result<(), String> {
-    let path = prefs_path(app)?;
-    if let Some(dir) = path.parent() {
-        std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+fn keep(app: &AppHandle, key: &str, value: Value) {
+    if let Some(stores) = app.try_state::<Stores>() {
+        let mut patch = Map::new();
+        patch.insert(key.into(), value);
+        stores.ui_state.patch(&patch);
     }
-    let mut prefs = read_prefs(app);
-    if !prefs.is_object() {
-        prefs = serde_json::json!({});
-    }
-    prefs[key] = value;
-    crate::atomic::write_sync(&path, prefs.to_string()).map_err(|e| e.to_string())
 }
 
 /// Whether to reopen last session's documents (default) or start blank.
@@ -42,9 +28,7 @@ pub fn read_restore_session_on_startup(app: &AppHandle) -> bool {
 /// The inner size (logical px) the last closed editor window had, for the next
 /// one. One size for all: labels after "main" are minted fresh each run.
 pub fn read_editor_window_size(app: &AppHandle) -> Option<(f64, f64)> {
-    let size = read_prefs(app).get("editor_window_size")?.clone();
-    let width = size.get(0)?.as_f64()?;
-    let height = size.get(1)?.as_f64()?;
+    let (width, height) = kept_pair(app, "editorWindowSize")?;
     // A corrupt or hand-edited value must not open an unusable window.
     (width >= 320.0 && height >= 240.0).then_some((width, height))
 }
@@ -52,8 +36,7 @@ pub fn read_editor_window_size(app: &AppHandle) -> Option<(f64, f64)> {
 /// Where the last closed editor window was (outer position, logical px), for
 /// the main window to open there again.
 pub fn read_editor_window_position(app: &AppHandle) -> Option<(f64, f64)> {
-    let at = read_prefs(app).get("editor_window_position")?.clone();
-    Some((at.get(0)?.as_f64()?, at.get(1)?.as_f64()?))
+    kept_pair(app, "editorWindowPosition")
 }
 
 /// Records `window`'s size and place, unless it is maximized, fullscreen or
@@ -69,24 +52,20 @@ pub fn remember_editor_window(app: &AppHandle, window: &tauri::Window) {
         return;
     };
     let size = size.to_logical::<f64>(scale);
-    if let Err(e) = write_pref(
+    keep(
         app,
-        "editor_window_size",
-        serde_json::json!([size.width.round(), size.height.round()]),
-    ) {
-        eprintln!("textus: cannot keep the window size: {e}");
-    }
+        "editorWindowSize",
+        json!([size.width.round(), size.height.round()]),
+    );
     if !crate::editor_windows::window_place_known() {
         return;
     }
     if let Ok(at) = window.outer_position() {
         let at = at.to_logical::<f64>(scale);
-        if let Err(e) = write_pref(
+        keep(
             app,
-            "editor_window_position",
-            serde_json::json!([at.x.round(), at.y.round()]),
-        ) {
-            eprintln!("textus: cannot keep the window position: {e}");
-        }
+            "editorWindowPosition",
+            json!([at.x.round(), at.y.round()]),
+        );
     }
 }
