@@ -108,6 +108,17 @@ test("its edge dragged out, the sidebar widens and the islands make room", async
   expect(after.width).toBeGreaterThan(before.width + 100);
   const moved = (await page.locator("section.island").first().boundingBox())!;
   expect(moved.x).toBeGreaterThan(island.x + 100);
+  // Dragged again and Esc pressed while held: back to where it was.
+  const again = (await page.locator(".sidebar-resizer").boundingBox())!;
+  await page.mouse.move(again.x + again.width / 2, again.y + again.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(again.x + 100, again.y + again.height / 2, {
+    steps: 8,
+  });
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  await settled(page);
+  expect((await sidebar.boundingBox())!.width).toBeCloseTo(after.width, 0);
 });
 
 test("the folder's tools coming on hover move none of the tree's rows", async ({

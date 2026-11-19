@@ -4,8 +4,8 @@ import { holdGrip } from "./grip";
 /** How far one arrow key moves a grip, in interface pixels. */
 export const GRIP_KEY_STEP = 24;
 
-/** How a hold ended: let go, cancelled by the system, or the grip gone
- *  from the page while held. */
+/** How a hold ended: let go, cancelled (Esc, or by the system: what it
+ *  changed goes back), or the grip gone from the page while held. */
 type GripEnd = "done" | "cancelled" | "gone";
 
 /**
@@ -26,6 +26,8 @@ export function useGrip<S>({
   end: (held: S, how: GripEnd) => void;
 }) {
   const held = useRef<S | null>(null);
+  /** What holds the pointer, to let it go on Esc. */
+  const holder = useRef<{ el: HTMLElement; pointer: number } | null>(null);
   const [gripped, setGripped] = useState(false);
   const ended = useRef(end);
   ended.current = end;
@@ -37,6 +39,21 @@ export function useGrip<S>({
     if (how !== "gone") setGripped(false);
     ended.current(was, how);
   };
+  // Esc while held: back where it started, as every drag.
+  useEffect(() => {
+    if (!gripped) return;
+    const key = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.preventDefault();
+      e.stopPropagation();
+      const was = holder.current;
+      letGo("cancelled");
+      if (was?.el.hasPointerCapture(was.pointer))
+        was.el.releasePointerCapture(was.pointer);
+    };
+    window.addEventListener("keydown", key, true);
+    return () => window.removeEventListener("keydown", key, true);
+  });
   // Gone while held (its island closed, ⌘B mid-drag): let go all the same.
   useEffect(
     () => () => {
@@ -57,6 +74,7 @@ export function useGrip<S>({
         if (begun === null) return;
         event.preventDefault();
         event.currentTarget.setPointerCapture(event.pointerId);
+        holder.current = { el: event.currentTarget, pointer: event.pointerId };
         held.current = begun;
         holdGrip(true);
         setGripped(true);
