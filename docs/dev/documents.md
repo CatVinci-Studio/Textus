@@ -199,7 +199,7 @@ while that follows the machine's memory, a few of a kind at most kept
 
 What is heavy to draw is drawn only near the screen, by one rule in
 `editor/lazy/` (`lazy-rules.ts`): drawn within a screen of the view, let go
-three screens away. A document's weight, its text plus what each formula,
+four screens away. A document's weight, its text plus what each formula,
 diagram, raw HTML block, picture and embedded note costs to draw, decides
 how much of the rule applies. The rule has two parts:
 
@@ -231,3 +231,11 @@ the same two calls:
   so nothing needs drawing for them.
 
 A new heavy view uses `drawWhileNear`; nothing keeps its own observer.
+
+Each block drawn or let go is a child added to or taken from the editor,
+which in a document of thousands of blocks makes the browser restyle and
+lay out again. Keep that cheap: no stylesheet rule of the shape
+`X:has(> Y) > *` (or `> :not(…)`, `> * + *`). In Chromium one such rule,
+anywhere in the app, restyles every sibling on every child added to any
+element (16 ms a block in a 5,000-block document). Say the state with a
+class or attribute set by code instead.
