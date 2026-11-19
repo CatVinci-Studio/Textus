@@ -371,6 +371,26 @@ fn the_proxy_follows_the_settings() {
         aicompat::http::proxy_url().as_deref(),
         Some("socks5h://127.0.0.1:7890")
     );
+    // A whole URL pasted into the address is taken as is: prefixing another
+    // scheme onto it made a host literally named "http", which then failed
+    // to resolve.
+    proxy_changed(&json!({
+        "proxyType": "http",
+        "proxyHost": "http://192.168.1.1:7890",
+        "proxyPort": "7890",
+    }));
+    assert_eq!(
+        aicompat::http::proxy_url().as_deref(),
+        Some("http://192.168.1.1:7890")
+    );
+    proxy_changed(&json!({
+        "proxyType": "socks5",
+        "proxyHost": "socks5://192.168.1.1:1080",
+    }));
+    assert_eq!(
+        aicompat::http::proxy_url().as_deref(),
+        Some("socks5h://192.168.1.1:1080")
+    );
     proxy_changed(&json!({ "proxyType": "http", "proxyHost": "proxy.lan" }));
     assert_eq!(
         aicompat::http::proxy_url().as_deref(),

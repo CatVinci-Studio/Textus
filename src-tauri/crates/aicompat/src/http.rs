@@ -99,8 +99,13 @@ fn system_proxy() -> Option<String> {
 
 fn system_proxy_now() -> Option<String> {
     // Fork: the Windows settings carry the proxy in forms hyper-util's
-    // registry reader drops (see parse_windows_proxy_server); read them
-    // ourselves first.
+    // registry reader drops (see parse_windows_proxy_server); a PAC or a
+    // WPAD-discovered one (what the browser follows) isn't in the registry
+    // reader's reach at all. WinHTTP answers both, like the browser.
+    #[cfg(windows)]
+    if let Some(url) = system_proxy_winhttp() {
+        return Some(url);
+    }
     #[cfg(windows)]
     if let Some(url) = system_proxy_from_registry() {
         return Some(url);
@@ -147,6 +152,164 @@ fn system_proxy_from_registry() -> Option<String> {
     }
     let raw = settings.get_string("ProxyServer").ok()?;
     parse_windows_proxy_server(&raw)
+}
+
+/// The proxy a PAC script or a WPAD-discovered one answers with, asked the
+/// way the browser asks: WinHTTP's autoproxy, which evaluates the script
+/// for the URL. An auto-detection without a WPAD answer can take seconds,
+/// so the result (including "none") is kept for five minutes. Fork-only.
+#[cfg(windows)]
+fn system_proxy_winhttp() -> Option<String> {
+    use std::sync::Mutex;
+    use std::time::Instant;
+    static READ: Mutex<Option<(Instant, Option<String>)>> = Mutex::new(None);
+    let mut read = READ.lock().unwrap_or_else(|e| e.into_inner());
+    if let Some((at, url)) = read.as_ref() {
+        if at.elapsed() < Duration::from_secs(300) {
+            return url.clone();
+        }
+    }
+    let url = system_proxy_winhttp_now();
+    *read = Some((Instant::now(), url.clone()));
+    url
+}
+
+#[cfg(windows)]
+fn system_proxy_winhttp_now() -> Option<String> {
+    // An automatic-configuration script, when the IE settings name one;
+    // otherwise discovery over DHCP and DNS (WPAD).
+    let config_url = windows_registry::CURRENT_USER
+        .open("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings")
+        .ok()
+        .and_then(|settings| settings.get_string("AutoConfigURL").ok());
+
+    #[repr(C)]
+    struct AutoProxyOptions {
+        flags: u32,
+        auto_detect_flags: u32,
+        auto_config_url: *const u16,
+        reserved: *mut core::ffi::c_void,
+        reserved_u32: u32,
+        auto_logon_if_challenged: i32,
+    }
+    #[repr(C)]
+    struct ProxyInfo {
+        access_type: u32,
+        proxy: *mut u16,
+        bypass: *mut u16,
+    }
+    const WINHTTP_AUTOPROXY_AUTO_DETECT: u32 = 0x1;
+    const WINHTTP_AUTOPROXY_CONFIG_URL: u32 = 0x2;
+    const WINHTTP_AUTO_DETECT_TYPE_DHCP: u32 = 0x1;
+    const WINHTTP_AUTO_DETECT_TYPE_DNS_A: u32 = 0x2;
+    const WINHTTP_ACCESS_TYPE_NO_PROXY: u32 = 1;
+
+    #[link(name = "winhttp")]
+    extern "system" {
+        fn WinHttpOpen(
+            agent: *const u16,
+            access_type: u32,
+            proxy: *const u16,
+            bypass: *const u16,
+            flags: u32,
+        ) -> *mut core::ffi::c_void;
+        fn WinHttpGetProxyForUrl(
+            session: *mut core::ffi::c_void,
+            url: *const u16,
+            options: *mut AutoProxyOptions,
+            info: *mut ProxyInfo,
+        ) -> i32;
+        fn WinHttpCloseHandle(handle: *mut core::ffi::c_void) -> i32;
+    }
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn GlobalFree(memory: *mut core::ffi::c_void) -> *mut core::ffi::c_void;
+    }
+
+    fn wide(text: &str) -> Vec<u16> {
+        text.encode_utf16().chain(std::iter::once(0)).collect()
+    }
+
+    let session = unsafe {
+        WinHttpOpen(
+            wide("Textus").as_ptr(),
+            WINHTTP_ACCESS_TYPE_NO_PROXY,
+            std::ptr::null(),
+            std::ptr::null(),
+            0,
+        )
+    };
+    if session.is_null() {
+        return None;
+    }
+    let config_url_wide = config_url.as_deref().map(|url| wide(url));
+    let mut options = AutoProxyOptions {
+        flags: WINHTTP_AUTOPROXY_CONFIG_URL,
+        auto_detect_flags: WINHTTP_AUTO_DETECT_TYPE_DHCP | WINHTTP_AUTO_DETECT_TYPE_DNS_A,
+        auto_config_url: match &config_url_wide {
+            Some(url) => url.as_ptr(),
+            None => std::ptr::null(),
+        },
+        reserved: std::ptr::null_mut(),
+        reserved_u32: 0,
+        auto_logon_if_challenged: 1,
+    };
+    if config_url.is_none() {
+        options.flags = WINHTTP_AUTOPROXY_AUTO_DETECT;
+    }
+    let probe = wide("https://example.com/");
+    let mut info = ProxyInfo {
+        access_type: 0,
+        proxy: std::ptr::null_mut(),
+        bypass: std::ptr::null_mut(),
+    };
+    let answered =
+        unsafe { WinHttpGetProxyForUrl(session, probe.as_ptr(), &mut options, &mut info) != 0 };
+    let raw = if answered && !info.proxy.is_null() {
+        // The proxy list ends at its nul, whatever came behind it.
+        let len = (0..)
+            .position(|index| unsafe { *info.proxy.add(index) } == 0)
+            .unwrap_or(0);
+        let text = String::from_utf16_lossy(unsafe { std::slice::from_raw_parts(info.proxy, len) });
+        unsafe { GlobalFree(info.proxy.cast()) };
+        if !info.bypass.is_null() {
+            unsafe { GlobalFree(info.bypass.cast()) };
+        }
+        parse_winhttp_proxy(&text)
+    } else {
+        None
+    };
+    unsafe { WinHttpCloseHandle(session) };
+    raw
+}
+
+/// The proxy a WinHTTP autoproxy answer names: PAC script results say
+/// "PROXY host:port" (several, then DIRECT), "SOCKS host:port", or the
+/// per-protocol form; a bare "host:port" is an HTTP proxy.
+#[cfg_attr(not(windows), allow(dead_code))]
+fn parse_winhttp_proxy(raw: &str) -> Option<String> {
+    let raw = raw.trim();
+    if raw.is_empty() {
+        return None;
+    }
+    if raw.eq_ignore_ascii_case("direct") {
+        return None;
+    }
+    if let Some(rest) = raw.strip_prefix("PROXY ") {
+        let first = rest
+            .split([',', ';', ' '])
+            .map(str::trim)
+            .find(|entry| !entry.is_empty())?;
+        return Some(format!("http://{first}"));
+    }
+    if let Some(rest) = raw.strip_prefix("SOCKS ") {
+        let first = rest
+            .split([',', ';', ' '])
+            .map(str::trim)
+            .find(|entry| !entry.is_empty())?;
+        return Some(format!("socks5h://{first}"));
+    }
+    parse_windows_proxy_server(raw)
 }
 
 /// The proxy URL in a Windows `ProxyServer` value: either `host:port`
@@ -421,6 +584,36 @@ mod tests {
         );
         assert_eq!(parse_windows_proxy_server(""), None);
         assert_eq!(parse_windows_proxy_server("  "), None);
+    }
+
+    #[test]
+    fn a_winhttp_proxy_answer_is_parsed() {
+        // PAC results come as "PROXY ..." lists ending in DIRECT, or a
+        // SOCKS entry; per-protocol and bare values delegate to the
+        // ProxyServer parsing.
+        assert_eq!(
+            parse_winhttp_proxy("PROXY 192.168.1.1:8080").as_deref(),
+            Some("http://192.168.1.1:8080")
+        );
+        assert_eq!(
+            parse_winhttp_proxy("PROXY p1.example:80, PROXY p2.example:80; DIRECT").as_deref(),
+            Some("http://p1.example:80")
+        );
+        assert_eq!(
+            parse_winhttp_proxy("SOCKS 127.0.0.1:1080").as_deref(),
+            Some("socks5h://127.0.0.1:1080")
+        );
+        assert_eq!(
+            parse_winhttp_proxy("http=10.0.0.2:81;https=10.0.0.2:444").as_deref(),
+            Some("http://10.0.0.2:444")
+        );
+        assert_eq!(
+            parse_winhttp_proxy("10.0.0.2:8080").as_deref(),
+            Some("http://10.0.0.2:8080")
+        );
+        assert_eq!(parse_winhttp_proxy("DIRECT"), None);
+        assert_eq!(parse_winhttp_proxy("direct"), None);
+        assert_eq!(parse_winhttp_proxy(""), None);
     }
 
     #[test]

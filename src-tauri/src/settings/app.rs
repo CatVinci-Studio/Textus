@@ -71,8 +71,21 @@ pub(crate) fn proxy_changed(settings: &Value) {
         // "system", and "none", which before 1.4.5 was the default.
         Route::System
     } else {
-        let mut url = format!("{kind}://{host}");
-        if !port.is_empty() {
+        // The address as pasted: a whole URL ("http://host:port", what a
+        // proxy app shows) is taken as is. Prefixing another scheme onto it
+        // produced "http://http://...", whose host "http" then failed to
+        // resolve - a name error that read like the site was gone.
+        let mut url = if host.contains("://") {
+            // socks5:// pasted keeps its scheme, mapped to socks5h.
+            if let Some(inner) = host.strip_prefix("socks5://") {
+                format!("socks5h://{inner}")
+            } else {
+                host.clone()
+            }
+        } else {
+            format!("{kind}://{host}")
+        };
+        if !port.is_empty() && !host.contains("://") {
             url.push_str(&format!(":{port}"));
         }
         // The proxy's credentials, when it asks for a name and password
@@ -90,6 +103,9 @@ pub(crate) fn proxy_changed(settings: &Value) {
         Route::Via(url)
     };
     if aicompat::http::set_route(route).is_err() {
+        // A setting that can't be parsed (a typo) must not pass for one in
+        // use: say so, then follow the system's proxy.
+        eprintln!("textus: proxy setting left out, requests follow the system's: the address didn't parse");
         let _ = aicompat::http::set_route(Route::System);
     }
 }
