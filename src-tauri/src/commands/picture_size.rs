@@ -38,7 +38,11 @@ fn size_of(path: &str) -> Option<PictureSize> {
             | Orientation::Rotate90FlipH
             | Orientation::Rotate270FlipH
     );
-    let (width, height) = if turned { (height, width) } else { (width, height) };
+    let (width, height) = if turned {
+        (height, width)
+    } else {
+        (width, height)
+    };
     (width > 0 && height > 0).then_some(PictureSize { width, height })
 }
 
@@ -53,7 +57,10 @@ mod tests {
         image::RgbImage::new(30, 20).save(&path).unwrap();
         assert_eq!(
             size_of(path.to_str().unwrap()),
-            Some(PictureSize { width: 30, height: 20 })
+            Some(PictureSize {
+                width: 30,
+                height: 20
+            })
         );
         let svg = dir.path().join("p.svg");
         std::fs::write(&svg, "<svg xmlns='http://www.w3.org/2000/svg'/>").unwrap();
