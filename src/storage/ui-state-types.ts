@@ -15,8 +15,6 @@ export interface UiState {
   sidebarOpen: boolean;
   /** The sidebar tab last shown: files, outline or clipboard. */
   sidebarTab: string;
-  /** The sidebar's tabs as the user dragged them, by id. */
-  sidebarTabOrder: string[];
   /** iOS: recently opened documents, newest first. */
   iosRecentDocuments: unknown;
   /** iOS: the document list's layout. */
@@ -80,10 +78,6 @@ export interface UiState {
   movedToPluginsOffered: string[];
   /** "plugin key" pairs whose manifest key was someone else's, told once. */
   pluginKeysTold: string[];
-  /** The split the window was left in, its panes by their documents'
-   *  paths (app/layout/restore.ts); null when it showed one. Read
-   *  loosely: earlier versions kept a pair. */
-  splitLayout: { tree: unknown } | null;
   /** Settings › Extensions: the kinds whose Available list is folded. */
   extensionsFolded: string[];
   /** The folder a document was last saved into with Save As, where the

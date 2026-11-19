@@ -61,31 +61,18 @@ pub fn read_session_windows(app: &AppHandle) -> Vec<WindowSession> {
     parse_session(&raw)
 }
 
-/// Whether `raw` is a session file some version wrote.
+/// Whether `raw` is a session file this version writes.
 fn readable_session(raw: &str) -> bool {
     serde_json::from_str::<Vec<WindowSession>>(raw).is_ok()
-        || serde_json::from_str::<Vec<Vec<String>>>(raw).is_ok()
-        || serde_json::from_str::<Vec<String>>(raw).is_ok()
 }
 
-/// The file as each version wrote it: windows' sessions; up to 1.3.12 each
-/// window's paths; up to 1.3.0-beta.6 one flat list, each path a window.
+/// The windows' sessions in the file, those with nothing left out.
 fn parse_session(raw: &str) -> Vec<WindowSession> {
-    let windows = if let Ok(windows) = serde_json::from_str::<Vec<WindowSession>>(raw) {
-        windows
-    } else if let Ok(windows) = serde_json::from_str::<Vec<Vec<String>>>(raw) {
-        windows.into_iter().map(WindowSession::of_paths).collect()
-    } else {
-        serde_json::from_str::<Vec<String>>(raw)
-            .map(|paths| {
-                paths
-                    .into_iter()
-                    .map(|p| WindowSession::of_paths(vec![p]))
-                    .collect()
-            })
-            .unwrap_or_default()
-    };
-    windows.into_iter().filter(kept).collect()
+    serde_json::from_str::<Vec<WindowSession>>(raw)
+        .unwrap_or_default()
+        .into_iter()
+        .filter(kept)
+        .collect()
 }
 
 /// A window worth bringing back: one with documents or a folder.
@@ -282,15 +269,7 @@ mod tests {
     }
 
     #[test]
-    fn every_earlier_session_file_still_opens() {
-        assert_eq!(
-            parse_session(r#"["a.md","b.md"]"#),
-            vec![of(&["a.md"]), of(&["b.md"])]
-        );
-        assert_eq!(
-            parse_session(r#"[["a.md","b.md"],[]]"#),
-            vec![of(&["a.md", "b.md"])]
-        );
+    fn the_session_file_opens_without_its_empty_windows() {
         assert_eq!(
             parse_session(r#"[{"paths":[],"folder":"/n"},{"paths":[]}]"#),
             vec![WindowSession {
@@ -302,16 +281,14 @@ mod tests {
     }
 
     #[test]
-    fn only_a_file_no_version_wrote_is_set_aside() {
-        for written in [
-            r#"["a.md"]"#,
-            r#"[["a.md"]]"#,
-            r#"[{"paths":["a.md"]}]"#,
-            "[]",
-        ] {
+    fn a_file_this_version_did_not_write_is_set_aside() {
+        for written in [r#"[{"paths":["a.md"]}]"#, "[]"] {
             assert!(readable_session(written), "{written}");
         }
-        assert!(!readable_session(r#"[{"paths":["a.md"]"#));
+        // Broken, or as versions before 1.4 wrote it.
+        for other in [r#"[{"paths":["a.md"]"#, r#"[["a.md"]]"#, r#"["a.md"]"#] {
+            assert!(!readable_session(other), "{other}");
+        }
     }
 
     #[test]

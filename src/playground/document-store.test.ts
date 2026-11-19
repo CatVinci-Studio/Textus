@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  LEGACY_KEY,
   loadDocuments,
   memoryBackend,
   newDocument,
@@ -31,15 +30,6 @@ describe("loadDocuments", () => {
     expect(docs.map((d) => d.markdown)).toEqual(["# Sample"]);
     expect(current).toBe(docs[0].id);
     expect(await backend.all()).toHaveLength(1);
-  });
-
-  it("brings the first web editor's one document over", async () => {
-    const { docs } = await loadDocuments(
-      memoryBackend(),
-      "# Sample",
-      storage({ [LEGACY_KEY]: "My old note" }),
-    );
-    expect(docs.map((d) => d.markdown)).toEqual(["My old note"]);
   });
 
   it("lists the newest first and opens the one open last time", async () => {

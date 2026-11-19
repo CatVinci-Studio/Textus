@@ -48,15 +48,6 @@ function restoredFolder(restoreSession: boolean): string | null {
   return docs ? ownFolderMoved(saved, docs) : saved;
 }
 
-/** The folder an earlier version kept for the whole app: taken by the first
- *  window to restore, once. */
-function olderFolder(): string | null {
-  const saved = getUiState("openFolder");
-  if (!saved) return null;
-  setUiState("openFolder", null);
-  return typeof saved === "string" ? saved : null;
-}
-
 /** The AI's folder that opening a folder once copied into the setting:
  *  not a pick of the user's, so it goes (the AI follows the open folder
  *  itself now, ai-root.ts). */
@@ -273,8 +264,7 @@ function useTakePendingFolder(openFolder: (path: string) => void) {
       windowIpc.takePendingOpenFolder().catch(() => null),
       canUseWindows ? takeWindowSession() : null,
     ]).then(([pending, window]) => {
-      const path =
-        pending ?? (window ? (window.folder ?? olderFolder()) : null);
+      const path = pending ?? window?.folder ?? null;
       if (path) open.current(path);
     });
   }, [open]);

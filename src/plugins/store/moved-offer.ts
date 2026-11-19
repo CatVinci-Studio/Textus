@@ -1,5 +1,5 @@
 import type { Strings } from "../../i18n/strings";
-import { fs, storage } from "../../platform/ipc";
+import { fs } from "../../platform/ipc";
 import { openFolderOnDisk } from "../../platform/open-folder";
 import { keepInList, uiList } from "../../storage/ui-state";
 import { pluginRecord } from "./plugin-records";
@@ -14,12 +14,6 @@ const MOVED: Record<
   string,
   { plugin: string; used: () => Promise<boolean>; now?: boolean }
 > = {
-  // 1.3.10. Its old entries stay where they were, unread.
-  "clipboard-history": {
-    plugin: "catvinci.clipboard-history",
-    used: async () =>
-      (await storage.historyList("clipboard").catch(() => [])).length > 0,
-  },
   // 1.4.6: a Logseq graph's settings.
   "logseq-settings": {
     plugin: "catvinci.logseq",

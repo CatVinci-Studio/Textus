@@ -72,11 +72,6 @@ const LOCAL: {
     decode: (raw) => raw,
     encode: (value) => value,
   },
-  sidebarTabOrder: {
-    key: "textus-sidebar-tab-order",
-    decode: (raw) => JSON.parse(raw),
-    encode: (value) => JSON.stringify(value),
-  },
   iosRecentDocuments: {
     key: "textus-ios-recent-documents",
     decode: (raw) => JSON.parse(raw),
@@ -121,11 +116,6 @@ const LOCAL: {
     key: "textus-file-tree-hidden",
     decode: (raw) => raw,
     encode: (value) => value,
-  },
-  splitLayout: {
-    key: "textus-split-layout",
-    decode: (raw) => JSON.parse(raw),
-    encode: (value) => JSON.stringify(value),
   },
   fileTreeSort: {
     key: "textus-file-tree-sort",
@@ -199,32 +189,6 @@ const LOCAL: {
   },
 };
 
-/** Fields once kept only in localStorage: carried into the file the first
- *  time it lacks them, then let go there. */
-const FROM_LOCAL: UiStateKey[] = [
-  "deepThinking",
-  "webSearch",
-  "lastAgentMode",
-  "webPageBarHidden",
-  "floatingViews",
-];
-
-function carryFromLocal(file: Record<string, unknown>): void {
-  for (const key of FROM_LOCAL) {
-    if (file[key] !== undefined) continue;
-    const kept = readLocal(key);
-    if (kept === undefined) continue;
-    file[key] = kept;
-    written.add(key);
-    trackWrite(storage.uiStatePatch({ [key]: kept })).catch(() => {});
-    try {
-      localStorage.removeItem(LOCAL[key]!.key);
-    } catch {
-      // Left there: read again next time, harmlessly.
-    }
-  }
-}
-
 function readLocal(key: UiStateKey): unknown {
   const local = LOCAL[key];
   if (!local) return undefined;
@@ -246,7 +210,6 @@ function fileCache(): Record<string, unknown> | null {
   if (!boot) return null;
   if (!cache) {
     cache = { ...boot.uiState };
-    carryFromLocal(cache);
     refreshed = storage
       .uiStateGet()
       .then((live) => {

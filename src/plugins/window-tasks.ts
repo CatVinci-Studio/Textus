@@ -3,7 +3,6 @@ import { listenToThisWindow, unlistenAll } from "../platform/events";
 import { watchPluginAiTools } from "./contributions/ai-tools";
 import { takePluginUris } from "./plugin-uri";
 import { watchDevPlugins } from "./store/dev-reload";
-import { migrateOfficialPlugins } from "./store/migrate-official";
 import { offerMovedFeatures } from "./store/moved-offer";
 import { onOpenFolder } from "../platform/open-folder";
 import { currentStrings } from "../i18n/current";
@@ -25,11 +24,9 @@ export function startWindowTasks(runTool: typeof runPluginAiTool): () => void {
   return () => stops.forEach((stop) => stop());
 }
 
-/** Once the plugins are read: official plugins from before API 1.0 moved
- *  to their rewrites, then, once, the core's features that became plugins
- *  offered. */
+/** Once the plugins are read: the core's features that became plugins
+ *  offered, once. */
 export async function afterPluginsLoad(t: Strings): Promise<void> {
-  await migrateOfficialPlugins();
   await offerMovedFeatures(t);
   // Some show only in a folder: asked again as one opens.
   onOpenFolder(() => void offerMovedFeatures(currentStrings()));

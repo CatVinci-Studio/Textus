@@ -1,4 +1,3 @@
-import { uiList } from "../../storage/ui-state";
 import { inOrder } from "../../utils/in-order";
 import { loadSettings } from "../../prefs/settings-store";
 import {
@@ -221,11 +220,9 @@ export function sidebarTabs(): SidebarTabDef[] {
 
 /** The tabs as the rail shows them: plugins' pinned among Textus's own. */
 export function railTabs(): SidebarTabDef[] {
-  // Kept in the settings since 1.3.13; before, in this window's UI state.
-  const order = loadSettings().activityRailOrder;
   return orderTabs(
     [...BUILT_IN, ...pluginsTab(), ...settingsTab(), ...addedSidebarTabs()],
-    order.length ? order : uiList("sidebarTabOrder"),
+    loadSettings().activityRailOrder,
   );
 }
 
