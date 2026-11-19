@@ -17,6 +17,7 @@ export { toggleCodeSpan };
 import {
   blockRanges,
   gives,
+  holdsSpans,
   spanCovering,
   mergedContent,
   outOfSpans,
@@ -137,8 +138,8 @@ function acrossBlocks(
  * One of these md_span styles (the schema has no strong/em marks) toggled
  * on the selection. No selection opens an empty shell, as typing "**" does;
  * a selection in one textblock is wrapped, edge whitespace left outside so
- * it serializes; one over several textblocks, each block's part; inside
- * code/math or another shell, nothing. False where nothing applies.
+ * it serializes, inside another style's span too; one over several
+ * textblocks, each block's part; inside code or maths, nothing. False where nothing applies.
  */
 export function toggleFormat(view: EditorView, spec: FormatSpec): boolean {
   // Live selection: Cmd+B right after fast caret movement must not act on a
@@ -157,12 +158,7 @@ export function toggleFormat(view: EditorView, spec: FormatSpec): boolean {
   const parent = $from.parent;
 
   if (empty) {
-    if (
-      !parent.isTextblock ||
-      parent.type.spec.code ||
-      isEnclosureName(parent.type.name)
-    )
-      return false;
+    if (!holdsSpans(parent)) return false;
 
     const node = mdSpan.create({ delim: spec.delim, rung: spec.rung });
     const tr = state.tr.replaceWith($from.pos, $from.pos, node);
@@ -237,13 +233,7 @@ function wrapMerged(
   const from = outOfSpans(state, range.from, -1, spec);
   const to = outOfSpans(state, range.to, 1, spec);
   const $from = state.doc.resolve(from);
-  const parent = $from.parent;
-  if (
-    !$from.sameParent(state.doc.resolve(to)) ||
-    !parent.isTextblock ||
-    parent.type.spec.code ||
-    isEnclosureName(parent.type.name)
-  )
+  if (!$from.sameParent(state.doc.resolve(to)) || !holdsSpans($from.parent))
     return null;
   const content = mergedContent(state.doc.slice(from, to).content, spec);
   if (!content) return null;

@@ -204,6 +204,20 @@ test("after a formula, on an empty line and beside a picture, the drawn caret st
       );
     })
     .toBe(true);
+  // Enter at a code block's end: the caret on the new, empty line.
+  await page.keyboard.press("Enter");
+  await pasteMarkdown(page, "```\ncode\n```");
+  const code = page.locator(`${editor} pre`);
+  await code.click();
+  await page.keyboard.press(MAC ? "Meta+ArrowRight" : "End");
+  const first = (await code.locator("code").boundingBox())!;
+  await page.keyboard.press("Enter");
+  await expect
+    .poll(async () => {
+      const box = (await drawn())!;
+      return box.y > first.y + first.height - 4;
+    })
+    .toBe(true);
 });
 
 test("with Smooth caret on, the drawn caret glides", async ({ page }) => {
