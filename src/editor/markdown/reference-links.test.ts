@@ -45,6 +45,10 @@ describe("reference links", () => {
     ["a reference image", "An ![image][pic].\n\n[pic]: a.png\n"],
     ["a definition nobody uses", "Text.\n\n[unused]: https://x.org\n"],
     ["a definition in a quote", "> [r]: https://x.org\n\n[a][r]\n"],
+    [
+      "definitions on consecutive lines",
+      "See [ref21] and [ref22].\n\n[ref21]: https://x.org/21\n[ref22]: https://x.org/22\n",
+    ],
   ])("keeps %s", async (_name, markdown) => {
     expect(await save(await open(markdown))).toBe(markdown);
   });

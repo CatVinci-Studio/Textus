@@ -10,7 +10,11 @@ import {
   type Handle,
   type Unsafe,
 } from "mdast-util-to-markdown";
-import { referenceFor, type LinkReference } from "./reference-links";
+import {
+  joinDefinitions,
+  referenceFor,
+  type LinkReference,
+} from "./reference-links";
 import {
   imageMarkdownHtml,
   imageWidthOf,
@@ -405,6 +409,7 @@ export function configureMarkdownOutput(ctx: Ctx): void {
     ...options,
     // A file with no list yet gets "-", as most write it.
     bullet: bullet ?? "-",
+    join: [...(options.join ?? []), joinDefinitions],
     handlers: {
       ...options.handlers,
       root,
