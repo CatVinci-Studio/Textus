@@ -1,6 +1,7 @@
 import { markTime } from "../../engine/controls/moves";
 import { wholeBlockKind } from "./markdown-forms";
 import { splitUnits } from "./unit-diff";
+import type { Reveal } from "../../engine/motion/reveal";
 
 /** A proposal's new text revealed a unit (sentence or block) at a time, as a
  *  half-written unit shows raw Markdown. In the document, paragraphs land
@@ -126,7 +127,7 @@ function fenceClosed(unit: string): boolean {
   return !!open && lines.at(-1)!.trim().startsWith(open);
 }
 
-export class UnitReveal {
+export class UnitReveal implements Reveal {
   /** Paragraphs land whole. */
   constructor(private paragraphs = false) {}
 

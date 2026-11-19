@@ -4,6 +4,7 @@ import { enter, glideAfter } from "../../engine/controls/moves";
 import { measure, play } from "../../engine/motion/flip";
 import { Cascade } from "../../engine/controls/cascade";
 import { UnitReveal } from "./unit-reveal";
+import { revealFrames } from "../../engine/motion/reveal";
 import { inlineSentence } from "./sentence-diff";
 import { splitUnits } from "./unit-diff";
 import {
@@ -30,7 +31,8 @@ interface InsertAnimation {
   /** False while more streamed text may still arrive (keeps the caret). */
   done: boolean;
   span: HTMLSpanElement | null;
-  frame: number | null;
+  /** Stops the reveal's frames while they run. */
+  frame: (() => void) | null;
   /** The view that drew the widget - the reveal's only way to dispatch the
    *  `settle` meta that finally offers Accept/Reject for this preview. */
   view: EditorView | null;
@@ -240,10 +242,8 @@ export function maybeSettle(callId: string) {
 }
 
 export function stopFrame(anim: InsertAnimation) {
-  if (anim.frame !== null) {
-    cancelAnimationFrame(anim.frame);
-    anim.frame = null;
-  }
+  anim.frame?.();
+  anim.frame = null;
 }
 
 export function renderAnimation(anim: InsertAnimation) {
@@ -304,18 +304,17 @@ export function ensureTicking(anim: InsertAnimation) {
     renderAnimation(anim);
     return;
   }
-  const step = (now: number) => {
-    anim.reveal.tick(now);
-    refreshStream(anim);
-    renderAnimation(anim);
-    if (!anim.reveal.caughtUp) {
-      anim.frame = requestAnimationFrame(step);
-      return;
-    }
-    anim.frame = null;
-    maybeSettle(anim.callId);
-  };
-  anim.frame = requestAnimationFrame(step);
+  anim.frame = revealFrames(
+    anim.reveal,
+    () => {
+      refreshStream(anim);
+      renderAnimation(anim);
+    },
+    () => {
+      anim.frame = null;
+      maybeSettle(anim.callId);
+    },
+  );
 }
 
 export function dropAnimation(callId: string) {

@@ -1,3 +1,5 @@
+import type { Reveal } from "./reveal";
+
 /**
  * Paces streamed text onto the screen, one animation frame at a time, so a
  * bursty stream types in smoothly about TARGET_LAG_MS behind the network.
@@ -24,7 +26,7 @@ const HOLD_LAST_MS = 350;
 
 const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
-export class StreamReveal {
+export class StreamReveal implements Reveal {
   private received = "";
   private shown = 0;
   private done = false;
