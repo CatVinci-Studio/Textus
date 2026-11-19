@@ -212,14 +212,17 @@ function main(argv) {
       const read = (file) => [show(base, file), show("HEAD", file)];
       const rustReads = rustIncludes();
       const jobs = classify({ files, push, read, rustReads });
+      const full =
+        !push &&
+        files.includes("package.json") &&
+        bumpsVersion(...read("package.json"));
       result = {
         ...jobs,
+        // The full suite builds Rust on every platform, as the tag will.
+        native: jobs.native || full,
         docs: !push && docsOnly({ files, rustReads }),
         roundtrip: !jobs.light && reachesSaving({ files, push }),
-        full:
-          !push &&
-          files.includes("package.json") &&
-          bumpsVersion(...read("package.json")),
+        full,
       };
     } catch {
       // The base isn't in this clone (a force push): run everything.

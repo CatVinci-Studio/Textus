@@ -169,7 +169,7 @@ fn system_proxy_winhttp_now() -> Option<String> {
     if session.is_null() {
         return None;
     }
-    let config_url_wide = config_url.as_deref().map(|url| wide(url));
+    let config_url_wide = config_url.as_deref().map(wide);
     let mut options = AutoProxyOptions {
         flags: WINHTTP_AUTOPROXY_CONFIG_URL,
         auto_detect_flags: WINHTTP_AUTO_DETECT_TYPE_DHCP | WINHTTP_AUTO_DETECT_TYPE_DNS_A,
