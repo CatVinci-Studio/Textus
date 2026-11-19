@@ -59,8 +59,8 @@ export interface UiState {
   /** Files Textus AI left something in, by path: revisions waiting, a file
    *  it made waiting to be kept, a file it wrote straight in. */
   aiFileMarks: Record<string, AiFileMark>;
-  /** The note embeds folded, by the document they are in and what they
-   *  show, oldest first. */
+  /** Embeds folded, and opened as cards, kept apart before: moved into
+   *  foldedBlocks and openedBlocks the first time an embed is drawn. */
   foldedEmbeds: string[];
   /** The drawn blocks folded (editor/fold/block-fold.ts), by document and
    *  place, oldest first. */
@@ -68,7 +68,6 @@ export interface UiState {
   /** The drawn blocks opened by hand, so one folded in a narrow column
    *  stays open. */
   openedBlocks: string[];
-  /** With embeds shown as cards, the ones opened, the same way. */
   openedEmbeds: string[];
   /** The plugin suggestion card's answers by situation: how many times
    *  Later put it off, or "never" (plugins/store/plugin-card.ts). */

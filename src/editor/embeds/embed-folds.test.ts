@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { installTestLocalStorage } from "../../dev/test-local-storage";
-import { resetUiStateForTests, setUiState } from "../../storage/ui-state";
+import {
+  resetUiStateForTests,
+  setUiState,
+  uiList,
+} from "../../storage/ui-state";
 import { embedFolded, setEmbedFolded } from "./embed-folds";
 
 describe("folded embeds", () => {
@@ -26,10 +30,15 @@ describe("folded embeds", () => {
     expect(embedFolded("k300")).toBe(true);
   });
 
-  it("ignore what isn't a list of keys", () => {
+  it("kept apart before, are moved in with every drawn block's; what isn't a key is left", () => {
     setUiState("foldedEmbeds", "nonsense" as unknown as string[]);
     expect(embedFolded("nonsense")).toBe(false);
     setUiState("foldedEmbeds", ["a", 3] as unknown as string[]);
+    setUiState("openedEmbeds", ["b"]);
     expect(embedFolded("a")).toBe(true);
+    expect(uiList("foldedBlocks")).toEqual(["a"]);
+    expect(uiList("openedBlocks")).toEqual(["b"]);
+    expect(uiList("foldedEmbeds")).toEqual([]);
+    expect(uiList("openedEmbeds")).toEqual([]);
   });
 });

@@ -1,27 +1,30 @@
-import { keepInList, uiList } from "../../storage/ui-state";
+import { setUiState, uiList } from "../../storage/ui-state";
 import { loadSettings } from "../../prefs/settings-store";
+import { blockFolded, setBlockFolded } from "../fold/block-fold";
 
-// Which embeds the user folded, on this machine only: the file keeps its
-// ![[...]] as written. With embeds shown as cards, the ones opened instead.
+// Which embeds the user folded, on this machine only, with every other
+// drawn block's (block-fold.ts): the file keeps its ![[...]] as written.
+// Shown as cards, an embed starts folded unless opened.
 
-/** Folds remembered at most; the oldest goes first. */
-const KEPT = 300;
+const asCards = () => loadSettings().embedDisplay === "card";
 
-type Kept = "foldedEmbeds" | "openedEmbeds";
-
-const kept = uiList;
-
-/** The list that says otherwise than the setting: folded ones, or opened cards. */
-const exceptions = (): Kept =>
-  loadSettings().embedDisplay === "card" ? "openedEmbeds" : "foldedEmbeds";
+/** The folds kept in lists of their own before, moved in. */
+function carryOldFolds(): void {
+  const folded = uiList("foldedEmbeds");
+  const opened = uiList("openedEmbeds");
+  if (!folded.length && !opened.length) return;
+  for (const key of folded) setBlockFolded(key, true);
+  for (const key of opened) setBlockFolded(key, false);
+  setUiState("foldedEmbeds", []);
+  setUiState("openedEmbeds", []);
+}
 
 export function embedFolded(key: string): boolean {
-  const name = exceptions();
-  return kept(name).includes(key) === (name === "foldedEmbeds");
+  carryOldFolds();
+  return blockFolded(key, asCards());
 }
 
 export function setEmbedFolded(key: string, folded: boolean): void {
-  const name = exceptions();
-  const listed = folded === (name === "foldedEmbeds");
-  keepInList(name, key, listed, { max: KEPT });
+  carryOldFolds();
+  setBlockFolded(key, folded);
 }

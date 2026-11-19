@@ -22,13 +22,18 @@ function keep(
   keepInList(name, key, on, { max: KEPT });
 }
 
-function blockFolded(key: string): boolean {
-  return kept("foldedBlocks").includes(key);
+/** Whether the block `key` is folded: folded by the user, or, if it
+ *  starts folded (`foldUnlessOpened`), not opened by them. */
+export function blockFolded(key: string, foldUnlessOpened = false): boolean {
+  return (
+    kept("foldedBlocks").includes(key) ||
+    (foldUnlessOpened && !kept("openedBlocks").includes(key))
+  );
 }
 
 /** Folded or opened by the user, kept; an opened one is remembered too, so
  *  a block that starts folded in a narrow column stays open once opened. */
-function setBlockFolded(key: string, on: boolean): void {
+export function setBlockFolded(key: string, on: boolean): void {
   keep("foldedBlocks", key, on);
   keep("openedBlocks", key, !on);
 }
@@ -133,9 +138,5 @@ export function addBlockFold(
     button.addEventListener("mousedown", (e) => e.preventDefault());
     button.addEventListener("click", toggle);
   }
-  showBlockFold(
-    el,
-    blockFolded(key) ||
-      (foldUnlessOpened && !kept("openedBlocks").includes(key)),
-  );
+  showBlockFold(el, blockFolded(key, foldUnlessOpened));
 }
