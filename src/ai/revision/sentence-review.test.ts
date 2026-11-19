@@ -10,6 +10,7 @@ import { locateHunks } from "./sentence-locate";
 import { diffSentences } from "./unit-diff";
 import { pendingEditKey } from "./pending-types";
 import { serializeBlocks } from "../../editor/markdown/doc-markdown";
+import { TextSelection } from "@milkdown/kit/prose/state";
 
 // Two of five sentences changed: decided sentence by sentence (a
 // paragraph most of whose sentences changed is one change).
@@ -37,8 +38,8 @@ function markdown(e: Editor) {
   );
 }
 
-async function setup() {
-  editor = await createTestEditor(`# 笔记\n\n${NOTE}\n`);
+async function setup(anchor: string | undefined = NOTE) {
+  editor = await createTestEditor(`# 笔记\n\n${NOTE}\n\n**后记**。\n`);
   const e = editor;
   const hook = renderHook(() => usePendingEdits(runner(e)));
   // The id the model names the paragraph by.
@@ -62,7 +63,7 @@ async function setup() {
       [
         {
           callId: "c1",
-          proposal: { action: "replace", block, anchor: NOTE, text: REWRITE },
+          proposal: { action: "replace", block, anchor, text: REWRITE },
         },
       ],
       null,
@@ -115,6 +116,26 @@ describe("a rewrite decided sentence by sentence", () => {
       "这一句呼应第一回，是一个起点。宝玉初见黛玉便觉似曾相识。贾母一句胡说，轻轻带过。" +
         KEPT,
     );
+  });
+
+  it("keeps the caret in the paragraph it rewrites", async () => {
+    const { hook, e } = await setup(undefined);
+    const caretIn = () =>
+      e.action(
+        (ctx) =>
+          ctx.get(editorViewCtx).state.selection.$head.parent.textContent,
+      );
+    e.action((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      const at = view.state.doc.firstChild!.nodeSize + 3;
+      view.dispatch(
+        view.state.tr.setSelection(TextSelection.create(view.state.doc, at)),
+      );
+    });
+    act(() => {
+      hook.result.current.accept("c1");
+    });
+    expect(caretIn()).toBe(REWRITE);
   });
 
   it("keeping every sentence is a rejection", async () => {
