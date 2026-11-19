@@ -82,13 +82,19 @@ test("an outside agent's button starts a conversation with it, each press a new 
   const bar = page.locator(".window-bar");
   const status = page.locator(".plugin-status-item").first();
   await expect(bar).not.toHaveAttribute("data-fit", /status|agents/);
-  await page.setViewportSize({ width: 560, height: 760 });
+  // Less than a tab's room left beside the status: it gives way.
+  await page.setViewportSize({ width: 440, height: 760 });
   await expect(bar).toHaveAttribute("data-fit", /status|agents/);
   await expect(status.locator(".plugin-status-text")).toBeHidden();
-  const lastTab = (await coder.last().boundingBox())!;
-  expect((await status.boundingBox())!.x).toBeGreaterThanOrEqual(
-    lastTab.x + lastTab.width,
-  );
+  // The tab in front ends before the status starts.
+  const frontTab = page.locator('.tab-pill[aria-selected="true"]').first();
+  await expect
+    .poll(async () => {
+      const tab = await frontTab.boundingBox();
+      const shown = await status.boundingBox();
+      return tab && shown ? shown.x - (tab.x + tab.width) : -1;
+    })
+    .toBeGreaterThanOrEqual(0);
 
   // Listed in Settings' External tools, Manage opening its plugin's page.
   await page.evaluate(() =>
