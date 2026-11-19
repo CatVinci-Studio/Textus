@@ -118,6 +118,12 @@ export const fs = {
       : command("folder_documents", root),
   // No change watching for picked documents: the coordinator serialises
   // our writes with iCloud's, and the app re-reads on open.
+  /** A picture's size from its file's header, before it loads; null where
+   *  that can't be read (SVG, a far file). */
+  pictureSize: (
+    path: string,
+  ): Promise<{ width: number; height: number } | null> =>
+    isFarUrl(path) ? Promise.resolve(null) : command("picture_size", path),
   fileMtimeMs: (path: string): Promise<number | null> =>
     isFarUrl(path) ? Promise.resolve(null) : command("file_mtime_ms", path),
   readTextFile: (path: string): Promise<string> =>

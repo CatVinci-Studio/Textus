@@ -25,6 +25,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::commands::fs::save_file_dialog,
                     crate::commands::fs::list_dir,
                     crate::commands::fs::file_mtime_ms,
+                    crate::commands::picture_size::picture_size,
                     crate::commands::fs::read_text_file,
                     crate::commands::fs::read_binary_file_base64,
                     crate::commands::fs::write_text_file,

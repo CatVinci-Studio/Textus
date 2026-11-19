@@ -36,6 +36,7 @@ import {
   withImageWidth,
 } from "./image-html";
 import { imageRotationView } from "./image-rotation";
+import { reserveRoom, rememberSize } from "./picture-sizes";
 import { DROP_IMAGE_FILES_EVENT } from "../../utils/events";
 import {
   changedRangesOf,
@@ -149,21 +150,6 @@ function isImageParagraph(node: ProseNode): boolean {
 
 const isTextblock = (node: ProseNode) => node.isTextblock;
 
-/** Each picture's size once it has loaded, by document and src: drawn
- *  again, it takes its room before it loads. */
-const pictureSizes = new Map<string, { width: number; height: number }>();
-
-function reserveRoom(img: HTMLImageElement, key: string) {
-  const size = pictureSizes.get(key);
-  if (size) {
-    img.width = size.width;
-    img.height = size.height;
-  } else {
-    img.removeAttribute("width");
-    img.removeAttribute("height");
-  }
-}
-
 const imageParagraph = (node: ProseNode, pos: number) =>
   isImageParagraph(node)
     ? [Decoration.node(pos, pos + node.nodeSize, { class: "image-paragraph" })]
@@ -237,13 +223,7 @@ function createImageView(
     dom.append(card);
   };
   img.addEventListener("load", clearMissing);
-  img.addEventListener("load", () => {
-    if (img.naturalWidth)
-      pictureSizes.set(shown(), {
-        width: img.naturalWidth,
-        height: img.naturalHeight,
-      });
-  });
+  img.addEventListener("load", () => rememberSize(shown(), img));
   const stopHold = holdOnResize(dom);
   // A short, wide strip (a README badge) has nothing to enlarge or
   // resize, and the controls would cover its words.
@@ -269,13 +249,10 @@ function createImageView(
     const want = shown();
     if (want !== drawn || card) {
       drawn = want;
-      reserveRoom(img, want);
-      showDocImage(
-        img,
-        (n.attrs.src as string) ?? "",
-        docPath(),
-        () => shown() === want,
-      );
+      const src = (n.attrs.src as string) ?? "";
+      const stillWanted = () => shown() === want;
+      reserveRoom(img, want, src, docPath(), stillWanted);
+      showDocImage(img, src, docPath(), stillWanted);
     }
     img.alt = splitAltSize((n.attrs.alt as string) ?? "").alt;
     if (title) img.title = title;
