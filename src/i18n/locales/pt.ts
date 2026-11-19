@@ -1436,6 +1436,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   closeLastLabel: "Ao fechar o último documento",
   closeLastWindow: "Fechar a janela",
   closeLastStartPage: "Mostrar a página inicial",
+  addTabLabel: "O + da barra de abas abre",
   startPageRemoveRecent: "Remover dos recentes",
   startPageRecentProjects: "Pastas recentes",
   startPagePickDocument:

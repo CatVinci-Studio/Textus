@@ -1384,6 +1384,7 @@ type /name in a conversation to use one.
   closeLastLabel: "When the last document closes",
   closeLastWindow: "Close the window",
   closeLastStartPage: "Show the start page",
+  addTabLabel: "The + in the tab row opens",
   startPageRemoveRecent: "Remove from Recent",
   startPageRecentProjects: "Recent Folders",
   startPagePickDocument:

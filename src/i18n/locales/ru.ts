@@ -1457,6 +1457,7 @@ export default {
   closeLastLabel: "Когда закрыт последний документ",
   closeLastWindow: "Закрыть окно",
   closeLastStartPage: "Показать начальную страницу",
+  addTabLabel: "Кнопка + в строке вкладок открывает",
   startPageRemoveRecent: "Убрать из недавних",
   startPageRecentProjects: "Недавние папки",
   startPagePickDocument:
