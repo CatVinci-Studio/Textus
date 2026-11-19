@@ -353,6 +353,40 @@ jobs:
           test "$CHANGES" = success
           test "$RESULT" = success || test "$RESULT" = skipped
 
+  # The built app on Linux, driven like a user (scripts/drive-linux.mjs):
+  # it starts on a document, takes typing and saves it. Not required yet.
+  linux-app:
+    needs: changes
+    if: needs.changes.outputs.native == 'true' || needs.changes.outputs.full == 'true'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    env:
+      CARGO_PROFILE_DEV_DEBUG: "0"
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf webkit2gtk-driver xvfb
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - run: cargo install tauri-driver --locked
+      - name: Build the app
+        run: npm run tauri build -- --debug --no-bundle
+      - name: Drive it
+        run: |
+          export XDG_CONFIG_HOME="$RUNNER_TEMP/config" XDG_DATA_HOME="$RUNNER_TEMP/data" XDG_CACHE_HOME="$RUNNER_TEMP/cache"
+          mkdir -p "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_CACHE_HOME"
+          xvfb-run -a bash -c 'tauri-driver & sleep 3; node scripts/drive-linux.mjs src-tauri/target/debug/textus'
+
   # iOS: proves the shared code and the #[cfg(desktop)] gating compile for
   # the iOS simulator (docs/dev/ios-code-map.md). No secrets and no signing: the
   # Xcode project is generated fresh (gen/apple is not committed) and the

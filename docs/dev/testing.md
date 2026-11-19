@@ -470,6 +470,10 @@ launch handing its file to the running instance and exiting. Runs with
 throwaway config/data directories. Window checks need niri; `--screenshot`
 also needs the screen unlocked.
 
+`scripts/drive-linux.mjs <binary>` drives the debug build through
+`tauri-driver` (WebKitWebDriver): it starts on a document, takes typing and
+saves it to disk. CI's `linux-app` job runs it under xvfb.
+
 `scripts/smoke-ios-sim.sh <Textus.app>` does the same for iOS in the
 simulator: past onboarding, so the window loads its plugins and menus as at
 every later launch, and alive 20 seconds on. CI's `ios` job runs it.
