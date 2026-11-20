@@ -304,10 +304,10 @@ export function iconMarkup(Shape: LucideIcon, size: number): string {
   // lucide-react (pinned) keeps its shape on the element it renders.
   const render = (
     Shape as unknown as {
-      render: (p: object, r: null) => { props: { iconNode: IconNode } };
+      render: (p: object, r: null) => { props: { icon: { node: IconNode } } };
     }
   ).render;
-  const parts = render({}, null).props.iconNode.map(
+  const parts = render({}, null).props.icon.node.map(
     ([tag, attrs]) =>
       `<${tag} ${Object.entries(attrs)
         .filter(([k]) => k !== "key")
