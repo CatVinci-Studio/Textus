@@ -3,7 +3,7 @@ import { CheckIcon } from "./icons";
 import { Sheet } from "./Sheet";
 import "./ActionSheet.css";
 
-interface ActionSheetItem {
+export interface ActionSheetItem {
   label: string;
   onSelect: () => void;
   danger?: boolean;
@@ -11,6 +11,12 @@ interface ActionSheetItem {
   checked?: boolean;
   /** Shown but not offered now. */
   disabled?: boolean;
+  /** A row deeper in a hierarchy (an outline's heading, 1 being the top):
+   *  its label indented by the level. */
+  depth?: number;
+  /** The row being read or in force: a tick, without `checked`'s
+   *  one-choice-of-several meaning. */
+  current?: boolean;
 }
 
 /**
@@ -58,6 +64,8 @@ export function ActionSheet({
                       : undefined
                   }
                   disabled={item.disabled}
+                  data-depth={item.depth}
+                  aria-current={item.current ? "location" : undefined}
                   className={`action-sheet-item${item.danger ? " action-sheet-item-danger" : ""}`}
                   onClick={() => {
                     onClose();
@@ -65,6 +73,9 @@ export function ActionSheet({
                   }}
                 >
                   {item.label}
+                  {item.current && (
+                    <CheckIcon className="action-sheet-check" aria-hidden />
+                  )}
                   {item.checked && (
                     <CheckIcon className="action-sheet-check" aria-hidden />
                   )}
