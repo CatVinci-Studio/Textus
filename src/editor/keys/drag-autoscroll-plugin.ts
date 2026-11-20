@@ -1,54 +1,36 @@
 import { Plugin, TextSelection } from "@milkdown/kit/prose/state";
 import { $prose } from "@milkdown/kit/utils";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { edgeStep } from "../../engine/drag/edge-scroll";
+import { edgeScroll } from "../../engine/drag/edge-scroll";
 
 /**
  * Dragging a selection past the document's top or bottom scrolls it and
- * takes the selection along; WebKitGTK barely scrolls by itself. Each frame
- * tops the scroll up to edgeStep's pace, so a web view that scrolls on its
- * own isn't scrolled twice.
+ * takes the selection along; WebKitGTK barely scrolls by itself. The scroll
+ * is topped up to edgeScroll's pace, so a web view that scrolls on its own
+ * isn't scrolled twice.
  */
 function createDragAutoscrollPlugin() {
   return new Plugin({
     view(view) {
-      let frame = 0;
       let anchor = -1;
       let pointer = { x: 0, y: 0 };
-      let last = 0;
-      const scroller = () =>
-        view.dom.closest<HTMLElement>(".editor-scroll") ?? null;
-
-      const step = () => {
-        frame = 0;
-        const el = scroller();
-        if (!el || anchor < 0) return;
-        const rect = el.getBoundingClientRect();
-        const want = edgeStep(pointer.y, rect.top, rect.bottom);
-        if (want !== 0) {
-          // What the web view moved by itself since the last frame counts.
-          const own = el.scrollTop - last;
-          const rest = Math.sign(want) === Math.sign(own) ? want - own : want;
-          if (Math.abs(rest) >= 1 && Math.sign(rest) === Math.sign(want))
-            el.scrollTop += rest;
-          extendTo(view, anchor, pointer, rect);
-        }
-        last = el.scrollTop;
-        frame = requestAnimationFrame(step);
-      };
+      const edge = edgeScroll(
+        () => view.dom.closest<HTMLElement>(".editor-scroll") ?? null,
+        (rect, atEdge) => {
+          if (atEdge && rect && anchor >= 0)
+            extendTo(view, anchor, pointer, rect);
+        },
+        { topUp: true },
+      );
 
       const onMove = (event: MouseEvent) => {
         if (!(event.buttons & 1)) return stop();
         pointer = { x: event.clientX, y: event.clientY };
-        if (!frame) {
-          last = scroller()?.scrollTop ?? 0;
-          frame = requestAnimationFrame(step);
-        }
+        edge.at(pointer.y);
       };
       const stop = () => {
         anchor = -1;
-        if (frame) cancelAnimationFrame(frame);
-        frame = 0;
+        edge.stop();
         window.removeEventListener("mousemove", onMove, true);
         window.removeEventListener("mouseup", stop, true);
       };

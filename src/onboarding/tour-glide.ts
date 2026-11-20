@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { easingFn } from "../engine/frame/easing";
+import { tween } from "../engine/motion/tween";
 import { duration, motionAllowed } from "../engine/motion/motion";
 import type { Box } from "./tour-place";
 
@@ -101,18 +102,10 @@ export function useGlide(
       draw(to);
       return;
     }
-    const ease = easingFn("--ease-settle");
-    const span = duration("--dur-settle");
-    const start = performance.now();
-    let id = 0;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / span);
-      const frame = mixFrame(from, to, ease(t));
+    return tween(duration("--dur-settle"), easingFn("--ease-settle"), (p) => {
+      const frame = mixFrame(from, to, p);
       shown.current = frame;
       draw(frame);
-      if (t < 1) id = requestAnimationFrame(tick);
-    };
-    id = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(id);
+    });
   }, [key, draw]);
 }

@@ -1,5 +1,6 @@
 import { tokenPx } from "../tokens/token-px";
 import { onAppearance } from "../tokens/appearance";
+import { tween } from "./tween";
 /**
  * Timing for motion CSS can't express on its own (FLIP, the AI sheet under a
  * finger, smooth scrolling), from the same tokens and switches as motion.css.
@@ -220,25 +221,23 @@ export function glideScroll(
     return;
   }
   const from = el.scrollTop;
-  const length = duration(token);
-  const start = performance.now();
-  let frame = 0;
   const stop = () => {
-    cancelAnimationFrame(frame);
+    cancel();
     el.removeEventListener("wheel", stop);
     el.removeEventListener("pointerdown", stop);
     gliding.delete(el);
   };
-  const step = (now: number) => {
-    const t = Math.min(1, (now - start) / length);
-    el.scrollTop = from + delta * (1 - Math.pow(1 - t, 4));
-    if (t < 1) frame = requestAnimationFrame(step);
-    else stop();
-  };
+  const cancel = tween(
+    duration(token),
+    (t) => 1 - Math.pow(1 - t, 4),
+    (p) => {
+      el.scrollTop = from + delta * p;
+      if (p >= 1) stop();
+    },
+  );
   el.addEventListener("wheel", stop, { passive: true });
   el.addEventListener("pointerdown", stop);
   gliding.set(el, stop);
-  frame = requestAnimationFrame(step);
 }
 
 /** "smooth" unless motion is reduced - for scrollIntoView and scrollTo. */
