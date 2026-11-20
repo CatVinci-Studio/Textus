@@ -1,7 +1,7 @@
 import { scaledPx } from "../tokens/chrome-scale";
 
 /** How near a scroller's top or bottom edge the pointer starts it
- *  scrolling, in pixels, and the fastest it goes, in pixels a frame. */
+ *  scrolling, in pixels, and the fastest it goes, in pixels a 60 Hz frame. */
 const EDGE = 36;
 const MAX_STEP = 40;
 
@@ -19,41 +19,71 @@ export function edgeStep(y: number, top: number, bottom: number): number {
   return 0;
 }
 
+/** edgeStep's pace is per frame at 60 Hz; the scroll goes by time, so a
+ *  120 Hz screen moves as fast as a 60 Hz one. A late frame moves no more
+ *  than LONGEST_GAP_MS's worth. */
+const FRAME_MS = 1000 / 60;
+const LONGEST_GAP_MS = 50;
+
 /**
  * Something dragged near a scroller's top or bottom (a selection, a block,
  * a margin pick): the scroller moves at edgeStep's pace and goes on while
- * the pointer rests there. `step` follows each frame, scrolled or not.
+ * the pointer rests there. `step` follows each frame, scrolled or not, told
+ * whether the pointer is in the edge band. With `topUp`, what the web view
+ * scrolled by itself since the last frame counts towards the pace, so a
+ * view that scrolls on its own while selecting isn't scrolled twice.
  */
 export function edgeScroll(
   scroller: () => HTMLElement | null,
-  step: (rect: DOMRect | undefined) => void,
+  step: (rect: DOMRect | undefined, atEdge: boolean) => void,
+  { topUp = false }: { topUp?: boolean } = {},
 ): { at: (y: number) => void; flush: () => void; stop: () => void } {
   let y = 0;
   let frame = 0;
-  const run = () => {
+  let then = 0;
+  let carry = 0;
+  let lastTop = 0;
+  const run = (now: number) => {
     frame = 0;
     const el = scroller();
     const rect = el?.getBoundingClientRect();
-    const by = rect ? edgeStep(y, rect.top, rect.bottom) : 0;
-    if (el && by) el.scrollTop += by;
-    step(rect);
-    if (by) frame = requestAnimationFrame(run);
+    const pace = rect ? edgeStep(y, rect.top, rect.bottom) : 0;
+    if (el && pace) {
+      const gap = then ? Math.min(now - then, LONGEST_GAP_MS) : FRAME_MS;
+      let want = (pace * gap) / FRAME_MS + carry;
+      const own = el.scrollTop - lastTop;
+      if (topUp && Math.sign(own) === Math.sign(pace)) want -= own;
+      const whole = Math.sign(want) === Math.sign(pace) ? Math.trunc(want) : 0;
+      carry = whole || Math.sign(want) === Math.sign(pace) ? want - whole : 0;
+      if (whole) el.scrollTop += whole;
+      then = now;
+    } else {
+      then = 0;
+      carry = 0;
+    }
+    if (el) lastTop = el.scrollTop;
+    step(rect, pace !== 0);
+    if (pace) frame = requestAnimationFrame(run);
   };
   return {
     at(next) {
       y = next;
-      if (!frame) frame = requestAnimationFrame(run);
+      if (frame) return;
+      lastTop = scroller()?.scrollTop ?? 0;
+      frame = requestAnimationFrame(run);
     },
     /** A frame still waiting runs now (the button let go before it). */
     flush() {
       if (!frame) return;
       cancelAnimationFrame(frame);
       frame = 0;
-      step(scroller()?.getBoundingClientRect());
+      step(scroller()?.getBoundingClientRect(), false);
     },
     stop() {
       cancelAnimationFrame(frame);
       frame = 0;
+      then = 0;
+      carry = 0;
     },
   };
 }
