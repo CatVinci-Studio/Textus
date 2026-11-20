@@ -49,8 +49,9 @@ export function checkPlugin(
   if (!source) return [];
   const checks: PluginCheck[] = [];
   if (DOM.test(source)) checks.push({ kind: "dom" });
+  const calls = writtenOut(source);
   for (const [call, permission] of PERMISSION_CALLS)
-    if (call.test(source) && !grants(manifest.permissions, permission))
+    if (call.test(calls) && !grants(manifest.permissions, permission))
       checks.push({ kind: "permission", permission });
   for (const key of unknownWhenKeys(manifest))
     checks.push({ kind: "when", key });
@@ -64,6 +65,40 @@ export function checkPlugin(
     if (!registered(source, manifest.id, id))
       checks.push({ kind: "unregistered", id });
   return checks;
+}
+
+/** `ed = textus.editor` (or `= textus`), declared or assigned, in any
+ *  declarator of a list: a name for a part of the API, not for what a call
+ *  of it returns. */
+const VARIABLE =
+  /(?:^|[^\w$.])([\w$]+)\s*=\s*textus((?:\.[\w$]+)*)\s*(?=[;,)\n]|$)/gm;
+/** `{ files, editor: ed } = textus`, or from a part of it. */
+const DESTRUCTURED =
+  /\{([^{}]*)\}\s*=\s*textus((?:\.[\w$]+)*)\s*(?=[;,)\n]|$)/gm;
+
+/** `source` with each name it gives a part of `textus` written out in full
+ *  (`ed.getText` as `textus.editor.getText`): PERMISSION_CALLS only knows
+ *  the written-out calls. A name keeps its meaning across the whole file. */
+function writtenOut(source: string): string {
+  const names = new Map<string, string>();
+  for (const [, name, path] of source.matchAll(VARIABLE))
+    names.set(name, `textus${path}`);
+  for (const [, list, path] of source.matchAll(DESTRUCTURED))
+    for (const entry of list.split(",")) {
+      const [key, name = key] = entry
+        .split("=")[0]
+        .split(":")
+        .map((part) => part.trim());
+      if (/^[\w$]+$/.test(key) && /^[\w$]+$/.test(name))
+        names.set(name, `textus${path}.${key}`);
+    }
+  let text = source;
+  for (const [name, full] of names)
+    text = text.replace(
+      new RegExp(`(^|[^\\w$.])${name.replace(/\$/g, "\\$")}\\.`, "g"),
+      (_, before: string) => `${before}${full}.`,
+    );
+  return text;
 }
 
 /** Whether `source` names `id` - whole, or as the plugin's id joined to its

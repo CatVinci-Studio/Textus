@@ -69,6 +69,34 @@ describe("checkPlugin", () => {
     ).toEqual([{ kind: "permission", permission: "editor.read" }]);
   });
 
+  it("flags a call through a variable that holds a namespace", () => {
+    expect(plugin({}, `const ed = textus.editor;\ned.getText();`)).toEqual([
+      { kind: "permission", permission: "editor.read" },
+    ]);
+    expect(plugin({}, `let n = 0, ed = textus.editor;\ned.getText();`)).toEqual(
+      [{ kind: "permission", permission: "editor.read" }],
+    );
+  });
+
+  it("flags a call through a destructured namespace", () => {
+    expect(
+      plugin({}, `const { files } = textus;\nfiles.writeText(path, text);`),
+    ).toEqual([
+      { kind: "permission", permission: "files.read" },
+      { kind: "permission", permission: "files.write" },
+    ]);
+  });
+
+  it("flags a call through a destructured namespace given a new name", () => {
+    expect(plugin({}, `const { editor: ed } = textus;\ned.getText();`)).toEqual(
+      [{ kind: "permission", permission: "editor.read" }],
+    );
+  });
+
+  it("reads a name the plugin did not take from textus as its own", () => {
+    expect(plugin({}, `const files = [];\nfiles.find((f) => f);`)).toEqual([]);
+  });
+
   it("flags a menu condition that reads a key Textus never sets", () => {
     expect(
       plugin(
