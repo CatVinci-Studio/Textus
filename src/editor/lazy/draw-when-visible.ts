@@ -1,4 +1,4 @@
-import { holdStill, stillPoint } from "./hold-still";
+import { holdStill, pastAnEnd, stillPoint } from "./hold-still";
 import { drawAllBlocks } from "./lazy-blocks-drawer";
 import {
   DRAW_SCREENS,
@@ -98,9 +98,17 @@ function latest(
 }
 
 /** Draws in the scroller `observer` watches, what is on screen held where
- *  it is. */
+ *  it is. Pulled past an end, the page can't be held, so it waits for the
+ *  scroll heard when the page comes to rest. */
 function stillWhile(observer: IntersectionObserver, change: () => void) {
   const scroller = observer.root as Element | null;
+  if (scroller && pastAnEnd(scroller)) {
+    scroller.addEventListener("scroll", () => stillWhile(observer, change), {
+      once: true,
+      passive: true,
+    });
+    return;
+  }
   const root = scroller?.querySelector(".ProseMirror");
   const still = scroller && root ? stillPoint(root, scroller) : null;
   change();
