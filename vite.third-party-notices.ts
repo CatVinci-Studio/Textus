@@ -93,7 +93,7 @@ export function splitCopyright(text: string): {
 export function filesIn(dir: string): { texts: string[]; notices: string[] } {
   const texts: string[] = [];
   const notices: string[] = [];
-  let names: string[] = [];
+  let names: string[];
   try {
     names = readdirSync(dir).sort();
   } catch {
