@@ -3,7 +3,8 @@
 // editor's own drawer draws it, so it matches the document's diagrams.
 
 import { renderMarkdownInlineHtml } from "./markdown/render-html";
-import { animate, duration } from "../engine/motion/motion";
+import { duration } from "../engine/motion/motion";
+import { glideFrom } from "../engine/controls/moves";
 
 /** A run of Markdown text, or a ```mermaid fence in it. */
 type DiagramPart =
@@ -240,11 +241,7 @@ function showDrawing(
     const now = part.getBoundingClientRect();
     const dx = (was.left - now.left) / scale;
     const dy = (was.top - now.top) / scale;
-    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
-    animate(part, [{ translate: `${dx}px ${dy}px` }, { translate: "0 0" }], {
-      duration: "--dur-slow",
-      easing: "--ease-out",
-    });
+    glideFrom(part, dx, dy, { duration: "--dur-slow" });
   }
   state.keys = keys;
 }

@@ -7,6 +7,7 @@ import {
   crossfade,
   enter,
   exit,
+  glideFrom,
   joinBeat,
   land,
   startBeat,
@@ -28,6 +29,17 @@ describe("moves where nothing moves", () => {
     await land([old], change);
     expect(change).toHaveBeenCalledOnce();
     expect(old.classList.contains(MARK_CLASS)).toBe(false);
+  });
+
+  it("glideFrom stops a glide still running and starts none", () => {
+    const el = document.createElement("div");
+    const cancel = vi.fn();
+    el.getAnimations = () =>
+      [{ id: "glide-from", playState: "running", cancel }] as never;
+    el.animate = vi.fn();
+    glideFrom(el, 0, 40);
+    expect(cancel).toHaveBeenCalledOnce();
+    expect(el.animate).not.toHaveBeenCalled();
   });
 });
 

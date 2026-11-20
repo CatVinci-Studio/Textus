@@ -5,8 +5,7 @@ import { scaledPx } from "../../engine/tokens/chrome-scale";
 import { RevisionNoteText } from "./RevisionNoteText";
 import { OWN_CHANGES } from "./own-revision-plugin";
 import { memo, useLayoutEffect, useRef, type RefObject } from "react";
-import { animate } from "../../engine/motion/motion";
-import { joinBeat } from "../../engine/controls/moves";
+import { glideFrom, joinBeat } from "../../engine/controls/moves";
 import { CARD_WIDTH } from "./margin-room";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import "./ReviewMargin.css";
@@ -102,36 +101,17 @@ export function useCardBox(
     ro.observe(el);
     return () => ro.disconnect();
   }, [key]);
-  const glide = useRef<{
-    top: number;
-    from: number;
-    animation: Animation | null;
-  } | null>(null);
+  const placed = useRef<number | null>(null);
   useLayoutEffect(() => {
     const el = ref.current;
-    const last = glide.current;
     if (top === null) return;
-    if (!el || !last) {
-      glide.current = { top, from: 0, animation: null };
-      return;
-    }
-    if (last.top === top) return;
-    let from = last.top - top;
-    const running = last.animation;
-    if (running?.playState === "running") {
-      const progress = running.effect?.getComputedTiming().progress ?? 1;
-      from += last.from * (1 - progress);
-      running.cancel();
-    }
-    glide.current = {
-      top,
-      from,
-      animation: animate(
-        el,
-        [{ translate: `0 ${from}px` }, { translate: "0 0" }],
-        { duration: "--dur-slow", easing: "--ease-spring" },
-      ),
-    };
+    const last = placed.current;
+    placed.current = top;
+    if (el && last !== null && last !== top)
+      glideFrom(el, 0, last - top, {
+        duration: "--dur-slow",
+        easing: "--ease-spring",
+      });
   }, [top]);
   return ref;
 }

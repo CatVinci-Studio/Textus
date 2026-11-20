@@ -4,6 +4,7 @@ import {
   length,
   motionAllowed,
   type DurationToken,
+  type EasingToken,
 } from "../motion/motion";
 import { measure, play } from "../motion/flip";
 
@@ -323,6 +324,41 @@ function ghostBeside(el: HTMLElement) {
   return ghost;
 }
 
+const GLIDE_ID = "glide-from";
+const glides = new WeakMap<Element, { dx: number; dy: number }>();
+
+/** `el` glides to where it now is from `dx`, `dy` px away, on `translate`
+ *  (its own transform left alone). A glide still running on it is carried
+ *  on from where it had got to, so a second move doesn't jump. */
+export function glideFrom(
+  el: Element,
+  dx: number,
+  dy: number,
+  {
+    duration = "--dur-base",
+    easing = "--ease-out",
+  }: { duration?: DurationToken; easing?: EasingToken } = {},
+): void {
+  const last = glides.get(el);
+  for (const running of el.getAnimations?.() ?? []) {
+    if (running.id !== GLIDE_ID) continue;
+    if (last && running.playState === "running") {
+      const left = 1 - (running.effect?.getComputedTiming().progress ?? 1);
+      dx += last.dx * left;
+      dy += last.dy * left;
+    }
+    running.cancel();
+  }
+  glides.delete(el);
+  if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
+  const run = animate(
+    el,
+    [{ translate: `${dx}px ${dy}px` }, { translate: "0 0" }],
+    { duration, easing, id: GLIDE_ID },
+  );
+  if (run) glides.set(el, { dx, dy });
+}
+
 /** What comes after `el` in `root` glides down from where it stood, after it
  *  grew by `by` px or arrived. Only what is on screen moves. */
 export function glideAfter(el: Element, by: number, root: Element) {
@@ -336,9 +372,5 @@ export function glideAfter(el: Element, by: number, root: Element) {
     next && next.getBoundingClientRect().top - by < bottom;
     next = next.nextElementSibling
   )
-    animate(
-      next,
-      [{ transform: `translateY(${-by}px)` }, { transform: "none" }],
-      { duration: "--dur-base", easing: "--ease-out" },
-    );
+    glideFrom(next, 0, -by);
 }
