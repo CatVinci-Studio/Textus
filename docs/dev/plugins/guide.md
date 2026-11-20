@@ -676,9 +676,7 @@ exports.activate = function () {
               prompt: selectedText,
             },
             (text) => {
-              void webview
-                .postMessage({ type: "text", text })
-                .catch(() => {});
+              void webview.postMessage({ type: "text", text }).catch(() => {});
             },
             { signal: controller.signal },
           );
