@@ -184,4 +184,4 @@ Ja: einfache .md-Dateien, mit Tabellen, Aufgabenlisten, Fußnoten, Formeln und M
 
 ## Lizenz
 
-[MIT](./LICENSE) © CatVinci Studio
+[MIT](./LICENSE) © CatVinci Studio and the Textus contributors. Name und Logo: [TRADEMARKS.md](./TRADEMARKS.md).

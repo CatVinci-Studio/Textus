@@ -187,4 +187,4 @@ Yes: plain .md files, with tables, task lists, footnotes, math and Mermaid. You 
 
 ## License
 
-[MIT](./LICENSE) © CatVinci Studio
+[MIT](./LICENSE) © CatVinci Studio and the Textus contributors. The name and logo: [TRADEMARKS.md](./TRADEMARKS.md).

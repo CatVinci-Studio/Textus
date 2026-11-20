@@ -732,6 +732,7 @@ type /name in a conversation to use one.
   aboutVersionBeta: "Version {version} · Beta",
   aboutMadeBy: "Made by CatVinci Studio",
   aboutQq: "QQ group",
+  aboutLicenses: "Open-source licenses",
   navShortcuts: "Shortcuts",
   generalBasicsLabel: "Basics",
   generalSystemLabel: "Application",

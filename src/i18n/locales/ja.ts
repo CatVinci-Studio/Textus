@@ -716,6 +716,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   aboutVersionBeta: "バージョン {version} · ベータ版",
   aboutMadeBy: "CatVinci Studio 制作",
   aboutQq: "QQ グループ",
+  aboutLicenses: "オープンソースライセンス",
   navShortcuts: "ショートカット",
   generalBasicsLabel: "基本設定",
   generalSystemLabel: "アプリ",

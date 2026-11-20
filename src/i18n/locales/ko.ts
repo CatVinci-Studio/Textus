@@ -704,6 +704,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   aboutVersionBeta: "버전 {version} · 베타",
   aboutMadeBy: "CatVinci Studio 제작",
   aboutQq: "QQ 그룹",
+  aboutLicenses: "오픈 소스 라이선스",
   navShortcuts: "단축키",
   generalBasicsLabel: "기본 설정",
   generalSystemLabel: "앱",

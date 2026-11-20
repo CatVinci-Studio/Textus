@@ -23,6 +23,8 @@
     "vite.dev-plugins.ts",
     "vite.startup-budget.ts",
     "vite.csp.ts",
+    "vite.third-party-notices.ts",
+    "vite.third-party-notices.test.ts",
     "playwright.webview.config.ts",
     "playwright.config.ts",
     "e2e",

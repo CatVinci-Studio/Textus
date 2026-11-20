@@ -780,6 +780,7 @@ export default {
   aboutVersionBeta: "Версия {version} · Бета",
   aboutMadeBy: "Сделано в CatVinci Studio",
   aboutQq: "Группа QQ",
+  aboutLicenses: "Лицензии открытого ПО",
   navShortcuts: "Сочетания клавиш",
   generalBasicsLabel: "Общие",
   generalSystemLabel: "Приложение",

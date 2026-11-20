@@ -95,6 +95,9 @@ export function AboutPage({
         <button type="button" onClick={() => void links.openAboutLink("qq")}>
           {t.aboutQq}
         </button>
+        <button type="button" onClick={() => openHelp("licenses")}>
+          {t.aboutLicenses}
+        </button>
         <span>{t.aboutMadeBy}</span>
       </p>
     </>

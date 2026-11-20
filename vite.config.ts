@@ -7,11 +7,18 @@ import { chromeScale } from "./vite.chrome-scale";
 import { devPlugins } from "./vite.dev-plugins";
 import { startupBudget } from "./vite.startup-budget";
 import { devServerCsp } from "./vite.csp";
+import { thirdPartyNotices } from "./vite.third-party-notices";
 
 const host = process.env.TAURI_DEV_HOST;
 
 export default defineConfig(async () => ({
-  plugins: [react(), katexWoff2Only(), devPlugins(), startupBudget()],
+  plugins: [
+    react(),
+    katexWoff2Only(),
+    devPlugins(),
+    startupBudget(),
+    thirdPartyNotices(),
+  ],
   css: { postcss: { plugins: [chromeScale(), colorMixFallback()] } },
   // The oldest engines Textus runs in. Newer syntax is lowered; APIs and
   // CSS aren't.

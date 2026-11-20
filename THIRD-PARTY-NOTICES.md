@@ -1,10 +1,10 @@
 # Third-party notices
 
-Code and artwork from other projects that ship inside Textus.
+Code and artwork copied into Textus's own source from other projects. Every package Textus is built from is listed, with its license, in the notices each build writes (Settings › About › Open-source licenses; `vite.third-party-notices.ts`).
 
 ## Lucide icons
 
-The app's icons (`src/engine/controls/icons.tsx`, `file-icons.tsx`, `format-icons.tsx`) are from [Lucide](https://lucide.dev): the `lucide-react` package 0.460.0, and shapes copied from lucide-static 0.460.0.
+The app's icons (`src/engine/controls/icons.tsx`, `file-icons.tsx`, `format-icons.tsx`) are from [Lucide](https://lucide.dev): the `lucide-react` package, and shapes copied from lucide-static 0.460.0.
 
 ```
 ISC License

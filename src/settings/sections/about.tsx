@@ -11,9 +11,12 @@ import appIcon from "../../../src-tauri/icons/128x128@2x.png";
  *  its code, where to talk with us, and who made it. */
 export function AboutSection({
   t,
+  openLicenses,
   checkNow = false,
 }: {
   t: Strings;
+  /** Opens the open-source licenses as a document. */
+  openLicenses: () => void;
   /** Opened from Check for Updates…: check at once. */
   checkNow?: boolean;
 }) {
@@ -57,6 +60,13 @@ export function AboutSection({
           onClick={() => void links.openAboutLink("qq")}
         >
           {t.aboutQq}
+        </button>
+        <button
+          type="button"
+          className="tx-button text-button settings-about-link"
+          onClick={openLicenses}
+        >
+          {t.aboutLicenses}
         </button>
         <UpdateButton t={t} checkOnOpen={checkNow} />
       </div>

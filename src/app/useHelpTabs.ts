@@ -34,8 +34,8 @@ export function useHelpTabs(opts: {
       setTabs((prev) => {
         let changed = false;
         const next = prev.map((tab) => {
-          if (!tab.helpDoc || tab.content !== tab.savedContent) return tab;
-          const content = guide.get(tab.helpDoc)!;
+          const content = tab.helpDoc && guide.get(tab.helpDoc);
+          if (!content || tab.content !== tab.savedContent) return tab;
           if (content === tab.content) return tab;
           changed = true;
           return {

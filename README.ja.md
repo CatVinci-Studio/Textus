@@ -184,4 +184,4 @@ macOS（AppleシリコンとIntel）、Windows、Linux、そしてAndroidとiOS�
 
 ## ライセンス
 
-[MIT](./LICENSE) © CatVinci Studio
+[MIT](./LICENSE) © CatVinci Studio and the Textus contributors. 名前とロゴについて：[TRADEMARKS.md](./TRADEMARKS.md).

@@ -14,6 +14,6 @@
   "rules": {
     "duplicates": "off"
   },
-  "ignoreDependencies": ["jscpd"],
+  "ignoreDependencies": ["jscpd", "spdx-license-list"],
   "ignoreBinaries": ["img2webp"]
 }
