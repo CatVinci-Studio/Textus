@@ -184,4 +184,4 @@ Oui : de simples fichiers .md, avec tableaux, listes de tâches, notes de bas de
 
 ## Licence
 
-[MIT](./LICENSE) © CatVinci Studio
+[MIT](./LICENSE) © CatVinci Studio and the Textus contributors. Le nom et le logo : [TRADEMARKS.md](./TRADEMARKS.md).

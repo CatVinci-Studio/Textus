@@ -5,7 +5,7 @@ import type { Settings, useSettings } from "../../prefs/SettingsContext";
 /** A page's own page within its category (General › About Textus; on the
  *  phone, Editor & Appearance › More themes). */
 /** What Help opens as a document (or, the welcome, as the tour). */
-export type HelpGuide = "welcome" | "markdown" | "agent";
+export type HelpGuide = "welcome" | "markdown" | "agent" | "licenses";
 
 export type Subpage = "about" | "guides";
 

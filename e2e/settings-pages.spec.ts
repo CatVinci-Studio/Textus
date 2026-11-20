@@ -83,12 +83,18 @@ test("groups fold, and open on the page shown", async ({ page }) => {
   await expect(nav.getByText("图片", { exact: true })).toBeVisible();
 });
 
-test("Check for Updates opens About; a plugin's settings open its page's tab", async ({
+test("Check for Updates opens About, its licenses a read-only document; a plugin's settings open its page's tab", async ({
   page,
 }) => {
   await open(page);
   await emit(page, "menu-check-updates");
   await expect(page.locator(".settings-about-card-icon")).toBeVisible();
+  await page.getByRole("button", { name: "开源许可" }).click();
+  await expect(tabs(page).last()).toContainText("开源许可");
+  const licenses = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(licenses.locator("h1")).toHaveText("Open-source licenses");
+  await expect(licenses).toHaveAttribute("contenteditable", "false");
+  await emit(page, "menu-check-updates");
   await emit(page, "menu-plugin-command", "plugin-settings:cloud-sync");
   await expect(tabs(page).last()).toContainText("插件：");
   await emit(page, "menu-manage-plugins");

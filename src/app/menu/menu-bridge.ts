@@ -272,7 +272,11 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-help-sponsor", () => h().openSponsor()),
       listenToThisWindow<string>("menu-open-help", (event) => {
         if (event.payload === "welcome") h().startWelcomeTutorial();
-        else if (event.payload === "markdown" || event.payload === "agent")
+        else if (
+          event.payload === "markdown" ||
+          event.payload === "agent" ||
+          event.payload === "licenses"
+        )
           h().openHelpTab(event.payload);
       }),
     );

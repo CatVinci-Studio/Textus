@@ -8,6 +8,8 @@ function readOnlyPaths(): string[] {
 
 /** Whether the tab is read-only: as set on it, else as its file was left. */
 export function tabReadOnly(tab: DocTab): boolean {
+  // The licenses are a record, not a guide to try things in.
+  if (tab.helpDoc === "licenses") return true;
   if (tab.readOnly !== undefined) return tab.readOnly;
   return tab.path !== null && readOnlyPaths().includes(tab.path);
 }

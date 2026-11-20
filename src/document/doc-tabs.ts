@@ -8,6 +8,7 @@ import { fs } from "../platform/ipc";
 import { detectFormat, toEditorText, toFileText } from "./file-format";
 import type { PluginTabView } from "../plugins/app-bridge";
 import { chatTitle } from "../ai/chat/chat-title";
+import { licensesText } from "../help/licenses";
 
 // Every bundled guide, by file name. A language without its own copy gets
 // the English one.
@@ -26,8 +27,8 @@ const HELP_GUIDES = new Map(
 // The document-tab data model.
 
 // Help doc ids, as the native Help menu sends them. "welcome" isn't one: it
-// starts the onboarding tour instead.
-export type HelpDoc = "markdown" | "agent";
+// starts the onboarding tour instead. "licenses" is Settings › About's.
+export type HelpDoc = "markdown" | "agent" | "licenses";
 
 export interface DocTab {
   id: string;
@@ -77,6 +78,7 @@ export interface DetachedTabDoc {
 
 /** A bundled guide's text in `lang`, or in English without a copy in it. */
 export function helpDocContent(doc: HelpDoc, lang: string): Promise<string> {
+  if (doc === "licenses") return licensesText();
   return (
     HELP_GUIDES.get(`../help/${doc}-guide.${lang}.md`) ??
     HELP_GUIDES.get(`../help/${doc}-guide.en.md`)!
@@ -134,6 +136,7 @@ export function tabTitle(tab: DocTab, t: Strings): string {
     );
   if (tab.helpDoc === "markdown") return t.markdownGuideTab;
   if (tab.helpDoc === "agent") return t.agentGuideTab;
+  if (tab.helpDoc === "licenses") return t.aboutLicenses;
   if (tab.importedFrom)
     return basename(tab.importedFrom).replace(/\.docx$/i, "");
   if (tab.draftTitle) return tab.draftTitle;

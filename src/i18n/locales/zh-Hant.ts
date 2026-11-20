@@ -668,6 +668,7 @@ export default {
   aboutVersionBeta: "版本 {version} · 公測版",
   aboutMadeBy: "由 CatVinci Studio 製作",
   aboutQq: "QQ 群",
+  aboutLicenses: "開放原始碼授權",
   navShortcuts: "快速鍵",
   generalBasicsLabel: "基本設定",
   generalSystemLabel: "應用程式",

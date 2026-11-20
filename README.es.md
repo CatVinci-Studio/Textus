@@ -184,4 +184,4 @@ Sí: archivos .md normales, con tablas, listas de tareas, notas al pie, fórmula
 
 ## Licencia
 
-[MIT](./LICENSE) © CatVinci Studio
+[MIT](./LICENSE) © CatVinci Studio and the Textus contributors. El nombre y el logotipo: [TRADEMARKS.md](./TRADEMARKS.md).

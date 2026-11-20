@@ -778,6 +778,7 @@ utiliser une.
   aboutVersionBeta: "Version {version} · Bêta",
   aboutMadeBy: "Créé par CatVinci Studio",
   aboutQq: "Groupe QQ",
+  aboutLicenses: "Licences open source",
   navShortcuts: "Raccourcis",
   generalBasicsLabel: "Réglages de base",
   generalSystemLabel: "Application",

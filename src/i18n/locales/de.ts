@@ -746,6 +746,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   aboutVersionBeta: "Version {version} · Beta",
   aboutMadeBy: "Von CatVinci Studio",
   aboutQq: "QQ-Gruppe",
+  aboutLicenses: "Open-Source-Lizenzen",
   navShortcuts: "Tastenkürzel",
   generalBasicsLabel: "Grundeinstellungen",
   generalSystemLabel: "Anwendung",

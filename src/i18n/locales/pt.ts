@@ -766,6 +766,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   aboutVersionBeta: "Versão {version} · Beta",
   aboutMadeBy: "Feito pela CatVinci Studio",
   aboutQq: "Grupo do QQ",
+  aboutLicenses: "Licenças de código aberto",
   navShortcuts: "Atalhos",
   generalBasicsLabel: "Básico",
   generalSystemLabel: "Aplicativo",

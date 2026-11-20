@@ -184,4 +184,4 @@ macOS (Apple Silicon и Intel), Windows и Linux, а также Android и iOS (
 
 ## Лицензия
 
-[MIT](./LICENSE) © CatVinci Studio
+[MIT](./LICENSE) © CatVinci Studio and the Textus contributors. Название и логотип: [TRADEMARKS.md](./TRADEMARKS.md).

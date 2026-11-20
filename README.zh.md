@@ -185,4 +185,4 @@ macOS、Windows、Linux，以及 Android 与 iOS（公测）。
 
 ## 许可证
 
-[MIT](./LICENSE) © CatVinci Studio
+[MIT](./LICENSE) © CatVinci Studio and the Textus contributors. 名字和图标的使用：[TRADEMARKS.md](./TRADEMARKS.md).

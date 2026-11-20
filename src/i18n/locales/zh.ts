@@ -667,6 +667,7 @@ export default {
   aboutVersionBeta: "版本 {version} · 公测版",
   aboutMadeBy: "由 CatVinci Studio 制作",
   aboutQq: "QQ 群",
+  aboutLicenses: "开源许可",
   navShortcuts: "快捷键",
   generalBasicsLabel: "基础设置",
   generalSystemLabel: "应用",
