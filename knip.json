@@ -1,7 +1,6 @@
 {
-  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": [
-    "src/playground/main.tsx",
     "src/plugin-api.ts",
     "src/**/*.test.{ts,tsx}",
     "scripts/**/*.mjs",
@@ -15,5 +14,6 @@
   "rules": {
     "duplicates": "off"
   },
-  "ignoreDependencies": ["jscpd"]
+  "ignoreDependencies": ["jscpd"],
+  "ignoreBinaries": ["img2webp"]
 }

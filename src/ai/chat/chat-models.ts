@@ -68,7 +68,7 @@ export function canSwitchModel(groups: { models: string[] }[]): boolean {
   return groups.reduce((n, group) => n + group.models.length, 0) > 1;
 }
 
-export interface ModelGroup {
+interface ModelGroup {
   provider: string;
   label: string;
   models: string[];

@@ -12,7 +12,7 @@ import { createSubscribers } from "../../utils/store";
  * Settings › Extensions.
  */
 
-export type CardSituation =
+type CardSituation =
   | { type: "offer"; caller: { id: string; name: string } }
   | { type: "content"; kind: string }
   | { type: "open"; path: string }

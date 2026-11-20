@@ -39,7 +39,7 @@ const SearchPanel = lazyComponent(
 
 /** What every sidebar tab's panel is given: the window's document and
  *  folder, and its ways to open a file or close the sidebar. */
-export interface SidebarTabProps {
+interface SidebarTabProps {
   t: Strings;
   /** The tree's root and the opened folder. */
   openFolder: OpenFolder;

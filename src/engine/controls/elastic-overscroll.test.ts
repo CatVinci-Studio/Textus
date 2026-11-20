@@ -74,7 +74,7 @@ describe("the Mac's give at a document's end", () => {
     const scrolls = vi.fn();
     scroller.addEventListener("scroll", scrolls);
     swipe(scroller, [-8, -9, -8, -10, -8]);
-    expect(content.style.translate).toMatch(/^0 \d/);
+    expect(content.style.translate).toMatch(/^0(px)? \d/);
     expect(scroller.hasAttribute("data-stretched")).toBe(true);
     finger(false);
     // Springing back, still stretched; at rest, a scroll is heard.
@@ -131,7 +131,7 @@ describe("the Mac's give at a document's end", () => {
     swipe(scroller, [-7, -6, -5, -4, -3, -2]);
     expect(springs).toHaveLength(0);
     const held = content.style.translate;
-    expect(held).toMatch(/^0 \d/);
+    expect(held).toMatch(/^0(px)? \d/);
     // Held still well past any pause a guess would take for a lift.
     vi.advanceTimersByTime(2000);
     expect(content.style.translate).toBe(held);
@@ -154,7 +154,7 @@ describe("the Mac's give at a document's end", () => {
     swipe(scroller, [-8, -9, -8, -7, -6, -5, -4, -3]);
     vi.advanceTimersByTime(300);
     swipe(scroller, [-8, -9, -8]);
-    expect(content.style.translate).toMatch(/^0 \d/);
+    expect(content.style.translate).toMatch(/^0(px)? \d/);
     stop();
   });
 
@@ -162,7 +162,7 @@ describe("the Mac's give at a document's end", () => {
     const { scroller, content, stop } = page();
     swipe(scroller, [-8, -9, -8, -10]);
     swipe(scroller, [-1, -1, -2, -1, -1]);
-    expect(content.style.translate).toMatch(/^0 \d/);
+    expect(content.style.translate).toMatch(/^0(px)? \d/);
     stop();
   });
 

@@ -175,7 +175,7 @@ function isFoldOpen(span: DetailsSpan, open: OpenStates): boolean {
  * on its spec as `foldAttention`. A fold opens when a new key lands in its
  * hidden text.
  */
-export interface FoldAttentionItem {
+interface FoldAttentionItem {
   key: string;
   from: number;
   to: number;

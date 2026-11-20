@@ -13,7 +13,7 @@ import { buildAppMenu, NO_RECENTS, type MenuNode } from "./menu/app-menu-model";
 export type ShortcutPlatform =
   "macos" | "ios" | "android" | "windows" | "linux";
 
-export interface FixedShortcut {
+interface FixedShortcut {
   label: string;
   /** Stored combo strings, for formatCombo; two when both work. */
   combos: string[];

@@ -93,7 +93,7 @@ class DrawnCaret {
     const empty = view.composing ? !!live : view.state.selection.empty;
     const on = this.enabled() && view.editable && view.hasFocus() && empty;
     this.root.classList.toggle("drawn-caret-on", on);
-    const wasHidden = this.caret.hidden;
+    const wasHidden = this.caret.hidden !== false;
     this.caret.hidden = !on;
     if (!on) return;
     const { $head } = view.state.selection;

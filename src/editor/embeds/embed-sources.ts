@@ -9,7 +9,7 @@ import { createSubscribers } from "../../utils/store";
 export type EmbedKind = "note" | "heading" | "block";
 
 /** What an embed points at, resolved as a click would. */
-export interface EmbedTarget {
+interface EmbedTarget {
   path: string;
   heading?: string;
   block?: string;

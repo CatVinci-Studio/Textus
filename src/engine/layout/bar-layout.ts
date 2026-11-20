@@ -13,7 +13,7 @@ export type BarPlatform = "macos" | "windows" | "linux" | "ios" | "android";
 
 /** At the bar's start, in order: the traffic lights' room, the app menu,
  *  the sidebar's button, the menu bar's titles. */
-export type BarItem = "lights" | "menu" | "sidebar-toggle" | "menu-bar";
+type BarItem = "lights" | "menu" | "sidebar-toggle" | "menu-bar";
 
 export interface BarLayout {
   /** 2: the menu bar is a row of its own over the islands. */

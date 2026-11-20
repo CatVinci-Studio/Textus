@@ -93,7 +93,7 @@ interface Positioned {
   position?: { start?: { offset?: number }; end?: { offset?: number } };
 }
 
-export interface JoinCheck {
+interface JoinCheck {
   left: string;
   right: string;
   definitions: string;

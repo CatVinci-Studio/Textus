@@ -37,7 +37,7 @@ const DOCUMENT_PROPERTY = new RegExp(
   "^(?:" +
     [
       "color|color-scheme|accent-color",
-      "background(?:-(?:color|image|position(?:-[xy])?|repeat(?:-[xy])?|size|clip|origin|attachment))?",
+      "background(?:-(?:color|image|position(?:-[xy])?|repeat(?:-[xy])?|size|clip|origin|attachment|blend-mode))?",
       "border(?:-(?:top|right|bottom|left|block|inline)(?:-(?:start|end))?)?(?:-(?:width|style|color))?",
       "border(?:-(?:top|bottom|start|end)-(?:left|right|start|end))?-radius",
       "border-image(?:-[a-z]+)?",

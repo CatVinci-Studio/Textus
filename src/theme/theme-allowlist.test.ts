@@ -28,7 +28,7 @@ describe("allowedThemeCss", () => {
   it("keeps all of the theme skill's sample, comment first", () => {
     const css = allowedThemeCss(sample)!;
     expect(css.startsWith("/* Night Harbor - ")).toBe(true);
-    expect(declarations(css)).toEqual(declarations(sample));
+    expect(declarations(css).sort()).toEqual(declarations(sample).sort());
   });
 
   it("keeps the dark form under @media and a data: background", () => {

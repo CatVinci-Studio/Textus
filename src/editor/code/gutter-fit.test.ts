@@ -11,6 +11,7 @@ function block(text: string, rows: number, tops: number[]) {
   code.textContent = text;
   code.style.height = `${rows * ROW}px`;
   code.style.lineHeight = `${ROW}px`;
+  document.body.append(code);
   code.getBoundingClientRect = () =>
     ({ top: 0, bottom: rows * ROW, height: rows * ROW }) as DOMRect;
   const gutter = document.createElement("span");
@@ -27,6 +28,7 @@ const heights = (gutter: HTMLElement) =>
   Array.from(gutter.children, (n) => (n as HTMLElement).style.height);
 
 afterEach(() => {
+  document.body.replaceChildren();
   const prototype = Range.prototype as unknown as Record<string, unknown>;
   delete prototype.getClientRects;
   delete prototype.getBoundingClientRect;

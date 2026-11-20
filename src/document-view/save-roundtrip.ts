@@ -23,7 +23,7 @@ import { LINK } from "../editor/markdown/link-source";
 
 /** Why a check failed. `-serializer` kinds also fail with the whole document
  *  serialized, so they are the serializer's fault, not preservation's. */
-export type FailureKind =
+type FailureKind =
   | "exception"
   | "undo-changed"
   | "unedited-changed"

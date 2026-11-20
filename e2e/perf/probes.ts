@@ -125,7 +125,7 @@ export function installProbes() {
   };
 }
 
-export interface Bench {
+interface Bench {
   longTasks: { start: number; duration: number }[];
   latencies: number[];
   plugins: Record<string, { ms: number; calls: number }>;

@@ -1,6 +1,6 @@
 ; Textus' copy of tauri-bundler's NSIS installer template.
 ;
-; Vendored from tauri-cli v2.12.4:
+; Vendored from tauri-cli v2.12.6:
 ;   crates/tauri-bundler/src/bundle/windows/nsis/installer.nsi
 ; and pointed at by `bundle > windows > nsis > template` in
 ; tauri.windows.conf.json. It is the upstream file VERBATIM apart from the

@@ -20,7 +20,7 @@ import { agentStepRuns, type AgentStep } from "./agent-steps";
 
 /** A proposal, and the selection its request went out with: the live one
  *  is gone once the caret moves, and the card would count all addition. */
-export interface ParsedProposal {
+interface ParsedProposal {
   proposal: EditProposal | null;
   sentSelection: string | null;
 }

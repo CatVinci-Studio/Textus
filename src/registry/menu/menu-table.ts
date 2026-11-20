@@ -8,7 +8,7 @@ import type { StringKey, Strings } from "../../i18n/strings";
  */
 
 /** Where the app-drawn menu differs from the native bar. */
-export interface DrawnOverride {
+interface DrawnOverride {
   label?: StringKey;
   keys?: string;
   /** Moved out of a menu the app-drawn bar lacks: the end of File, or after

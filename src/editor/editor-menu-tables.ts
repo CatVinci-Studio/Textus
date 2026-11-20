@@ -75,7 +75,7 @@ function alignTableColumn(
 
 /** The right-click menu's insert and delete items by name, for the iPhone
  *  keyboard toolbar's table buttons. */
-export const TABLE_ACTIONS = {
+const TABLE_ACTIONS = {
   "row-above": addRowBefore,
   "row-below": addRowAfter,
   "column-left": addColumnBefore,
