@@ -10,7 +10,6 @@ import {
 } from "../../prefs/SettingsContext";
 import { AssistantIcon, EyeIcon } from "../../engine/controls/icons";
 import { usePresenceProps } from "../../engine/motion/usePresence";
-import { useMarginAvailable } from "../margin/margin-room";
 import {
   effectiveRevisionDisplay,
   marginViewBlocked,
@@ -92,9 +91,12 @@ export function ReviewBar({
   changes,
   notes,
   onOpenChat,
+  noMargin: noRoom,
 }: {
   labels: ReviewBarLabels;
   phone: boolean;
+  /** This document has no room for a margin. */
+  noMargin: boolean;
   /** The pointer among all the stops (-1: not on one yet), and how many. */
   position: number;
   stops: number;
@@ -113,8 +115,8 @@ export function ReviewBar({
   const modes = phone
     ? REVISION_DISPLAYS.filter((m) => !needsMargin(m))
     : REVISION_DISPLAYS;
-  const marginAvailable = useMarginAvailable();
-  const noMargin = !phone && !marginAvailable;
+  const marginAvailable = !noRoom;
+  const noMargin = !phone && noRoom;
   const display = changes?.display ?? "final";
   const displayName = changes?.displayName ?? String;
   const onDisplay = changes?.onDisplay ?? (() => undefined);
