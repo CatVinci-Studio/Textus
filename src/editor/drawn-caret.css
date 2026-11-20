@@ -24,6 +24,12 @@
   transition: transform var(--dur-instant) var(--ease-out);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .drawn-caret-glide:not(.drawn-caret-still) {
+    transition: none;
+  }
+}
+
 .drawn-caret[hidden] {
   display: none;
 }

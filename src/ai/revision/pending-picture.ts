@@ -13,17 +13,17 @@ import {
 import { currentStrings } from "../../i18n/current";
 import { showPrompt } from "../../engine/controls/app-dialog";
 import { enter } from "../../engine/controls/moves";
+import { duration } from "../../engine/motion/motion";
 import "./pending-picture.css";
 
 /** A picture still being made in a proposal: a moving frame in its place,
  *  then the picture, or why it wasn't made. */
 
-// One shared phase, so a frame re-created as text streams in doesn't restart.
-const SHEEN_MS = 2400;
-
-/** Where the frames' sheen is now, for a frame drawn this moment. */
+/** Where the frames' sheen is now, for a frame drawn this moment: one
+ *  shared phase, so a frame re-created as text streams in doesn't restart. */
 export function sheenPhase(): string {
-  return `-${Date.now() % SHEEN_MS}ms`;
+  const period = duration("--dur-sheen");
+  return period > 0 ? `-${Date.now() % period}ms` : "0ms";
 }
 
 /** The frame for picture `id`, its alt text the label. */

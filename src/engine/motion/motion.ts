@@ -15,6 +15,7 @@ export type DurationToken =
   | "--dur-linger"
   | "--dur-stagger"
   | "--dur-cascade"
+  | "--dur-sheen"
   | "--dur-settle"
   | "--dur-land"
   | "--dur-tuck";
@@ -42,6 +43,7 @@ const DURATIONS: Record<DurationToken, number> = {
   "--dur-linger": 1600,
   "--dur-stagger": 18,
   "--dur-cascade": 700,
+  "--dur-sheen": 2400,
   "--dur-settle": 415,
   "--dur-land": 445,
   "--dur-tuck": 265,

@@ -30,6 +30,10 @@ const OWN_KEYFRAMES: Record<string, string> = {
 /** A time written out: 200ms, 1.2s. Zero and 1ms (a step, not a motion)
  *  are not timing. */
 const RAW_TIME = /(?<![\w-])(?!0m?s\b|1ms\b)\d*\.?\d+m?s\b/;
+/** An easing written out: a keyword or a curve of its own. steps() is a
+ *  blink's on and off, not a curve. */
+const RAW_EASING =
+  /(?<![\w-])(?:linear|ease(?:-in|-out|-in-out)?|cubic-bezier\()(?![\w-])/;
 
 function stylesheets(): string[] {
   return readdirSync(SRC, { recursive: true, encoding: "utf8" })
@@ -58,15 +62,26 @@ describe("motion tokens", () => {
       "",
     );
     it(name, () => {
-      const rawTimes = [
+      const timing = [
         ...css.matchAll(/(?:animation|transition)[\w-]*\s*:\s*([^;}]+)/g),
-      ]
-        .map((m) => m[0].trim())
-        .filter((decl) => RAW_TIME.test(withoutFallbacks(decl)));
+      ].map((m) => m[0].trim());
+      const rawTimes = timing.filter((decl) =>
+        RAW_TIME.test(withoutFallbacks(decl)),
+      );
+      // A 0s item is a switch (visibility at a fade's end): no curve.
+      const rawEasings = timing.filter((decl) =>
+        withoutFallbacks(decl)
+          .split(/,(?![^(]*\))/)
+          .some((item) => !/\s0s\b/.test(item) && RAW_EASING.test(item)),
+      );
       const keyframes = [...css.matchAll(/@keyframes\s+([\w-]+)/g)]
         .map((m) => `${name} ${m[1]}`)
         .filter((entry) => !(entry in OWN_KEYFRAMES));
-      expect({ rawTimes, keyframes }).toEqual({ rawTimes: [], keyframes: [] });
+      expect({ rawTimes, rawEasings, keyframes }).toEqual({
+        rawTimes: [],
+        rawEasings: [],
+        keyframes: [],
+      });
     });
   }
 
