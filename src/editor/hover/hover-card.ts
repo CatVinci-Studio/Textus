@@ -8,6 +8,7 @@ import { PICTURES_IN_TEXT } from "../markdown/doc-blocks";
 import { readEscapes } from "../markdown/link-syntax";
 import "./hover-card.css";
 import { duration } from "../../engine/motion/motion";
+import { removeWhenGone } from "../../engine/motion/leave";
 
 /**
  * The card a plugin's hover provider gives: beside the link until the
@@ -67,7 +68,7 @@ export function hideHoverCard(now = false) {
     return;
   }
   el.classList.remove("hover-card-open");
-  setTimeout(() => removeCard(el), duration("--dur-fast"));
+  removeWhenGone(el, duration("--dur-fast"), () => removeCard(el));
 }
 
 function build(card: HoverCard): HTMLElement {

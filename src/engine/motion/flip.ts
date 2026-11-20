@@ -1,4 +1,5 @@
 import { Component, type ReactNode, type RefObject } from "react";
+import { removeWhenGone } from "./leave";
 import {
   animate,
   motionAllowed,
@@ -174,14 +175,7 @@ function releaseGhost(
     pointerEvents: "none",
   });
   parent.insertBefore(node, under ? parent.firstChild : null);
-  const running = node.getAnimations?.() ?? [];
-  if (running.length === 0) {
-    node.remove();
-    return;
-  }
-  const leave = () => node.remove();
-  window.setTimeout(leave, exitMs + 50);
-  void Promise.allSettled(running.map((a) => a.finished)).then(leave);
+  removeWhenGone(node, exitMs);
 }
 
 /** measure, `mutate` (a synchronous DOM change), play. */

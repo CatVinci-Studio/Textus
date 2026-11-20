@@ -1,5 +1,6 @@
 import { currentStrings } from "../i18n/current";
-import { motionAllowed, duration } from "../engine/motion/motion";
+import { duration } from "../engine/motion/motion";
+import { removeWhenGone } from "../engine/motion/leave";
 import { fingerDown, onTrackpadTouch } from "../platform/trackpad";
 import { scaledPx } from "../engine/tokens/chrome-scale";
 import { isMacPlatform } from "../platform/os";
@@ -256,13 +257,8 @@ export function openDiagramViewer(
     closed = true;
     stopTrackpad();
     document.removeEventListener("keydown", onKey, true);
-    const done = () => layer.remove();
-    if (motionAllowed()) {
-      layer.classList.add("diagram-viewer-leaving");
-      layer.addEventListener("animationend", done, { once: true });
-      // In case the animation never runs (a hidden window): its length.
-      setTimeout(done, duration("--dur-fast") + 50);
-    } else done();
+    layer.classList.add("diagram-viewer-leaving");
+    removeWhenGone(layer, duration("--dur-fast"));
     previous?.focus?.({ preventScroll: true });
   }
   /** ‹ and › on the sides, and the hint naming the arrow keys; returns the
