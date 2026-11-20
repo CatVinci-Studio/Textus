@@ -145,6 +145,7 @@ export function ReviewBars({
         <ReviewBar
           labels={t}
           phone={phone}
+          noMargin={noMargin}
           position={position}
           stops={stops.length}
           onPrevious={() => step(-1)}
