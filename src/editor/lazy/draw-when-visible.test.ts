@@ -115,6 +115,51 @@ describe("drawWhileNear", () => {
     vi.useRealTimers();
   });
 
+  it("pulled past an end, it waits for the page to rest before drawing", () => {
+    // One that knows its scroller, its reports on screen.
+    class Rooted {
+      root: Element | null;
+      constructor(
+        private callback: IntersectionObserverCallback,
+        options?: IntersectionObserverInit,
+      ) {
+        this.root = (options?.root as Element | undefined) ?? null;
+      }
+      observe(el: Element) {
+        observed.push({
+          el,
+          fire: () =>
+            this.callback(
+              [
+                {
+                  isIntersecting: true,
+                  target: el,
+                  boundingClientRect: { top: 100 } as DOMRect,
+                } as IntersectionObserverEntry,
+              ],
+              this as unknown as IntersectionObserver,
+            ),
+        });
+      }
+      unobserve() {}
+      disconnect() {}
+    }
+    vi.stubGlobal("IntersectionObserver", Rooted);
+    const editor = editorIn();
+    const scroller = editor.parentElement!;
+    const el = editor.appendChild(document.createElement("div"));
+    const draw = vi.fn();
+    drawWhileNear(el, editor, draw, none);
+    scroller.getBoundingClientRect = () =>
+      ({ top: 0, bottom: 500, height: 500 }) as DOMRect;
+    scroller.setAttribute("data-stretched", "");
+    observed[0].fire(true);
+    expect(draw).not.toHaveBeenCalled();
+    scroller.removeAttribute("data-stretched");
+    scroller.dispatchEvent(new Event("scroll"));
+    expect(draw).toHaveBeenCalledOnce();
+  });
+
   it("drawn at once, it is still let go far from the screen", () => {
     vi.stubGlobal("IntersectionObserver", FakeObserver);
     vi.useFakeTimers();
