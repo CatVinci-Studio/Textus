@@ -1,4 +1,10 @@
-import { Fragment, Suspense, useRef, useSyncExternalStore } from "react";
+import {
+  Fragment,
+  Suspense,
+  useRef,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import { barRowsHaveRoom } from "../../engine/layout/row-insets";
 import { useFitSteps } from "../../engine/controls/fit-steps";
 import { useSettings } from "../../prefs/SettingsContext";
@@ -49,6 +55,7 @@ export function WindowBar({
   agentShortcut,
   onToggleAgent,
   onToggleReadOnly,
+  documentMenu,
 }: {
   menuChecks: MenuChecks;
   title: string;
@@ -65,6 +72,9 @@ export function WindowBar({
   onToggleAgent: () => void;
   /** The padlock beside a read-only document's title turns it off. */
   onToggleReadOnly: () => void;
+  /** A phone's document menu (its ⋯), beside the AI toggle; none on a
+   *  desktop, where the tabs and menus hold the document's actions. */
+  documentMenu?: ReactNode;
 }) {
   const { t, settings } = useSettings();
   const bar = useBarLayout({
@@ -149,6 +159,7 @@ export function WindowBar({
             shortcut={agentShortcut}
             onTogglePanel={onToggleAgent}
           />
+          {documentMenu}
         </div>
         <WindowCaptionButtons />
       </header>

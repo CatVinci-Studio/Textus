@@ -1,6 +1,6 @@
 import { provideAiFileMarks } from "../ai/revision/file-marks";
 import { useTabsInBar } from "./islands/tabs-in-bar";
-import { tabTitle } from "../document/doc-tabs";
+import { showsStartPage, tabTitle } from "../document/doc-tabs";
 import { useWindowAi } from "./islands/useWindowAi";
 import { conversationIn } from "./islands/ai-tabs";
 import { ConventionsCard } from "./ConventionsCard";
@@ -68,6 +68,7 @@ const phoneParts = lazyModule(
   () => import("../mobile/phone-parts"),
 );
 const DocumentList = lazyComponent(phoneParts, (m) => m.DocumentList);
+const DocumentMenu = lazyComponent(phoneParts, (m) => m.DocumentMenu);
 
 /**
  * One window: its tabs, the panels around them, and the prompts and notices
@@ -189,6 +190,17 @@ function App() {
             agentShortcut={formatCombo(settings.shortcuts.toggleAgentPanel)}
             onToggleAgent={toggleAgentPanel}
             onToggleReadOnly={() => toggleReadOnly()}
+            documentMenu={
+              phone && !activeTab.view && !showsStartPage(activeTab) ? (
+                <DocumentMenu
+                  title={activeTitle}
+                  onOutline={() => {
+                    setPanelMode("outline");
+                    setPanelOpen(true);
+                  }}
+                />
+              ) : undefined
+            }
           />
           <Sidebar
             open={sidebarShown}
