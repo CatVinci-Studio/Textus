@@ -53,6 +53,8 @@
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   /* Moving from A to B while on screen (FLIP). */
   --ease-in-out: cubic-bezier(0.45, 0, 0.25, 1);
+  /* One speed throughout: a spinner's turn. */
+  --ease-constant: linear;
   /* Springs, as cubic fallbacks where linear() is unknown; the @supports
      block below swaps in the real curves. */
   --ease-spring: var(--ease-out);

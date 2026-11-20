@@ -84,6 +84,6 @@
 @media (prefers-reduced-motion: reduce) {
   .hover-card {
     transform: none;
-    transition: opacity var(--dur-fast) linear;
+    transition: opacity var(--dur-fast) var(--ease-standard);
   }
 }

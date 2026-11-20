@@ -48,5 +48,5 @@
 }
 .tx-progress.ring.is-indeterminate {
   --value: 0.25;
-  animation: motion-spin var(--dur-spin) linear infinite;
+  animation: motion-spin var(--dur-spin) var(--ease-constant) infinite;
 }
