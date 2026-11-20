@@ -66,23 +66,23 @@
 }
 
 .action-sheet-item[data-depth="2"] {
-  padding-left: 30px;
+  padding-left: 32px;
 }
 
 .action-sheet-item[data-depth="3"] {
-  padding-left: 44px;
+  padding-left: 48px;
 }
 
 .action-sheet-item[data-depth="4"] {
-  padding-left: 58px;
+  padding-left: 64px;
 }
 
 .action-sheet-item[data-depth="5"] {
-  padding-left: 72px;
+  padding-left: 80px;
 }
 
 .action-sheet-item[data-depth="6"] {
-  padding-left: 86px;
+  padding-left: 96px;
 }
 
 /* The row being read: its tick sits at the end, as a checked row's. */
