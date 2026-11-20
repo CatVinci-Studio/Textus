@@ -2,9 +2,9 @@
 // mistake keeps the source on screen, as a broken diagram does.
 
 const CHART_TYPES = ["bar", "line", "area", "pie", "scatter"] as const;
-export type ChartType = (typeof CHART_TYPES)[number];
+type ChartType = (typeof CHART_TYPES)[number];
 
-export interface ChartSeries {
+interface ChartSeries {
   name: string;
   /** One value per label; for a scatter, [x, y] pairs. */
   data: number[] | [number, number][];

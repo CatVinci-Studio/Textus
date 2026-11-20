@@ -16,7 +16,7 @@ import { tabsStartOf } from "./row-insets";
  * The side of the document a dragged tab or file would open on; the middle
  * just brings it to the front.
  */
-export type DropZone = "left" | "right" | "top" | "bottom" | "center";
+type DropZone = "left" | "right" | "top" | "bottom" | "center";
 
 export interface DropTarget {
   zone: DropZone;

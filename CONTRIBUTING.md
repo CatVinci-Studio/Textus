@@ -23,7 +23,7 @@ Small fixes (a typo, a broken link) need no issue and no claim.
 
 ## Getting set up
 
-You need [Node.js](https://nodejs.org) 22+ (`.nvmrc`), [Rust](https://rustup.rs)
+You need [Node.js](https://nodejs.org) 26+ (`.nvmrc`), [Rust](https://rustup.rs)
 via rustup (`src-tauri/rust-toolchain.toml` picks the toolchain), and the
 platform's build tools: Xcode Command Line Tools on macOS; the "Desktop
 development with C++" workload on Windows; on Debian/Ubuntu

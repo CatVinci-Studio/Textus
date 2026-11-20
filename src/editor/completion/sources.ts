@@ -37,7 +37,7 @@ export interface CompletionContext {
 }
 
 /** A whole list the panel filters itself while the same match goes on. */
-export interface CompleteList {
+interface CompleteList {
   items: PanelItem[];
   complete: true;
 }

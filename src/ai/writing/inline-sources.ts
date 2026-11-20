@@ -2,7 +2,7 @@ import { useSyncExternalStore } from "react";
 import { createSubscribers } from "../../utils/store";
 
 /** What a plugin's inline completion is asked with. */
-export interface InlineRequest {
+interface InlineRequest {
   before: string;
   after: string;
   path: string | null;

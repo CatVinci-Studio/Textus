@@ -188,7 +188,7 @@ export const CREATION_KINDS: readonly CreationKind[] = [
   "skill",
 ];
 
-export interface GalleryOrigin {
+interface GalleryOrigin {
   id: string;
   /// The installed copy's `GalleryTheme.updated`.
   updated: string;

@@ -33,7 +33,7 @@ export interface QuestionState {
 }
 
 /** One thing a research helper did, as the card's recent list shows it. */
-export interface PaperActivity {
+interface PaperActivity {
   /** Unique in its run: the list's key. */
   id: number;
   question: number;

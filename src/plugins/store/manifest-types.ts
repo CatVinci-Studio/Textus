@@ -4,7 +4,7 @@ import type { Permission, PluginPlatform } from "./manifest";
 // What a plugin's manifest holds once read (manifest.ts reads and checks
 // it): its contributions and the manifest itself.
 
-export interface CommandContribution {
+interface CommandContribution {
   command: string;
   title: string;
   /** Runs one of Textus's commands with these arguments, at once and with
@@ -13,7 +13,7 @@ export interface CommandContribution {
   runs?: { command: string; args: unknown[] };
 }
 
-export interface KeybindingContribution {
+interface KeybindingContribution {
   command: string;
   /** As Settings writes combos: "mod+shift+k". */
   key: string;
@@ -58,7 +58,7 @@ export interface MenuContribution {
  *  plugin's own. */
 export type ViewType = "list" | "webview";
 
-export interface SidebarTabContribution {
+interface SidebarTabContribution {
   id: string;
   title: string;
   type: ViewType;
@@ -67,14 +67,14 @@ export interface SidebarTabContribution {
 }
 
 /** A view the plugin opens in a tab of its own. */
-export interface ViewContribution {
+interface ViewContribution {
   id: string;
   title: string;
   type: ViewType;
 }
 
 /** Code blocks of a language the plugin draws in the document: ```tasks. */
-export interface CodeBlockContribution {
+interface CodeBlockContribution {
   language: string;
   /** What the block is called where Textus names it ("Task query"). */
   title?: string;
@@ -88,7 +88,7 @@ export interface CodeBlockContribution {
 }
 
 /** A file type the plugin opens in a tab. */
-export interface CustomEditorContribution {
+interface CustomEditorContribution {
   viewType: string;
   displayName: string;
   /** Glob-like file name patterns: "*.pdf", "*.kanban.md". */
@@ -158,7 +158,7 @@ export interface SettingContribution {
 
 /** A tool the plugin gives Textus AI: what the model is told and its
  *  arguments as a JSON schema. */
-export interface AiToolContribution {
+interface AiToolContribution {
   name: string;
   description: string;
   parameters: Record<string, unknown>;
@@ -177,7 +177,7 @@ export interface CompletionContribution {
 
 /** A status in the window bar shown from the manifest, before the plugin's
  *  code starts; its code's ui.statusItem with the same id takes it over. */
-export interface StatusItemContribution {
+interface StatusItemContribution {
   id: string;
   text: string;
   tooltip?: string;
@@ -187,7 +187,7 @@ export interface StatusItemContribution {
 
 /** Links a plugin opens on Ctrl/Cmd+click instead of the browser: a URL
  *  matching `pattern` runs its `command` with the URL. */
-export interface LinkContribution {
+interface LinkContribution {
   pattern: string;
   command: string;
 }
@@ -216,7 +216,7 @@ export type EmbedKind = "note" | "heading" | "block";
 
 /** `![[...]]` embeds whose content the plugin gives as Markdown; Textus
  *  draws it, read-only. Needs files.read. */
-export interface EmbedContribution {
+interface EmbedContribution {
   id: string;
   targets: EmbedKind[];
 }
@@ -227,7 +227,7 @@ export type HoverContribution = "document" | "link" | "citation";
 /** An AI agent on the user's computer that Textus AI's panel can talk to
  *  (Agent Client Protocol over stdio): Claude Code, Codex… Needs `agents`.
  *  `{pluginDir}` in `args` and `env` is the plugin's own folder. */
-export interface AgentContribution {
+interface AgentContribution {
   id: string;
   name: string;
   command: string;

@@ -62,7 +62,7 @@ export interface PermissionOption {
   kind: "allow_once" | "allow_always" | "reject_once" | "reject_always";
 }
 
-export interface PermissionRequest {
+interface PermissionRequest {
   sessionId: string;
   toolCall: ToolCallFields;
   options: PermissionOption[];

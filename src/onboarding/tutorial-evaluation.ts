@@ -1,5 +1,5 @@
 /** The kinds of Markdown the editor step asks the learner to type. */
-export const FORMATS = ["heading", "list", "numbered", "task"] as const;
+const FORMATS = ["heading", "list", "numbered", "task"] as const;
 export type Format = (typeof FORMATS)[number];
 
 const SEEN: Record<Format, RegExp> = {

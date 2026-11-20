@@ -8,7 +8,7 @@ import { diffUnits, splitUnits } from "./unit-diff";
  *  come, not deleted; once done, the layout equals `diffSentences`. */
 
 /** One piece of the layout, over original sentences [start, end). */
-export type StreamPiece =
+type StreamPiece =
   | { kind: "same"; start: number; end: number }
   | {
       kind: "change";

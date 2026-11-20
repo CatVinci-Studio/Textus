@@ -137,7 +137,7 @@ stretched to fit and looks it.
 `src-tauri/tauri.windows.conf.json`.
 
 **The pages themselves** - `src-tauri/installer/installer.nsi`. This is
-tauri-bundler's own template, vendored (from tauri-cli v2.12.4) because the
+tauri-bundler's own template, vendored (from tauri-cli v2.12.6) because the
 two changes above are to `Page` declarations and no config option reaches
 them; `installerHooks` only reaches the four install/uninstall macros. It is
 upstream **verbatim** apart from the blocks marked `; Textus:`, so re-syncing

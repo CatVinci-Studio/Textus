@@ -47,7 +47,7 @@ export interface PluginTabInfo {
 
 /** The document in front, as its editor reads it. */
 /** A place in a document's Markdown: line and column, from 0. */
-export interface TextPoint {
+interface TextPoint {
   line: number;
   ch: number;
 }

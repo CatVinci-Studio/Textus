@@ -39,7 +39,7 @@ import { foldPanels } from "./fold";
 import "./split-panes.css";
 
 /** Where one island goes in the area, in pixels. */
-export interface IslandPlace {
+interface IslandPlace {
   paneId: string;
   /** Its row of tabs, and its sheet under it. */
   row?: CSSProperties;
