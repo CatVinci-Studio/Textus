@@ -5,7 +5,6 @@ import {
   pasteMarkdown,
   PHONE,
   restedOn,
-  settled,
   TABLET,
 } from "./helpers";
 import { openPath } from "./plugin-helpers";
@@ -34,6 +33,34 @@ async function fitsTheScreen(page: Page, within = "body") {
     () => document.documentElement.scrollWidth - innerWidth,
   );
   expect(scroll).toBeLessThanOrEqual(0);
+}
+
+/** A phone's tabs are behind the document's name: its sheet's New Tab.
+ *  A tablet draws the row, so its + is the one there. */
+async function addTab(page: Page) {
+  if (await page.locator(".tab-switcher-button").isVisible()) {
+    await page.locator(".tab-switcher-button").tap();
+    await page.locator(".tab-switcher-new").tap();
+  } else {
+    await page.locator(".tab-bar-add").first().tap();
+  }
+}
+
+/** How many tabs are open, read where the device shows the count. */
+async function tabCount(page: Page) {
+  return (await page.locator(".tab-switcher-button").isVisible())
+    ? Number(await page.locator(".tab-switcher-count").innerText())
+    : page.locator(".tab-pill").count();
+}
+
+/** The tab in front, from the sheet a phone opens or the row a tablet has. */
+async function firstTab(page: Page) {
+  if (await page.locator(".tab-switcher-button").isVisible()) {
+    await page.locator(".tab-switcher-button").tap();
+    await page.locator(".tab-switcher-pick").first().tap();
+  } else {
+    await page.locator(".tab-pill").first().tap();
+  }
 }
 
 for (const device of DEVICES)
@@ -76,13 +103,13 @@ for (const device of DEVICES)
       await page.keyboard.type("A first line");
       await expect(editor).toContainText("A first line");
 
-      await page.locator(".tab-bar-add").first().tap();
-      await expect(page.locator(".tab-pill")).toHaveCount(2);
+      await addTab(page);
+      expect(await tabCount(page)).toBe(2);
       // With no keyboard up a phone's new document waits for a tap.
       await page.locator(".ProseMirror:visible").tap();
       await page.keyboard.type("Second");
       await expect(page.locator(".ProseMirror:visible")).toHaveText("Second");
-      await page.locator(".tab-pill").first().tap();
+      await firstTab(page);
       await expect(page.locator(".ProseMirror:visible")).toHaveText(
         "A first line",
       );
@@ -121,7 +148,7 @@ test.describe("on a phone with its keyboard up", () => {
       dispatchEvent(new CustomEvent("textus-keyboard", { detail: 300 })),
     );
     await page.keyboard.type("A first line");
-    await page.locator(".tab-bar-add").first().tap();
+    await addTab(page);
     const fresh = page.locator(".ProseMirror:visible");
     await expect(fresh).toBeFocused();
     await page.keyboard.type("Second");
@@ -433,53 +460,36 @@ test.describe("a phone on its side", () => {
   });
 });
 
-test.describe("a phone's tab row", () => {
+test.describe("a phone's tabs", () => {
   test.use(PHONE);
 
-  test("shows no slice of a tab before the first whole one", async ({
+  test("sit behind the document's name: every tab, the one in front ticked, one closed", async ({
     page,
   }) => {
     await openApp(page);
-    // The + at the row's end however many tabs it has, beside their list
-    // once they overflow.
-    const addAtEnd = () =>
-      page.evaluate(() => {
-        const bar = document.querySelector<HTMLElement>(".tab-bar")!;
-        const add = bar.querySelector(".tab-bar-add")!.getBoundingClientRect();
-        const list = bar.querySelector(".tab-bar-list");
-        const end = list
-          ? list.getBoundingClientRect().left
-          : bar.getBoundingClientRect().right -
-            parseFloat(getComputedStyle(bar).paddingRight);
-        return Math.abs(end - add.right) <= 1;
-      });
-    await page.locator(".tab-bar-add").first().tap();
-    expect(await addAtEnd()).toBe(true);
-    for (let i = 0; i < 3; i++)
-      await page.locator(".tab-bar-add").first().tap();
-    await expect(page.locator(".tab-pill")).toHaveCount(5);
-    expect(await addAtEnd()).toBe(true);
-    // The last tab, open, closed: the row a tab shorter, the one before it
-    // open at the row's end.
-    await page.locator(".tab-pill-active .tab-pill-close").tap();
-    await expect(page.locator(".tab-pill")).toHaveCount(4);
-    await settled(page);
-    const cut = await page.evaluate(() => {
-      const bar = document.querySelector<HTMLElement>(".tab-bar")!;
-      const from =
-        bar.getBoundingClientRect().left +
-        parseFloat(getComputedStyle(bar).paddingLeft);
-      return [...bar.querySelectorAll<HTMLElement>(".tab-pill")]
-        .map((pill) => pill.getBoundingClientRect())
-        .filter((box) => box.left < from - 1 && box.right > from + 1)
-        .map((box) => [box.left, box.right, from]);
-    });
-    expect(cut).toEqual([]);
+    for (let i = 0; i < 3; i++) await addTab(page);
+    await expect(page.locator(".tab-switcher-button")).toContainText("4");
+    await page.locator(".tab-switcher-button").tap();
+    await expect(page.locator(".tab-switcher-row")).toHaveCount(4);
+    // Only the document in front is ticked.
+    await expect(page.locator('[role="menuitem"][aria-current]')).toHaveCount(
+      1,
+    );
+    // The first tab, from the sheet: the same count, the tick moved.
+    await page.locator(".tab-switcher-pick").first().tap();
+    await expect(page.locator(".tab-switcher-button")).toContainText("4");
+    await page.locator(".tab-switcher-button").tap();
+    await expect(page.locator('[role="menuitem"][aria-current]')).toHaveCount(
+      1,
+    );
+    // The last tab, closed from its x: one fewer, still one in front.
+    await page.locator(".tab-switcher-close").last().tap();
+    await expect(page.locator(".tab-switcher-button")).toContainText("3");
   });
 });
 
-test.describe("reordering tabs on a phone", () => {
-  test.use(PHONE);
+test.describe("reordering tabs on a tablet", () => {
+  test.use(TABLET);
 
   test("a tab dragged along the row keeps its document's scroll", async ({
     page,

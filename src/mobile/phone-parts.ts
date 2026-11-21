@@ -2,3 +2,5 @@
 export { DocumentList } from "./DocumentList";
 // eslint-disable-next-line no-restricted-syntax -- a lazy chunk's entry passes these on
 export { DocumentMenu } from "./DocumentMenu";
+// eslint-disable-next-line no-restricted-syntax -- a lazy chunk's entry passes these on
+export { TabSwitcher } from "./TabSwitcher";

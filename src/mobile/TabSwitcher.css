@@ -1,0 +1,161 @@
+/* The document's name in a phone's bar: the tab switcher's button. It sits
+   in the bar's row between the menu and the AI toggle, centred in the room
+   they leave. */
+.tab-switcher-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0 8px;
+  border: none;
+  background: none;
+  color: var(--ui-text);
+  font: inherit;
+  font-size: var(--text-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tab-switcher-name {
+  min-width: 0;
+}
+
+.tab-switcher-count {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: var(--shape-pill);
+  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  color: var(--ui-muted);
+  font-size: var(--text-caption);
+  font-weight: 600;
+}
+
+/* A sheet like the action sheets': groups on the paper, the dismiss set
+   apart below. */
+.tab-switcher-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 8px calc(8px + var(--safe-bottom));
+}
+
+.tab-switcher-group {
+  overflow: hidden;
+  border-radius: var(--shape-l);
+  background: var(--ui-surface);
+  /* Many tabs scroll rather than run under the status bar: Cancel and the
+     gaps below take the rest, as the action sheets' groups do. */
+  max-height: calc(100vh - var(--safe-top, 0px) - 154px);
+  overflow-y: auto;
+}
+
+.tab-switcher-title {
+  padding: 12px 16px;
+  text-align: center;
+  font-size: var(--text-footnote);
+  color: var(--ui-muted);
+  border-bottom: 1px solid var(--ui-border);
+}
+
+.tab-switcher-row {
+  display: flex;
+  align-items: center;
+}
+
+.tab-switcher-row + .tab-switcher-row {
+  border-top: 1px solid var(--ui-border);
+}
+
+.tab-switcher-pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 62px;
+  padding: 0 16px;
+  border: none;
+  background: none;
+  color: var(--ui-text);
+  font: inherit;
+  font-size: var(--text-body);
+  text-align: left;
+  transition: background-color var(--dur-base) var(--ease-standard);
+}
+
+.tab-switcher-pick:active {
+  background: var(--ui-pressed-row);
+  transition-duration: 0s;
+}
+
+.tab-switcher-tab {
+  flex: 1;
+  min-width: 0;
+}
+
+.tab-switcher-check {
+  flex: none;
+  color: var(--ui-accent-text);
+}
+
+.tab-switcher-close {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  margin-right: 4px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: var(--shape-pill);
+  background: none;
+  color: var(--ui-muted);
+}
+
+.tab-switcher-close:active {
+  background: var(--ui-pressed-row);
+}
+
+/* The tab row's +, kept in the sheet a phone draws instead. */
+.tab-switcher-new {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 62px;
+  padding: 0 16px;
+  border: none;
+  border-top: 1px solid var(--ui-border);
+  background: none;
+  color: var(--ui-accent-text);
+  font: inherit;
+  font-size: var(--text-body);
+  text-align: left;
+  transition: background-color var(--dur-base) var(--ease-standard);
+}
+
+.tab-switcher-new:active {
+  background: var(--ui-pressed-row);
+  transition-duration: 0s;
+}
+
+.tab-switcher-plus {
+  flex: none;
+  width: 16px;
+  font-size: var(--text-body-large);
+  line-height: 1;
+  text-align: center;
+}
+
+.tab-switcher-done {
+  min-height: 62px;
+  border: none;
+  border-radius: var(--shape-l);
+  background: var(--ui-surface);
+  color: var(--ui-accent-text);
+  font: inherit;
+  font-size: var(--text-body);
+  font-weight: 600;
+}
