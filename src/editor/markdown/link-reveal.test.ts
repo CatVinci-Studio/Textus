@@ -41,6 +41,19 @@ const caret = (view: EditorView, pos: number) =>
 
 const MARKDOWN = 'See [the **docs**](https://x.org "T") here.';
 
+describe("a reference link", () => {
+  it("carries its definition's address, for its hover and its click (#718)", async () => {
+    const source =
+      'A [goog1] and [x][ref] here\n\n---\n\n[goog1]: https://www.google.com "Google"\n[ref]: https://x.org';
+    const t = await openView(source);
+    const hrefs = [...t.view.dom.querySelectorAll("a")].map((a) =>
+      a.getAttribute("href"),
+    );
+    expect(hrefs).toEqual(["https://www.google.com", "https://x.org"]);
+    expect(t.markdown()).toBe(source);
+  });
+});
+
 describe("a link", () => {
   it("reads as its text while the caret is away, its Markdown while on it", async () => {
     const t = await open(MARKDOWN);
