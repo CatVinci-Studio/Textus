@@ -74,7 +74,10 @@ test("PDF pages are laid out at the sheet's width, not narrowed by a scrollbar (
 
 test("a document ending a fraction of a pixel into its last page prints no blank page after it (#736)", async ({
   page,
+  browserName,
 }) => {
+  // Playwright prints to PDF in Chromium only (WebView2's engine).
+  test.skip(browserName !== "chromium", "page.pdf is Chromium's");
   // A page's worth, then a block ending 0.4 px past a whole pixel on the
   // second page.
   const source = proseHtml().replace(
