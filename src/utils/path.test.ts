@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   absoluteIn,
   basename,
+  fileUrlAsLink,
+  fileUrlPath,
   dirname,
   folderName,
   hasUrlScheme,
@@ -92,6 +94,46 @@ describe("a drive path and a URL scheme", () => {
       expect(hasUrlScheme(url)).toBe(true);
     for (const path of ["assets/a.png", "/home/me/a.png", "./a:b.png"])
       expect(hasUrlScheme(path)).toBe(false);
+  });
+});
+
+describe("fileUrlPath", () => {
+  it("reads every way a file: URL names a local file", () => {
+    const cases: [string, string][] = [
+      ["file:///D:/notes/local.png", "D:/notes/local.png"],
+      ["file://D:/notes/local.png", "D:/notes/local.png"],
+      ["file:///d:/notes/local.png", "d:/notes/local.png"],
+      ["file:///D:/notes/local%20space.png", "D:/notes/local space.png"],
+      ["file:///D:/notes/%E5%9B%BE%E7%89%87.png", "D:/notes/图片.png"],
+      ["file:///D:/notes/图片.png", "D:/notes/图片.png"],
+      ["FILE:///D:/notes/a.png", "D:/notes/a.png"],
+      ["file:///Users/me/a.png", "/Users/me/a.png"],
+      ["file://localhost/Users/me/a.png", "/Users/me/a.png"],
+    ];
+    for (const [url, path] of cases) expect(fileUrlPath(url)).toBe(path);
+  });
+
+  it("leaves other schemes, plain paths and other hosts alone", () => {
+    for (const src of [
+      "https://x.org/a.png",
+      "D:/notes/a.png",
+      "assets/a.png",
+      "file://server/share/a.png",
+      "file:////server/share/a.png",
+      "file://\\\\server\\share\\a.png",
+      "file:///%5C%5Cserver%5Cshare%5Ca.png",
+      "file:///%2F%2Fserver/share/a.png",
+    ])
+      expect(fileUrlPath(src)).toBeNull();
+  });
+});
+
+describe("fileUrlAsLink", () => {
+  it("writes a file: URL as its path, a # in a name kept in the name", () => {
+    expect(fileUrlAsLink("file:///D:/a%23b%20c.md#Part")).toBe(
+      "D:/a%23b%20c.md#Part",
+    );
+    expect(fileUrlAsLink("notes/a.md#Part")).toBe("notes/a.md#Part");
   });
 });
 

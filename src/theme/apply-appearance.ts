@@ -21,6 +21,7 @@ import { UI_SIZE_NAMES, UI_TEXT_SCALES } from "../prefs/settings-values";
 import { applyThemeChrome, clearThemeChrome } from "../engine/tokens/palette";
 import { isIOSApp } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
+import { tokenPx } from "../engine/tokens/token-px";
 import { CUSTOM_CSS_STYLE_ID, PLUGIN_COLORS_STYLE_ID } from "./style-ids";
 
 // What an imported theme or the user's own CSS is read through: loaded
@@ -88,6 +89,14 @@ function promoteCustomProperties(rules: CSSRuleList) {
 /// `loadSettings` would discard the entire settings blob.
 function systemPrefersDark(): boolean {
   return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+}
+
+/** Tells macOS the size's bar height, which its traffic lights centre on.
+ *  The token is a calc(), so it is read resolved; nothing is sent before
+ *  the page has laid it out. */
+export function followWindowBar(): void {
+  const height = tokenPx("--window-bar-height", { fresh: true });
+  if (height > 0) void windowBarIpc.follow(height);
 }
 
 export function isEffectiveDark(themeMode: ThemeMode): boolean {
@@ -212,13 +221,7 @@ function useApplyAppearance(
       root.style.setProperty("--ui-text-scale", String(settings.uiTextScale));
       root.dataset.uiSize = size;
     }
-    // The size's bar height, which macOS's traffic lights centre on.
-    if (root.dataset.windowChrome === "native")
-      void windowBarIpc.follow(
-        Number.parseFloat(
-          getComputedStyle(root).getPropertyValue("--window-bar-height"),
-        ),
-      );
+    if (root.dataset.windowChrome === "native") followWindowBar();
   }, [settings.uiTextScale]);
 
   useEffect(() => {

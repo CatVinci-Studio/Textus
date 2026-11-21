@@ -60,6 +60,18 @@ describe("parseNoteLink", () => {
     });
   });
 
+  it("reads a file: URL's link as the file it names, anchor kept", () => {
+    expect(parseNoteLink("file:///D:/notes/a%20b.md#Part")).toMatchObject({
+      wiki: false,
+      note: "D:/notes/a b.md",
+      headings: ["Part"],
+    });
+    expect(parseNoteLink("<file:///Users/me/图片.pdf>")).toMatchObject({
+      note: "/Users/me/图片.pdf",
+    });
+    expect(parseNoteLink("file://server/share/a.md")).toBeNull();
+  });
+
   it("reads nothing else", () => {
     expect(parseNoteLink("[[]]")).toBeNull();
     expect(parseNoteLink("[[a]] b")).toBeNull();
