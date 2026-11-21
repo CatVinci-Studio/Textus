@@ -587,18 +587,24 @@ test.describe("on a phone", () => {
     page,
   }) => {
     await openApp(page);
+    const count = page.locator(".tab-switcher-count");
     await aiButton(page).click();
-    await page.locator(".tab-bar-add").first().click();
-    await expect(tabs(page)).toHaveCount(3);
+    // A new document, from the sheet the title opens: a phone draws no row.
+    await page.locator(".tab-switcher-button").tap();
+    await page.locator(".tab-switcher-new").tap();
+    await expect(count).toHaveText("3");
     // A document in front, the AI's tab behind it.
-    await tabs(page).first().click();
+    await page.locator(".tab-switcher-button").tap();
+    await page.locator(".tab-switcher-pick").first().tap();
     await aiButton(page).click();
+    await page.locator(".tab-switcher-button").tap();
     await expect(
-      page.locator(".tab-pill.active, .tab-pill[aria-selected=true]"),
+      page.locator('.tab-switcher-pick[aria-current="true"]'),
     ).toHaveText(/Textus AI/);
-    await expect(tabs(page)).toHaveCount(3);
+    await page.locator(".tab-switcher-done").tap();
+    await expect(count).toHaveText("3");
     await aiButton(page).click();
-    await expect(tabs(page)).toHaveCount(2);
+    await expect(count).toHaveText("2");
   });
 });
 
