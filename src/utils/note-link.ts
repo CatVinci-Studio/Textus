@@ -1,4 +1,10 @@
-import { decodeUrlPath, hasUrlScheme, isDrivePath, isNoteFile } from "./path";
+import {
+  decodeUrlPath,
+  fileUrlPath,
+  hasUrlScheme,
+  isDrivePath,
+  isNoteFile,
+} from "./path";
 import { MARKDOWN_EXTENSIONS } from "../platform/bindings/files";
 
 /**
@@ -69,8 +75,16 @@ export function parseNoteLink(written: string): NoteLink | null {
     };
   }
   if (/^!?\[\[/.test(text)) return null;
-  const bare =
+  const target =
     text.startsWith("<") && text.endsWith(">") ? text.slice(1, -1) : text;
+  // A file: URL is the same local file as its path; its anchor kept.
+  const anchorAt = target.indexOf("#");
+  const fileUrl = fileUrlPath(
+    anchorAt < 0 ? target : target.slice(0, anchorAt),
+  );
+  const bare = fileUrl
+    ? encodeURI(fileUrl) + (anchorAt < 0 ? "" : target.slice(anchorAt))
+    : target;
   if (!bare || (!isDrivePath(bare) && hasUrlScheme(bare))) return null;
   const hash = bare.indexOf("#");
   const note = decode(hash < 0 ? bare : bare.slice(0, hash));

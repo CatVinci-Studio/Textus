@@ -183,6 +183,35 @@ export function isDrivePath(path: string): boolean {
   return /^[a-z]:[\\/]/i.test(path);
 }
 
+/** The local path a `file:` URL names (`file:///D:/a b.png` → `D:/a b.png`,
+ *  `file:///Users/x.png` → `/Users/x.png`), or null: not a file: URL, or
+ *  one naming another machine (`file://host/…`, `file:////host/…`, a
+ *  `\\host` share), which is never read. */
+export function fileUrlPath(src: string): string | null {
+  const url = /^file:(?:\/\/(?:localhost)?)?(.*)$/i.exec(src.trim());
+  if (!url) return null;
+  const rest = url[1];
+  const named = isDrivePath(rest)
+    ? rest
+    : /^\/[^/\\]/.test(rest)
+      ? rest.slice(1)
+      : null;
+  if (named === null) return null;
+  const path = decodeUrlPath(named);
+  if (isDrivePath(path)) return path;
+  return /^[/\\]/.test(path) ? null : `/${path}`;
+}
+
+/** `link` with a `file:` URL written as the plain path it names, anchor
+ *  kept, so it is followed like that path; any other link as it is. */
+export function fileUrlAsLink(link: string): string {
+  const hash = link.indexOf("#");
+  const path = fileUrlPath(hash < 0 ? link : link.slice(0, hash));
+  return path === null
+    ? link
+    : linkPath(path) + (hash < 0 ? "" : link.slice(hash));
+}
+
 // Whether a link or image src starts with a URL scheme (http:, data:,
 // asset:, file:, ...) rather than being a path.
 export function hasUrlScheme(src: string): boolean {

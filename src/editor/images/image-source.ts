@@ -1,5 +1,10 @@
 import { localPath } from "../markdown/link-target";
-import { decodeUrlPath, hasUrlScheme, isDrivePath } from "../../utils/path";
+import {
+  decodeUrlPath,
+  fileUrlPath,
+  hasUrlScheme,
+  isDrivePath,
+} from "../../utils/path";
 
 /** Where a document's image points: one reading for the editor, the
  *  missing-picture card and export. */
@@ -16,7 +21,7 @@ type ImageSource =
   | { kind: "unsaved" }
   /** Relative to a document read through iOS Files (a file: URL). */
   | { kind: "scoped" }
-  /** Anything else: data:, asset:, file:, empty. */
+  /** Anything else: data:, asset:, another host's file:, empty. */
   | { kind: "other" };
 
 /** Where `src`, an image in the document at `docPath`, points. */
@@ -27,6 +32,8 @@ export function imageSource(src: string, docPath: string | null): ImageSource {
   if (isDrivePath(value))
     return { kind: "file", path: decodeUrlPath(value), rooted: false };
   if (!value) return { kind: "other" };
+  const local = fileUrlPath(value);
+  if (local) return { kind: "file", path: local, rooted: false };
   if (hasUrlScheme(value))
     return /^https?:/i.test(value)
       ? { kind: "web", url: value }
