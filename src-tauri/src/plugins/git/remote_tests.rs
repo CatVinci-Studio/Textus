@@ -26,7 +26,18 @@ fn git(dir: &Path, args: &[&str]) {
 
 fn clone_of(remote: &Path, name: &str, into: &Path) -> PathBuf {
     let dir = into.join(name);
-    git(into, &["clone", "-q", &remote.to_string_lossy(), name]);
+    // Windows' git writes files out with CRLF unless told not to.
+    git(
+        into,
+        &[
+            "clone",
+            "-q",
+            "-c",
+            "core.autocrlf=false",
+            &remote.to_string_lossy(),
+            name,
+        ],
+    );
     for args in [
         ["config", "user.email", "a@b.c"],
         ["config", "user.name", "A"],
