@@ -262,3 +262,18 @@ test("changing what one tilde reads as redraws an edited document, its text kept
   await expect(doc.locator("sub")).toHaveCount(0);
   await expect(doc).toContainText("H~2~O and 5~10人");
 });
+
+test("Make your theme opens Create in a tab of its own, filled, with the AI on or off", async ({
+  page,
+}) => {
+  for (const textusAi of [true, false]) {
+    await page.setViewportSize({ width: 1200, height: 760 });
+    await openApp(page, { settings: { menuBarShown: false, textusAi } });
+    await emit(page, "menu-settings");
+    await page.locator(".sidebar").getByText("外观").first().click();
+    await page.getByText("制作你的主题").first().click();
+    await expect(page.locator(".create-studio-title")).toBeVisible();
+    const box = await page.locator(".create-studio").boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThan(400);
+  }
+});

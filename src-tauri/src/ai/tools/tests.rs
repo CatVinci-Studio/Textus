@@ -614,6 +614,18 @@ fn propose_edit_refuses_a_clause_replaced_by_one_latin_token() {
 }
 
 #[test]
+fn a_rewrite_that_changes_nothing_is_refused() {
+    let doc = ctx("Textus is great.\n\nIt ships soon.");
+    let same = r#"{"action":"replace","anchor":"Textus is great.","text":"Textus is great.\n"}"#;
+    let out = edit(&doc, same);
+    assert!(out.starts_with("Not proposed"), "{out}");
+    assert!(out.contains("nothing would change"), "{out}");
+    // Not counted as proposed: a real rewrite of it still stands.
+    let real = r#"{"action":"replace","anchor":"Textus is great.","text":"Textus is good."}"#;
+    assert!(edit(&doc, real).starts_with("Edit proposed"));
+}
+
+#[test]
 fn a_second_proposal_for_the_same_passage_is_refused() {
     let doc = ctx("Textus is great.\n\nTextus is fast.\n\nIt ships soon.");
     let ctx2 = ctx("Textus is great.");
