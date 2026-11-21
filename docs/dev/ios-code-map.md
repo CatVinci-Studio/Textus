@@ -4,6 +4,29 @@ One codebase builds both the desktop app (macOS / Windows / Linux) and the iOS a
 
 The rule: **iOS is the same app in a narrower layout.** It has the desktop's features through the desktop's code - plugins, themes, skills, tracked changes, Textus AI - and differs in layout (the phone styles below, `usePhoneLayout`), never by hiding a feature. Code is desktop-only only where iOS can't do the thing: more than one window, a menu bar, background mode and the tray, MCP servers (programs on the computer), the updater, the terminal command. That code is neither compiled nor called on iOS. An iPad is a narrow desktop: margin cards and split panes where there is room. The App Store build for mainland China differs in one thing: Textus AI is left out at runtime (`hasTextusAi`, from the storefront in `Storefront.swift`).
 
+## Phones and tablets: form, then capability
+
+The same rule holds for Android. **The interface follows the form; only
+what the system can do follows the platform.**
+
+- **Form:** a narrow phone (iPhone, an Android phone) gets the phone
+  layout (`usePhoneLayout` / `isPhoneLayout`); an iPad or an Android tablet
+  gets the desktop's interface with touch adjustments. iPhone and Android
+  phones look and behave the same: the same menus, sheets, Settings sheet
+  and document page.
+- **Capability:** what differs by system is asked only through
+  `src/platform/capabilities.ts` (`hasSystemBack`, `canPickImageFile`,
+  `hasTextusAi`, the safe area...). `isAndroidApp` isn't exported, and the
+  files that may read `isIOSApp` are listed with their reasons in
+  `src/platform/ios-gates.test.ts`; a new one needs a reason there.
+- **A phone's two menus:** ☰ is the app and its files (new, open, save,
+  the sidebar, Textus AI, plugins, Settings); the document's ⋯
+  (`mobile/DocumentMenu.tsx`) is the document in front (outline, find and
+  replace, source mode, share). Each command has one way in. A tablet has
+  no ⋯: its ☰ is the desktop's whole menu.
+
+Contributions for phones are reviewed against this section.
+
 ## Rust (`src-tauri/`)
 
 ### How the code is kept apart

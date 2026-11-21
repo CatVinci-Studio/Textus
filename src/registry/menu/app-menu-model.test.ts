@@ -125,6 +125,13 @@ describe("the View menu's on/off items", () => {
     },
   );
 
+  it("leave the document's own actions to its ⋯ on a phone", () => {
+    const phone = flatten(buildMobileMenu(t)).map((item) => item.label);
+    expect(phone).toContain(t.menuSave);
+    expect(phone).not.toContain(t.menuShare);
+    expect(phone).not.toContain(t.menuFindReplace);
+  });
+
   it("show what is on", () => {
     const view = buildAppMenu(t, shortcuts, NO_RECENTS, {
       sidebar: true,
@@ -213,17 +220,13 @@ describe("the View menu's on/off items", () => {
     expect(buildMobileMenu(t)[0]).toMatchObject({ label: t.menuNewFile });
   });
 
-  it("grey Save, Share and Find on the phone while a page (AI, Settings) is in front", () => {
+  it("grey Save on the phone while a page (AI, Settings) is in front", () => {
     const t = resolveStrings("en");
     const off = (checks: MenuChecks) =>
       flatten(buildMobileMenu(t, checks, [{ label: "P", command: "p" }]))
         .filter((item) => item.disabled)
         .map((item) => item.label);
-    expect(off({ noDocument: true })).toEqual([
-      t.menuSave,
-      t.menuShare,
-      t.menuFindReplace,
-    ]);
+    expect(off({ noDocument: true })).toEqual([t.menuSave]);
     expect(off({})).toEqual([]);
   });
 

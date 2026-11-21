@@ -248,6 +248,16 @@ Every size in the interface is written once, in **interface pixels** on the 4 px
 - **Zen** shows the tab in use alone, nothing else; the split comes back when Zen ends. An × at the top right leaves it.
 - **Documents always open as tabs** (no new-window choice); a tab dragged out of the window opens a window of its own.
 
+### 5.8 Phones and tablets - In force (Textus 1.4.6)
+
+The interface follows the device's form, not its system. A phone (iPhone or
+Android) has the phone layout, and both phones look and behave the same; a
+tablet (iPad or Android) has the desktop's interface with touch room. Only
+what a system can't do differs, through `platform/capabilities.ts`
+([ios-code-map.md](../dev/ios-code-map.md#phones-and-tablets-form-then-capability)).
+On a phone, ☰ holds the app and its files and the document's ⋯ holds the
+document's own actions; nothing is in both.
+
 ## 6. Shape - In force
 
 - **Containers** are rounded rectangles in three sizes: `--shape-m` 12 (islands, dialogs, sheets, cards, Settings' groups, menus, popovers, the AI composer, code blocks), `--shape-s` 8 (a box inside a card, a highlighted row, tooltips, multi-line fields), `--shape-xs` 4 (the smallest inner box). `--shape-l` is kept for plugins and draws 12. Nothing is rounder than its level; nothing is under `--shape-xs` 4.

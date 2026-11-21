@@ -352,7 +352,9 @@ export function menuBarSections(menu: MenuNode[]): MenuBarSection[] {
 }
 
 /**
- * The iPhone's menu: one flat list, with only what a phone needs.
+ * A phone's ☰: one flat list of the app and its files (new, open, save,
+ * the sidebar, Textus AI, plugins, Settings); the document in front has
+ * its own ⋯.
  */
 export function buildMobileMenu(
   t: Strings,
@@ -384,22 +386,14 @@ export function buildMobileMenu(
     { label: t.menuOpenFile, action: { native: "open-file" } },
     // Another folder over the one open: the Files panel shows that folder.
     { label: t.menuOpenFolder, action: { native: "open-folder" } },
-    ...(
-      [
-        [t.menuSave, "save-file"],
-        [t.menuShare, "share"],
-        "separator",
-        [t.menuFindReplace, "find-replace"],
-      ] as const
-    ).map((item): MenuNode =>
-      item === "separator"
-        ? item
-        : {
-            label: item[0],
-            action: { native: item[1] },
-            disabled: checks.noDocument,
-          },
-    ),
+    // The document's own actions (Find, Share, Outline) are its ⋯'s
+    // (mobile/DocumentMenu): each command has one way in.
+    {
+      label: t.menuSave,
+      action: { native: "save-file" },
+      disabled: checks.noDocument,
+    },
+    "separator",
     {
       label: t.menuToggleSidebar,
       action: { native: "toggle-sidebar" },
