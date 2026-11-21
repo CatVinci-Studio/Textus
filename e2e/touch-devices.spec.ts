@@ -151,7 +151,7 @@ test.describe("searching on a phone", () => {
     await openPath(page, "/w/b.md");
     const toggle = page.locator(".window-bar-sidebar-toggle:visible");
     if (await toggle.count()) await toggle.tap();
-    await page.locator('[data-rail-id="search"]').tap();
+    await page.locator('[data-sidebar-tab="search"]').tap();
     await page.locator(".search-panel input").first().fill("needle");
     await page.locator(".search-text-line").first().tap();
     const hit = page.locator(".ProseMirror:visible p", {
