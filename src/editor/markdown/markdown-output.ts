@@ -3,6 +3,7 @@ import type { Ctx } from "@milkdown/kit/ctx";
 import { defaultValueCtx, remarkStringifyOptionsCtx } from "@milkdown/kit/core";
 import { codeBlockSchema, imageSchema } from "@milkdown/kit/preset/commonmark";
 import { remarkGFMPlugin } from "@milkdown/kit/preset/gfm";
+import type { SingleTildeMode } from "../../prefs/settings-values";
 import type { DOMOutputSpec } from "@milkdown/kit/prose/model";
 import type { List, ListItem, Parents } from "mdast";
 import {
@@ -357,6 +358,30 @@ function withChildren(node: { type: string; children?: unknown[] }): void {
     withChildren(child as { type: string; children?: unknown[] });
 }
 
+/** The guards escaping every `~` in text (GFM's, for a one-tilde
+ *  strikethrough) or at a line's start (a fence). */
+const isTildeGuard = (pattern: Unsafe) =>
+  pattern.character === "~" &&
+  !pattern.before &&
+  !pattern.after &&
+  (pattern.atBreak === true || pattern.inConstruct === "phrasing");
+
+/** Where a `~` in text must be escaped, by what one tilde reads as: with
+ *  one not a strikethrough, only beside another (`~~`) or where it would
+ *  open a subscript (`H~2~`); `5~10` is written as it is. */
+function tildeGuards(guard: Unsafe, singleTilde: SingleTildeMode): Unsafe[] {
+  if (singleTilde === "strikethrough") return [guard];
+  // A line's first `~` opens a fence only as `~~~`.
+  if (guard.atBreak) return [{ ...guard, after: "~~" }];
+  const beside = [
+    { ...guard, after: "~" },
+    { ...guard, before: "~" },
+  ];
+  return singleTilde === "subscript"
+    ? [...beside, { ...guard, before: "[A-Za-z0-9]", after: "[A-Za-z0-9+-]+~" }]
+    : beside;
+}
+
 const root: Handle = (node, parent, state, info) => {
   withChildren(node);
   joinAdjacent(node as Phrasing);
@@ -364,9 +389,15 @@ const root: Handle = (node, parent, state, info) => {
   alternateNestedMarkers(node as Phrasing);
   markLatexAhead(node as Phrasing);
   encodeAroundAttention(node as Phrasing);
+  const { singleTilde = "strikethrough" } = state.options as {
+    singleTilde?: SingleTildeMode;
+  };
   state.unsafe = state.unsafe
     .filter((pattern) => !isAutolinkLiteralGuard(pattern))
     .map((pattern) => (isHeadingGuard(pattern) ? headingGuard : pattern))
+    .flatMap((pattern) =>
+      isTildeGuard(pattern) ? tildeGuards(pattern, singleTilde) : [pattern],
+    )
     .concat(closingHashGuard);
   const del = state.handlers.delete as Handle | undefined;
   if (del) state.handlers.delete = withTildesAsWritten(del);

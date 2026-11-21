@@ -123,6 +123,15 @@ export const PANDOC_ARGS_FORMATS = [
 export type PandocArgsFormat = (typeof PANDOC_ARGS_FORMATS)[number];
 
 export const COLOR_SWATCH_MODES = ["off", "code", "everywhere"] as const;
+/** What one tilde each side, `~text~`, means: GitHub strikes it out,
+ *  Pandoc and Typora read `H~2~O` as a subscript; `~~text~~` always
+ *  strikes out. */
+export const SINGLE_TILDE_MODES = [
+  "subscript",
+  "strikethrough",
+  "text",
+] as const;
+export type SingleTildeMode = (typeof SINGLE_TILDE_MODES)[number];
 export type ColorSwatchMode = (typeof COLOR_SWATCH_MODES)[number];
 
 /// In the order the menus list them, the default first.

@@ -23,6 +23,7 @@ import {
   type DiagramEngine,
   type PandocArgsFormat,
   type ColorSwatchMode,
+  type SingleTildeMode,
   type RevisionDisplay,
   type AiChangeMode,
   type CompletionTone,
@@ -64,6 +65,9 @@ export interface Settings {
   codeLineNumbers: boolean;
   /** Where a small square of the colour shows before a colour code. */
   colorSwatches: ColorSwatchMode;
+  /** What `~text~` is: a subscript after a letter or digit (`H~2~O`), a
+   *  strikethrough as on GitHub, or the tildes as typed. */
+  singleTilde: SingleTildeMode;
   /** Where newly pasted images go. Existing markdown image references are
    *  never migrated when this changes. */
   imageStorageMode: ImageStorageMode;
@@ -312,6 +316,7 @@ export const DEFAULT_SETTINGS: Settings = {
   diagramEngine: "mermaid",
   codeLineNumbers: false,
   colorSwatches: "off",
+  singleTilde: "subscript",
   imageStorageMode: "local",
   imageFolder: DEFAULT_IMAGE_SUBFOLDER,
   imageHost: "picgo",

@@ -14,6 +14,7 @@ import {
   type PdfMargin,
   type PdfPaper,
   type PdfTextScale,
+  type SingleTildeMode,
   type ViewMode,
 } from "../../prefs/settings-values";
 import { AdvancedFold, SettingRow, ToggleRow } from "../sections/controls";
@@ -207,6 +208,20 @@ export function EditMarkdownPage({
             <option value="off">{t.colorSwatchesOff}</option>
             <option value="code">{t.colorSwatchesCode}</option>
             <option value="everywhere">{t.colorSwatchesEverywhere}</option>
+          </Select>
+        </SettingRow>
+        <SettingRow label={t.singleTildeLabel}>
+          <Select
+            className="settings-select"
+            aria-label={t.singleTildeLabel}
+            value={settings.singleTilde}
+            onChange={(e) =>
+              setSettings({ singleTilde: e.target.value as SingleTildeMode })
+            }
+          >
+            <option value="subscript">{t.singleTildeSubscript}</option>
+            <option value="strikethrough">{t.singleTildeStrikethrough}</option>
+            <option value="text">{t.singleTildeText}</option>
           </Select>
         </SettingRow>
         <ToggleRow

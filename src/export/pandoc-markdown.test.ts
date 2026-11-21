@@ -157,12 +157,23 @@ describe("toPandocMarkdown", () => {
     expect(toPandocMarkdown("```\n%%kept%%\n```")).toBe("```\n%%kept%%\n```");
   });
 
-  it("writes the editor's subscript, superscript and one-tilde strikethrough", () => {
+  it("writes one tilde as the editor reads it: a subscript, else as written", () => {
     expect(toPandocMarkdown("H~2~O, x^2^, ~gone~ and ~~old~~")).toBe(
+      "H[2]{.textus-sub}O, x[2]{.textus-sup}, \\~gone\\~ and ~~old~~",
+    );
+    expect(toPandocMarkdown("5~10人，20~30人")).toBe("5\\~10人，20\\~30人");
+    expect(toPandocMarkdown("H~2~O and ~a~", { singleTilde: "text" })).toBe(
+      "H\\~2\\~O and \\~a\\~",
+    );
+  });
+
+  it("writes one tilde as a strikethrough where the editor reads it so", () => {
+    const strike = { singleTilde: "strikethrough" } as const;
+    expect(toPandocMarkdown("H~2~O, x^2^, ~gone~ and ~~old~~", strike)).toBe(
       "H[2]{.textus-sub}O, x[2]{.textus-sup}, ~~gone~~ and ~~old~~",
     );
     expect(
-      toPandocMarkdown("a ~b~ but ~a b~ and 2^10 and [^1] and ^[note]"),
+      toPandocMarkdown("a ~b~ but ~a b~ and 2^10 and [^1] and ^[note]", strike),
     ).toBe("a ~~b~~ but ~~a b~~ and 2^10 and [^1] and ^[note]");
     expect(
       toPandocMarkdown("$a~b~c^2^$ `x~y~` [l](https://x.org/~a/~b) \\~n~"),

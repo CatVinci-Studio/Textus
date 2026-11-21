@@ -15,9 +15,17 @@ import { Selection } from "@milkdown/kit/prose/state";
 import { $ctx, $prose } from "@milkdown/kit/utils";
 import { historyFrom } from "./left-history";
 import type { TabLeft } from "./tab-left";
+import type { SingleTildeMode } from "../prefs/settings-values";
 
 // The editor's side of tab-left.ts: built from what the tab's last editor
 // left. Apart from it, so the store loads without the editor.
+
+/** How this editor reads one tilde (editor-core-syntax), left with its
+ *  document so the next editor reuses it only if it reads it alike. */
+export const singleTildeCtx = $ctx<SingleTildeMode, "singleTilde">(
+  "subscript",
+  "singleTilde",
+);
 
 /** What this editor was given to open with. */
 export const openedFromCtx = $ctx<TabLeft | null, "openedFrom">(
