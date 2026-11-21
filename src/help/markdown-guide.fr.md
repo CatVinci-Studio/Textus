@@ -19,7 +19,7 @@ Pas envie de retenir les symboles ? Utilisez la **barre de mise en forme** au-de
 
 ## Écrire un texte long
 
-**Retrait de première ligne** (Réglages › Édition › Texte) décale la première ligne de chaque paragraphe de deux caractères ; les listes, les citations et les tableaux restent tels quels.
+**Retrait de première ligne** (Réglages › Apparence › Texte) décale la première ligne de chaque paragraphe de deux caractères ; les listes, les citations et les tableaux restent tels quels.
 
 ### Façons d'écrire et modes
 
@@ -29,7 +29,7 @@ Outre l'éditeur WYSIWYG et le mode source (`Cmd+/`), Textus offre trois façons
 - **Mode machine à écrire** : la ligne que vous tapez reste au milieu de la fenêtre, dans l'éditeur, en mode source comme en Source et aperçu.
 - **Mode zen** (`Cmd+Shift+J`) : masque tout sauf le document où vous êtes et atténue tous les paragraphes sauf celui que vous écrivez. Le × en haut à droite, ou de nouveau le raccourci, permet d'en sortir.
 
-Tous se trouvent dans le menu **Présentation** (les deux premiers sous **Présentation › Mode**) et dans le groupe **Affichage** de **Réglages › Édition › Texte**. Chacun est un seul réglage pour tout Textus : changez-le dans n'importe quelle fenêtre et chaque onglet de chaque fenêtre change avec lui, les documents que vous ouvrez ensuite s'y affichent, et Textus s'y rouvre la fois suivante.
+Tous se trouvent dans le menu **Présentation** (les deux premiers sous **Présentation › Mode**) et dans le groupe **Affichage** de **Réglages › Édition › Document**. Chacun est un seul réglage pour tout Textus : changez-le dans n'importe quelle fenêtre et chaque onglet de chaque fenêtre change avec lui, les documents que vous ouvrez ensuite s'y affichent, et Textus s'y rouvre la fois suivante.
 
 **Présentation › Mode › Mode lecture** (aussi dans le menu contextuel d'un onglet) empêche toute modification d'un document : frappe, collage, dépôt, annulation, Textus AI ou extensions. Un cadenas à côté du titre l'indique ; cliquez dessus pour autoriser de nouveau les modifications.
 
@@ -65,7 +65,7 @@ Survolez un tableau pour ajouter ou supprimer des lignes et des colonnes. Tapez 
 
 ### Blocs de code
 
-Blocs de code délimités, avec coloration syntaxique (changez de langage dans le coin supérieur droit du bloc). Entrée sur la dernière ligne vide quitte le bloc, tout comme Ctrl/⌘+Entrée à tout moment ; il en va de même pour les citations. **Copier** et **Tout sélectionner**, à côté du langage, copient ou sélectionnent le code du bloc, et **Numéros de ligne dans les blocs de code** (Réglages › Édition › Texte) numérote ses lignes ; ni l'un ni les autres n'apparaissent dans les exports ou à l'impression.
+Blocs de code délimités, avec coloration syntaxique (changez de langage dans le coin supérieur droit du bloc). Entrée sur la dernière ligne vide quitte le bloc, tout comme Ctrl/⌘+Entrée à tout moment ; il en va de même pour les citations. **Copier** et **Tout sélectionner**, à côté du langage, copient ou sélectionnent le code du bloc, et **Numéros de ligne dans les blocs de code** (Réglages › Édition › Document) numérote ses lignes ; ni l'un ni les autres n'apparaissent dans les exports ou à l'impression.
 
 ```python
 def fib(n: int) -> int:
@@ -127,7 +127,7 @@ sequenceDiagram
     Textus-->>Vous: Rendu en direct
 ```
 
-**Moteur de diagrammes** (Réglages › Édition › Texte) choisit ce qui dessine ces blocs : Mermaid, par défaut, ou Pele, plus rapide, mais qui dispose les diagrammes à sa façon et laisse de côté quelques fonctions ; un diagramme que Pele ne sait pas dessiner est dessiné par Mermaid.
+**Moteur de diagrammes** (Réglages › Édition › Document) choisit ce qui dessine ces blocs : Mermaid, par défaut, ou Pele, plus rapide, mais qui dispose les diagrammes à sa façon et laisse de côté quelques fonctions ; un diagramme que Pele ne sait pas dessiner est dessiné par Mermaid.
 
 Leurs couleurs suivent l'apparence — une palette grise et sobre en clair, sa version sombre en sombre — et un thème importé ou le CSS personnalisé peut en choisir une autre intégrée avec `--doc-mermaid-theme: forest`.
 
@@ -240,11 +240,11 @@ Les codes courts d'emoji de GitHub s'affichent en emoji : :tada: (`:tada:`), :ro
 
 Indices et exposants comme dans Typora et Pandoc : H~2~O (`H~2~O`), x^2^ (`x^2^`) ; sans espace à l'intérieur.
 
-Taper `(`, `[`, `{`, un guillemet ou une parenthèse d'une méthode de saisie chinoise ou japonaise, comme `（`, `【` ou `「`, ajoute son partenaire fermant après le curseur : taper le fermant passe par-dessus, Retour arrière juste après l'ouvrant efface les deux, et avec du texte sélectionné la paire l'entoure. **Fermer (), [] et « »** dans **Réglages › Édition › Texte** le désactive.
+Taper `(`, `[`, `{`, un guillemet ou une parenthèse d'une méthode de saisie chinoise ou japonaise, comme `（`, `【` ou `「`, ajoute son partenaire fermant après le curseur : taper le fermant passe par-dessus, Retour arrière juste après l'ouvrant efface les deux, et avec du texte sélectionné la paire l'entoure. **Fermer (), [] et « »** dans **Réglages › Édition › Document** le désactive.
 
 Les liens s'écrivent ainsi : [le dépôt de Textus](https://github.com/CatVinci-Studio/Textus). Ctrl/⌘+clic suit un lien : un lien web s'ouvre dans le navigateur, un lien vers un autre fichier Markdown l'ouvre dans un onglet, et un lien vers `#a-heading` fait défiler jusqu'à ce titre. Un simple clic place le curseur dans le lien et affiche son Markdown, `[text](url)`, à modifier sur place ; quand le curseur en sort, c'est de nouveau un lien. Le HTML en ligne s'affiche aussi, par exemple les touches du clavier <kbd>Cmd</kbd> + <kbd>S</kbd>. De même pour les blocs repliables `<details>`, les tableaux HTML, quelques styles en ligne (couleur, fond, taille, graisse, alignement, soulignement et barré) et le `<svg>` en ligne, affiché comme une image. Les scripts et le reste du HTML restent en code source. Un lien vers un titre d'un autre fichier, comme `[see](notes.md#a-heading)`, ouvre ce fichier à ce titre. Les wikiliens d'Obsidian (`[[Note]]`, `[[Note|text]]` et `[[Note#Heading]]`) s'ouvrent de la même façon, depuis le dossier du document ou n'importe où dans son coffre ; eux et les `#tags` en début de ligne sont enregistrés tels qu'ils ont été écrits.
 
-**Pastilles avant les codes couleur** (Réglages › Édition › Texte) place un petit carré de la couleur devant un code couleur. **Dans le code seulement** l'affiche dans le code en ligne qui désigne une couleur, comme `#0af` ou `rgb(0 128 255)`, et devant les valeurs de couleur des blocs de code ; **Partout**, aussi devant ceux écrits dans le texte avec six ou huit chiffres, comme #ff8800, ou sous forme de fonction, comme hsl(210 100% 50%). Les codes courts dans le texte, les étiquettes comme #cafe, les numéros comme #234 et les liens restent tels quels.
+**Pastilles avant les codes couleur** (Réglages › Édition › Document) place un petit carré de la couleur devant un code couleur. **Dans le code seulement** l'affiche dans le code en ligne qui désigne une couleur, comme `#0af` ou `rgb(0 128 255)`, et devant les valeurs de couleur des blocs de code ; **Partout**, aussi devant ceux écrits dans le texte avec six ou huit chiffres, comme #ff8800, ou sous forme de fonction, comme hsl(210 100% 50%). Les codes courts dans le texte, les étiquettes comme #cafe, les numéros comme #234 et les liens restent tels quels.
 
 Formules en ligne : l'équivalence masse-énergie $E = mc^2$, l'identité d'Euler $e^{i\pi} + 1 = 0$.
 

@@ -190,7 +190,10 @@ test("menus and popovers", async ({ page }) => {
 test("InfoTip", async ({ page }) => {
   await open(page);
   await emit(page, "menu-settings");
-  await page.getByRole("button", { name: "Text", exact: true }).first().click();
+  await page
+    .getByRole("button", { name: "Document", exact: true })
+    .first()
+    .click();
   const tip = page.locator(".info-tip-button").first();
   await tip.scrollIntoViewIfNeeded();
   await page.waitForTimeout(400);

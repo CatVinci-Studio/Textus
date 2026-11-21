@@ -4,7 +4,7 @@ import { isMacPlatform } from "../../platform/os";
 import { fingerDown, onTrackpadTouch } from "../../platform/trackpad";
 
 /** On the scroll box while its content is pulled past an end or springs
- *  back: its scroll position doesn't say so (hold-still.ts). */
+ *  back: its scroll position doesn't say so (scroll-hold.ts). */
 export const STRETCHED_ATTR = "data-stretched";
 /** How far the page can be pulled past an end, at most. */
 const MAX_PULL = 80;

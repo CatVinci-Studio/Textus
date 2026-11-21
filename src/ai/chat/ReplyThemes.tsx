@@ -4,6 +4,7 @@ import { themesInReply, type ReplyTheme } from "./reply-theme";
 import { saveUserTheme, withUserTheme } from "../../theme/theme-import";
 import { ReplyFilesPreview } from "./ReplyFilesPreview";
 import { useCreationAction } from "./useCreationAction";
+import { requestWorkshop } from "./create-request";
 
 export interface ReplyThemeLabels {
   useTheme: string;
@@ -12,6 +13,8 @@ export interface ReplyThemeLabels {
   themeFallbackName: string;
   /** Unfolds the CSS Use would apply. */
   showCode: string;
+  /** Opens the theme workshop on the installed theme. */
+  themeToWorkshop: string;
 }
 
 /**
@@ -73,6 +76,11 @@ function ReplyThemeChip({
       <button type="button" disabled={busy || inUse} onClick={use}>
         {inUse ? labels.themeInUse : labels.useTheme}
       </button>
+      {installed && installedId && (
+        <button type="button" onClick={() => requestWorkshop(installedId)}>
+          {labels.themeToWorkshop}
+        </button>
+      )}
       <ReplyFilesPreview
         label={labels.showCode}
         files={[{ path: null, text: theme.css }]}

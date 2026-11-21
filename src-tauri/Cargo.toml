@@ -1,6 +1,6 @@
 [package]
 name = "textus"
-version = "1.4.6-rc.4"
+version = "1.4.6-rc.5"
 description = "Textus: an Integrated Writing Environment, designed for professional writing"
 authors = ["CatVinci Studio"]
 edition = "2021"
@@ -290,6 +290,10 @@ libloading = "0.7"
 # Plugins' notifications and their clicks over D-Bus (src/schedule/notify/linux.rs).
 # Already in the tree through tauri-plugin-opener, with the blocking API on.
 zbus = "5"
+# The font folders fontconfig names (a distribution's own, Flatpak's, a
+# user's custom ones), which WebKitGTK draws from: without it fontdb only
+# looks in four fixed folders.
+fontdb = { version = "0.24", default-features = false, features = ["fs", "memmap", "fontconfig"] }
 
 [target.'cfg(any(windows, target_os = "linux"))'.dependencies]
 # A second launch with a textus:// link hands it to the running app

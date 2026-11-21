@@ -19,7 +19,7 @@ Prefere não decorar os símbolos? Use a **barra de formatação** acima do docu
 
 ## Escrever textos longos
 
-**Recuo da primeira linha** (Ajustes › Edição › Texto) recua em dois caracteres a primeira linha de cada parágrafo; listas, citações e tabelas ficam como estão.
+**Recuo da primeira linha** (Ajustes › Aparência › Texto) recua em dois caracteres a primeira linha de cada parágrafo; listas, citações e tabelas ficam como estão.
 
 ### Maneiras de escrever e modos
 
@@ -29,7 +29,7 @@ Além do editor WYSIWYG e do modo código-fonte (`Cmd+/`), o Textus tem três ma
 - **Modo Máquina de Escrever**: a linha que você está digitando fica no meio da janela, no editor, no modo código-fonte e em Código e pré-visualização.
 - **Modo Zen** (`Cmd+Shift+J`): esconde tudo menos o documento em que você está e esmaece todos os parágrafos, menos o que você está escrevendo. O × no canto superior direito, ou o mesmo atalho, sai dele.
 
-Todos estão no menu **Visualizar** (**Visualizar › Modo** para os dois primeiros) e no grupo **Visualização** de **Ajustes › Edição › Texto**. Cada um é um único ajuste para todo o Textus: mude em qualquer janela e todas as abas de todas as janelas mudam junto, os documentos que você abrir em seguida aparecem nele, e o Textus volta a abrir nele da próxima vez.
+Todos estão no menu **Visualizar** (**Visualizar › Modo** para os dois primeiros) e no grupo **Visualização** de **Ajustes › Edição › Documento**. Cada um é um único ajuste para todo o Textus: mude em qualquer janela e todas as abas de todas as janelas mudam junto, os documentos que você abrir em seguida aparecem nele, e o Textus volta a abrir nele da próxima vez.
 
 **Visualizar › Modo › Modo leitura** (também no menu de contexto de uma aba) impede que um documento seja alterado, seja digitando, colando, soltando, desfazendo, pela Textus AI ou por plugins. Um cadeado ao lado do título indica isso; clique nele para permitir alterações de novo.
 
@@ -65,7 +65,7 @@ Passe o ponteiro sobre uma tabela para adicionar ou remover linhas e colunas. Di
 
 ### Blocos de código
 
-Blocos de código delimitados, com realce de sintaxe (troque a linguagem no canto superior direito do bloco). Enter na última linha, quando ela está vazia, sai do bloco, assim como Ctrl/⌘+Enter a qualquer momento; o mesmo vale para as citações. **Copiar** e **Selecionar Tudo**, ao lado da linguagem, copiam ou selecionam o código do bloco, e **Números de linha nos blocos de código** (Ajustes › Edição › Texto) numera as linhas; nenhum dos dois aparece nas exportações nem na impressão.
+Blocos de código delimitados, com realce de sintaxe (troque a linguagem no canto superior direito do bloco). Enter na última linha, quando ela está vazia, sai do bloco, assim como Ctrl/⌘+Enter a qualquer momento; o mesmo vale para as citações. **Copiar** e **Selecionar Tudo**, ao lado da linguagem, copiam ou selecionam o código do bloco, e **Números de linha nos blocos de código** (Ajustes › Edição › Documento) numera as linhas; nenhum dos dois aparece nas exportações nem na impressão.
 
 ```python
 def fib(n: int) -> int:
@@ -127,7 +127,7 @@ sequenceDiagram
     Textus-->>Você: Renderiza ao vivo
 ```
 
-**Motor de diagramas** (Ajustes › Edição › Texto) escolhe quem desenha esses blocos: o Mermaid, padrão, ou o Pele, mais rápido, mas que organiza os diagramas do seu próprio jeito e deixa de fora alguns recursos; um diagrama que o Pele não consegue desenhar é desenhado pelo Mermaid.
+**Motor de diagramas** (Ajustes › Edição › Documento) escolhe quem desenha esses blocos: o Mermaid, padrão, ou o Pele, mais rápido, mas que organiza os diagramas do seu próprio jeito e deixa de fora alguns recursos; um diagrama que o Pele não consegue desenhar é desenhado pelo Mermaid.
 
 As cores seguem a aparência — uma paleta cinza e sóbria no claro e a escura no escuro — e um tema importado ou o CSS personalizado pode escolher outra paleta interna com `--doc-mermaid-theme: forest`.
 
@@ -240,11 +240,11 @@ Códigos curtos de emoji como no GitHub aparecem como o emoji: :tada: (`:tada:`)
 
 Subscrito e sobrescrito como no Typora e no Pandoc: H~2~O (`H~2~O`), x^2^ (`x^2^`); sem espaços dentro.
 
-Ao digitar `(`, `[`, `{`, aspas ou um parêntese de um método de entrada chinês ou japonês, como `（`, `【` ou `「`, o par de fechamento entra depois do cursor: digitar o fechamento passa por cima dele, Backspace logo depois da abertura apaga os dois e, com texto selecionado, o par o envolve. **Fechar (), [] e “”**, em **Ajustes › Edição › Texto**, desativa isso.
+Ao digitar `(`, `[`, `{`, aspas ou um parêntese de um método de entrada chinês ou japonês, como `（`, `【` ou `「`, o par de fechamento entra depois do cursor: digitar o fechamento passa por cima dele, Backspace logo depois da abertura apaga os dois e, com texto selecionado, o par o envolve. **Fechar (), [] e “”**, em **Ajustes › Edição › Documento**, desativa isso.
 
 Links ficam assim: [o repositório do Textus](https://github.com/CatVinci-Studio/Textus). Ctrl/⌘+clique segue um link: um link da web abre no navegador, um link para outro arquivo Markdown o abre em uma aba e um link para `#um-titulo` rola até ele. Um clique simples põe o cursor no link e mostra seu Markdown, `[texto](url)`, para editar ali mesmo; quando o cursor sai, ele volta a ser um link. HTML no meio do texto também é renderizado, por exemplo as teclas <kbd>Cmd</kbd> + <kbd>S</kbd>, assim como blocos recolhíveis `<details>`, tabelas HTML, alguns estilos inline (cor, fundo, tamanho, peso, alinhamento, sublinhado e tachado) e `<svg>` no meio do texto, que aparece como imagem. Scripts e o resto do HTML ficam como código-fonte. Um link para um título em outro arquivo, como `[veja](notas.md#um-titulo)`, abre esse arquivo nesse título. Os wikilinks do Obsidian (`[[Nota]]`, `[[Nota|texto]]` e `[[Nota#Título]]`) abrem do mesmo jeito, a partir da pasta do documento ou de qualquer lugar do cofre; eles e as `#tags` no início de uma linha são salvos exatamente como foram escritos.
 
-**Amostras antes dos códigos de cor** (Ajustes › Edição › Texto) põe um quadradinho da cor antes de um código de cor. **Só no código** mostra-o no código em linha que é uma cor, como `#0af` ou `rgb(0 128 255)`, e antes dos valores de cor dos blocos de código; **Em todo o texto**, também antes dos escritos no texto com seis ou oito dígitos, como #ff8800, ou como função de cor, como hsl(210 100% 50%). Códigos curtos no texto, etiquetas como #cafe, números como #234 e links ficam como estão.
+**Amostras antes dos códigos de cor** (Ajustes › Edição › Documento) põe um quadradinho da cor antes de um código de cor. **Só no código** mostra-o no código em linha que é uma cor, como `#0af` ou `rgb(0 128 255)`, e antes dos valores de cor dos blocos de código; **Em todo o texto**, também antes dos escritos no texto com seis ou oito dígitos, como #ff8800, ou como função de cor, como hsl(210 100% 50%). Códigos curtos no texto, etiquetas como #cafe, números como #234 e links ficam como estão.
 
 Fórmulas no texto: a equivalência massa-energia $E = mc^2$ e a identidade de Euler $e^{i\pi} + 1 = 0$.
 

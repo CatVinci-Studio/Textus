@@ -55,6 +55,18 @@
   white-space: pre-wrap;
 }
 
+/* One newline in a paragraph, drawn as a space, breaks the line where the
+   setting or the folder says so (line-breaks-plugin). Pending AI blocks,
+   rendered with the newline kept, do the same. */
+[data-line-breaks] [data-type="hardbreak"][data-is-inline="true"]::after {
+  content: "\A";
+  white-space: pre;
+}
+
+[data-line-breaks] .pending-blocks p {
+  white-space: pre-line;
+}
+
 .mermaid-source-hidden {
   display: none;
 }

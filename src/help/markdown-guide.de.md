@@ -19,7 +19,7 @@ Keine Lust, dir die Zeichen zu merken? Nimm die **Formatleiste** über dem Dokum
 
 ## Lange Texte schreiben
 
-**Erste Zeile einrücken** (Einstellungen › Bearbeiten › Text) rückt die erste Zeile jedes Absatzes um zwei Zeichen ein; Listen, Zitate und Tabellen bleiben, wie sie sind.
+**Erste Zeile einrücken** (Einstellungen › Darstellung › Text) rückt die erste Zeile jedes Absatzes um zwei Zeichen ein; Listen, Zitate und Tabellen bleiben, wie sie sind.
 
 ### Schreibweisen und Modi
 
@@ -29,7 +29,7 @@ Neben dem WYSIWYG-Editor und dem Quellcodemodus (`Cmd+/`) bietet Textus drei Art
 - **Schreibmaschinenmodus**: Die Zeile, in der du tippst, bleibt in der Mitte des Fensters – im Editor, im Quellcodemodus und in Quelltext und Vorschau.
 - **Zen-Modus** (`Cmd+Shift+J`): blendet alles außer dem Dokument aus, in dem du bist, und dimmt jeden Absatz außer dem, an dem du gerade schreibst. Das × oben rechts oder noch einmal das Tastenkürzel beendet ihn.
 
-Alle findest du im Menü **Ansicht** (die ersten beiden unter **Ansicht › Modus**) und in der Gruppe **Ansicht** unter **Einstellungen › Bearbeiten › Text**. Jeder ist eine Einstellung für ganz Textus: Schaltest du ihn in einem Fenster um, wechselt jeder Tab in jedem Fenster mit, die Dokumente, die du als Nächstes öffnest, erscheinen darin, und Textus öffnet sich beim nächsten Mal wieder darin.
+Alle findest du im Menü **Ansicht** (die ersten beiden unter **Ansicht › Modus**) und in der Gruppe **Ansicht** unter **Einstellungen › Bearbeiten › Dokument**. Jeder ist eine Einstellung für ganz Textus: Schaltest du ihn in einem Fenster um, wechselt jeder Tab in jedem Fenster mit, die Dokumente, die du als Nächstes öffnest, erscheinen darin, und Textus öffnet sich beim nächsten Mal wieder darin.
 
 **Ansicht › Modus › Lesemodus** (auch im Rechtsklickmenü eines Tabs) schützt ein Dokument vor Änderungen – durch Tippen, Einfügen, Ablegen, Rückgängig, Textus AI oder Plugins. Ein Vorhängeschloss neben dem Titel zeigt es an; ein Klick darauf erlaubt wieder Änderungen.
 
@@ -65,7 +65,7 @@ Bewege den Zeiger über eine Tabelle, um Zeilen und Spalten hinzuzufügen oder z
 
 ### Codeblöcke
 
-Umgrenzte Codeblöcke mit Syntaxhervorhebung (die Sprache stellst du oben rechts im Block um). Enter in der leeren letzten Zeile verlässt den Block, Ctrl/⌘+Enter jederzeit; dasselbe gilt für Zitate. **Kopieren** und **Alles auswählen** neben der Sprache kopieren oder markieren den Code des Blocks, und **Zeilennummern in Codeblöcken** (Einstellungen › Bearbeiten › Text) nummeriert seine Zeilen; beides erscheint weder in Exporten noch im Ausdruck.
+Umgrenzte Codeblöcke mit Syntaxhervorhebung (die Sprache stellst du oben rechts im Block um). Enter in der leeren letzten Zeile verlässt den Block, Ctrl/⌘+Enter jederzeit; dasselbe gilt für Zitate. **Kopieren** und **Alles auswählen** neben der Sprache kopieren oder markieren den Code des Blocks, und **Zeilennummern in Codeblöcken** (Einstellungen › Bearbeiten › Dokument) nummeriert seine Zeilen; beides erscheint weder in Exporten noch im Ausdruck.
 
 ```python
 def fib(n: int) -> int:
@@ -127,7 +127,7 @@ sequenceDiagram
     Textus-->>Du: Sofort dargestellt
 ```
 
-**Diagramm-Engine** (Einstellungen › Bearbeiten › Text) legt fest, was diese Blöcke zeichnet: Mermaid, die Voreinstellung, oder Pele, das schneller ist, Diagramme aber auf seine eigene Art anordnet und einige Funktionen weglässt; ein Diagramm, das Pele nicht zeichnen kann, zeichnet Mermaid.
+**Diagramm-Engine** (Einstellungen › Bearbeiten › Dokument) legt fest, was diese Blöcke zeichnet: Mermaid, die Voreinstellung, oder Pele, das schneller ist, Diagramme aber auf seine eigene Art anordnet und einige Funktionen weglässt; ein Diagramm, das Pele nicht zeichnen kann, zeichnet Mermaid.
 
 Die Farben folgen dem Erscheinungsbild – im hellen eine ruhige graue Palette, im dunklen ihr dunkles Gegenstück –, und ein importiertes Theme oder eigenes CSS kann mit `--doc-mermaid-theme: forest` eine andere eingebaute Palette wählen.
 
@@ -240,11 +240,11 @@ Emoji-Kurzcodes wie auf GitHub erscheinen als Emoji: :tada: (`:tada:`), :rocket:
 
 Tief- und Hochstellung wie in Typora und Pandoc: H~2~O (`H~2~O`), x^2^ (`x^2^`); ohne Leerzeichen dazwischen.
 
-Tippst du `(`, `[`, `{`, ein Anführungszeichen oder eine Klammer aus einer chinesischen oder japanischen Eingabemethode wie `（`, `【` oder `「`, kommt das schließende Gegenstück hinter den Cursor: Das getippte Schlusszeichen springt darüber, Rücktaste direkt nach dem öffnenden löscht beide, und markierter Text wird eingeschlossen. **(), [] und „“ schließen** unter **Einstellungen › Bearbeiten › Text** schaltet das ab.
+Tippst du `(`, `[`, `{`, ein Anführungszeichen oder eine Klammer aus einer chinesischen oder japanischen Eingabemethode wie `（`, `【` oder `「`, kommt das schließende Gegenstück hinter den Cursor: Das getippte Schlusszeichen springt darüber, Rücktaste direkt nach dem öffnenden löscht beide, und markierter Text wird eingeschlossen. **(), [] und „“ schließen** unter **Einstellungen › Bearbeiten › Dokument** schaltet das ab.
 
 Links sehen so aus: [das Textus-Repository](https://github.com/CatVinci-Studio/Textus). Mit Strg/⌘+Klick folgst du einem Link: Ein Weblink öffnet sich im Browser, ein Link auf eine andere Markdown-Datei öffnet sie in einem Tab, und ein Link auf `#a-heading` scrollt dorthin. Ein einfacher Klick setzt den Cursor in den Link und zeigt sein Markdown, `[text](url)`, zum Bearbeiten an Ort und Stelle; verlässt der Cursor ihn, ist er wieder ein Link. Auch HTML im Text wird dargestellt, etwa Tasten wie <kbd>Cmd</kbd> + <kbd>S</kbd>. Ebenso aufklappbare `<details>`-Blöcke, HTML-Tabellen, einige Inline-Stile (Farbe, Hintergrund, Größe, Stärke, Ausrichtung, Unter- und Durchstreichung) und eingebettetes `<svg>`, das als Bild erscheint. Skripte und anderes HTML bleiben als Quelltext stehen. Ein Link auf eine Überschrift in einer anderen Datei, etwa `[see](notes.md#a-heading)`, öffnet diese Datei an der Überschrift. Obsidian-Wikilinks (`[[Note]]`, `[[Note|text]]` und `[[Note#Heading]]`) öffnen sich genauso, aus dem Ordner des Dokuments oder von überall in seinem Vault; sie und `#tags` am Zeilenanfang werden genau so gespeichert, wie sie geschrieben sind.
 
-**Farbfelder vor Farbcodes** (Einstellungen › Bearbeiten › Text) setzt ein kleines Quadrat in der Farbe vor einen Farbcode. **Nur in Code** zeigt es in Inline-Code, der eine Farbe ist, etwa `#0af` oder `rgb(0 128 255)`, und vor den Farbwerten in Codeblöcken; **Überall** auch vor im Text mit sechs oder acht Stellen geschriebenen Farbcodes, etwa #ff8800, und Farbfunktionen, etwa hsl(210 100% 50%). Kurzformen im Text, Tags wie #cafe, Nummern wie #234 und Links bleiben, wie sie sind.
+**Farbfelder vor Farbcodes** (Einstellungen › Bearbeiten › Dokument) setzt ein kleines Quadrat in der Farbe vor einen Farbcode. **Nur in Code** zeigt es in Inline-Code, der eine Farbe ist, etwa `#0af` oder `rgb(0 128 255)`, und vor den Farbwerten in Codeblöcken; **Überall** auch vor im Text mit sechs oder acht Stellen geschriebenen Farbcodes, etwa #ff8800, und Farbfunktionen, etwa hsl(210 100% 50%). Kurzformen im Text, Tags wie #cafe, Nummern wie #234 und Links bleiben, wie sie sind.
 
 Formeln im Text: die Äquivalenz von Masse und Energie $E = mc^2$, die eulersche Identität $e^{i\pi} + 1 = 0$.
 

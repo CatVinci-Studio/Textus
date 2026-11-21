@@ -64,6 +64,16 @@ describe("allowedThemeCss", () => {
     expect(allowedThemeCss("#write p, .menu { color: red; }")).toBeNull();
   });
 
+  it("keeps a measure on #write itself, not on what is inside it", () => {
+    const css = allowedThemeCss(
+      ":root #write { max-width: 720px; } #write p { max-width: 10px; color: red; }",
+    )!;
+    expect(declarations(css)).toEqual([
+      ":root #write max-width",
+      "#write p color",
+    ]);
+  });
+
   it("drops properties that change how the editor works or what it shows", () => {
     const css = allowedThemeCss(`#write h1::before {
       content: "Approved";

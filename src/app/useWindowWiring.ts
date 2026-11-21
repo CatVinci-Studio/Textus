@@ -1,7 +1,7 @@
 import { canLinkSponsor } from "../platform/capabilities";
 import { useEntriesFromOtherWindows } from "./useEntriesFromOtherWindows";
 import { linkToFile } from "./islands/link-to-file";
-import { useHoldScrollOnReturn } from "../document-view/hold-scroll-on-return";
+import { holdOnReturn } from "./hold-on-return";
 import { useEffect } from "react";
 import { links } from "../platform/ipc";
 import { useGlobalShortcuts } from "./useGlobalShortcuts";
@@ -38,6 +38,10 @@ import type { Settings, useSettings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import { tabInUse } from "../engine/layout/store";
 import { pageOf } from "./tabs/page-tabs";
+
+/** The documents' scrollers: rendered, the split's preview, source. */
+const DOCUMENT_SCROLLERS =
+  ".main-pane :is(.editor-scroll, .split-preview, .source-view .cm-scroller)";
 
 type WiringInput = {
   shell: WindowShell;
@@ -167,7 +171,7 @@ function useWindowGuards(input: WiringInput) {
   );
 
   useExternalChangeReload(liveTabs, tabState.updateTab);
-  useHoldScrollOnReturn();
+  useEffect(() => holdOnReturn(DOCUMENT_SCROLLERS), []);
 }
 
 /** What the app's own renames, moves and deletes do to open tabs, also

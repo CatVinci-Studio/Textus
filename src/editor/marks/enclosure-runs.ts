@@ -22,8 +22,16 @@ export function isEnclosure(node: ProseNode): boolean {
   return ENCLOSURE_NODES.has(node.type.name);
 }
 
+/** Closers that differ from their opener. */
+const CLOSERS: Record<string, string> = {
+  "\\(": "\\)",
+  "\\[": "\\]",
+  "$`": "`$",
+};
+
 /** The literal delimiters an enclosure node is rendered with, opening and
- *  closing: the same but for LaTeX's `\(...\)` and `\[...\]`. */
+ *  closing: the same but for LaTeX's `\(...\)` and `\[...\]` and GitHub's
+ *  $`...`$. */
 export function enclosureDelims(node: ProseNode): {
   open: string;
   close: string;
@@ -32,8 +40,7 @@ export function enclosureDelims(node: ProseNode): {
   if (node.type.name === "math_inline")
     open = (node.attrs.delimiter as string | undefined) ?? "$";
   if (node.type.name === "math_block") open = "$$";
-  const close = open === "\\(" ? "\\)" : open === "\\[" ? "\\]" : open;
-  return { open, close };
+  return { open, close: CLOSERS[open] ?? open };
 }
 
 /**

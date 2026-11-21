@@ -454,3 +454,25 @@ test("a file that takes the preview tab starts with its own history, not the las
   await expect(doc.locator("h1")).toContainText("Beta");
   await expect(doc).not.toContainText("Alpha");
 });
+
+test("the sidebar stepping aside and back leaves the rows of tabs in place, not drawn anew", async ({
+  page,
+}) => {
+  await open(page);
+  await pasteMarkdown(page, "# 第三章");
+  await emit(page, "menu-toggle-sidebar");
+  await page.getByRole("button", { name: "Textus AI" }).first().click();
+  await expect(page.locator("section.island")).toHaveCount(2);
+  const rows = page.locator(".tab-bar, .tab-pill[data-tab]");
+  const before = await rows.elementHandles();
+  const sidebar = page.locator(".sidebar");
+  await page.setViewportSize({ width: 780, height: 760 });
+  await expect(sidebar).toHaveClass(/sidebar-collapsed/);
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
+  const kept = await Promise.all(
+    before.map((el) => el.evaluate((n) => n.isConnected)),
+  );
+  expect(kept).toEqual(before.map(() => true));
+  await expect(rows).toHaveCount(before.length);
+});

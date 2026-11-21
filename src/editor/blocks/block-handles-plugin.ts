@@ -38,7 +38,7 @@ const DWELL_MS = 100;
  * edited. Under a finger, ⋮⋮ alone stands by the block with the caret:
  * tapped, its menu; held, the block lifts to be moved.
  */
-function blockHandlesPlugin(options: { enabled: () => boolean }) {
+function blockHandlesPlugin(grip: boolean) {
   return new Plugin<Pulled | null>({
     key: pulled,
     // A block being pulled, as this editor shows it: a class set on its
@@ -58,7 +58,7 @@ function blockHandlesPlugin(options: { enabled: () => boolean }) {
       decorations: (state) =>
         pulledDecorations(state.doc, pulled.getState(state) ?? null),
     },
-    view: (view) => new BlockHandles(view, options.enabled),
+    view: (view) => new BlockHandles(view, grip),
   });
 }
 
@@ -70,8 +70,9 @@ const showPulled = (view: EditorView, state: Pulled | null) =>
     view.state.tr.setMeta(pulled, state).setMeta("addToHistory", false),
   );
 
-export const createBlockHandlesPlugin = (options: { enabled: () => boolean }) =>
-  $prose(() => blockHandlesPlugin(options));
+/** `grip`: ⋮⋮ shows; a preview has only the fold carets. */
+export const createBlockHandlesPlugin = ({ grip = true } = {}) =>
+  $prose(() => blockHandlesPlugin(grip));
 
 class BlockHandles {
   private readonly root: HTMLElement;
@@ -94,7 +95,7 @@ class BlockHandles {
 
   constructor(
     private readonly view: EditorView,
-    private readonly enabled: () => boolean,
+    private readonly withGrip: boolean,
   ) {
     this.root = view.dom.parentElement as HTMLElement;
     this.area = view.dom.closest<HTMLElement>(".editor-scroll") ?? this.root;
@@ -208,7 +209,7 @@ class BlockHandles {
   private show(block: HandledBlock) {
     const dom = this.view.nodeDOM(block.pos) as HTMLElement | null;
     if (!dom?.isConnected) return this.hide();
-    const grip = this.enabled() && this.view.editable;
+    const grip = this.withGrip && this.view.editable;
     const fold = headingFold(this.view, block.pos);
     const caret = !!fold && !fold.folded;
     if (!grip && !caret) return this.hide();

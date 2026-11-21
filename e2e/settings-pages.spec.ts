@@ -214,7 +214,6 @@ test("Layout switched in Settings lays the islands out again at once", async ({
   await open(page);
   await emit(page, "menu-settings");
   await page.getByRole("button", { name: "外观" }).first().click();
-  await expect(page.locator(".settings-group-note")).toContainText("经典");
   const sidebar = page.locator(".sidebar");
   const island = page.locator("section.island").first();
   const gap = async () =>
@@ -225,6 +224,57 @@ test("Layout switched in Settings lays the islands out again at once", async ({
   await page.getByRole("option", { name: "经典" }).click();
   // Flush against the sidebar, with no island gap left over.
   await expect.poll(gap).toBeLessThanOrEqual(1);
+});
+
+test("the classic look turns on in one switch, and off gives back the look before it", async ({
+  page,
+}) => {
+  await open(page);
+  await emit(page, "menu-settings");
+  await page.getByRole("button", { name: "外观" }).first().click();
+  const classic = page.getByRole("switch", { name: "使用旧版本样式" });
+  const rail = page.getByRole("switch", { name: "显示左侧图标栏" });
+  const titleRow = page.getByRole("switch", { name: "标题栏单独一行显示" });
+  const layout = page.getByRole("combobox", { name: "布局" });
+  await expect(classic).not.toBeChecked();
+  await titleRow.click();
+  await classic.click();
+  await expect(classic).toBeChecked();
+  await expect(layout).toContainText("经典");
+  // The rail itself still shows while the sidebar is open.
+  await expect(rail).not.toBeChecked();
+  await expect(titleRow).toBeChecked();
+  await classic.click();
+  await expect(classic).not.toBeChecked();
+  await expect(layout).toContainText("浮动岛");
+  await expect(rail).toBeChecked();
+  // The title row was on before: it stays on.
+  await expect(titleRow).toBeChecked();
+});
+
+test("custom CSS is written from the installed themes' ⋯", async ({ page }) => {
+  await open(page);
+  await emit(page, "menu-settings");
+  await page.getByRole("button", { name: "外观" }).first().click();
+  await expect(page.locator(".settings-tab-page textarea")).toHaveCount(0);
+  await page
+    .getByRole("region", { name: "已安装主题" })
+    .locator(".extensions-more button")
+    .click();
+  await page.getByRole("menuitem", { name: "自定义 CSS…" }).click();
+  const dialog = page.getByRole("dialog", { name: "自定义 CSS" });
+  await dialog.getByRole("textbox").fill("#write { letter-spacing: 1px; }");
+  await dialog.getByRole("button", { name: "完成" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        [...document.querySelectorAll("style")].some((s) =>
+          s.textContent?.includes("letter-spacing: 1px"),
+        ),
+      ),
+    )
+    .toBe(true);
 });
 
 test("a tab brought to the front by a click takes the focus without the keyboard's ring", async ({
@@ -255,7 +305,6 @@ test("changing what one tilde reads as redraws an edited document, its text kept
       }),
     ),
   );
-  await page.locator(".settings-advanced > summary").first().click();
   await page.getByLabel("单个波浪线 ~文字~").click();
   await page.getByRole("option", { name: "原样显示" }).click();
   await tabs(page).first().click();
@@ -263,7 +312,46 @@ test("changing what one tilde reads as redraws an edited document, its text kept
   await expect(doc).toContainText("H~2~O and 5~10人");
 });
 
-test("Make your theme opens Create in a tab of its own, filled, with the AI on or off", async ({
+test("one newline in a paragraph breaks the line once the setting says so, its text kept", async ({
+  page,
+}) => {
+  await open(page);
+  // From a file: a paste would make two paragraphs of the two lines.
+  await page.evaluate(() => {
+    const w = window as unknown as Record<string, unknown> & {
+      __devEmitTauriEvent: (name: string, payload: unknown) => void;
+    };
+    w.__devFiles = { "/notes/lines.md": "one\ntwo" };
+    w.__devEmitTauriEvent("tauri://drag-drop", {
+      paths: ["/notes/lines.md"],
+      position: { x: 0, y: 0 },
+    });
+  });
+  const doc = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(doc).toContainText("one two");
+  const soft = doc.locator('[data-type="hardbreak"][data-is-inline="true"]');
+  const drawn = () =>
+    soft.evaluate((el) => getComputedStyle(el, "::after").content);
+  await expect(soft).toHaveCount(1);
+  await expect(doc).not.toHaveAttribute("data-line-breaks");
+  expect(await drawn()).toBe("none");
+  await emit(page, "menu-settings");
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new CustomEvent("textus:open-settings-page", {
+        detail: { page: "edit-text" },
+      }),
+    ),
+  );
+  await page.getByLabel("段落中的单个换行").click();
+  await page.getByRole("option", { name: "换行", exact: true }).click();
+  await tabs(page).filter({ hasText: "lines" }).click();
+  await expect(doc).toHaveAttribute("data-line-breaks", "");
+  expect(await drawn()).not.toBe("none");
+  await expect(doc).toContainText("one two");
+});
+
+test("Make your theme opens the theme workshop in a tab of its own, filled, with the AI on or off", async ({
   page,
 }) => {
   for (const textusAi of [true, false]) {
@@ -272,8 +360,29 @@ test("Make your theme opens Create in a tab of its own, filled, with the AI on o
     await emit(page, "menu-settings");
     await page.locator(".sidebar").getByText("外观").first().click();
     await page.getByText("制作你的主题").first().click();
-    await expect(page.locator(".create-studio-title")).toBeVisible();
-    const box = await page.locator(".create-studio").boundingBox();
+    await expect(page.locator(".theme-workshop")).toBeVisible();
+    const box = await page.locator(".theme-workshop-studio").boundingBox();
     expect(box?.height ?? 0).toBeGreaterThan(400);
   }
+});
+
+test("the margin views are offered as the document behind Settings has room for, not as its hidden page measures", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1400, height: 760 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  // An edited draft stays mounted, out of sight, behind the Settings tab.
+  await pasteMarkdown(page, "# 第一章");
+  await emit(page, "menu-settings");
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new CustomEvent("textus:open-settings-page", {
+        detail: { page: "chat" },
+      }),
+    ),
+  );
+  await page.getByRole("combobox", { name: "修订显示方式" }).click();
+  const list = page.getByRole("listbox", { name: "修订显示方式" });
+  await expect(list.getByRole("option")).toHaveCount(3);
+  await expect(list.getByRole("option", { disabled: true })).toHaveCount(0);
 });

@@ -18,9 +18,7 @@ export function pointerPlugins(settings: {
     dragAutoscrollPlugin,
     textDragPlugin,
     marginClickPlugin,
-    createBlockHandlesPlugin({
-      enabled: () => settings.current.blockHandles,
-    }),
+    createBlockHandlesPlugin(),
     // Desktop only: a phone's or tablet's own caret has its handles.
     createDrawnCaretPlugin({
       enabled: () => !isMobileApp,

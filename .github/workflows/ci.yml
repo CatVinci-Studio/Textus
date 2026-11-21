@@ -585,6 +585,14 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-${{ runner.os }}-${{ hashFiles('src-tauri/Cargo.lock', 'package-lock.json') }}
           restore-keys: gradle-${{ runner.os }}-
+      # Retries that wait seconds and grow, not 125 ms, when Central says 429.
+      - name: Gradle retries downloads with a back-off
+        run: |
+          mkdir -p ~/.gradle
+          cat >> ~/.gradle/gradle.properties <<'PROPS'
+          systemProp.org.gradle.internal.repository.max.retries=6
+          systemProp.org.gradle.internal.repository.initial.backoff=2000
+          PROPS
       # The runner image's SDK and newest NDK.
       - name: Generate the Android project (src-tauri/gen/android)
         run: |

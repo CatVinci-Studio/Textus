@@ -335,6 +335,16 @@
   padding-bottom: var(--space-4);
   text-align: center;
 }
+/* Kept with its conversation while the theme workshop shows. */
+.create-studio[hidden] {
+  display: none;
+}
+/* Making a theme: the workshop, or describing it to the AI. */
+.create-studio-switch {
+  display: flex;
+  justify-content: center;
+  padding-bottom: var(--space-2);
+}
 /* With the AI off it is all there is: in the middle. */
 .create-studio-hero:only-child {
   justify-content: center;

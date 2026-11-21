@@ -24,6 +24,7 @@ import {
   type PandocArgsFormat,
   type ColorSwatchMode,
   type SingleTildeMode,
+  type SingleNewlineMode,
   type RevisionDisplay,
   type AiChangeMode,
   type CompletionTone,
@@ -68,6 +69,9 @@ export interface Settings {
   /** What `~text~` is: a subscript after a letter or digit (`H~2~O`), a
    *  strikethrough as on GitHub, or the tildes as typed. */
   singleTilde: SingleTildeMode;
+  /** What one newline inside a paragraph shows as: a space, the lines
+   *  joined, or a line break; a folder's own convention wins. */
+  singleNewline: SingleNewlineMode;
   /** Where newly pasted images go. Existing markdown image references are
    *  never migrated when this changes. */
   imageStorageMode: ImageStorageMode;
@@ -177,10 +181,6 @@ export interface Settings {
   contentWidth: ContentWidth;
   /** Each body paragraph's first line set in by two characters. */
   firstLineIndent: boolean;
-  /** A gray "type / to insert" on the empty line the caret is on. */
-  emptyLineHint: boolean;
-  /** ⋮⋮ beside the block under the pointer. */
-  blockHandles: boolean;
   /** The caret glides to where it goes (computers only). */
   smoothCaret: boolean;
   /** How an image on a line of its own sits. Display only: the file is
@@ -198,6 +198,13 @@ export interface Settings {
   /// Floating islands (the page and panels as rounded sheets on the frame)
   /// or classic (flush, square, hairlines).
   layout: "islands" | "classic";
+  /// The layout, rail and title row as they were when "Use the classic
+  /// look" turned on, put back when it turns off; null while it is off.
+  lookBeforeClassic: {
+    layout: "islands" | "classic";
+    activityRail: boolean;
+    titleRowShown: boolean;
+  } | null;
   /// Sidebar tabs the user took off the rail, by id.
   activityRailHidden: string[];
   /// Plugins' sidebar tabs the user pinned among Textus's own at the rail's
@@ -317,6 +324,7 @@ export const DEFAULT_SETTINGS: Settings = {
   codeLineNumbers: false,
   colorSwatches: "off",
   singleTilde: "subscript",
+  singleNewline: "join",
   imageStorageMode: "local",
   imageFolder: DEFAULT_IMAGE_SUBFOLDER,
   imageHost: "picgo",
@@ -361,14 +369,13 @@ export const DEFAULT_SETTINGS: Settings = {
   zenMode: false,
   contentWidth: "auto",
   firstLineIndent: false,
-  emptyLineHint: false,
-  blockHandles: true,
   smoothCaret: false,
   imageAlign: "center",
   menuBarShown: false,
   titleRowShown: false,
   activityRail: true,
   layout: "islands",
+  lookBeforeClassic: null,
   activityRailHidden: [],
   activityRailPinned: [],
   activityRailOrder: [],

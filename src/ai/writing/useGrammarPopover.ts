@@ -1,5 +1,5 @@
 import { CJK_SCRIPT } from "../../utils/cjk";
-import { focusInPlace } from "../../editor/focus-in-place";
+import { keepWhile } from "../../engine/controls/scroll-hold";
 import { TextSelection } from "@milkdown/kit/prose/state";
 import {
   useCallback,
@@ -10,7 +10,7 @@ import {
   type SetStateAction,
 } from "react";
 import { editorViewCtx } from "@milkdown/kit/core";
-import type { Decoration } from "@milkdown/kit/prose/view";
+import type { Decoration, EditorView } from "@milkdown/kit/prose/view";
 import {
   issueAt,
   issueSource,
@@ -326,4 +326,14 @@ export function useGrammarPopover(
     ignore,
     step,
   };
+}
+
+/** The editor focused from a control outside it (a card's Apply) with the
+ *  page left where the reader has it: WebKit, taking the focus back, first
+ *  puts back its own selection from before and scrolls to that, however
+ *  far it is. */
+function focusInPlace(view: EditorView): void {
+  keepWhile(view.dom.closest<HTMLElement>(".editor-scroll"), () =>
+    view.focus(),
+  );
 }

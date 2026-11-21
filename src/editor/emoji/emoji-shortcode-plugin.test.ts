@@ -25,6 +25,19 @@ describe(":shortcode: emoji", () => {
     expect(shown(t)).toEqual([]);
   });
 
+  it("leaves a known name glued to a letter or digit alone", async () => {
+    const t = await openView("10:100:00 a:b:c a:smile:b 好:smile: x :tada: y");
+    t.select(1);
+    expect(shown(t)).toEqual(["🎉"]);
+    expect(t.markdown()).toBe("10:100:00 a:b:c a:smile:b 好:smile: x :tada: y");
+  });
+
+  it("takes the edge of bold as a word's edge, as GitHub does", async () => {
+    const t = await openView("x **a**:smile:");
+    t.select(1);
+    expect(shown(t)).toEqual(["😄"]);
+  });
+
   it("leaves a code block alone", async () => {
     const t = await openView("```\n:smile:\n```\n\nafter");
     expect(shown(t)).toEqual([]);

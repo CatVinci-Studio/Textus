@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "@playwright/test";
 import { pluginsCheckout } from "../vite.dev-plugins";
-import { emit, mockInvoke, openApp, sourceOf } from "./helpers";
+import { emit, mockInvoke, openApp, settled, sourceOf } from "./helpers";
 import {
   hasPlugin,
   minimalDocx,
@@ -451,6 +451,46 @@ test("a plugin's slip is underlined, explained on the slip card, and fixed from 
   await card.locator(".grammar-popover-apply").click();
   await expect(slip).toHaveCount(0);
   await expect.poll(() => sourceOf(page)).toBe("# A\n\n## Notes\n\nText");
+});
+
+test("a slip picked from the list off screen is scrolled to, its card staying open until the page is scrolled", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.markdown-lint"), "no plugins checkout");
+  const lines = Array.from({ length: 80 }, (_, i) => `Line ${i}.`);
+  await openWithPlugins(page, {
+    plugins: {
+      "catvinci.markdown-lint": permissions("catvinci.markdown-lint"),
+    },
+    folder: {
+      "/work/notes/a.md": `# A\n\n## Notes:\n\n${lines.join("\n\n")}\n`,
+    },
+  });
+  await openPath(page, "/work/notes/a.md");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  const slip = editor.locator(".plugin-issue");
+  await expect(slip).toHaveCount(1);
+  const scroller = page.locator('[data-active-tab="true"] .editor-scroll');
+  // Just past it: still among the blocks near enough to be asked about
+  // again (rest-asking's AROUND), so it stays in the list once the page rests.
+  await slip.evaluate((el) => {
+    const s = el.closest(".editor-scroll")!;
+    s.scrollBy(
+      0,
+      el.getBoundingClientRect().bottom - s.getBoundingClientRect().top + 100,
+    );
+  });
+  await expect(slip).not.toBeInViewport();
+  await settled(page);
+  await page.locator(".slip-count").click();
+  await page.getByRole("menuitem", { name: /^Tidy: MD026/ }).click();
+  await expect(slip).toBeInViewport();
+  await settled(page);
+  const card = page.locator(".grammar-popover");
+  await expect(card).toBeVisible();
+  // The reader scrolling on: the card no longer points at its words.
+  await scroller.evaluate((s) => s.scrollBy(0, 200));
+  await expect(card).toBeHidden();
 });
 
 test("a plugin's inline syntax is shown as it means, its source back under the caret", async ({

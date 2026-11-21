@@ -5,7 +5,7 @@ import type { Settings } from "../prefs/SettingsContext";
 
 /**
  * Decorations draw only on a transaction, so settings they read (language,
- * line numbers, swatches, diagram engine) need one dispatched on change,
+ * line numbers, swatches, diagram engine, line breaks) need one dispatched on change,
  * or they wait for the next keystroke.
  */
 export function useSettingsRedraw(run: EditorRunner, settings: Settings) {
@@ -21,7 +21,7 @@ export function useSettingsRedraw(run: EditorRunner, settings: Settings) {
     settings.diagramEngine,
     settings.enableMath,
     settings.enableMermaid,
-    settings.emptyLineHint,
+    settings.singleNewline,
     run,
   ]);
 }

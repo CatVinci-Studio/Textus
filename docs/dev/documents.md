@@ -217,7 +217,7 @@ how much of the rule applies. The rule has two parts:
   `loading="lazy"` brings them.
 
 Either part, drawing or letting go, keeps what the reader sees where it is
-(`hold-still.ts`): WebKit has no CSS scroll anchoring.
+(`engine/controls/scroll-hold.ts`): WebKit has no CSS scroll anchoring.
 
 Whatever copies the page or measures a place in it draws first, through
 the same two calls:

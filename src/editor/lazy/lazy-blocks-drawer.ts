@@ -1,7 +1,9 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorState, PluginView } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { firstBelow, holdStill, pastAnEnd, stillPoint } from "./hold-still";
+import { holdStill, pageIsTheHands } from "../../engine/controls/scroll-hold";
+import { firstBelow, stillPoint } from "./still-point";
+import { flushDomSelection } from "../modes/mode-switch";
 import {
   DRAW_AHEAD_SCREENS,
   DRAW_SCREENS,
@@ -293,7 +295,11 @@ export class LazyBlocksDrawer implements PluginView {
     if (this.view.isDestroyed || !this.scroller || this.holding) return;
     if (performance.now() < this.pausedUntil) return;
     // The scroll's end (onScroll's settle) draws it.
-    if (pastAnEnd(this.scroller)) return;
+    if (pageIsTheHands(this.scroller)) return;
+    // A click's caret not yet read (a busy page hears its selectionchange
+    // late) would be overwritten by the old one as the blocks redraw; read
+    // before anything is measured, as it may open a block's source.
+    flushDomSelection(this.view);
     const scrolling = performance.now() - this.scrolledAt < SETTLE_MS;
     const next = plan(this.view, this.scroller, !scrolling);
     if (!next) return;

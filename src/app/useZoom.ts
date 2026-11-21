@@ -4,7 +4,11 @@ import { tabInUse, windowLayout } from "../engine/layout/store";
 import { paneById } from "../engine/layout/tree";
 import { useEffect, useRef } from "react";
 import { onFlush } from "../storage/pending-writes";
-import { blockAt, holdBlock } from "../engine/controls/hold-line";
+import {
+  blockAt,
+  holdBlock,
+  keepNextFrame,
+} from "../engine/controls/scroll-hold";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
 import type { EditorView } from "@codemirror/view";
 import { zoomPanesOf, type ZoomPane } from "../engine/zoom/zoom-panes";
@@ -255,11 +259,9 @@ export function useZoom(
       // finds and the pane under the pointer gets pulled with it. One frame
       // later, put that pane back where the step left it and let the other
       // follow again.
-      requestAnimationFrame(() => {
-        if (pane.scroller.scrollTop === held) return;
-        pane.scroller.scrollTop = held;
-        pane.scroller.dispatchEvent(new Event("scroll"));
-      });
+      keepNextFrame(pane.scroller, held, () =>
+        pane.scroller.dispatchEvent(new Event("scroll")),
+      );
     };
 
     const applyFrame = () => {

@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, type ReactNode, type RefObject } from "react";
 import { onAppearance } from "../../engine/tokens/appearance";
+import { RowHelp } from "../sections/controls";
 
 /** One row's control gone under its name puts every row's there: a group
  *  reads one way (data-stacked on its body). */
@@ -40,6 +41,8 @@ function useEvenRows(body: RefObject<HTMLDivElement | null>, on: boolean) {
 export function SettingsGroup({
   title,
   count,
+  help,
+  helpLabel,
   actions,
   className,
   evenRows = false,
@@ -52,6 +55,10 @@ export function SettingsGroup({
   title?: string;
   /** How many it lists, after the title. */
   count?: number;
+  /** What the section is, behind a "?" after its title (named `helpLabel`,
+   *  else the title). */
+  help?: ReactNode;
+  helpLabel?: string;
   actions?: ReactNode;
   className?: string;
   /** Rows alike (a list of shortcuts): one row's control under its name
@@ -81,6 +88,7 @@ export function SettingsGroup({
                   {count}
                 </span>
               )}
+              {help && <RowHelp label={helpLabel ?? title}>{help}</RowHelp>}
             </h2>
           )}
           {actions && <div className="settings-group-actions">{actions}</div>}

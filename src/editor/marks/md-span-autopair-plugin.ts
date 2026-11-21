@@ -23,6 +23,7 @@ import {
   runsHoldAtoms,
   spanNode,
   threeLiteral,
+  unglueSuperscript,
   upgradeRung,
 } from "./md-span-runs";
 import {
@@ -90,6 +91,7 @@ export const createMdSpanAutopairPlugin = (options: {
             if (from !== to) return false;
             if (redirectMisattributedInput(view, from, to, text)) return true;
             if (swallowPendingCloser(view, from, text)) return true;
+            if (unglueSuperscript(view, from, text)) return true;
 
             if (text === " ") {
               const stars = lineStartStars(view.state.doc.resolve(from));

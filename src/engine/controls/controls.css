@@ -245,6 +245,29 @@ input[type="range"].tx-slider {
   accent-color: var(--ui-accent-fill);
 }
 
+/* A number with its unit, stepped by − and + (NumberField.tsx). */
+.tx-number {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.tx-number-input {
+  flex: none;
+  width: 4.5em;
+  height: var(--control-height-sm);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.tx-number-unit {
+  min-width: 1.5em;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+}
+.tx-number-step {
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+}
+
 /* Text edited where it is shown: a cell, a card's title. No frame of its
    own; the place it sits in is the field. */
 .tx-inline-input {

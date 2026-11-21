@@ -103,10 +103,7 @@ export function withEditorInput(editor: Editor, env: CoreEnv): Editor {
         editing(
           createPlaceholderPlugin(
             () => resolveStrings(settings.current.language).emptyDocPlaceholder,
-            () =>
-              settings.current.emptyLineHint
-                ? resolveStrings(settings.current.language).emptyLineHint
-                : null,
+            () => resolveStrings(settings.current.language).emptyLineHint,
           ),
         ),
       )

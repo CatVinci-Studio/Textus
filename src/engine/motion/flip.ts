@@ -25,6 +25,14 @@ export function measure(elements: Iterable<Element>): Snapshot {
   return rects;
 }
 
+/** The slides `play` started on `elements` stopped: each drawn at once
+ *  where it is laid out. */
+export function stopFlips(elements: Iterable<Element>): void {
+  for (const el of elements)
+    for (const running of el.getAnimations?.() ?? [])
+      if (running.id === FLIP_ID) running.cancel();
+}
+
 type Timing = { duration?: DurationToken | number; easing?: EasingToken };
 
 /** Slides every element of `before` that moved from its old place to its new
@@ -37,6 +45,7 @@ export function play(
     timingFor,
     prepare,
     resizes,
+    onTranslate = false,
   }: Timing & {
     timingFor?: (el: Element) => Timing | undefined;
     /** Ones that change size as they move and are only a box (an island's
@@ -46,15 +55,16 @@ export function play(
     /** Lays out what follows the change (measured lengths set as styles)
      *  before the new places are read: settled later, it jumped. */
     prepare?: () => void;
+    /** Slides on `translate`, leaving the place an item rests at on its
+     *  own `transform` (one making room for a dragged one) alone. */
+    onTranslate?: boolean;
   } = {},
 ): void {
   if (!motionAllowed()) return;
   const targets = [...before.keys()].filter((el) => el.isConnected);
   // Slides still running were measured into `before`; they must not count
   // again in the new positions.
-  for (const el of targets)
-    for (const running of el.getAnimations?.() ?? [])
-      if (running.id === FLIP_ID) running.cancel();
+  stopFlips(targets);
   prepare?.();
   type Move = {
     el: Element;
@@ -96,14 +106,15 @@ export function play(
       width: `${r.width / k}px`,
       height: `${r.height / k}px`,
     });
+    const from = onTranslate
+      ? { translate: `${dx / k}px ${dy / k}px` }
+      : { transform: `translate(${dx / k}px, ${dy / k}px)` };
+    const to = onTranslate ? { translate: "0px 0px" } : { transform: "none" };
     animate(
       el,
       [
-        {
-          transform: `translate(${dx / k}px, ${dy / k}px)`,
-          ...(size && box(size[0])),
-        },
-        { transform: "none", ...(size && box(size[1])) },
+        { ...from, ...(size && box(size[0])) },
+        { ...to, ...(size && box(size[1])) },
       ],
       {
         duration: timing?.duration ?? duration,

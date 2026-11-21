@@ -1,0 +1,19 @@
+/* The dialog box is the app's (.close-prompt); its width is its own. */
+.custom-css-dialog {
+  box-sizing: border-box;
+  width: min(560px, calc(100vw - 2 * var(--space-4)));
+  max-width: none;
+}
+
+.custom-css-title {
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.tx-input.custom-css-input {
+  min-height: 14em;
+}
+
+.custom-css-buttons {
+  margin-top: 20px;
+}
