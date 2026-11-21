@@ -69,6 +69,7 @@ const phoneParts = lazyModule(
 );
 const DocumentList = lazyComponent(phoneParts, (m) => m.DocumentList);
 const DocumentMenu = lazyComponent(phoneParts, (m) => m.DocumentMenu);
+const TabSwitcher = lazyComponent(phoneParts, (m) => m.TabSwitcher);
 
 /**
  * One window: its tabs, the panels around them, and the prompts and notices
@@ -121,7 +122,9 @@ function App() {
   // Whether the documents lie on islands: their tabs in the window bar's
   // row (or the row under a bar of its own), or one sheet alone under the
   // title's row - else a clean sheet (Zen), or the phone's own bar.
-  const tabsInBar = useTabsInBar(zenMode, showTabBar);
+  // A phone draws no tab row: its tabs are behind the document's name
+  // (TabSwitcher). The desktop keeps the row.
+  const tabsInBar = useTabsInBar(zenMode, showTabBar) && !phone;
   const tabRow = tabsInBar || !zenMode ? "bar" : undefined;
 
   // What Settings needs, as a sheet or as a tab.
@@ -190,6 +193,20 @@ function App() {
             agentShortcut={formatCombo(settings.shortcuts.toggleAgentPanel)}
             onToggleAgent={toggleAgentPanel}
             onToggleReadOnly={() => toggleReadOnly()}
+            tabSwitcher={
+              phone ? (
+                <TabSwitcher
+                  tabs={tabs}
+                  activeTabId={activeTabId}
+                  onActivate={setActiveTabId}
+                  onClose={requestCloseTab}
+                  // The tab row's +, which a phone does not draw.
+                  onAdd={
+                    settings.addTabShowsStartPage ? addStartTab : addBlankTab
+                  }
+                />
+              ) : undefined
+            }
             documentMenu={
               phone && !activeTab.view && !showsStartPage(activeTab) ? (
                 <DocumentMenu
