@@ -54,7 +54,13 @@ const DOCUMENT_PROPERTY = new RegExp(
     ")$",
 );
 
-type Scope = "root" | "document";
+/** `#write` itself, which may also set its `max-width`: the measure a
+ *  Typora theme sets, which the column follows. */
+const COLUMN_SELECTOR = new RegExp(
+  String.raw`^(?:${ROOT}\s*>?\s*)*(?:\.milkdown\s*>?\s*)?#write$`,
+);
+
+type Scope = "root" | "document" | "column";
 
 /** A selector list's top-level parts: commas inside `:is(a, b)` don't split. */
 function selectorParts(selectorText: string): string[] {
@@ -78,8 +84,11 @@ function selectorParts(selectorText: string): string[] {
  *  document, or somewhere a theme doesn't style (null). A list that mixes root
  *  and document gets the root's narrower set. */
 function scopeOf(selectorText: string): Scope | null {
-  let scope: Scope = "document";
-  for (const part of selectorParts(selectorText)) {
+  const parts = selectorParts(selectorText);
+  let scope: Scope = parts.every((part) => COLUMN_SELECTOR.test(part))
+    ? "column"
+    : "document";
+  for (const part of parts) {
     if (ROOT_SELECTOR.test(part)) scope = "root";
     else if (!DOCUMENT_SELECTOR.test(part)) return null;
   }
@@ -88,9 +97,10 @@ function scopeOf(selectorText: string): Scope | null {
 
 function allowed(name: string, scope: Scope): boolean {
   if (name.startsWith("--")) return VARIABLE.test(name);
-  return scope === "root"
-    ? ROOT_PROPERTY.test(name)
-    : DOCUMENT_PROPERTY.test(name);
+  if (scope === "root") return ROOT_PROPERTY.test(name);
+  return (
+    DOCUMENT_PROPERTY.test(name) || (scope === "column" && name === "max-width")
+  );
 }
 
 /** The style rule with only the properties its scope allows, or null when

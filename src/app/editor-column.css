@@ -21,6 +21,11 @@
   --content-width: 100%;
 }
 
+/* A width the reader chose wins over a theme's. */
+:root[data-content-width] {
+  --theme-text-width: initial !important;
+}
+
 :root {
   /* The margin left of the text: a drawn block's fold caret sits in it, so
      it grows with the document's zoom (block-fold.css). */
@@ -29,7 +34,16 @@
 
 .editor-content {
   --gutter: max(1.5rem, calc(var(--doc-gutter) * var(--content-zoom, 1)));
-  max-width: calc(var(--content-width) * var(--content-zoom, 1));
+  /* The column times the zoom; a theme's #write width (palette.ts) is the
+     text's, as in Typora, so the margins go round it - with no theme width
+     the two terms cancel to the column. */
+  max-width: calc(
+    var(
+        --theme-text-width,
+        calc(var(--content-width) - 2 * var(--gutter) / var(--content-zoom, 1))
+      ) *
+      var(--content-zoom, 1) + 2 * var(--gutter)
+  );
   margin: 0 auto;
   /* The text size follows this column's width (milkdown-theme.css). */
   container-type: inline-size;
@@ -81,12 +95,12 @@
   outline: none;
 }
 
-/* First-line indent (Editing › Text): the document's own paragraphs, two
+/* First-line indent (Appearance › Text): the document's own paragraphs, two
    characters in; not those in a list, a quote or a table, nor a picture
-   standing alone, centred. */
+   standing alone, centred. The reader's, so over a theme's own indent. */
 :root[data-first-line-indent]
   :is(.editor-content, .split-preview)
   .ProseMirror
   > p:not(.image-paragraph) {
-  text-indent: 2em;
+  text-indent: 2em !important;
 }

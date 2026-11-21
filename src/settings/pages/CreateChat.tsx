@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ai } from "../../platform/ipc";
 import { resolveSkillMessage } from "../../ai/chat/proposal";
 import type { Strings } from "../../i18n/strings";
@@ -13,6 +13,7 @@ import { useOwnConversation } from "../../ai/chat/conversation/useConversation";
 import {
   onCreateRequest,
   takeCreateRequest,
+  type CreateRequest,
 } from "../../ai/chat/create-request";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { useBoxSlide } from "./useBoxSlide";
@@ -38,7 +39,20 @@ const EXAMPLES = KINDS.map((k) => [k, CREATE_EXAMPLES[k]] as const);
  * conversation. Loaded with the chat, not with Settings. "Fix with AI" and
  * the like fill in the box before it starts, and are the next message after.
  */
-export function CreateChat({ t }: { t: Strings }) {
+export function CreateChat({
+  t,
+  hidden = false,
+  head,
+  onRequest,
+}: {
+  t: Strings;
+  /** Kept, with its conversation, while the theme workshop shows. */
+  hidden?: boolean;
+  /** Above it: the switch back to the theme workshop. */
+  head?: ReactNode;
+  /** Each request it takes, as it takes it. */
+  onRequest?: (request: CreateRequest) => void;
+}) {
   const { settings } = useSettings();
   const conversation = useOwnConversation(() => ({
     docPath: null,
@@ -56,6 +70,7 @@ export function CreateChat({ t }: { t: Strings }) {
   const takeRequest = useLatest(() => {
     const request = takeCreateRequest();
     if (!request) return;
+    onRequest?.(request);
     if (!empty && request.text) {
       void conversation.send(NO_DOCUMENT, request.text, [], {
         mode: "create",
@@ -86,7 +101,9 @@ export function CreateChat({ t }: { t: Strings }) {
     <div
       ref={slide.ref}
       className={`create-studio${empty ? " create-studio-empty" : ""}`}
+      hidden={hidden}
     >
+      {head}
       {!empty && (
         <div className="create-studio-bar">
           <button

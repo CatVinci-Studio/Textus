@@ -22,11 +22,19 @@ import { applyThemeChrome, clearThemeChrome } from "../engine/tokens/palette";
 import { isIOSApp } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
 import { tokenPx } from "../engine/tokens/token-px";
-import { CUSTOM_CSS_STYLE_ID, PLUGIN_COLORS_STYLE_ID } from "./style-ids";
+import {
+  CUSTOM_CSS_STYLE_ID,
+  PLUGIN_COLORS_STYLE_ID,
+  USER_THEME_STYLE_ID as STYLE_ID,
+} from "./style-ids";
 
 // What an imported theme or the user's own CSS is read through: loaded
 // when there is one, not with every window.
 const typora = lazyModule("typora-compat", () => import("./typora-compat"));
+const suppliedFont = lazyModule(
+  "supplied-font",
+  () => import("./supplied-font"),
+);
 const legacy = lazyModule(
   "legacy-variables",
   () => import("./legacy-variables"),
@@ -121,10 +129,7 @@ function usePageAttributes(settings: Settings): void {
       root.removeAttribute("data-content-width");
     else root.setAttribute("data-content-width", settings.contentWidth);
     root.toggleAttribute("data-first-line-indent", settings.firstLineIndent);
-    // The margin keeps room for the block handles only while they show.
-    if (settings.blockHandles) root.removeAttribute("data-block-handles");
-    else root.setAttribute("data-block-handles", "off");
-  }, [settings.contentWidth, settings.firstLineIndent, settings.blockHandles]);
+  }, [settings.contentWidth, settings.firstLineIndent]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -165,6 +170,8 @@ function usePageAttributes(settings: Settings): void {
       root.style.removeProperty("--doc-chosen-font");
       root.removeAttribute("data-doc-font");
     }
+    if (settings.docFont || suppliedFont.peek())
+      void suppliedFont.load().then((m) => m.supplyFont(settings.docFont));
     const tracking = letterSpacing(
       settings.docLetterSpacing,
       settings.docLetterSpacingBy,
@@ -268,7 +275,6 @@ function useApplyAppearance(
   // theme/mode change and on OS switches in "system" mode.
   useEffect(() => {
     const root = document.documentElement;
-    const STYLE_ID = "textus-custom-theme";
 
     function clearInjectedStyle() {
       document.getElementById(STYLE_ID)?.remove();

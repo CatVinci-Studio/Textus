@@ -13,7 +13,10 @@ import type {
   StreamEvent_Serialize,
 } from "../platform/bindings/ai-agent";
 import type { AgentSkill_Serialize } from "../platform/bindings/ai-project";
-import type { GalleryTheme_Serialize } from "../platform/bindings/app";
+import type {
+  FontFamily,
+  GalleryTheme_Serialize,
+} from "../platform/bindings/app";
 import type { CustomEndpointStatus_Serialize } from "../platform/bindings/auth";
 import type { PluginsState_Serialize } from "../platform/bindings/plugins";
 import type { FsEntry_Serialize } from "../platform/bindings/plugin-access";
@@ -1650,6 +1653,33 @@ export function installDevTauriShim(): void {
             }
           }, 30);
         });
+      }
+      // A save dialog's and the CSS picker's answers (`window.__devSavePick`,
+      // `__devCssPick`), for a test to export into `__devFs` and import back.
+      if (cmd === "export_save_dialog")
+        return Promise.resolve(w.__devSavePick ?? null);
+      if (cmd === "open_css_file_dialog")
+        return Promise.resolve(w.__devCssPick ?? null);
+      // Common faces across macOS, Windows and Linux; the font pickers keep
+      // only those this browser can draw.
+      if (cmd === "system_font_families") {
+        return Promise.resolve(
+          [
+            "Georgia",
+            "Times New Roman",
+            "DejaVu Serif",
+            "Liberation Serif",
+            "Noto Serif",
+            "Arial",
+            "Helvetica Neue",
+            "DejaVu Sans",
+            "Liberation Sans",
+            "Courier New",
+            "Menlo",
+            "DejaVu Sans Mono",
+            "Liberation Mono",
+          ].map((name): FontFamily => ({ name, local: [], files: [] })),
+        );
       }
       // Real format handling (PDF, spreadsheets) needs the native side.
       if (cmd === "pick_attachment_files") {

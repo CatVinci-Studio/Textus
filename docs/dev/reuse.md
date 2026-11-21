@@ -24,12 +24,15 @@ The pieces:
 | A card to act on, bottom right             | `engine/controls/CornerToast.tsx` in a `CornerStack`                                                                              |
 | A phone's sheet                            | `engine/controls/Sheet.tsx` (`ActionSheet` and `BottomCard` are its bodies)                                                       |
 | A select, a switch, a settings row         | `engine/controls/Select.tsx`; `settings/sections/controls.tsx`                                                                    |
+| A number typed or stepped, with its unit   | `engine/controls/NumberField.tsx`                                                                                                 |
 | A panel's top row                          | `engine/controls/PanelHeader.tsx`                                                                                                 |
 | A "?" that explains                        | `engine/controls/InfoTip.tsx`                                                                                                     |
 | A handle that resizes a panel              | `engine/controls/ResizeHandle.tsx`                                                                                                |
 | Dragging to reorder or move                | `engine/drag/pointer-drag.ts` and `engine/drag/row.ts` (`trackDrag`, `reorderDrag`) - pointer events, never HTML drag and drop    |
+| Items making room for a dragged one        | `slideAside` (`engine/drag/row.ts`), or `flip` with `MAKE_ROOM` - FLIP on the settle spring; tab rows use the frame clock         |
 | A file's icon                              | `engine/controls/file-icons.tsx` (`fileIconFor`)                                                                                  |
 | A Mac-style rubber band past a scroll end  | `engine/controls/elastic-overscroll.ts`                                                                                           |
+| Keeping the page where the reader has it   | `engine/controls/scroll-hold.ts` (`holdStill`, `holdOnResize`, `holdBlock`, `keepWhile`; `pageIsTheHands` past an end)            |
 | A long press on touch                      | `utils/hooks/useLongPress.ts`                                                                                                     |
 | Telling a screen reader                    | `announce` (`engine/controls/announce.ts`)                                                                                        |
 

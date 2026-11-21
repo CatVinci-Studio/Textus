@@ -15,6 +15,10 @@ pub struct PandocOptions {
     pub csl: Option<String>,
     /// The user's arguments for this format, as an argv list.
     pub extra_args: Vec<String>,
+    /// One newline in a paragraph breaks the line, as the editor shows it
+    /// (Settings › Editing, or the document's folder).
+    #[serde(default)]
+    pub hard_line_breaks: bool,
 }
 
 /// Options the export sets itself: where it reads, what it writes, and to
@@ -216,6 +220,7 @@ mod tests {
             bibliography: Some("/r/refs.bib".into()),
             csl: Some("/r/apa.csl".into()),
             extra_args: vec![],
+            hard_line_breaks: false,
         };
         assert_eq!(
             settings_args(&options),

@@ -1,8 +1,8 @@
-import { STRETCHED_ATTR } from "../../engine/controls/elastic-overscroll";
+import type { Still } from "../../engine/controls/scroll-hold";
 import { PENDING_ATTR, PLACEHOLDER_CLASS } from "./lazy-rules";
 
 // What the reader sees stays where it is while blocks or views above it
-// are drawn or let go: WebKit has no CSS scroll anchoring to do it.
+// are drawn or let go: the block it is held by (engine/controls/scroll-hold).
 
 /** The first child of `children` whose bottom is below `y`, by binary
  *  search: their tops only grow down the document. One not shown (a
@@ -21,11 +21,6 @@ export function firstBelow(children: HTMLCollection, y: number): number {
     else high = mid;
   }
   return low;
-}
-
-interface Still {
-  el: Element;
-  top: number;
 }
 
 /** Changes as it is drawn: a placeholder, or a view still waiting. */
@@ -62,31 +57,4 @@ export function stillPoint(root: Element, scroller: Element): Still | null {
     }
   }
   return below ?? first ?? any;
-}
-
-/** Pulled past an end (macOS's rubber band, the system's or the page's
- *  own): the page is the hand's until
- *  it springs back, so nothing is drawn, let go or scrolled meanwhile - a
- *  block drawn, at its own height, and the page put back by it, cut the
- *  stretch short, and the page jumped between the two. */
-export function pastAnEnd(scroller: Element): boolean {
-  if (scroller.hasAttribute(STRETCHED_ATTR)) return true;
-  const top = scroller.scrollTop;
-  return top < 0 || top > scroller.scrollHeight - scroller.clientHeight + 0.5;
-}
-
-/** Scrolls by what `still` moved, to the nearest whole pixel the scroll
- *  position takes. `now`: where its block is shown now, when it was made
- *  anew (a placeholder drawn). */
-export function holdStill(
-  scroller: Element,
-  still: Still | null,
-  now: (el: Element) => Element | null | undefined = (el) => el,
-): void {
-  if (pastAnEnd(scroller)) return;
-  const el = still && (still.el.isConnected ? still.el : now(still.el));
-  if (!el?.isConnected) return;
-  const moved = el.getBoundingClientRect().top - still!.top;
-  if (Math.abs(moved) >= 0.5)
-    scroller.scrollTop = Math.round(scroller.scrollTop + moved);
 }

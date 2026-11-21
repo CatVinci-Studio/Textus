@@ -257,6 +257,14 @@ describe("saved markdown stays as written", () => {
     );
   });
 
+  it("saves powers written with carets with no backslash added", async () => {
+    for (const text of [
+      "x^2+y^2 and 2^10,3^5 then x^2^\n",
+      "2^10和3^5 and Na^+^Cl^-^\n",
+    ])
+      expect(await roundTrip(text)).toBe(text);
+  });
+
   it("reads dollar amounts as text, not math (Pandoc's rule)", async () => {
     expect(await roundTrip("about $4) and round's $19 ok\n")).toBe(
       "about \\$4) and round's \\$19 ok\n",

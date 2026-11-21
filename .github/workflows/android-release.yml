@@ -50,6 +50,16 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      # Gradle's downloads come from Maven Central, which answers a burst of
+      # requests with 429: its retries wait seconds and grow, not 125 ms.
+      - name: Gradle retries downloads with a back-off
+        run: |
+          mkdir -p ~/.gradle
+          cat >> ~/.gradle/gradle.properties <<'PROPS'
+          systemProp.org.gradle.internal.repository.max.retries=6
+          systemProp.org.gradle.internal.repository.initial.backoff=2000
+          PROPS
+
       - name: Install the NDK and build tools
         run: |
           "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;$NDK_VERSION" "build-tools;$BUILD_TOOLS" > /dev/null
@@ -96,7 +106,22 @@ jobs:
         run: |
           npx tauri android init --ci
           sh scripts/android-prepare.sh
-          npx tauri android build --ci --apk --target aarch64
+          # A download refused by Maven Central (429) or cut off is tried
+          # again after a pause; any other failure stops at once. The Rust
+          # library is built by then, so a retry is Gradle's part only.
+          # pipefail: the build's own exit status, not tee's.
+          set -o pipefail
+          log="$RUNNER_TEMP/android-build.log"
+          for wait in 60 180 0; do
+            if npx tauri android build --ci --apk --target aarch64 2>&1 | tee "$log"; then
+              exit 0
+            fi
+            if [ "$wait" = 0 ] || ! grep -Eq 'status code 429|Could not (GET|HEAD|resolve)|Read timed out|Connection reset' "$log"; then
+              exit 1
+            fi
+            echo "::warning::Gradle's downloads failed; trying again in ${wait}s."
+            sleep "$wait"
+          done
 
       - name: Check the signature and attach the APK
         run: |

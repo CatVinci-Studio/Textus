@@ -587,7 +587,7 @@ columns, types, group, date }` and answers HTML, shown without scripts or
 - `ai.registerInlineCompletion(id, { label, provide })` (`editor.read`, 1.8
   preview): grey text after the caret when typing pauses, from
   `provide({ before, after, path })`. One source at a time, picked by the
-  user in Settings › Textus AI › Writing assist.
+  user in Settings › Textus AI › Chat & writing.
 - `plugins.get(id)`: what another plugin's `activate` returned - its functions, callable from here.
 - `uri.registerHandler(fn)`: `textus://<plugin id>/<path>?<query>` links
   from a browser or another app, for "send to Textus" buttons and links

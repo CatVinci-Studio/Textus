@@ -3,10 +3,12 @@
  * then the rest of what is installed. Recommended faces draw the
  * interface's language; the rest draw it or Latin text, since a Latin face
  * still serves a CJK document. A name the web view can't match changes
- * nothing, so it is left out.
+ * nothing, so it is left out, unless Textus serves it from its files.
  */
 
+import { useEffect, useMemo, useState } from "react";
 import type { FontFamily } from "../../platform/bindings/app";
+import { draws, fontFamilies } from "../../theme/supplied-font";
 
 /** Faces the large platforms and type foundries ship for reading, by the
  *  script they are for; the first installed ones are offered first. */
@@ -84,21 +86,6 @@ function scriptOf(language: string): string {
   return base in SAMPLES ? base : "latin";
 }
 
-/** Whether `family` draws `sample` itself: its width differs from both
- *  generic fallbacks' when it does. */
-function draws(
-  context: CanvasRenderingContext2D,
-  family: string,
-  sample: string,
-): boolean {
-  return ["monospace", "serif"].some((fallback) => {
-    context.font = `32px ${fallback}`;
-    const alone = context.measureText(sample).width;
-    context.font = `32px "${family.replace(/"/g, "")}", ${fallback}`;
-    return context.measureText(sample).width !== alone;
-  });
-}
-
 /** One font in the list: the name it is set by, and the name shown,
  *  with its name in the interface's language first where it has one. */
 interface FontChoice {
@@ -124,9 +111,14 @@ export function fontChoices(
   const choice = (family: FontFamily, ...samples: string[]) => {
     const local = family.local.find((l) => l.language === script)?.name;
     // The web view may know a face only by a localized name.
-    const value = [family.name, ...family.local.map((l) => l.name)].find(
-      (name) => drawing(name, ...samples),
-    );
+    const names = [family.name, ...family.local.map((l) => l.name)];
+    // A face the web view doesn't know at all is served from its files.
+    const unknown =
+      family.files.length > 0 &&
+      !names.some((name) => drawing(name, SAMPLES[script], SAMPLES.latin));
+    const value = unknown
+      ? family.name
+      : names.find((name) => drawing(name, ...samples));
     if (!value) return [];
     return [{ value, label: local ? `${local} ${family.name}` : family.name }];
   };
@@ -147,4 +139,17 @@ export function fontChoices(
       .flatMap((family) => choice(family, SAMPLES[script], SAMPLES.latin))
       .filter((c) => !picked.has(c.value)),
   };
+}
+
+/** The installed text fonts as Settings offers them, once the list is in. */
+export function useFontChoices(language: string): FontChoices {
+  const [fonts, setFonts] = useState<FontFamily[]>([]);
+  useEffect(() => {
+    let live = true;
+    void fontFamilies().then((list) => live && setFonts(list));
+    return () => {
+      live = false;
+    };
+  }, []);
+  return useMemo(() => fontChoices(fonts, language), [fonts, language]);
 }

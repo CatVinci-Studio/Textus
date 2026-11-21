@@ -1,3 +1,4 @@
+import { storedLook } from "./classic-look";
 import { normaliseMcpServers } from "./mcp";
 import { hasTextusAi } from "../platform/capabilities";
 import { detectLang, isLang, type Lang } from "../i18n/strings";
@@ -20,6 +21,8 @@ import {
   type ColorSwatchMode,
   SINGLE_TILDE_MODES,
   type SingleTildeMode,
+  SINGLE_NEWLINE_MODES,
+  type SingleNewlineMode,
   DIAGRAM_ENGINES,
   type DiagramEngine,
   IMAGE_HOSTS,
@@ -212,6 +215,11 @@ function readSettings(parsed: Raw | null): Settings {
       )
         ? (parsed.singleTilde as SingleTildeMode)
         : DEFAULT_SETTINGS.singleTilde,
+      singleNewline: SINGLE_NEWLINE_MODES.includes(
+        parsed.singleNewline as SingleNewlineMode,
+      )
+        ? (parsed.singleNewline as SingleNewlineMode)
+        : DEFAULT_SETTINGS.singleNewline,
       uiTextScale: UI_TEXT_SCALES.includes(parsed.uiTextScale as UiTextScale)
         ? (parsed.uiTextScale as UiTextScale)
         : (UI_TEXT_SCALES_BEFORE[String(parsed.uiTextScale)] ??
@@ -254,6 +262,7 @@ function readSettings(parsed: Raw | null): Settings {
         : DEFAULT_SETTINGS.imageHost,
       // Any profile string is kept - a newer build's may not be in this
       // build's list - but it has to be one.
+      lookBeforeClassic: storedLook(parsed.lookBeforeClassic),
       textusAiResumeAt:
         typeof parsed.textusAiResumeAt === "number"
           ? parsed.textusAiResumeAt

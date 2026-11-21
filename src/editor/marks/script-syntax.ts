@@ -1,7 +1,10 @@
 // Micromark + mdast support for Pandoc's and Typora's "^superscript^" and
 // "~subscript~": one mark each side around text with no spaces, as in
 // "x^2^", "1^st^" and "H~2~O". Strikethrough is "~~" only, so one tilde
-// is a subscript or plain text (a range, "5~10").
+// is a subscript or plain text (a range, "5~10"). A superscript glued to
+// an ASCII letter or digit after it holds only an exponent or a charge
+// ("Na^+^Cl^-^", "x^2^y^2^"), so powers written with carets ("x^2+y^2",
+// "2^10,3^5") stay text.
 import type {
   Code,
   Effects,
@@ -76,7 +79,15 @@ interface ScriptSpec {
   opensAfter: (previous: Code) => boolean;
   /** Whether a character may be inside it (escapes aside). */
   holds: (code: number) => boolean;
+  /** Whether it may close, holding `held`, before the character after. */
+  closesBefore: (next: Code, held: string) => boolean;
 }
+
+/** After a superscript's closing caret, what glues it to the next word. */
+export const SUPERSCRIPT_GLUED_AFTER = /^[A-Za-z0-9]$/;
+/** What a superscript glued to the next word may hold: an exponent or a
+ *  charge (`2`, `-1`, `st`, `2+`, `+`), no operator between two terms. */
+export const SUPERSCRIPT_SIMPLE = /^(?:[+-]?[A-Za-z0-9]+[+-]?|[+-]+)$/;
 
 const SUPERSCRIPT: ScriptSpec = {
   name: "superscript",
@@ -84,6 +95,11 @@ const SUPERSCRIPT: ScriptSpec = {
   // "[^1]" is a footnote, and "^^" no superscript.
   opensAfter: (previous) => previous !== CARET && previous !== LEFT_BRACKET,
   holds: () => true,
+  closesBefore: (next, held) =>
+    next === null ||
+    next < 0 ||
+    !SUPERSCRIPT_GLUED_AFTER.test(String.fromCodePoint(next)) ||
+    SUPERSCRIPT_SIMPLE.test(held),
 };
 
 const SUBSCRIPT: ScriptSpec = {
@@ -95,6 +111,7 @@ const SUBSCRIPT: ScriptSpec = {
     previous > 0 &&
     LETTER_OR_DIGIT.test(String.fromCodePoint(previous)),
   holds: (code) => SUBSCRIPT_TEXT.test(String.fromCodePoint(code)),
+  closesBefore: (next) => next !== TILDE,
 };
 
 /** micromark syntax: "^...^" as a "superscript" token. */
@@ -124,7 +141,7 @@ function tokenizer(spec: ScriptSpec): Tokenizer {
     nok: State,
   ) {
     const previous = this.previous;
-    let size = 0;
+    let held = "";
     return start;
 
     function start(code: Code): State | undefined {
@@ -139,7 +156,7 @@ function tokenizer(spec: ScriptSpec): Tokenizer {
 
     function inside(code: Code): State | undefined {
       if (code === mark) {
-        if (size === 0) return nok(code);
+        if (!held) return nok(code);
         effects.exit(text);
         effects.enter(marker);
         effects.consume(code);
@@ -148,20 +165,21 @@ function tokenizer(spec: ScriptSpec): Tokenizer {
       }
       if (isBreak(code) || (code !== BACKSLASH && !spec.holds(code!)))
         return nok(code);
-      size++;
+      held += String.fromCodePoint(code!);
       effects.consume(code);
       return code === BACKSLASH ? escaped : inside;
     }
 
     // "x~2~~" is no subscript: the run belongs to a strikethrough.
     function close(code: Code): State | undefined {
-      if (code === mark && mark === TILDE) return nok(code);
+      if (!spec.closesBefore(code, held)) return nok(code);
       effects.exit(name);
       return ok(code);
     }
 
     function escaped(code: Code): State | undefined {
       if (isBreak(code)) return nok(code);
+      held += String.fromCodePoint(code!);
       effects.consume(code);
       return inside;
     }
@@ -212,7 +230,7 @@ export function scriptsToMarkdown(): ToMarkdownExtension {
       // or "2^10" saves as "2\^10".
       {
         character: "^",
-        after: "[^\\s^]+\\^",
+        after: "(?:[+-]?[A-Za-z0-9]+[+-]?|[+-]+)\\^|[^\\s^]+\\^(?![A-Za-z0-9])",
         inConstruct: "phrasing",
         notInConstruct: CONSTRUCTS_WITHOUT_SCRIPTS,
       },

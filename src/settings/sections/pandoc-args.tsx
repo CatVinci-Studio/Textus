@@ -22,14 +22,22 @@ const FORMAT_NAMES: Record<Exclude<PandocArgsFormat, "all">, string> = {
 const formatName = (t: Strings, format: PandocArgsFormat) =>
   format === "all" ? t.pandocArgsAll : FORMAT_NAMES[format];
 
-/** One format's arguments, typed as a command line and kept as its words;
- *  one the export owns is refused with its reason. */
-function ArgsInput({ t, format }: { t: Strings; format: PandocArgsFormat }) {
+/** Settings › Editing › Export › Advanced: the user's own Pandoc arguments,
+ *  in one row: which format, then its arguments typed as a command line and
+ *  kept as words; one the export owns is refused with its reason. */
+export function PandocArgsRows({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
-  const [text, setText] = useState(
-    joinCommandLine(settings.pandocArgs[format] ?? []),
-  );
+  const [format, setFormat] = useState<PandocArgsFormat>("all");
+  const argsOf = (f: PandocArgsFormat) =>
+    joinCommandLine(settings.pandocArgs[f] ?? []);
+  const [text, setText] = useState(() => argsOf("all"));
   const [error, setError] = useState<string | null>(null);
+
+  function choose(next: PandocArgsFormat) {
+    setFormat(next);
+    setText(argsOf(next));
+    setError(null);
+  }
 
   async function commit() {
     const args = splitCommandLine(text);
@@ -40,35 +48,13 @@ function ArgsInput({ t, format }: { t: Strings; format: PandocArgsFormat }) {
   }
 
   return (
-    <SettingRow label={formatName(t, format)} error={error}>
-      <input
-        type="text"
-        {...VERBATIM_INPUT}
-        className="tx-input settings-text-input"
-        aria-label={`${t.pandocArgsLabel}: ${formatName(t, format)}`}
-        placeholder="--toc-depth=2"
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onBlur={() => void commit()}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") void commit();
-        }}
-      />
-    </SettingRow>
-  );
-}
-
-/** Settings › Editor › Advanced: the user's own Pandoc arguments, by format. */
-export function PandocArgsRows({ t }: { t: Strings }) {
-  const [format, setFormat] = useState<PandocArgsFormat>("all");
-  return (
-    <>
-      <SettingRow label={t.pandocArgsLabel} help={t.pandocArgsHelp}>
+    <SettingRow label={t.pandocArgsLabel} help={t.pandocArgsHelp} error={error}>
+      <div className="settings-inline-buttons">
         <Select
           className="settings-select"
-          aria-label={t.pandocArgsLabel}
+          aria-label={t.pandocArgsFormat}
           value={format}
-          onChange={(e) => setFormat(e.target.value as PandocArgsFormat)}
+          onChange={(e) => choose(e.target.value as PandocArgsFormat)}
         >
           {PANDOC_ARGS_FORMATS.map((f) => (
             <option key={f} value={f}>
@@ -76,8 +62,20 @@ export function PandocArgsRows({ t }: { t: Strings }) {
             </option>
           ))}
         </Select>
-      </SettingRow>
-      <ArgsInput key={format} t={t} format={format} />
-    </>
+        <input
+          type="text"
+          {...VERBATIM_INPUT}
+          className="tx-input settings-text-input"
+          aria-label={`${t.pandocArgsLabel}: ${formatName(t, format)}`}
+          placeholder="--toc-depth=2"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onBlur={() => void commit()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") void commit();
+          }}
+        />
+      </div>
+    </SettingRow>
   );
 }

@@ -56,7 +56,7 @@ import {
 } from "./image-store";
 import { openDiagramViewer, zoomButton } from "../diagram-zoom";
 import { trackDrag } from "../../engine/drag/pointer-drag";
-import { holdOnResize } from "../lazy/hold-on-resize";
+import { holdOnResize } from "../../engine/controls/scroll-hold";
 /**
  * Image paste (stored in the document's image folder, relative src) and
  * render (local srcs rewritten to asset: URLs; the document keeps the original).
@@ -224,7 +224,11 @@ function createImageView(
   };
   img.addEventListener("load", clearMissing);
   img.addEventListener("load", () => rememberSize(shown(), img));
-  const stopHold = holdOnResize(dom);
+  // A picture resized by hand moves the page as the hand does.
+  const stopHold = holdOnResize(dom, {
+    scroller: () => dom.closest(".editor-scroll"),
+    byHand: () => dom.matches(".image-view-resizing"),
+  });
   // A short, wide strip (a README badge) has nothing to enlarge or
   // resize, and the controls would cover its words.
   img.addEventListener("load", () => {

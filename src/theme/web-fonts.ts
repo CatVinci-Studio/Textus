@@ -6,6 +6,9 @@ import { webAssets } from "../platform/ipc";
  *  data URL, both fetched by Rust. What can't be fetched stays as written. */
 
 const REMOTE = /^(https?:)?\/\//i;
+/** A file on this computer as Windows' web view serves it (a face a
+ *  workshop theme carries): not the web's. */
+const LOCAL_FILE = /^https?:\/\/asset\.localhost\//i;
 /** An `@import`: its address (url() or quoted), then its media, if any.
  *  One pattern for local themes and web sheets alike. */
 export const IMPORT_RE =
@@ -74,7 +77,7 @@ async function resolve(
   return replaceAsync(imported, FONT_FACE_RE, (face) =>
     replaceAsync(face, URL_RE, async (whole, target: string) => {
       const href = absolute(target.trim(), base);
-      if (!href) return whole;
+      if (!href || LOCAL_FILE.test(href)) return whole;
       try {
         return `url("${await webAssets.get(href, "font")}")`;
       } catch {

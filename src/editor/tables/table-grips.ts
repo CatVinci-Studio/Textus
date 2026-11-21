@@ -1,14 +1,19 @@
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { trackDrag } from "../../engine/drag/pointer-drag";
 import { holdToDrag } from "../../engine/drag/hold-drag";
-import { passedCount, shiftAt } from "../../engine/drag/row";
+import {
+  MAKE_ROOM,
+  passedCount,
+  shiftBy,
+  shiftsOf,
+} from "../../engine/drag/row";
 import {
   CellSelection,
   moveTableColumn,
   moveTableRow,
   TableMap,
 } from "@milkdown/kit/prose/tables";
-import { play } from "../../engine/motion/flip";
+import { flip, play, stopFlips } from "../../engine/motion/flip";
 
 type Axis = "row" | "col";
 
@@ -150,7 +155,7 @@ export function attachGrips(options: {
   /**
    * The row (below the head) or column under the grip, pulled: it follows
    * the pointer lifted, the others make room as it passes them (the
-   * sidebar tabs' way, engine/drag); let go, it moves there.
+   * rail's way, engine/drag/row.ts); let go, it moves there.
    */
   function drag(axis: Axis, e: PointerEvent) {
     const index = axis === "row" ? at.row : at.col;
@@ -195,12 +200,17 @@ export function attachGrips(options: {
         ? `${scope} > tr:nth-child(${i + 2})`
         : `${scope} > tr > :nth-child(${i + 1})`;
     const translate = axis === "row" ? "translateY" : "translateX";
+    const way = axis === "row" ? "y" : "x";
+    const slid = (i: number) => [
+      ...document.querySelectorAll<HTMLElement>(place(i)),
+    ];
     let to = from;
+    // The others' shifts as drawn: a change glides by FLIP, as the rail's.
+    let shown = items.map(() => 0);
     const handlers = {
       start: () => {
         dragging = axis;
         wrapper.setAttribute("data-dragging", axis);
-        wrapper.classList.add("tx-making-room");
       },
       move: (x: number, y: number) => {
         // Where it lands goes by the pointer; where it is drawn stays inside.
@@ -212,14 +222,20 @@ export function attachGrips(options: {
           `${place(from)} { transform: ${translate}(${shift}px); position: relative; z-index: 2; transition: none; }`,
           `${lifted} { background: var(--doc-bg, var(--ui-bg)); box-shadow: var(--shadow-popover); }`,
         ];
-        let other = 0;
-        items.forEach((_, i) => {
-          if (i === from) return;
-          const by = shiftAt(other++, from, to, mine.size);
-          if (by)
-            rules.push(`${place(i)} { transform: ${translate}(${by}px); }`);
+        const others = shiftsOf(items.length - 1, from, to, mine.size);
+        const shifts = items.map((_, i) =>
+          i === from ? 0 : others[i < from ? i : i - 1]!,
+        );
+        shifts.forEach((by, i) => {
+          if (by) rules.push(`${place(i)} { transform: ${shiftBy(by, way)}; }`);
         });
-        sheet.textContent = rules.join("\n");
+        const moving = shifts.flatMap((by, i) =>
+          by === shown[i] ? [] : slid(i),
+        );
+        shown = shifts;
+        const write = () => (sheet.textContent = rules.join("\n"));
+        if (moving.length) flip(moving, write, MAKE_ROOM);
+        else write();
       },
       end: (_x: number, _y: number, dropped: boolean) => {
         // Where the lifted cells are drawn as the hand lets go.
@@ -229,9 +245,9 @@ export function attachGrips(options: {
           ),
         ];
         const held = cells(from).map((el) => el.getBoundingClientRect());
+        stopFlips(items.flatMap((_, i) => slid(i)));
         sheet.textContent = "";
         wrapper.removeAttribute("data-dragging");
-        wrapper.classList.remove("tx-making-room");
         dragging = null;
         const table = tableNow();
         const moved = !!dropped && !!table && to !== from;

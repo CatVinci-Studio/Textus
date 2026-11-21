@@ -102,6 +102,7 @@ import { createMissingLinksPlugin } from "./markdown/missing-links";
 import { resolveStrings } from "../i18n/strings";
 import type { CoreEnv } from "./editor-core-env";
 import { singleTildeCtx } from "./opened-from";
+import { createLineBreaksPlugin } from "./markdown/line-breaks-plugin";
 
 /**
  * The Markdown the editor reads and draws, in load order: CommonMark and
@@ -151,6 +152,12 @@ export function withEditorSyntax(editor: Editor, env: CoreEnv): Editor {
       .use(createRawHtmlPreviewPlugin({ docPath: () => docPath.current }))
       .use(htmlAlignPlugin)
       .use(brToHardbreakPlugin)
+      .use(
+        createLineBreaksPlugin({
+          setting: () => settings.current.singleNewline,
+          docPath: () => docPath.current,
+        }),
+      )
       .use(remarkTableCellBreaks)
 
       .use(remarkReferenceLinksPlugin)

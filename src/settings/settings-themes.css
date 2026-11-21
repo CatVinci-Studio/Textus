@@ -74,16 +74,6 @@
   align-items: center;
   gap: var(--space-2);
 }
-.settings-letter-spacing-by {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  color: var(--ui-muted);
-}
-.settings-letter-spacing-by .settings-text-input {
-  width: 4.5em;
-  text-align: right;
-}
 
 /* On the desktop, the frame's way (design-language.md 5.7): the sections
    run the panel's full height in the frame's colour with the search at
@@ -219,10 +209,10 @@
   font-weight: 600;
 }
 
-/* Appearance's advanced fold, then the store's groups: a group's gap. */
-.settings-advanced + .settings-group,
-.settings-advanced + * > .settings-group:first-child {
-  margin-top: var(--space-6);
+/* Appearance's last group, then the theme store's (in a wrapper of its
+   own): a group's gap. */
+.settings-group + div > .settings-group:first-child {
+  margin-top: 28px;
 }
 
 /* An agent's row: its plugin's icon before its name. */

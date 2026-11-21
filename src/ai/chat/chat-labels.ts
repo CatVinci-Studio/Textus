@@ -126,6 +126,7 @@ function buildLabels(t: Strings, lang: Lang): InlineChatLabels {
     themeInUse: t.themeGalleryInUse,
     themeFallbackName: t.navTheme,
     showCode: t.chatShowCode,
+    themeToWorkshop: t.themeToWorkshop,
     permissionsAsk: t.pluginPermissionsAsk,
     installPlugin: t.chatInstallPlugin,
     updatePlugin: t.chatUpdatePlugin,

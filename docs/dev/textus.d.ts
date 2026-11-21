@@ -1695,7 +1695,7 @@ declare global {
       /** Grey text after the caret when typing pauses: `provide` answers
        *  the words to offer, or null; it is waited for at most 5 seconds.
        *  The user picks one source at a time in Settings › Textus AI ›
-       *  Writing assist ("Suggestions from"), Textus AI or one of these.
+       *  Chat & writing ("Suggestions from"), Textus AI or one of these.
        *  editor.read. From 1.4.4 (API 1.8, preview). */
       registerInlineCompletion(
         id: string,

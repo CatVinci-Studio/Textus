@@ -119,18 +119,20 @@ function drawSlip(
   ];
 }
 
-/** The caret into the slip `spec` is of, where it is now: its card opens. */
+/** The caret into the slip `spec` is of, where it is now: its card opens.
+ *  The editor takes the keys first: an editor without them scrolls to no
+ *  selection, and WebKit, given them after, scrolls back to the old one. */
 function goTo(view: EditorView, spec: DiagnosticSpec) {
   const deco = key
     .getState(view.state)
     ?.find(undefined, undefined, (s) => s === spec)[0];
   if (!deco) return;
+  view.focus();
   view.dispatch(
     view.state.tr
       .setSelection(TextSelection.create(view.state.doc, deco.from))
       .scrollIntoView(),
   );
-  view.focus();
 }
 
 /** The slips drawn, for the tab's corner, whenever they change. */

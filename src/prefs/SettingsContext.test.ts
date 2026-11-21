@@ -132,6 +132,26 @@ describe("colour swatches", () => {
   });
 });
 
+describe("one newline in a paragraph", () => {
+  beforeAll(installTestLocalStorage);
+  beforeEach(() => localStorage.clear());
+
+  const load = (stored: Record<string, unknown>) => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(stored));
+    return loadSettings().singleNewline;
+  };
+
+  it("joins the lines by default, as the editor always showed it", () => {
+    expect(load({ language: "en" })).toBe("join");
+  });
+
+  it("keeps a choice, and drops one it doesn't know", () => {
+    expect(load({ singleNewline: "break" })).toBe("break");
+    expect(load({ singleNewline: "join" })).toBe("join");
+    expect(load({ singleNewline: true })).toBe("join");
+  });
+});
+
 describe("separate writing and Agent models", () => {
   beforeAll(installTestLocalStorage);
   beforeEach(() => localStorage.clear());
