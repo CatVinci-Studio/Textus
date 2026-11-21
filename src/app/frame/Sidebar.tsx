@@ -115,12 +115,35 @@ export function Sidebar({
                   islands' tops. Without the rail its tabs are here. */}
               {/* A plugin's buttons for its panel (menus "view/title")
                   end the name's line: no row of their own. */}
-              <h2
-                className="tx-pane-title sidebar-title"
-                data-tauri-drag-region={titleShown || undefined}
-              >
-                {shown.label(t)}
-              </h2>
+              {phone ? (
+                // No rail: its tabs are the drawer's header, one tap apart.
+                <div className="sidebar-tabs" aria-label={t.activityRail}>
+                  {railTabs()
+                    .filter((tab) => !tab.railFoot)
+                    .map(({ id, label, Icon }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        className={`sidebar-tab${shown.id === id ? " sidebar-tab-active" : ""}`}
+                        aria-label={label(t)}
+                        aria-pressed={shown.id === id}
+                        data-sidebar-tab={id}
+                        onClick={() =>
+                          shown.id === id ? onClose() : onModeChange(id)
+                        }
+                      >
+                        <Icon />
+                      </button>
+                    ))}
+                </div>
+              ) : (
+                <h2
+                  className="tx-pane-title sidebar-title"
+                  data-tauri-drag-region={titleShown || undefined}
+                >
+                  {shown.label(t)}
+                </h2>
+              )}
               {titleShown && <ViewTitleActions view={shown.id} />}
             </div>
             <div className="sidebar-body" inert={closing || undefined}>

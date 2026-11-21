@@ -38,7 +38,10 @@ export function railShown(
   open: boolean,
   phone: boolean,
 ): boolean {
-  return settings.activityRail || phone || open;
+  // A phone has no rail: its library comes in as the drawer, its panel
+  // tabs in the drawer's header (Sidebar.tsx).
+  if (phone) return false;
+  return settings.activityRail || open;
 }
 
 type SetOpen = Dispatch<SetStateAction<boolean>>;
