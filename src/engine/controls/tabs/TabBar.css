@@ -113,6 +113,15 @@
   opacity: 0.7;
 }
 
+/* A pinned tab's pin, where its × would be, after the name. */
+.tab-pill-pin {
+  order: 1;
+}
+
+.tab-pill-pin:hover {
+  opacity: 0.7;
+}
+
 /* Reading mode's padlock before the name; a click turns it off. */
 .tab-pill-lock {
   display: inline-flex;

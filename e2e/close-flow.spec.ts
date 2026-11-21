@@ -187,6 +187,30 @@ test("a middle click closes a tab, and the tab menu closes those to its right, l
   ).toContainText("/notes/c.md");
 });
 
+test("a pinned tab goes first, shows no ×, and stays through ⌘W, a middle click and Close Others", async ({
+  page,
+}) => {
+  await openApp(page, {
+    settings: { language: "en", newDocumentMode: "tab" },
+  });
+  await openFiles(page, ["a.md", "b.md", "c.md"]);
+  await fromMenu(page, "c.md", "Pin Tab");
+  await expect(page.locator(titles)).toHaveText(["c.md", "a.md", "b.md"]);
+  await expect(tab(page, "c.md").locator(".tab-pill-close")).toHaveCount(0);
+  await expect(tab(page, "c.md").locator(".tab-pill-pin")).toHaveCount(1);
+  // ⌘W in front of it, and a middle click: still there.
+  await tab(page, "c.md").locator(".tab-pill-title").click();
+  await emit(page, "menu-close-tab");
+  await tab(page, "c.md").click({ button: "middle" });
+  await expect(page.locator(titles)).toHaveText(["c.md", "a.md", "b.md"]);
+  await fromMenu(page, "a.md", "Close Others");
+  await expect(page.locator(titles)).toHaveText(["c.md", "a.md"]);
+  await fromMenu(page, "c.md", "Unpin Tab");
+  await expect(tab(page, "c.md").locator(".tab-pill-close")).toHaveCount(1);
+  await fromMenu(page, "a.md", "Close Others");
+  await expect(page.locator(titles)).toHaveText(["a.md"]);
+});
+
 test("Close Others leaves a tab with unsaved changes open", async ({
   page,
 }) => {

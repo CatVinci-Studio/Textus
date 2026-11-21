@@ -54,20 +54,34 @@
 
 @media (any-hover: hover) {
   .tree-row:hover {
-    background: var(--ui-hover);
+    background-color: var(--ui-hover);
   }
 }
 
 .tree-row-active,
 .tree-row-picked {
-  background: var(--ui-selected);
+  background-color: var(--ui-selected);
   color: var(--ui-selected-text);
+}
+
+/* In the files: a faint line down from each enclosing folder's chevron, so
+   what sits in which folder reads at a glance. Under the row's fill, which
+   sets only its colour. */
+.file-tree .tree-row {
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0 calc(var(--tree-step) - 1px),
+    var(--ui-frame-edge) calc(var(--tree-step) - 1px) var(--tree-step)
+  );
+  background-repeat: no-repeat;
+  background-position-x: calc(var(--tree-chevron) / 2 + 1px);
+  background-size: calc((var(--depth, 1) - 1) * var(--tree-step)) 100%;
 }
 
 /* Rows picked together: the open document's row looks picked only if it
    is one of them. */
 .file-tree-picking .tree-row-active:not(.tree-row-picked, :hover) {
-  background: none;
+  background-color: transparent;
   color: inherit;
 }
 
@@ -238,7 +252,7 @@
 .tree-row-draft,
 .tree-row-draft:hover {
   cursor: default;
-  background: none;
+  background-color: transparent;
 }
 
 .tree-draft-input {

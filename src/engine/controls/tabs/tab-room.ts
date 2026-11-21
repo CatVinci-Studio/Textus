@@ -55,6 +55,7 @@ export interface TabShape {
   dirty?: boolean;
   preview?: boolean;
   readOnly?: boolean;
+  pinned?: boolean;
   waiting?: number;
   open?: boolean;
 }
@@ -192,29 +193,50 @@ export function sameRoom(a: TabRoom | null, b: TabRoom | null): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
+/** A pinned tab's name shows at most this many pin widths of it. */
+const PINNED_TITLE_LOCKS = 5;
+
 /** Each tab's width in a row with these measures, and whose name is cut. */
 export function fitTabs(tabs: readonly TabShape[], room: TabRoom): TabFit {
   const { pill } = room;
-  const parts = tabs.map((tab) => ({
-    title: Math.ceil(
+  const parts = tabs.map((tab) => {
+    const title = Math.ceil(
       (textWidth(tab.title, tab.preview ? `italic ${pill.font}` : pill.font) ??
         0) * pill.textFix,
-    ),
-    fixed:
-      pill.pad +
-      pill.close +
-      pill.gap +
-      (tab.dirty ? pill.dot + pill.gap : 0) +
-      (tab.readOnly ? pill.lock + pill.gap : 0) +
-      (tab.waiting
-        ? pill.waiting +
-          pill.digit * (String(tab.waiting).length - 1) +
-          pill.gap
-        : 0),
-    // Its × hidden till it opens, an unopened tab's name has that room.
-    spare: tab.open || pill.closeIdle ? 0 : pill.close + pill.gap,
-    open: tab.open,
-  }));
+    );
+    // Pinned: its pin where the × was, its name a few letters at most.
+    return tab.pinned
+      ? {
+          title: Math.min(title, PINNED_TITLE_LOCKS * pill.lock),
+          fixed:
+            pill.pad +
+            pill.lock +
+            pill.gap +
+            (tab.dirty ? pill.dot + pill.gap : 0),
+          spare: 0,
+          open: tab.open,
+        }
+      : shaped(tab, title);
+  });
+  function shaped(tab: TabShape, title: number) {
+    return {
+      title,
+      fixed:
+        pill.pad +
+        pill.close +
+        pill.gap +
+        (tab.dirty ? pill.dot + pill.gap : 0) +
+        (tab.readOnly ? pill.lock + pill.gap : 0) +
+        (tab.waiting
+          ? pill.waiting +
+            pill.digit * (String(tab.waiting).length - 1) +
+            pill.gap
+          : 0),
+      // Its × hidden till it opens, an unopened tab's name has that room.
+      spare: tab.open || pill.closeIdle ? 0 : pill.close + pill.gap,
+      open: tab.open,
+    };
+  }
   const fit = tabWidths(
     parts,
     pill,
