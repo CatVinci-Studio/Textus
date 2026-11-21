@@ -47,7 +47,9 @@ fn commit(dir: &Path, file: &str, text: &str) {
 /// A bare remote with one commit on main, and two clones of it.
 fn remote() -> (tempfile::TempDir, PathBuf, PathBuf) {
     let tmp = tempfile::tempdir().unwrap();
-    let base = std::fs::canonicalize(tmp.path()).unwrap();
+    // Windows' canonical form (`\\?\C:\...`) is one git can't clone from.
+    let canonical = std::fs::canonicalize(tmp.path()).unwrap();
+    let base = PathBuf::from(canonical.to_string_lossy().trim_start_matches(r"\\?\"));
     let bare = base.join("remote.git");
     git(&base, &["init", "-q", "--bare", "-b", "main", "remote.git"]);
     let seed = clone_of(&bare, "seed", &base);
