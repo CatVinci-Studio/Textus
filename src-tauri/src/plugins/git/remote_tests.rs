@@ -121,3 +121,39 @@ fn a_pull_that_conflicts_is_undone_and_says_so() {
     );
     assert!(!mine.join(".git/MERGE_HEAD").exists());
 }
+
+#[test]
+fn a_merge_under_way_is_left_to_the_user() {
+    let (_tmp, mine, theirs) = remote();
+    commit(&theirs, "a.md", "theirs\n");
+    git(&theirs, &["push", "-q", "origin", "main"]);
+    commit(&mine, "a.md", "mine\n");
+    git(&mine, &["fetch", "-q"]);
+    // The user's own merge, stopped on its conflict.
+    let _ = std::process::Command::new("git")
+        .args(["merge", "-q", "origin/main"])
+        .current_dir(&mine)
+        .output();
+    assert!(mine.join(".git/MERGE_HEAD").exists());
+    let err = pull(&state(SYNC), &list(), "a.b", &root(&mine)).unwrap_err();
+    assert!(err.contains("under way"), "{err}");
+    assert!(mine.join(".git/MERGE_HEAD").exists());
+}
+
+#[test]
+fn a_remote_that_names_its_own_program_asks_for_trust_first() {
+    let (_tmp, mine, _theirs) = remote();
+    for (key, value) in [
+        ("remote.origin.uploadpack", "touch ran; git-upload-pack"),
+        ("protocol.ext.allow", "always"),
+    ] {
+        git(&mine, &["config", key, value]);
+        let err = fetch(&state(SYNC), &list(), "a.b", &root(&mine)).unwrap_err();
+        assert!(
+            err.starts_with(super::super::safety::UNTRUSTED),
+            "{key}: {err}"
+        );
+        git(&mine, &["config", "--unset", key]);
+    }
+    assert!(!mine.join("ran").exists());
+}

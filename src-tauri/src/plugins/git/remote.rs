@@ -99,6 +99,10 @@ pub(in crate::plugins) fn pull(
     root: &str,
 ) -> Result<(), String> {
     let top = ready(state, trusted, id, root)?;
+    // A merge or rebase the user has under way is theirs: never undone here.
+    if stopped(&git_dir(&top)) {
+        return Err("A merge or rebase is under way in this folder. Finish or abort it with Git in a terminal (or your Git app), then pull.".to_string());
+    }
     let Err(said) = run_within(&top, &["pull", "--no-edit"], None, NETWORK_TIME) else {
         return Ok(());
     };
@@ -110,11 +114,23 @@ pub(in crate::plugins) fn pull(
     Err(explained(said))
 }
 
+/// The repository's own folder (`.git`, or where a worktree's lives).
+fn git_dir(top: &Path) -> std::path::PathBuf {
+    run_within(top, &["rev-parse", "--git-dir"], None, NETWORK_TIME)
+        .map(|out| top.join(String::from_utf8_lossy(&out).trim()))
+        .unwrap_or_else(|_| top.join(".git"))
+}
+
+/// Whether a merge or rebase stands stopped in `git_dir`.
+fn stopped(git_dir: &Path) -> bool {
+    git_dir.join("MERGE_HEAD").exists()
+        || git_dir.join("rebase-merge").exists()
+        || git_dir.join("rebase-apply").exists()
+}
+
 /// Undoes a merge or rebase a pull left stopped; whether there was one.
 fn undo_stopped(top: &Path) -> bool {
-    let git_dir = run_within(top, &["rev-parse", "--git-dir"], None, NETWORK_TIME)
-        .map(|out| top.join(String::from_utf8_lossy(&out).trim()))
-        .unwrap_or_else(|_| top.join(".git"));
+    let git_dir = git_dir(top);
     if git_dir.join("MERGE_HEAD").exists() {
         let _ = run_within(top, &["merge", "--abort"], None, NETWORK_TIME);
         return true;

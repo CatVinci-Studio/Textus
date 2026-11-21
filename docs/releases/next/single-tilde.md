@@ -1,6 +1,6 @@
 ### New
 
-- **Settings › Editing › One tilde each side, ~text~** chooses what one tilde means: a subscript after a letter or digit (`H~2~O`, the default), a strikethrough as on GitHub, or the tildes as typed. Two tildes, `~~text~~`, always strike out. Files are saved as written whichever is chosen; the editor, Textus AI's replies, the split view and Pandoc export all read it the same way.
+- **Settings › Editing › One tilde each side, ~text~** chooses what one tilde means: a subscript after a letter or digit (`H~2~O`, the default), a strikethrough as on GitHub, or the tildes as typed. Two tildes, `~~text~~`, always strike out; a document that struck text out with one tilde each side shows it as subscript or plain text now, unless you choose strikethrough here. Files are saved as written whichever is chosen; the editor, Textus AI's replies, the split view and Pandoc export all read it the same way.
 
 ### Fixed
 

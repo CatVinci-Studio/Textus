@@ -131,7 +131,7 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     let text = parsed.get("text").and_then(|v| v.as_str()).unwrap_or("");
     // A rewrite that changes nothing: shown, it read as the passage taken out
     // and put back.
-    if action == "replace" && !again && text.trim() == anchor.trim() {
+    if action == "replace" && !again && text.trim_matches('\n') == anchor.trim_matches('\n') {
         return UNCHANGED.to_string();
     }
     if let Some(problem) = degenerate_replacement(action, anchor, text) {

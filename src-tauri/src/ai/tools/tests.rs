@@ -623,6 +623,10 @@ fn a_rewrite_that_changes_nothing_is_refused() {
     // Not counted as proposed: a real rewrite of it still stands.
     let real = r#"{"action":"replace","anchor":"Textus is great.","text":"Textus is good."}"#;
     assert!(edit(&doc, real).starts_with("Edit proposed"));
+    // Spaces are a change: a hard break at a line's end.
+    let doc = ctx("One line.\n\nIt ships soon.");
+    let hard = r#"{"action":"replace","anchor":"One line.","text":"One line.  "}"#;
+    assert!(edit(&doc, hard).starts_with("Edit proposed"));
 }
 
 #[test]

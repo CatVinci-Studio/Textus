@@ -208,30 +208,29 @@ export function fitTabs(tabs: readonly TabShape[], room: TabRoom): TabFit {
     return tab.pinned
       ? {
           title: Math.min(title, PINNED_TITLE_LOCKS * pill.lock),
-          fixed:
-            pill.pad +
-            pill.lock +
-            pill.gap +
-            (tab.dirty ? pill.dot + pill.gap : 0),
+          fixed: pill.pad + pill.lock + pill.gap + marks(tab),
           spare: 0,
           open: tab.open,
         }
       : shaped(tab, title);
   });
+  // What a tab shows beside its name, pinned or not: the unsaved dot, the
+  // read-only lock, the count of waiting revisions.
+  function marks(tab: TabShape) {
+    return (
+      (tab.dirty ? pill.dot + pill.gap : 0) +
+      (tab.readOnly ? pill.lock + pill.gap : 0) +
+      (tab.waiting
+        ? pill.waiting +
+          pill.digit * (String(tab.waiting).length - 1) +
+          pill.gap
+        : 0)
+    );
+  }
   function shaped(tab: TabShape, title: number) {
     return {
       title,
-      fixed:
-        pill.pad +
-        pill.close +
-        pill.gap +
-        (tab.dirty ? pill.dot + pill.gap : 0) +
-        (tab.readOnly ? pill.lock + pill.gap : 0) +
-        (tab.waiting
-          ? pill.waiting +
-            pill.digit * (String(tab.waiting).length - 1) +
-            pill.gap
-          : 0),
+      fixed: pill.pad + pill.close + pill.gap + marks(tab),
       // Its × hidden till it opens, an unopened tab's name has that room.
       spare: tab.open || pill.closeIdle ? 0 : pill.close + pill.gap,
       open: tab.open,

@@ -2,7 +2,8 @@ import { keepInList, uiList } from "../storage/ui-state";
 import type { DocTab } from "./doc-tabs";
 
 /** Whether the tab is pinned: as set on it, else as its file was left. */
-export function tabPinned(tab: DocTab): boolean {
+export function tabPinned(tab: DocTab | undefined): boolean {
+  if (!tab) return false;
   if (tab.pinned !== undefined) return tab.pinned;
   return tab.path !== null && uiList("pinnedPaths").includes(tab.path);
 }

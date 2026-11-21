@@ -159,7 +159,7 @@ export function DocumentIslands({
   const order = panes
     .map(
       (p) =>
-        `${p.id}:${p.tabs.map((id) => (byId.get(id) && tabPinned(byId.get(id)!) ? "!" : "") + id).join(",")}`,
+        `${p.id}:${p.tabs.map((id) => (tabPinned(byId.get(id)) ? "!" : "") + id).join(",")}`,
     )
     .join("|");
   useEffect(() => {
@@ -245,7 +245,12 @@ export function DocumentIslands({
         ...readOnlyItem(id),
         ...pinItem(id),
         "separator",
-        { label: t.menuCloseTab, onSelect: () => onClose(id) },
+        {
+          label: t.menuCloseTab,
+          // A pinned tab is unpinned first.
+          disabled: tabPinned(byId.get(id)),
+          onSelect: () => onClose(id),
+        },
         ...closeManyItems(list, id),
         ...pluginTabItems(byId.get(id)?.path ?? null),
       ]}

@@ -201,7 +201,14 @@ test("a pinned tab goes first, shows no ×, and stays through ⌘W, a middle cli
   // ⌘W in front of it, and a middle click: still there.
   await tab(page, "c.md").locator(".tab-pill-title").click();
   await emit(page, "menu-close-tab");
+  await page.keyboard.press("ControlOrMeta+w");
   await tab(page, "c.md").click({ button: "middle" });
+  // Its own menu offers no Close Tab while it is pinned.
+  await tab(page, "c.md").click({ button: "right" });
+  await expect(
+    page.getByRole("menuitem", { name: "Close Tab", exact: true }),
+  ).toBeDisabled();
+  await page.keyboard.press("Escape");
   await expect(page.locator(titles)).toHaveText(["c.md", "a.md", "b.md"]);
   await fromMenu(page, "a.md", "Close Others");
   await expect(page.locator(titles)).toHaveText(["c.md", "a.md"]);
