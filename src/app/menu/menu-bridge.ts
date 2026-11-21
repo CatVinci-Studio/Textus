@@ -1,3 +1,4 @@
+import { tabPinned } from "../../document/pinned";
 import { splitHere } from "./split-here";
 import type { FormatBarSide } from "../../prefs/settings-values";
 import { PLUGIN_SETTINGS } from "../../registry/menu/plugin-menu";
@@ -252,9 +253,13 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-insert-link", () =>
         sendAppEvent(INSERT_LINK_EVENT),
       ),
-      listenToThisWindow("menu-close-tab", () =>
-        h().requestCloseTab(h().activeTabId),
-      ),
+      // A pinned tab stays: unpinned first, as its row shows no ×.
+      listenToThisWindow("menu-close-tab", () => {
+        const tab = h()
+          .liveTabs()
+          .find((x) => x.id === h().activeTabId);
+        if (!tab || !tabPinned(tab)) h().requestCloseTab(h().activeTabId);
+      }),
       listenToThisWindow("menu-reopen-closed-tab", () => h().reopenClosedTab()),
       // Payload is the block kind (h1..h6, bullet-list, ...) from the menu id.
       listenToThisWindow<string>("menu-insert-block", (event) => {

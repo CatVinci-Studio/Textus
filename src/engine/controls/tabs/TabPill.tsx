@@ -7,7 +7,7 @@ import { scaledPx } from "../../tokens/chrome-scale";
 import { rowIslandAt } from "../../frame/frame-store";
 import { trackDrag } from "../../drag/pointer-drag";
 import { useEffect, useRef } from "react";
-import { CloseIcon, LockIcon } from "../icons";
+import { CloseIcon, LockIcon, PinIcon } from "../icons";
 import { Tooltip } from "../Tooltip";
 import { nativeFiles } from "../../../platform/native-files";
 import { canHaptic } from "../../../platform/capabilities";
@@ -32,6 +32,8 @@ export interface TabInfo {
   marked?: boolean;
   /** In reading mode: a padlock before its name turns it off. */
   readOnly?: boolean;
+  /** Pinned: a pin where its × was, and no closing it from the row. */
+  pinned?: boolean;
   /** How many of Textus AI's revisions wait in it: a count after its name. */
   waiting?: number;
 }
@@ -84,6 +86,8 @@ export function TabPill({
     close: string;
     unsaved: string;
     readOnly?: string;
+    /** A pinned tab's pin. */
+    pinned?: string;
     /** What its count of waiting revisions says. */
     waiting?: (n: number) => string;
   };
@@ -256,7 +260,7 @@ export function TabPill({
       }}
       data-tab={tab.id}
       data-place={at || undefined}
-      className={`tab-pill ${isActive ? "tab-pill-active" : ""}${tab.preview ? " tab-pill-looking" : ""}`}
+      className={`tab-pill ${isActive ? "tab-pill-active" : ""}${tab.preview ? " tab-pill-looking" : ""}${tab.pinned ? " tab-pill-pinned" : ""}`}
       style={width === undefined ? undefined : { width }}
       data-marked={tab.marked || undefined}
       onDoubleClick={tab.preview && onKeep ? () => onKeep(tab.id) : undefined}
@@ -289,7 +293,7 @@ export function TabPill({
       onAuxClick={(e) => {
         if (e.button !== 1) return;
         e.preventDefault();
-        onClose(tab.id);
+        if (!tab.pinned) onClose(tab.id);
       }}
     >
       {tab.dirty && (
@@ -339,20 +343,33 @@ export function TabPill({
           </span>
         </Tooltip>
       )}
-      {/* Not a button: a tab holds no control of its own. */}
-      <Tooltip text={labels.close} description={null}>
-        <span
-          className="tab-pill-close"
-          aria-hidden="true"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation();
-            onClose(tab.id);
-          }}
-        >
-          <CloseIcon />
-        </span>
-      </Tooltip>
+      {tab.pinned ? (
+        // Measured as the padlock is (tab-room.ts): the same icon's room.
+        <Tooltip text={labels.pinned ?? ""} description={null}>
+          <span
+            className="tab-pill-lock tab-pill-pin"
+            role="img"
+            aria-label={labels.pinned}
+          >
+            <PinIcon />
+          </span>
+        </Tooltip>
+      ) : (
+        /* Not a button: a tab holds no control of its own. */
+        <Tooltip text={labels.close} description={null}>
+          <span
+            className="tab-pill-close"
+            aria-hidden="true"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose(tab.id);
+            }}
+          >
+            <CloseIcon />
+          </span>
+        </Tooltip>
+      )}
     </div>
   );
 }

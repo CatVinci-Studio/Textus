@@ -61,6 +61,8 @@ export interface UiState {
   fileTreeHidden: string;
   /** The documents left read-only (View › Read Only), by path. */
   readOnlyPaths: string[];
+  /** Documents pinned in their row, by path (document/pinned.ts). */
+  pinnedPaths: string[];
   /** Files Textus AI left something in, by path: revisions waiting, a file
    *  it made waiting to be kept, a file it wrote straight in. */
   aiFileMarks: Record<string, AiFileMark>;

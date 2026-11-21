@@ -1,6 +1,7 @@
 import type { DocTab } from "../../document/doc-tabs";
 import { tabIsDirty } from "../../document/doc-tabs";
 import { tabReadOnly } from "../../document/read-only";
+import { tabPinned } from "../../document/pinned";
 import { pathItems } from "../../clipboard/copy-path";
 import { windowFolder } from "../../platform/window-folder";
 import { isWithin } from "../../utils/path";
@@ -73,12 +74,14 @@ export function tabMenuItems({
       },
     ];
   };
-  const closeManyItems = (list: DocTab[], id: string) => {
-    const at = list.findIndex((tab) => tab.id === id);
+  // A pinned tab is closed only on its own, once unpinned.
+  const closeManyItems = (row: DocTab[], id: string) => {
+    const at = row.findIndex((tab) => tab.id === id);
+    const list = row.filter((tab) => !tabPinned(tab));
     const groups: [string, DocTab[]][] = [
       [t.closeOtherTabs, list.filter((tab) => tab.id !== id)],
-      [t.closeTabsToLeft, list.slice(0, at)],
-      [t.closeTabsToRight, list.slice(at + 1)],
+      [t.closeTabsToLeft, row.slice(0, at).filter((tab) => !tabPinned(tab))],
+      [t.closeTabsToRight, row.slice(at + 1).filter((tab) => !tabPinned(tab))],
     ];
     return [
       ...groups
