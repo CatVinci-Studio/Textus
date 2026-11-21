@@ -239,3 +239,41 @@ test("a tab brought to the front by a click takes the focus without the keyboard
   await expect(pill).toBeFocused();
   expect(await pill.evaluate((el) => el.matches(":focus-visible"))).toBe(false);
 });
+
+test("changing what one tilde reads as redraws an edited document, its text kept", async ({
+  page,
+}) => {
+  await open(page);
+  await pasteMarkdown(page, "H~2~O and 5~10人");
+  const doc = page.locator(".milkdown .ProseMirror").first();
+  await expect(doc.locator("sub")).toHaveText("2");
+  await emit(page, "menu-settings");
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new CustomEvent("textus:open-settings-page", {
+        detail: { page: "edit-text" },
+      }),
+    ),
+  );
+  await page.locator(".settings-advanced > summary").first().click();
+  await page.getByLabel("单个波浪线 ~文字~").click();
+  await page.getByRole("option", { name: "原样显示" }).click();
+  await tabs(page).first().click();
+  await expect(doc.locator("sub")).toHaveCount(0);
+  await expect(doc).toContainText("H~2~O and 5~10人");
+});
+
+test("Make your theme opens Create in a tab of its own, filled, with the AI on or off", async ({
+  page,
+}) => {
+  for (const textusAi of [true, false]) {
+    await page.setViewportSize({ width: 1200, height: 760 });
+    await openApp(page, { settings: { menuBarShown: false, textusAi } });
+    await emit(page, "menu-settings");
+    await page.locator(".sidebar").getByText("外观").first().click();
+    await page.getByText("制作你的主题").first().click();
+    await expect(page.locator(".create-studio-title")).toBeVisible();
+    const box = await page.locator(".create-studio").boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThan(400);
+  }
+});

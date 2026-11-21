@@ -1165,6 +1165,10 @@ export default {
   colorSwatchesOff: "Выкл.",
   colorSwatchesCode: "Только в коде",
   colorSwatchesEverywhere: "Везде",
+  singleTildeLabel: "Одна тильда с каждой стороны, ~текст~",
+  singleTildeSubscript: "Нижний индекс после буквы или цифры (H~2~O)",
+  singleTildeStrikethrough: "Зачёркнутый",
+  singleTildeText: "Как набрано",
   codeBlockCopy: "Копировать",
   codeBlockCopied: "Скопировано",
   autoCloseMarksLabel: "Закрывать ** и `",
@@ -1263,6 +1267,9 @@ export default {
   closeOtherTabs: "Закрыть другие",
   closeTabsToLeft: "Закрыть вкладки слева",
   closeTabsToRight: "Закрыть вкладки справа",
+  menuPinTab: "Закрепить вкладку",
+  menuUnpinTab: "Открепить вкладку",
+  tabPinned: "Закреплена: открепите, чтобы закрыть",
   splitDivider: "Разделитель между документами",
   hoverCard: "Предпросмотр",
   hoverPin: "Закрепить",
@@ -1974,6 +1981,8 @@ export default {
   pluginPermNotifications: "Показывать системные уведомления",
   pluginPermAppearance: "Менять цвета Textus и ваших документов",
   pluginPermGitCommit: "Делать коммиты Git в открытой папке вашим Git",
+  pluginPermGitSync:
+    "Получать, отправлять и подтягивать изменения Git-репозитория открытой папки вашим Git",
   pluginPermSsh:
     "Подключаться к серверам с вашими настройками SSH (только к разрешённым)",
   pluginSshAsk:

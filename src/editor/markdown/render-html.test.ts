@@ -6,6 +6,7 @@ import {
   renderMarkdownInlineHtml,
 } from "./render-html";
 import { loadKatex } from "../math/katex-loader";
+import { writeLocalSettings } from "../../prefs/settings-store";
 
 // The app loads KaTeX on the first formula; these render with it there.
 beforeAll(() => loadKatex());
@@ -50,6 +51,33 @@ describe("renderMarkdownHtml", () => {
     const md = "这就是**线性（linearity）**在这里的含义";
     for (const html of [renderMarkdownHtml(md), renderMarkdownInlineHtml(md)])
       expect(html).toContain("<strong>线性（linearity）</strong>");
+  });
+
+  it("reads one tilde as the setting says, two as a strikethrough", () => {
+    const md = "40.30~40.45 = **64.0~64.2%**, H~2~O, 5~10人，20~30人, ~~old~~";
+    const all = () => [
+      renderMarkdownHtml(md),
+      renderMarkdownInlineHtml(md),
+      renderDocumentHtml(md),
+    ];
+    try {
+      for (const html of all()) {
+        expect(html).toContain("40.30~40.45 = <strong>64.0~64.2%</strong>");
+        expect(html).toContain("H<sub>2</sub>O");
+        expect(html).toContain("5~10人，20~30人");
+        expect(html).toContain("<del>old</del>");
+      }
+      writeLocalSettings({ singleTilde: "text" });
+      for (const html of all()) {
+        expect(html).toContain("H~2~O");
+        expect(html).not.toContain("<sub>");
+      }
+      writeLocalSettings({ singleTilde: "strikethrough" });
+      for (const html of all())
+        expect(html).toContain("<del>40.45 = **64.0</del>");
+    } finally {
+      writeLocalSettings({ singleTilde: "subscript" });
+    }
   });
 
   it("still strips script from model output", () => {

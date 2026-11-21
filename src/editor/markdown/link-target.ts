@@ -1,6 +1,7 @@
 import {
   decodeUrlPath,
   dirname,
+  fileUrlAsLink,
   hasUrlScheme,
   isDrivePath,
   isNoteFile,
@@ -19,14 +20,15 @@ export type LinkTarget =
 
 /**
  * Where `href`, a link in the document at `docPath`, leads, or null. Of URL
- * schemes only http(s) and mailto are followed: javascript:, file: and the
- * like would let a document's author run or open things.
+ * schemes only http(s) and mailto are followed: javascript: and the like
+ * would let a document's author run things. A local `file:` URL is read as
+ * the path it names, which only opens a note or shows a file, never runs it.
  */
 export function linkTarget(
   href: string,
   docPath: string | null,
 ): LinkTarget | null {
-  const link = href.trim();
+  const link = fileUrlAsLink(href.trim());
   if (link.startsWith("#"))
     return link.length > 1
       ? { kind: "heading", anchor: decodeUrlPath(link.slice(1)) }

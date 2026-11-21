@@ -1,6 +1,7 @@
 import type { ScrollPlace } from "../document/last-places";
 import type { LeftHistory } from "./left-history";
 import { windowTabs } from "../engine/layout/store";
+import type { SingleTildeMode } from "../prefs/settings-values";
 
 /** Kept only for a tab still open: an editor going because its tab closed
  *  leaves nothing behind (the window's model drops the tab first). */
@@ -17,6 +18,9 @@ export interface TabLeft {
   path: string | null;
   /** The text the document stands for: it holds for this text only. */
   markdown: string;
+  /** How one tilde was read (Settings › Editing): read another way now,
+   *  the text is parsed afresh. */
+  singleTilde: SingleTildeMode;
   doc: unknown;
   selection: unknown;
   history: LeftHistory | null;
@@ -89,12 +93,18 @@ export function leftBy(tabId: string, markdown: string): TabLeft | null {
   return state?.markdown === markdown ? state : null;
 }
 
-/** What `tabId`'s last editor left for the file at `path`, whatever its
- *  text now: a change made meanwhile (in source mode) is applied over it
+/** What `tabId`'s last editor left for the file at `path`, read the way
+ *  the next editor reads one tilde, whatever its text now: a change made meanwhile (in source mode) is applied over it
  *  as one more step. */
-export function leftAtAll(tabId: string, path: string | null): TabLeft | null {
+export function leftAtAll(
+  tabId: string,
+  path: string | null,
+  singleTilde: SingleTildeMode,
+): TabLeft | null {
   const state = left.get(tabId);
-  return state?.path === path ? state : null;
+  return state?.path === path && state.singleTilde === singleTilde
+    ? state
+    : null;
 }
 
 /** The tab closed, or its editor took what was left: nothing kept twice. */

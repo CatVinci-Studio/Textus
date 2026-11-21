@@ -206,7 +206,10 @@ pub fn app_quitting() -> bool {
 pub fn cancel_session_quit(app: AppHandle, state: tauri::State<SessionTabsState>) {
     APP_QUITTING.store(false, Ordering::SeqCst);
     #[cfg(desktop)]
-    super::update::cancel_relaunch();
+    {
+        super::update::note_exit(&app, "quit cancelled by a window's prompt");
+        super::update::cancel_relaunch();
+    }
     let windows = merge_windows(&state.0.lock().unwrap());
     write_session(&app, &windows);
 }

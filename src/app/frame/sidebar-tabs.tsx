@@ -18,7 +18,7 @@ import {
 import { Suspense } from "react";
 import { lazyModule } from "../../lazy/lazy-module";
 import { lazyComponent } from "../../lazy/lazy-component";
-import { canOpenFolder, isIOSApp } from "../../platform/capabilities";
+import { canOpenFolder } from "../../platform/capabilities";
 import { isPhoneLayout } from "../../platform/phone-layout";
 import type { Strings } from "../../i18n/strings";
 import type { OpenFolder } from "../useOpenFolder";
@@ -191,8 +191,8 @@ const SETTINGS_TAB: SidebarTabDef = {
   ),
   railFoot: true,
 };
-// An iPhone opens Settings from its menu, as a sheet.
-const settingsTab = () => (isIOSApp && isPhoneLayout() ? [] : [SETTINGS_TAB]);
+// A phone opens Settings from its menu, as a sheet (SettingsLayer).
+const settingsTab = () => (isPhoneLayout() ? [] : [SETTINGS_TAB]);
 
 /** The first tab, Files: where the sidebar opens with nothing remembered. */
 export const DEFAULT_SIDEBAR_TAB = "tree";

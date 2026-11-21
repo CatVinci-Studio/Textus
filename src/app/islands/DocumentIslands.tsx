@@ -8,7 +8,7 @@ import { plural } from "../../i18n/plural";
 import { DocumentCorners } from "./DocumentCorner";
 import { DocumentViews } from "./DocumentViews";
 import type { Lang } from "../../i18n/langs";
-import { type ComponentProps, type CSSProperties } from "react";
+import { useEffect, type ComponentProps, type CSSProperties } from "react";
 import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import {
   canDragTabsBetweenWindows,
@@ -30,7 +30,19 @@ import { tabMenuItems } from "../tabs/tab-menu-items";
 import { FormatBar } from "../FormatBar";
 import { useIslands } from "../../engine/layout/useIslands";
 import { panesOf, type Pane } from "../../engine/layout/tree";
-import { focusPane, reorderInPane } from "../../engine/layout/store";
+import {
+  focusPane,
+  reorderInPane,
+  setTabOrder,
+  windowLayout,
+  windowTabs,
+} from "../../engine/layout/store";
+import {
+  keepPinned,
+  pinnedFirst,
+  placeAmongPinned,
+  tabPinned,
+} from "../../document/pinned";
 import { useTabsInBar } from "./tabs-in-bar";
 import { pullTab } from "./tab-pull";
 import { addFromTabRow, newConversation } from "./ai-tabs";
@@ -63,6 +75,7 @@ export function DocumentIslands({
   onDetach,
   onMoveToNewWindow,
   onToggleReadOnly,
+  onPin,
   onKeep,
   previewTab,
   onChange,
@@ -84,6 +97,8 @@ export function DocumentIslands({
   onDetach: (tabId: string) => void;
   onMoveToNewWindow: (tabId: string) => void;
   onToggleReadOnly: (tabId: string) => void;
+  /** A tab pinned or unpinned in its row. */
+  onPin: (tabId: string, pinned: boolean) => void;
   /** A preview tab kept. */
   onKeep: (tabId: string) => void;
   previewTab: TabBarProps["previewTab"];
@@ -124,6 +139,39 @@ export function DocumentIslands({
   // its row, the sheet reaches up into the bar's.
   const cells = new Map<string, CSSProperties | undefined>();
   const body = (id: string) => cells.get(id);
+  // Pin Tab / Unpin Tab: kept by its file's path, as Read Only is.
+  const pinItem = (id: string) => {
+    const tab = byId.get(id);
+    if (!tab) return [];
+    const pinned = tabPinned(tab);
+    return [
+      {
+        label: pinned ? t.menuUnpinTab : t.menuPinTab,
+        onSelect: () => {
+          if (tab.path) keepPinned(tab.path, !pinned);
+          onPin(id, !pinned);
+        },
+      },
+    ];
+  };
+  // Each row with its pinned tabs first, whatever put them elsewhere (a
+  // pin, a tab come from another island).
+  const order = panes
+    .map(
+      (p) =>
+        `${p.id}:${p.tabs.map((id) => (tabPinned(byId.get(id)) ? "!" : "") + id).join(",")}`,
+    )
+    .join("|");
+  useEffect(() => {
+    for (const p of panesOf(windowLayout().root)) {
+      const pinned = (id: string) => {
+        const tab = windowTabs<DocTab>().find((x) => x.id === id);
+        return !!tab && tabPinned(tab);
+      };
+      const sorted = pinnedFirst(p.tabs, pinned);
+      if (sorted.some((id, i) => id !== p.tabs[i])) setTabOrder(p.id, sorted);
+    }
+  }, [order]);
   const { pathItem, readOnlyItem, closeManyItems } = tabMenuItems({
     tabs,
     activeTabId,
@@ -154,6 +202,7 @@ export function DocumentIslands({
         preview: tab.preview,
         path: tab.path,
         readOnly: tabReadOnly(tab),
+        pinned: tabPinned(tab),
         marked: !!tab.path && (changed.has(tab.path) || !!marks[tab.path]),
         waiting: (tab.path && marks[tab.path]?.pending) || undefined,
       }))}
@@ -179,14 +228,29 @@ export function DocumentIslands({
               : undefined,
         })
       }
-      onReorder={(id, index) => reorderInPane(pane, id, index)}
+      // The pinned stay first: a drag lands on its own side of them.
+      onReorder={(id, index) => {
+        const tab = byId.get(id);
+        const pinned = list.filter(tabPinned).length;
+        reorderInPane(
+          pane,
+          id,
+          placeAmongPinned(index, !!tab && tabPinned(tab), pinned),
+        );
+      }}
       previewTab={pane === panes[0]?.id ? previewTab : null}
       // Open beside and Move to New Window are drags (pullTab).
       menuFor={(id) => [
         ...pathItem(id, byId.get(id)?.path),
         ...readOnlyItem(id),
+        ...pinItem(id),
         "separator",
-        { label: t.menuCloseTab, onSelect: () => onClose(id) },
+        {
+          label: t.menuCloseTab,
+          // A pinned tab is unpinned first.
+          disabled: tabPinned(byId.get(id)),
+          onSelect: () => onClose(id),
+        },
         ...closeManyItems(list, id),
         ...pluginTabItems(byId.get(id)?.path ?? null),
       ]}
@@ -197,6 +261,7 @@ export function DocumentIslands({
         unsaved: t.unsavedIndicator,
         all: t.menuAllTabs,
         readOnly: t.readOnlyLock,
+        pinned: t.tabPinned,
         waiting: (n) => plural(t.aiPendingCount, n, lang),
       }}
     />

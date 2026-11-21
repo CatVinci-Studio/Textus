@@ -7,6 +7,7 @@ pub(crate) const PROPOSE_EDIT_TOOL_NAME: &str = "propose_edit";
 /// How a valid proposal's result starts - and a valid comment's below:
 /// such a call needs nothing more from the model (ToolOutput::settled).
 pub(super) const EDIT_PROPOSED: &str = "Edit proposed";
+const UNCHANGED: &str = "Not proposed: `text` is the same as the passage it replaces, so nothing would change. If the passage already reads as asked, say so in your reply; otherwise send the proposal with the new text.";
 
 /// Told after a rewrite whose text swapped a document's picture for a new
 /// one: the original stays in it, and the new one is the picture tool's.
@@ -128,6 +129,11 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
     // The frontend later appends a status note to this result. The size of the
     // change is measured here so the reply can rest on it instead of guessing.
     let text = parsed.get("text").and_then(|v| v.as_str()).unwrap_or("");
+    // A rewrite that changes nothing: shown, it read as the passage taken out
+    // and put back.
+    if action == "replace" && !again && text.trim_matches('\n') == anchor.trim_matches('\n') {
+        return UNCHANGED.to_string();
+    }
     if let Some(problem) = degenerate_replacement(action, anchor, text) {
         // Refused once; the identical call again means it ("replace this
         // sentence with TBD").

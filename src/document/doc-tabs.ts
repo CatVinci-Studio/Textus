@@ -56,6 +56,9 @@ export interface DocTab {
   /** View › Read Only: nothing may change it. Kept by path
    *  (document/read-only.ts). */
   readOnly?: boolean;
+  /** Pinned: first in its row, narrow, closed only once unpinned. Kept by
+   *  path (document/pinned.ts). */
+  pinned?: boolean;
   /** A plugin's view or custom editor shown instead of a document; a custom
    *  editor's file is its `resource`, which the plugin saves itself. */
   view?: PluginTabView;

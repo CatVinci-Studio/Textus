@@ -155,6 +155,7 @@ static RELAUNCH: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn quit_and_relaunch(app: tauri::AppHandle) {
+    note_exit(&app, "update installed: quitting to relaunch");
     RELAUNCH.store(true, std::sync::atomic::Ordering::SeqCst);
     crate::menu::quit(&app);
 }
@@ -178,7 +179,16 @@ static PENDING_INSTALL: std::sync::Mutex<
 /// The end of a quit: exit, or install and start the new version.
 #[cfg(desktop)]
 pub fn exit_app(app: &tauri::AppHandle) {
-    if RELAUNCH.load(std::sync::atomic::Ordering::SeqCst) {
+    let relaunch = RELAUNCH.load(std::sync::atomic::Ordering::SeqCst);
+    note_exit(
+        app,
+        if relaunch {
+            "quit: relaunching"
+        } else {
+            "quit: exiting"
+        },
+    );
+    if relaunch {
         // A restart, or the installer, ends this process without Exit's own
         // writes: they're made here.
         crate::settings::flush_all(app);
@@ -186,14 +196,45 @@ pub fn exit_app(app: &tauri::AppHandle) {
         release_instance(app.clone());
         let pending = PENDING_INSTALL.lock().ok().and_then(|mut p| p.take());
         if let Some((update, bytes)) = pending {
+            note_exit(app, "installing the downloaded update");
             // The installer ends this process and starts the new version.
             if let Err(e) = update.install(bytes) {
-                eprintln!("textus: update install failed: {e}");
+                note_exit(app, &format!("update install failed: {e}"));
             }
         }
+        note_exit(app, "restarting");
         app.restart();
     }
     app.exit(0);
+}
+
+/// One line of what the end of a quit did, in the app's log folder
+/// (`exit.log`, its last 32 KiB kept): an update that doesn't come back
+/// after its relaunch says there where it stopped.
+#[cfg(desktop)]
+pub(crate) fn note_exit(app: &tauri::AppHandle, what: &str) {
+    use std::io::Write;
+    use tauri::Manager;
+    let Ok(dir) = app.path().app_log_dir() else {
+        return;
+    };
+    let _ = std::fs::create_dir_all(&dir);
+    let path = dir.join("exit.log");
+    if std::fs::metadata(&path).is_ok_and(|m| m.len() > 32 * 1024) {
+        let kept = std::fs::read(&path).unwrap_or_default();
+        let _ = std::fs::write(&path, &kept[kept.len().saturating_sub(16 * 1024)..]);
+    }
+    let at = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    if let Ok(mut file) = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&path)
+    {
+        let _ = writeln!(file, "{at} {} {what}", app.package_info().version);
+    }
 }
 
 /// Windows: downloads `rid`'s update, then every window closes as at Quit

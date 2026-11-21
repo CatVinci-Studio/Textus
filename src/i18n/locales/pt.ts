@@ -1143,6 +1143,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   colorSwatchesOff: "Desligadas",
   colorSwatchesCode: "Só no código",
   colorSwatchesEverywhere: "Em todo o texto",
+  singleTildeLabel: "Um til de cada lado, ~texto~",
+  singleTildeSubscript: "Subscrito após letra ou algarismo (H~2~O)",
+  singleTildeStrikethrough: "Riscado",
+  singleTildeText: "Como foi digitado",
   codeBlockCopy: "Copiar",
   codeBlockCopied: "Copiado",
   autoCloseMarksLabel: "Fechar ** e `",
@@ -1241,6 +1245,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   closeOtherTabs: "Fechar as outras",
   closeTabsToLeft: "Fechar abas à esquerda",
   closeTabsToRight: "Fechar abas à direita",
+  menuPinTab: "Fixar aba",
+  menuUnpinTab: "Desafixar aba",
+  tabPinned: "Fixada: desafixe para fechar",
   splitDivider: "Divisória entre os documentos",
   hoverCard: "Pré-visualização",
   hoverPin: "Fixar",
@@ -1953,6 +1960,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginPermNotifications: "Mostrar notificações do sistema",
   pluginPermAppearance: "Alterar as cores do Textus e dos seus documentos",
   pluginPermGitCommit: "Fazer commits do Git na pasta aberta com o seu Git",
+  pluginPermGitSync:
+    "Buscar, enviar e puxar o repositório Git da pasta aberta com o seu Git",
   pluginPermSsh:
     "Ligar-se a servidores com as suas definições SSH (só os que permitir)",
   pluginSshAsk:

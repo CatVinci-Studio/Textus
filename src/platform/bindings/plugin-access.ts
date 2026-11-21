@@ -74,6 +74,12 @@ export const commands = {
 	plugin_git_log: (id: string, root: string, path: string, limit: number | null) => __TAURI_INVOKE<GitCommit[]>("plugin_git_log", { id, root, path, limit }),
 	plugin_git_show: (id: string, root: string, hash: string, path: string) => __TAURI_INVOKE<string | null>("plugin_git_show", { id, root, hash, path }),
 	plugin_git_commit: (id: string, root: string, message: string, paths: string[]) => __TAURI_INVOKE<string>("plugin_git_commit", { id, root, message, paths }),
+	/**  Takes the remote's branches (git.sync). */
+	plugin_git_fetch: (id: string, root: string) => __TAURI_INVOKE<null>("plugin_git_fetch", { id, root }),
+	/**  Sends the branch to its remote branch (git.sync). */
+	plugin_git_push: (id: string, root: string) => __TAURI_INVOKE<null>("plugin_git_push", { id, root }),
+	/**  Takes the remote branch's commits in, undone on a conflict (git.sync). */
+	plugin_git_pull: (id: string, root: string) => __TAURI_INVOKE<null>("plugin_git_pull", { id, root }),
 	/**  The hosts named in the user's `~/.ssh/config`. */
 	plugin_ssh_hosts: (id: string) => __TAURI_INVOKE<string[]>("plugin_ssh_hosts", { id }),
 	/**  The user's yes to `id` reaching `host`. */
@@ -233,12 +239,22 @@ export type GitStatus = GitStatus_Serialize | GitStatus_Deserialize;
 export type GitStatus_Deserialize = {
 	/**  None when HEAD is detached. */
 	branch?: string | null,
+	/**  The remote branch it follows (`origin/main`); None with none. */
+	upstream?: string | null,
+	/**  Commits here the remote branch hasn't, and there that this hasn't. */
+	ahead: number,
+	behind: number,
 	changes: GitChange[],
 };
 
 export type GitStatus_Serialize = {
 	/**  None when HEAD is detached. */
 	branch: string | null,
+	/**  The remote branch it follows (`origin/main`); None with none. */
+	upstream: string | null,
+	/**  Commits here the remote branch hasn't, and there that this hasn't. */
+	ahead: number,
+	behind: number,
 	changes: GitChange[],
 };
 

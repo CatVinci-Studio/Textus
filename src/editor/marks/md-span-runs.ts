@@ -1,3 +1,4 @@
+import { SUBSCRIPT_TEXT } from "./script-syntax";
 import type { Node as ProseNode, Schema } from "@milkdown/kit/prose/model";
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
@@ -178,11 +179,14 @@ export function closeTightRun(
   textBefore: string,
   runStart: number,
   to: number,
+  /** A subscript holds only what the parser reads as one (SUBSCRIPT_TEXT). */
+  { strict = false } = {},
 ): boolean {
   if (!pairsIn(view.state.doc.resolve(to).parent, spec)) return false;
   const open = findRunOpen(textBefore, spec.char, 1);
   if (!open || /\s/.test(open.value)) return false;
   if (spec === SUBSCRIPT) {
+    if (strict && !SUBSCRIPT_TEXT.test(open.value)) return false;
     const before = textBefore.slice(0, open.openIdx).slice(-1);
     if (!LETTER_OR_DIGIT.test(before)) return false;
     return closeOpenRun(view, spec, textBefore, runStart, to, { sub: true });

@@ -6,7 +6,7 @@ import type { MenuChecks } from "../../registry/menu/app-menu-model";
 import { HamburgerIcon } from "../../engine/controls/icons";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { Presence } from "../../engine/motion/usePresence";
-import { isIOSApp, isMobileApp } from "../../platform/capabilities";
+import { isMobileApp } from "../../platform/capabilities";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import "./window-controls.css";
 
@@ -50,15 +50,15 @@ export function AppMenuButton({ checks }: { checks?: MenuChecks } = {}) {
           // Pressed, it keeps the focus where it was, for the menu to give
           // back.
           onMouseDown={(e) => {
-            if (!isIOSApp) e.preventDefault();
+            if (!isMobileApp) e.preventDefault();
           }}
           onClick={(e) => {
             if (anchor) {
               close();
               return;
             }
-            if (isIOSApp) {
-              // The phone: blur the editor so the keyboard and the system's
+            if (isMobileApp) {
+              // Touch: blur the editor so the keyboard and the system's
               // paste bubble go, and don't hand focus back afterwards.
               (document.activeElement as HTMLElement | null)?.blur();
               focusOnClose.current = null;

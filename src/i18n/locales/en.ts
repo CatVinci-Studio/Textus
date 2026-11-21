@@ -1091,6 +1091,10 @@ type /name in a conversation to use one.
   colorSwatchesOff: "Off",
   colorSwatchesCode: "In code only",
   colorSwatchesEverywhere: "Everywhere",
+  singleTildeLabel: "One tilde each side, ~text~",
+  singleTildeSubscript: "Subscript after a letter or digit (H~2~O)",
+  singleTildeStrikethrough: "Strikethrough",
+  singleTildeText: "As typed",
   codeBlockCopy: "Copy",
   codeBlockCopied: "Copied",
   autoCloseMarksLabel: "Close ** and `",
@@ -1190,6 +1194,9 @@ type /name in a conversation to use one.
   closeOtherTabs: "Close Others",
   closeTabsToLeft: "Close Tabs to the Left",
   closeTabsToRight: "Close Tabs to the Right",
+  menuPinTab: "Pin Tab",
+  menuUnpinTab: "Unpin Tab",
+  tabPinned: "Pinned: unpin it to close it",
   splitDivider: "Divider between the documents",
   hoverCard: "Preview",
   hoverPin: "Pin",
@@ -1887,6 +1894,8 @@ type /name in a conversation to use one.
   pluginPermNotifications: "Show system notifications",
   pluginPermAppearance: "Change the colors of Textus and your documents",
   pluginPermGitCommit: "Make Git commits in the open folder with your Git",
+  pluginPermGitSync:
+    "Fetch, push and pull the open folder's Git repository with your Git",
   pluginPermSsh:
     "Connect to servers with your SSH settings (only ones you allow)",
   pluginSshAsk:

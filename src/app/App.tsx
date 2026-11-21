@@ -242,6 +242,7 @@ function App() {
             onDetach={handleTabDetach}
             onMoveToNewWindow={moveTabToNewWindow}
             onToggleReadOnly={toggleReadOnly}
+            onPin={(id, pinned) => shell.tabState.updateTab(id, { pinned })}
             onKeep={(id) => shell.tabState.updateTab(id, { preview: false })}
             previewTab={dragHoverPreview}
             onChange={handleChange}

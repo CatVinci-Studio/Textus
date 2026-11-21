@@ -1,3 +1,4 @@
+import { tabPinned } from "../document/pinned";
 import { fill } from "../i18n/fill";
 import { useCallback, useEffect } from "react";
 import { thisWindow } from "../platform/this-window";
@@ -128,8 +129,11 @@ export function useTabRemoval(opts: {
 
   const requestCloseTab = useCallback(
     async (id: string) => {
-      await flushAutosave([id]);
       const tab = liveTabs().find((tb) => tb.id === id);
+      // A pinned tab stays, however it is asked to close: unpinned first,
+      // as its row shows no ×.
+      if (tabPinned(tab)) return;
+      await flushAutosave([id]);
       if (tab?.path) closedPaths.push(tab.path);
       if (!tab || !tabIsDirty(tab)) {
         removeTab(id);

@@ -38,7 +38,6 @@ import { SOURCE_EDIT_EVENT } from "../../utils/events";
 import { followFormatMenu, formatSource } from "./source-format-events";
 import { sourceKeys, sourceTab } from "./source-keys";
 import { tellCopied } from "../../clipboard/copied";
-import { elasticOverscroll } from "../../engine/controls/elastic-overscroll";
 import { leaveSource, sourceLeftBy } from "../tab-left";
 import { registerTabEditor } from "../tab-editor";
 import { mayTakeKeys } from "../take-keys";
@@ -242,8 +241,6 @@ export function SourceEditor({
       latest.current.onScroll?.(scroller);
     };
     scroller.addEventListener("scroll", onScrollEvent, { passive: true });
-    // The same give at either end as the rendered view's, on a Mac.
-    const stopElastic = elasticOverscroll(scroller, view.dom);
     return () => {
       report();
       if (tabId && touched)
@@ -255,7 +252,6 @@ export function SourceEditor({
       stopFlush?.();
       stopFocus?.();
       stopZoomPane?.();
-      stopElastic();
       stopFormat();
       host.removeEventListener(SOURCE_EDIT_EVENT, onEdit);
       scroller.removeEventListener("scroll", onScrollEvent);

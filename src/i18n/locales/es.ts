@@ -1159,6 +1159,10 @@ para usar una.
   colorSwatchesOff: "Desactivadas",
   colorSwatchesCode: "Solo en el código",
   colorSwatchesEverywhere: "En todo el texto",
+  singleTildeLabel: "Una tilde a cada lado, ~texto~",
+  singleTildeSubscript: "Subíndice tras una letra o cifra (H~2~O)",
+  singleTildeStrikethrough: "Tachado",
+  singleTildeText: "Tal como se escribe",
   codeBlockCopy: "Copiar",
   codeBlockCopied: "Copiado",
   autoCloseMarksLabel: "Cerrar ** y `",
@@ -1258,6 +1262,9 @@ para usar una.
   closeOtherTabs: "Cerrar las demás",
   closeTabsToLeft: "Cerrar pestañas a la izquierda",
   closeTabsToRight: "Cerrar pestañas a la derecha",
+  menuPinTab: "Fijar pestaña",
+  menuUnpinTab: "Dejar de fijar pestaña",
+  tabPinned: "Fijada: déjala de fijar para cerrarla",
   splitDivider: "Separador entre los documentos",
   hoverCard: "Vista previa",
   hoverPin: "Fijar",
@@ -1975,6 +1982,8 @@ para usar una.
   pluginPermNotifications: "Mostrar notificaciones del sistema",
   pluginPermAppearance: "Cambiar los colores de Textus y de tus documentos",
   pluginPermGitCommit: "Hacer commits de Git en la carpeta abierta con tu Git",
+  pluginPermGitSync:
+    "Obtener, enviar y traer el repositorio Git de la carpeta abierta con tu Git",
   pluginPermSsh:
     "Conectarse a servidores con tu configuración SSH (solo los que permitas)",
   pluginSshAsk:
