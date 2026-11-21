@@ -1891,6 +1891,8 @@ type /name in a conversation to use one.
   pluginPermNotifications: "Show system notifications",
   pluginPermAppearance: "Change the colors of Textus and your documents",
   pluginPermGitCommit: "Make Git commits in the open folder with your Git",
+  pluginPermGitSync:
+    "Fetch, push and pull the open folder's Git repository with your Git",
   pluginPermSsh:
     "Connect to servers with your SSH settings (only ones you allow)",
   pluginSshAsk:

@@ -5,6 +5,7 @@
 //! a read of the folder is; .git itself is never handed over.
 
 mod process;
+mod remote;
 mod safety;
 
 use super::access::{checked_root, folder_path};
@@ -34,6 +35,11 @@ pub struct GitChange {
 pub struct GitStatus {
     /// None when HEAD is detached.
     pub branch: Option<String>,
+    /// The remote branch it follows (`origin/main`); None with none.
+    pub upstream: Option<String>,
+    /// Commits here the remote branch hasn't, and there that this hasn't.
+    pub ahead: u32,
+    pub behind: u32,
     pub changes: Vec<GitChange>,
 }
 
@@ -161,11 +167,27 @@ pub(super) fn status(
     let mut entries = text.split('\0');
     let mut status = GitStatus {
         branch: None,
+        upstream: None,
+        ahead: 0,
+        behind: 0,
         changes: Vec::new(),
     };
     while let Some(entry) = entries.next() {
         if let Some(head) = entry.strip_prefix("# branch.head ") {
             status.branch = (head != "(detached)").then(|| head.to_string());
+            continue;
+        }
+        if let Some(upstream) = entry.strip_prefix("# branch.upstream ") {
+            status.upstream = Some(upstream.to_string());
+            continue;
+        }
+        // "+2 -1": two to push, one to pull.
+        if let Some(ab) = entry.strip_prefix("# branch.ab ") {
+            let mut counts = ab
+                .split(' ')
+                .map(|n| n.trim_start_matches(['+', '-']).parse().unwrap_or(0));
+            status.ahead = counts.next().unwrap_or(0);
+            status.behind = counts.next().unwrap_or(0);
             continue;
         }
         let kind = entry.get(..1).unwrap_or("");
@@ -412,6 +434,48 @@ pub async fn plugin_git_commit(
 ) -> Result<String, String> {
     checked(&app, &id.clone(), &root.clone(), move |s, t| {
         commit(&s, &t, &id, &root, &message, &paths)
+    })
+    .await
+}
+
+/// Takes the remote's branches (git.sync).
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn plugin_git_fetch(
+    app: tauri::AppHandle,
+    id: String,
+    root: String,
+) -> Result<(), String> {
+    checked(&app, &id.clone(), &root.clone(), move |s, t| {
+        remote::fetch(&s, &t, &id, &root)
+    })
+    .await
+}
+
+/// Sends the branch to its remote branch (git.sync).
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn plugin_git_push(
+    app: tauri::AppHandle,
+    id: String,
+    root: String,
+) -> Result<(), String> {
+    checked(&app, &id.clone(), &root.clone(), move |s, t| {
+        remote::push(&s, &t, &id, &root)
+    })
+    .await
+}
+
+/// Takes the remote branch's commits in, undone on a conflict (git.sync).
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn plugin_git_pull(
+    app: tauri::AppHandle,
+    id: String,
+    root: String,
+) -> Result<(), String> {
+    checked(&app, &id.clone(), &root.clone(), move |s, t| {
+        remote::pull(&s, &t, &id, &root)
     })
     .await
 }

@@ -1758,6 +1758,7 @@ export default {
   pluginPermNotifications: "显示系统通知",
   pluginPermAppearance: "更改 Textus 和文档的颜色",
   pluginPermGitCommit: "用你的 Git 在打开的文件夹里提交",
+  pluginPermGitSync: "用你的 Git 获取、推送和拉取打开的文件夹所在的仓库",
   pluginPermSsh: "用你的 SSH 设置连接服务器（只连你允许的）",
   pluginSshAsk: "{plugin} 想用你的 SSH 设置连接 {host}，在那里读写文件。",
   pluginSshUnknownHost:

@@ -31,6 +31,7 @@ type PlainPermission =
   | "agents"
   | "appearance"
   | "git.commit"
+  | "git.sync"
   | "ssh";
 export type PluginPlatform = "desktop" | "ios";
 

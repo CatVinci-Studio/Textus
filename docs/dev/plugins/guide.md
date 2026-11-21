@@ -201,6 +201,7 @@ turning it on, or leaves it off, and can take each back later.
 | `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.13)                              |
 | `appearance`     | change Textus's colours: a palette over the theme, the frame a gradient (API 1.6)                                   |
 | `git.commit`     | commit files of the open folder with the user's git (1.4.3; reading Git history is `files.read`)                    |
+| `git.sync`       | fetch, push and pull the open folder's repository with the user's git (1.4.6)                                       |
 | `ssh`            | reach servers through the user's own ssh, SFTP only, each host allowed once by the user (API 1.9, desktop, preview) |
 | `network:<host>` | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for the open web)                                |
 | `hidden:<path>`  | read that hidden file of the open folder, named from its top: `hidden:.vitepress/config.ts` (1.4.3)                 |
@@ -513,8 +514,16 @@ file's commits through renames, and `git.show(hash, path)` the file as a
 commit had it; these need `files.read`. `git.commit(message, paths)`
 commits those files' changes only, through the user's own git (hooks,
 signing), and needs `git.commit`. Hidden files stay out, and nothing
-pushes, pulls or switches branches. Elsewhere `status()` is `null`. Set
+switches branches. Elsewhere `status()` is `null`. Set
 `engines.textus` to `">=1.4.3"`.
+
+From API 1.9 (Textus 1.4.6), `git.fetch()`, `git.push()` and `git.pull()`
+reach the remote with the user's saved credentials and need `git.sync`;
+`status()` also says the remote branch and how many commits are `ahead`
+and `behind`. Nothing asks for a password: a remote that wants one refuses,
+saying to sign in once with git. A pull that conflicts is undone and
+refuses, so no document is left with conflict markers. Set
+`engines.textus` to `">=1.4.6"` for these.
 
 ### Margin notes - `textus.comments` (API 1.8, preview)
 

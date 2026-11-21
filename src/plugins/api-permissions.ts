@@ -136,6 +136,10 @@ const API_PERMISSIONS: readonly {
     methods: ["appearance.setColors", "appearance.clear"],
   },
   { permission: "git.commit", methods: ["git.commit"] },
+  {
+    permission: "git.sync",
+    methods: ["git.fetch", "git.push", "git.pull"],
+  },
   // Checked when the window tells Rust the tools (contributions/ai-tools.ts).
   { permission: "ai.tools", methods: [], calls: ["ai.registerTool"] },
   {

@@ -1978,6 +1978,8 @@ export default {
   pluginPermNotifications: "Показывать системные уведомления",
   pluginPermAppearance: "Менять цвета Textus и ваших документов",
   pluginPermGitCommit: "Делать коммиты Git в открытой папке вашим Git",
+  pluginPermGitSync:
+    "Получать, отправлять и подтягивать изменения Git-репозитория открытой папки вашим Git",
   pluginPermSsh:
     "Подключаться к серверам с вашими настройками SSH (только к разрешённым)",
   pluginSshAsk:

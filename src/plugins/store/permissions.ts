@@ -27,6 +27,7 @@ export const PERMISSION_LABELS: Record<
   agents: "pluginPermAgents",
   appearance: "pluginPermAppearance",
   "git.commit": "pluginPermGitCommit",
+  "git.sync": "pluginPermGitSync",
   ssh: "pluginPermSsh",
 };
 

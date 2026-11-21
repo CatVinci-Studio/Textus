@@ -244,6 +244,9 @@ export const plugins = {
     command("plugin_git_show", id, root, hash, path),
   gitCommit: (id: string, root: string, message: string, paths: string[]) =>
     command("plugin_git_commit", id, root, message, paths),
+  gitFetch: (id: string, root: string) => command("plugin_git_fetch", id, root),
+  gitPush: (id: string, root: string) => command("plugin_git_push", id, root),
+  gitPull: (id: string, root: string) => command("plugin_git_pull", id, root),
   /** The writer agreed to Git running what the folder's repository sets up. */
   gitTrust: (root: string) => command("git_trust_repository", root),
   secretGet: (id: string, key: string) => command("plugin_secret_get", id, key),

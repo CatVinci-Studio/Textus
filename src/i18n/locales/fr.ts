@@ -1993,6 +1993,8 @@ utiliser une.
   pluginPermAppearance: "Modifier les couleurs de Textus et de vos documents",
   pluginPermGitCommit:
     "Faire des commits Git dans le dossier ouvert avec votre Git",
+  pluginPermGitSync:
+    "Récupérer, pousser et tirer le dépôt Git du dossier ouvert avec votre Git",
   pluginPermSsh:
     "Se connecter à des serveurs avec vos réglages SSH (seulement ceux que vous autorisez)",
   pluginSshAsk:

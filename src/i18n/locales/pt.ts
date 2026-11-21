@@ -1957,6 +1957,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginPermNotifications: "Mostrar notificações do sistema",
   pluginPermAppearance: "Alterar as cores do Textus e dos seus documentos",
   pluginPermGitCommit: "Fazer commits do Git na pasta aberta com o seu Git",
+  pluginPermGitSync:
+    "Buscar, enviar e puxar o repositório Git da pasta aberta com o seu Git",
   pluginPermSsh:
     "Ligar-se a servidores com as suas definições SSH (só os que permitir)",
   pluginSshAsk:
