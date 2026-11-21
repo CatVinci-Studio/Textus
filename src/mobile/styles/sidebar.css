@@ -1,10 +1,11 @@
-/* The sidebar on a phone (design: phone, pushed open): the rail and the
-   sidebar lie under the page's left edge, and the page, its bar too, moves
-   right by their width, a strip of it left at the right edge. Nothing
-   dims; a tap on that strip pushes it back (usePushedSidebar). */
+/* The sidebar on a phone (design: phone, pushed open): the library lies
+   under the page's left edge - a phone has no activity rail, its tabs are
+   the drawer's header - and the page, its bar too, moves right by the
+   drawer's width, a strip of it left at the right edge. Nothing dims; a
+   tap on that strip pushes it back (usePushedSidebar). */
 :root[data-window-chrome="mobile"] .app-shell {
-  --rail-width: 56px;
-  --sidebar-width: min(240px, calc(100vw - var(--rail-width) - 64px));
+  --rail-width: 0px;
+  --sidebar-width: min(240px, calc(100vw - 64px));
 }
 
 :root[data-window-chrome="mobile"] :is(.activity-rail, .sidebar) {

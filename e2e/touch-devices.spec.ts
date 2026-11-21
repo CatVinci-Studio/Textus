@@ -87,23 +87,29 @@ for (const device of DEVICES)
         "A first line",
       );
 
-      // The phone keeps its rail and sidebar out of sight until asked; they
-      // come in pushing the island aside.
+      // The phone keeps its library out of sight until asked; it comes in
+      // pushing the island aside, its panel tabs in the drawer's header.
       const toggle = page.locator(".window-bar-sidebar-toggle:visible");
       if (await toggle.count()) await toggle.tap();
-      const settings = page.locator(".activity-rail-settings");
-      await expect(settings).toBeVisible();
-      await fitsTheScreen(page, ".activity-rail");
-      await settings.tap();
-      // A phone's Settings is a sheet over the window; a tablet's a tab, as
-      // on the desktop.
       if (device.name === "a phone") {
+        await expect(page.locator(".activity-rail")).toHaveCount(0);
+        await expect(page.locator(".sidebar-tab")).toHaveCount(3);
+        await fitsTheScreen(page, ".sidebar");
+        // Settings is the menu's on a phone, a sheet over the window: the
+        // drawer goes first, as a tap beside it does.
+        await toggle.tap();
+        await page.locator(".window-menu-button").tap();
+        await page.getByRole("menuitem", { name: /设置/ }).tap();
         const dialog = page.getByRole("dialog", { name: "设置" });
         await expect(
           dialog.getByRole("button", { name: "外观" }),
         ).toBeVisible();
         await fitsTheScreen(page, '[role="dialog"]');
       } else {
+        const settings = page.locator(".activity-rail-settings");
+        await expect(settings).toBeVisible();
+        await fitsTheScreen(page, ".activity-rail");
+        await settings.tap();
         await expect(page.locator(".settings-tab-page")).toBeVisible();
         await fitsTheScreen(page, ".settings-tab-page");
       }
@@ -145,7 +151,7 @@ test.describe("searching on a phone", () => {
     await openPath(page, "/w/b.md");
     const toggle = page.locator(".window-bar-sidebar-toggle:visible");
     if (await toggle.count()) await toggle.tap();
-    await page.locator('[data-rail-id="search"]').tap();
+    await page.locator('[data-sidebar-tab="search"]').tap();
     await page.locator(".search-panel input").first().fill("needle");
     await page.locator(".search-text-line").first().tap();
     const hit = page.locator(".ProseMirror:visible p", {
