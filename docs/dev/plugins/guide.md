@@ -656,7 +656,7 @@ exports.activate = function () {
 <script>
   const api = acquireTextusApi();
   const answer = document.getElementById("answer");
-  api.onMessage((message) => {
+  api.onDidReceiveMessage((message) => {
     if (message?.type === "text") answer.textContent += message.text;
     if (message?.type === "error") answer.textContent = message.text;
   });
