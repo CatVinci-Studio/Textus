@@ -9,7 +9,7 @@
   flex: 1 1 auto;
   min-width: 0;
   height: 100%;
-  padding: 0 6px;
+  padding: 0 8px;
   border: none;
   background: none;
   color: var(--ui-text);
@@ -25,8 +25,8 @@
 
 .tab-switcher-count {
   flex: none;
-  padding: 2px 7px;
-  border-radius: 999px;
+  padding: 2px 8px;
+  border-radius: var(--shape-pill);
   background: color-mix(in srgb, var(--ui-text) 8%, transparent);
   color: var(--ui-muted);
   font-size: var(--text-caption);
@@ -72,7 +72,7 @@
 .tab-switcher-pick {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex: 1 1 auto;
   min-width: 0;
   min-height: 62px;
@@ -109,7 +109,7 @@
   display: grid;
   place-items: center;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--shape-pill);
   background: none;
   color: var(--ui-muted);
 }
@@ -122,7 +122,7 @@
 .tab-switcher-new {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
   min-height: 62px;
   padding: 0 16px;
