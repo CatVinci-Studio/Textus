@@ -10,6 +10,7 @@ vi.mock("../prefs/SettingsContext", () => ({
       cancel: "Cancel",
       docMore: "More",
       outlineTab: "Outline",
+      outlineEmpty: "No headings yet",
       menuFindReplace: "Find & Replace…",
       menuToggleSourceMode: "Source Mode",
       menuShare: "Share…",
@@ -21,6 +22,8 @@ vi.mock("../utils/events", async (importOriginal) => ({
   ...(await importOriginal<object>()),
   sendAppEvent: vi.fn(),
 }));
+vi.mock("../editor/tab-jump", () => ({ setTabJump: vi.fn() }));
+vi.mock("../editor/nav-history", () => ({ noteJump: vi.fn() }));
 
 beforeAll(() => {
   window.matchMedia = ((query: string) => ({
@@ -35,13 +38,18 @@ const { DocumentMenu } = await import("./DocumentMenu");
 const { emitMenuEvent } = await import("../platform/menu-events");
 const { sendAppEvent, TOGGLE_FIND_REPLACE_EVENT } =
   await import("../utils/events");
+const { setTabJump } = await import("../editor/tab-jump");
 
 function open() {
-  render(<DocumentMenu title="notes.md" onOutline={onOutline} />);
+  render(
+    <DocumentMenu
+      title="notes.md"
+      content={"# One\n\n## Two\n"}
+      tabId="tab-1"
+    />,
+  );
   fireEvent.click(screen.getByRole("button", { name: "More" }));
 }
-
-const onOutline = vi.fn();
 
 describe("a document's menu on a phone", () => {
   afterEach(() => {
@@ -59,12 +67,20 @@ describe("a document's menu on a phone", () => {
     expect(screen.getByRole("menuitem", { name: "Share…" })).toBeTruthy();
   });
 
-  it("runs the same commands the menus do", () => {
+  it("opens the outline sheet, and a row goes to its heading", () => {
     open();
     fireEvent.click(screen.getByRole("menuitem", { name: "Outline" }));
-    expect(onOutline).toHaveBeenCalledOnce();
-    cleanup();
+    expect(screen.getByRole("menu", { name: "Outline" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "One" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("menuitem", { name: "Two" }));
+    expect(setTabJump).toHaveBeenCalledWith(
+      "tab-1",
+      { kind: "outline", index: 1 },
+      true,
+    );
+  });
 
+  it("runs the same commands the menus do", () => {
     open();
     fireEvent.click(screen.getByRole("menuitem", { name: "Find & Replace…" }));
     expect(sendAppEvent).toHaveBeenCalledWith(TOGGLE_FIND_REPLACE_EVENT);

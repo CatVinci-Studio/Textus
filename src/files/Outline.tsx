@@ -1,9 +1,9 @@
 import { tabElement } from "../engine/layout/tab-element";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { parseHeadings, sourceAnchors } from "./outline-parse";
+import { HEADINGS, currentHeading } from "./outline-current";
 import { ChevronIcon } from "../engine/controls/icons";
 import { useSettings } from "../prefs/SettingsContext";
-import { HEADING_PLACEHOLDER } from "../editor/lazy/lazy-block-views";
 import { useTreeKeys } from "../engine/controls/useTreeKeys";
 import { plainInline } from "../utils/markdown-plain";
 import { Tooltip } from "../engine/controls/Tooltip";
@@ -19,27 +19,6 @@ interface OutlineProps {
   content: string;
   /** The tab whose document it lists, which scrolls to a row's heading. */
   tabId: string;
-}
-
-// A long document's headings out of sight are placeholders, in their place.
-const HEADINGS = `:scope > :is(h1, h2, h3, h4, h5, h6, ${HEADING_PLACEHOLDER})`;
-
-/** The index of the section being read in `tabId`'s editor: the last
- *  top-level heading just below the scroller's top, or -1 above the first. */
-function currentHeading(tabId: string): number {
-  const scroller = tabElement(tabId)?.querySelector(":scope > .editor-scroll");
-  const root = scroller?.querySelector(".editor-content .ProseMirror");
-  if (!scroller || !root) return -1;
-  const line = scroller.getBoundingClientRect().top + 80;
-  const headings = root.querySelectorAll(HEADINGS);
-  let current = -1;
-  for (let i = 0; i < headings.length; i++) {
-    // Folded away in a <details>: no place on screen, not being read.
-    if (headings[i].getClientRects().length === 0) continue;
-    if (headings[i].getBoundingClientRect().top > line) break;
-    current = i;
-  }
-  return current;
 }
 
 /** The anchor a link to heading `index` takes: the id the editor gave it

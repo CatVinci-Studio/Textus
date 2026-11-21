@@ -194,10 +194,8 @@ function App() {
               phone && !activeTab.view && !showsStartPage(activeTab) ? (
                 <DocumentMenu
                   title={activeTitle}
-                  onOutline={() => {
-                    setPanelMode("outline");
-                    setPanelOpen(true);
-                  }}
+                  content={activeTab.content}
+                  tabId={activeTab.id}
                 />
               ) : undefined
             }

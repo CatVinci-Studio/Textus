@@ -56,6 +56,40 @@
   border-top: 1px solid var(--ui-border);
 }
 
+/* A row deeper in a hierarchy (an outline's heading): left-aligned, each
+   level in under the one above it. */
+.action-sheet-item[data-depth] {
+  text-align: left;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.action-sheet-item[data-depth="2"] {
+  padding-left: 32px;
+}
+
+.action-sheet-item[data-depth="3"] {
+  padding-left: 48px;
+}
+
+.action-sheet-item[data-depth="4"] {
+  padding-left: 64px;
+}
+
+.action-sheet-item[data-depth="5"] {
+  padding-left: 80px;
+}
+
+.action-sheet-item[data-depth="6"] {
+  padding-left: 96px;
+}
+
+/* The row being read: its tick sits at the end, as a checked row's. */
+.action-sheet-item[aria-current] {
+  position: relative;
+}
+
 .action-sheet-item:active {
   background: var(--ui-pressed-row);
   transition-duration: 0s;
