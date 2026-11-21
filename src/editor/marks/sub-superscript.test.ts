@@ -17,9 +17,40 @@ describe("subscript and superscript", () => {
     expect(t.markdown()).toBe(source);
   });
 
+  it("reads one tilde as a subscript after a word, else as written", async () => {
+    const source =
+      "40.30~40.45 = **64.0~64.2%**; 5~10人，20~30人; H~2~O, a~n-1~; ~a~ ~~b~~";
+    const t = await openView(source);
+    expect(tags(t.view.dom, "strong")).toEqual(["64.0~64.2%"]);
+    expect(tags(t.view.dom, "sub")).toEqual(["2", "n-1"]);
+    expect(tags(t.view.dom, "del")).toEqual(["b"]);
+    expect(t.markdown()).toBe(source);
+  });
+
+  it("reads one tilde as typed where the setting says so", async () => {
+    const source = "H~2~O and ~a~ and ~~b~~";
+    const t = await openView(source, { singleTilde: "text" });
+    expect(t.view.dom.querySelector("sub")).toBeNull();
+    expect(tags(t.view.dom, "del")).toEqual(["b"]);
+    expect(t.markdown()).toBe(source);
+  });
+
+  it("types no subscript where one tilde reads as typed", async () => {
+    const t = await openView("", { singleTilde: "text" });
+    t.type("H~2~O");
+    expect(t.view.dom.querySelector("sub")).toBeNull();
+    expect(t.markdown()).toBe("H~2~O");
+  });
+
+  it("types a subscript only of what a file would read as one", async () => {
+    const t = await openView("");
+    t.type("5~10人~ ");
+    expect(t.view.dom.querySelector("sub")).toBeNull();
+  });
+
   it("strikes out one tilde each side away from a word, as GitHub does", async () => {
     const source = "Was ~wrong~ and ~two words~; CO~2~ and H~2~O stay.";
-    const t = await openView(source);
+    const t = await openView(source, { singleTilde: "strikethrough" });
     expect(tags(t.view.dom, "del")).toEqual(["wrong", "two words"]);
     expect(tags(t.view.dom, "sub")).toEqual(["2", "2"]);
     expect(t.markdown()).toBe(source);

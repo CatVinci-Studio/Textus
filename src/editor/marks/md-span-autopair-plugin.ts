@@ -1,3 +1,4 @@
+import type { SingleTildeMode } from "../../prefs/settings-values";
 import { Plugin, type EditorState } from "@milkdown/kit/prose/state";
 import { Decoration, DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
@@ -76,6 +77,9 @@ function swallowPendingCloser(
  */
 export const createMdSpanAutopairPlugin = (options: {
   autoClose: () => boolean;
+  /** What `~text~` reads as: a typed closing tilde makes a subscript only
+   *  where the file would read one. */
+  singleTilde: () => SingleTildeMode;
 }) =>
   $prose(
     () =>
@@ -238,7 +242,10 @@ export const createMdSpanAutopairPlugin = (options: {
             // One tilde closing `H~2`: a subscript.
             if (
               spec.char === "~" &&
-              closeTightRun(view, SUBSCRIPT, textBefore, runStart, to)
+              options.singleTilde() !== "text" &&
+              closeTightRun(view, SUBSCRIPT, textBefore, runStart, to, {
+                strict: options.singleTilde() === "subscript",
+              })
             )
               return true;
 

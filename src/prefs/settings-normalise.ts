@@ -18,6 +18,8 @@ import {
   type PdfTextScale,
   COLOR_SWATCH_MODES,
   type ColorSwatchMode,
+  SINGLE_TILDE_MODES,
+  type SingleTildeMode,
   DIAGRAM_ENGINES,
   type DiagramEngine,
   IMAGE_HOSTS,
@@ -205,6 +207,11 @@ function readSettings(parsed: Raw | null): Settings {
       )
         ? (parsed.colorSwatches as ColorSwatchMode)
         : DEFAULT_SETTINGS.colorSwatches,
+      singleTilde: SINGLE_TILDE_MODES.includes(
+        parsed.singleTilde as SingleTildeMode,
+      )
+        ? (parsed.singleTilde as SingleTildeMode)
+        : DEFAULT_SETTINGS.singleTilde,
       uiTextScale: UI_TEXT_SCALES.includes(parsed.uiTextScale as UiTextScale)
         ? (parsed.uiTextScale as UiTextScale)
         : (UI_TEXT_SCALES_BEFORE[String(parsed.uiTextScale)] ??

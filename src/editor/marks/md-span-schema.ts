@@ -19,10 +19,12 @@ import {
   highlightToMarkdown,
 } from "./highlight-syntax";
 import {
-  superscriptFromMarkdown,
+  scriptsFromMarkdown,
+  scriptsToMarkdown,
+  subscriptSyntax,
   superscriptSyntax,
-  superscriptToMarkdown,
-} from "./superscript-syntax";
+} from "./script-syntax";
+import type { SingleTildeMode } from "../../prefs/settings-values";
 
 // Registers "==highlighted==" with remark the way remark-math registers
 // "$...$": extensions pushed onto the processor's shared `data()`.
@@ -43,20 +45,20 @@ export const remarkHighlightPlugin = $remark(
   () => remarkHighlight,
 );
 
-// "^superscript^", the same way.
-const remarkSuperscript: RemarkPluginRaw<unknown> = function (
-  this: ThisParameterType<RemarkPluginRaw<unknown>>,
-) {
-  const data = this.data();
-  (data.micromarkExtensions ??= []).push(superscriptSyntax());
-  (data.fromMarkdownExtensions ??= []).push(superscriptFromMarkdown());
-  (data.toMarkdownExtensions ??= []).push(superscriptToMarkdown());
-};
+// "^superscript^" and, when one tilde is read as one, "~subscript~", the
+// same way. Both are written back whichever reading is set.
+const remarkScripts = (subscripts: boolean): RemarkPluginRaw<unknown> =>
+  function (this: ThisParameterType<RemarkPluginRaw<unknown>>) {
+    const data = this.data();
+    (data.micromarkExtensions ??= []).push(superscriptSyntax());
+    if (subscripts) data.micromarkExtensions.push(subscriptSyntax());
+    (data.fromMarkdownExtensions ??= []).push(scriptsFromMarkdown());
+    (data.toMarkdownExtensions ??= []).push(scriptsToMarkdown());
+  };
 
-export const remarkSuperscriptPlugin = $remark(
-  "remark-superscript",
-  () => remarkSuperscript,
-);
+/** The scripts for an editor whose `~text~` reads as `singleTilde` says. */
+export const remarkScriptsPlugin = (singleTilde: SingleTildeMode) =>
+  $remark("remark-scripts", () => remarkScripts(singleTilde === "subscript"));
 
 interface MdastNode {
   type: string;
@@ -254,7 +256,8 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
       node.type === "emphasis" ||
       node.type === "delete" ||
       node.type === "mark" ||
-      node.type === "superscript",
+      node.type === "superscript" ||
+      node.type === "subscript",
     runner: (state, node, type) => {
       const attrs =
         node.type === "strong"
@@ -269,7 +272,9 @@ export const mdSpanSchema = $nodeSchema("md_span", () => ({
                 }
               : node.type === "superscript"
                 ? { delim: "^", rung: 1 }
-                : { delim: "=", rung: 2 };
+                : node.type === "subscript"
+                  ? { delim: "~", rung: 1, sub: true }
+                  : { delim: "=", rung: 2 };
       state.openNode(type, attrs);
       state.next(node.children);
       state.closeNode();

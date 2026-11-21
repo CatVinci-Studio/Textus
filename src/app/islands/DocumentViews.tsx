@@ -13,7 +13,7 @@ import { showsStartPage, tabTitle, type DocTab } from "../../document/doc-tabs";
 import { tabReadOnly } from "../../document/read-only";
 import type { Strings } from "../../i18n/strings";
 import type { TourAi } from "../../utils/events";
-import type { AgentMode } from "../../prefs/SettingsContext";
+import { useSettingsIfAny, type AgentMode } from "../../prefs/SettingsContext";
 import {
   PluginListPane,
   PluginTabPane,
@@ -98,6 +98,9 @@ export function DocumentViews({
   // AI tab or a page tab active.
   const inFront = useDocumentInFront();
   const listed = useOpeningOrder(tabs);
+  // Read when an editor is made (editor-core-syntax): a change remounts the
+  // documents, each with its text as it stands.
+  const singleTilde = useSettingsIfAny()?.settings.singleTilde;
   return (
     <>
       {/* A document's editor is mounted while its tab is in front (or a
@@ -209,7 +212,7 @@ export function DocumentViews({
                 }
               >
                 <EditorPane
-                  key={`${tab.id}-${tab.reloadKey}`}
+                  key={`${tab.id}-${tab.reloadKey}-${singleTilde}`}
                   tabId={tab.id}
                   filePath={tab.path}
                   docTitle={tabTitle(tab, t)}

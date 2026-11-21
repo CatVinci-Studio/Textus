@@ -6,6 +6,7 @@ import { leaveHistory } from "../editor/left-history";
 import { whenIdle } from "../lazy/lazy-module";
 import { registerTabEditor } from "../editor/tab-editor";
 import { leaveTab } from "../editor/tab-left";
+import { singleTildeCtx } from "../editor/opened-from";
 import {
   readSourceBlocks,
   writePreservingSource,
@@ -156,6 +157,7 @@ export function useEditorFlush(
         doc: state.doc.toJSON(),
         selection: state.selection.toJSON(),
         history: leaveHistory(state),
+        singleTilde: ctx.get(singleTildeCtx.key),
       });
     });
   });

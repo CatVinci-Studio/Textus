@@ -239,3 +239,26 @@ test("a tab brought to the front by a click takes the focus without the keyboard
   await expect(pill).toBeFocused();
   expect(await pill.evaluate((el) => el.matches(":focus-visible"))).toBe(false);
 });
+
+test("changing what one tilde reads as redraws an edited document, its text kept", async ({
+  page,
+}) => {
+  await open(page);
+  await pasteMarkdown(page, "H~2~O and 5~10人");
+  const doc = page.locator(".milkdown .ProseMirror").first();
+  await expect(doc.locator("sub")).toHaveText("2");
+  await emit(page, "menu-settings");
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new CustomEvent("textus:open-settings-page", {
+        detail: { page: "edit-text" },
+      }),
+    ),
+  );
+  await page.locator(".settings-advanced > summary").first().click();
+  await page.getByLabel("单个波浪线 ~文字~").click();
+  await page.getByRole("option", { name: "原样显示" }).click();
+  await tabs(page).first().click();
+  await expect(doc.locator("sub")).toHaveCount(0);
+  await expect(doc).toContainText("H~2~O and 5~10人");
+});

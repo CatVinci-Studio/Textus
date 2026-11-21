@@ -16,6 +16,8 @@ import {
 } from "../editor/markdown/callout-syntax";
 import { OBJECT, findInlineSyntax } from "../editor/markdown/inline-syntax";
 import type { NoteLinkOut } from "./note-links";
+import { SUBSCRIPT_TEXT } from "../editor/marks/script-syntax";
+import type { SingleTildeMode } from "../prefs/settings-values";
 
 const IMG_TAG = /<img\b(?:[^<>"']|"[^"]*"|'[^']*')*>/gi;
 const IMAGE = /!\[([^\]]*)\]\((\S+?)(?:\s+"([^"]*)")?\)/g;
@@ -63,6 +65,8 @@ interface PandocRewrite {
   noteLinks?: ReadonlyMap<string, NoteLinkOut | null>;
   /** A bibliography is set: `[@key]` goes to Pandoc's citeproc. */
   citations?: boolean;
+  /** What `~text~` reads as in the editor; subscript by default. */
+  singleTilde?: SingleTildeMode;
 }
 
 /** Every ASCII punctuation mark escaped: the text reads as written. */
@@ -121,13 +125,17 @@ function rewriteText(text: string, options: PandocRewrite): string {
       if (cite) return options.citations ? `\`${cite}\`{=textuscite}` : whole;
       if (mark) return `[${rewriteText(mark, options)}]{.mark}`;
       if (sup) return `[${bracketsEscaped(sup)}]{.textus-sup}`;
-      // The editor's rule: one tilde after a letter or digit, around text
-      // with no space, is a subscript; anywhere else it strikes through.
+      // As the editor reads it (editor-core-syntax): a subscript after a
+      // letter or digit, then a strikethrough or the tildes as written,
+      // which pandoc, reading `~x~` as a subscript, gets escaped.
+      const mode = options.singleTilde ?? "subscript";
+      const afterWord = /[\p{L}\p{N}]/u.test(text[offset - 1] ?? "");
       const subscript =
-        /[\p{L}\p{N}]/u.test(text[offset - 1] ?? "") && !/\s/.test(tilde);
-      return subscript
-        ? `[${bracketsEscaped(tilde)}]{.textus-sub}`
-        : `~~${tilde}~~`;
+        mode === "strikethrough"
+          ? afterWord && !/\s/.test(tilde)
+          : mode === "subscript" && afterWord && SUBSCRIPT_TEXT.test(tilde);
+      if (subscript) return `[${bracketsEscaped(tilde)}]{.textus-sub}`;
+      return mode === "strikethrough" ? `~~${tilde}~~` : `\\~${tilde}\\~`;
     },
   );
 }

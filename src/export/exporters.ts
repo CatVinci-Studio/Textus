@@ -320,6 +320,7 @@ export async function exportViaPandoc(
         ? numberedHeadings(tab.content)
         : tab.content;
       const text = toPandocMarkdown(source, {
+        singleTilde: settings.singleTilde,
         alertLabels: {
           NOTE: t.alertNote,
           TIP: t.alertTip,

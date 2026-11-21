@@ -11,6 +11,7 @@ export type PandocSettings = Pick<
   | "exportBibliography"
   | "exportCsl"
   | "pandocArgs"
+  | "singleTilde"
 >;
 
 /** What the export command takes for `format`; Rust's `PandocOptions` in
