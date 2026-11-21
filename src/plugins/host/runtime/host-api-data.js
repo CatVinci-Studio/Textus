@@ -105,6 +105,15 @@ textus.git = {
       paths: (paths || []).map(String),
     });
   },
+  fetch: function () {
+    return call("git.fetch");
+  },
+  push: function () {
+    return call("git.push");
+  },
+  pull: function () {
+    return call("git.pull");
+  },
 };
 
 textus.net = {

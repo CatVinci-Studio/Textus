@@ -1975,6 +1975,8 @@ para usar una.
   pluginPermNotifications: "Mostrar notificaciones del sistema",
   pluginPermAppearance: "Cambiar los colores de Textus y de tus documentos",
   pluginPermGitCommit: "Hacer commits de Git en la carpeta abierta con tu Git",
+  pluginPermGitSync:
+    "Obtener, enviar y traer el repositorio Git de la carpeta abierta con tu Git",
   pluginPermSsh:
     "Conectarse a servidores con tu configuración SSH (solo los que permitas)",
   pluginSshAsk:

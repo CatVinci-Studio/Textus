@@ -1833,6 +1833,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   pluginPermNotifications: "시스템 알림 표시하기",
   pluginPermAppearance: "Textus와 문서의 색상 변경하기",
   pluginPermGitCommit: "내 Git으로 열린 폴더에 Git 커밋 만들기",
+  pluginPermGitSync:
+    "내 Git으로 열린 폴더의 Git 저장소를 가져오기, 푸시, 풀하기",
   pluginPermSsh: "내 SSH 설정으로 서버에 연결 (허용한 서버만)",
   pluginSshAsk:
     "{plugin}이(가) 내 SSH 설정으로 {host}에 연결해 그곳의 파일을 읽고 쓰려고 합니다.",

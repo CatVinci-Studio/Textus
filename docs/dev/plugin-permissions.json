@@ -146,6 +146,14 @@
     ]
   },
   {
+    "permission": "git.sync",
+    "calls": [
+      "git.fetch",
+      "git.push",
+      "git.pull"
+    ]
+  },
+  {
     "permission": "ai.tools",
     "calls": [
       "ai.registerTool"

@@ -1420,7 +1420,8 @@ declare global {
     // ---------------------------------------------------------------
     // git: the open folder's Git history, read with the user's own git
     // (desktop; elsewhere status() is null and the rest refuse). Files.read;
-    // commit needs git.commit. No push, pull or switching branches.
+    // commit needs git.commit; fetch, push and pull need git.sync. No
+    // switching branches.
     // ---------------------------------------------------------------
 
     interface GitChange {
@@ -1450,7 +1451,15 @@ declare global {
       /** The branch (null when detached) and the changed files of the
        *  open folder; null when it is in no repository or git isn't there.
        *  Hidden files are left out. */
-      status(): Promise<{ branch: string | null; changes: GitChange[] } | null>;
+      status(): Promise<{
+        branch: string | null;
+        /** The remote branch it follows (`origin/main`), or null. From 1.9. */
+        upstream: string | null;
+        /** Commits to push, and to pull, as of the last fetch. From 1.9. */
+        ahead: number;
+        behind: number;
+        changes: GitChange[];
+      } | null>;
       /** `path`'s commits, newest first, through renames (100, at most 500). */
       log(path: string, options?: { limit?: number }): Promise<GitCommit[]>;
       /** The file as commit `hash` had it at `path` (a GitCommit's path);
@@ -1459,6 +1468,17 @@ declare global {
       /** Commits the changes of `paths` only, with `message`, as the user's
        *  git does (hooks, signing): the new commit's hash. git.commit. */
       commit(message: string, paths: string[]): Promise<string>;
+      /** Takes the remote's branches, as `git fetch --prune` does, with the
+       *  user's credentials (nothing is asked for: a remote wanting a
+       *  password typed refuses, saying so). git.sync. From 1.9. */
+      fetch(): Promise<void>;
+      /** Sends the branch to the remote branch it follows; one following
+       *  none goes to `origin` under its name. git.sync. From 1.9. */
+      push(): Promise<void>;
+      /** Takes the remote branch's commits in, as the user's `git pull`
+       *  would; on a conflict it is undone, the folder left as it was, and
+       *  it refuses saying so. git.sync. From 1.9. */
+      pull(): Promise<void>;
     }
 
     /** A link to a server: the user's own `ssh` (their config, agent,

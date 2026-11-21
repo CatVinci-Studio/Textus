@@ -1930,6 +1930,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   pluginPermNotifications: "Systemmitteilungen anzeigen",
   pluginPermAppearance: "Die Farben von Textus und Ihren Dokumenten ändern",
   pluginPermGitCommit: "Mit Ihrem Git Commits im geöffneten Ordner erstellen",
+  pluginPermGitSync:
+    "Das Git-Repository des geöffneten Ordners mit Ihrem Git abrufen, pushen und pullen",
   pluginPermSsh: "Mit Ihren SSH-Einstellungen Server verbinden (nur erlaubte)",
   pluginSshAsk:
     "{plugin} möchte sich mit Ihren SSH-Einstellungen mit {host} verbinden, um dort Dateien zu lesen und zu schreiben.",

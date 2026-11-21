@@ -56,6 +56,14 @@ async function trusting<T>(
   }
 }
 
+/** A call that changes the repository or its remote: refused, saying
+ *  why, where the writer doesn't trust the repository. */
+function writing<T>(root: string, call: () => Promise<T>): Promise<T> {
+  return trusting(root, call, () => {
+    throw new Error(currentStrings().gitTrustRefused);
+  });
+}
+
 /** The open folder's Git history, read with the user's git (desktop):
  *  checked again in Rust, path by path. Where the writer doesn't trust the
  *  repository, reading finds none and a commit says why. */
@@ -97,13 +105,19 @@ export function gitHandlers(p: PluginScope) {
     "git.commit": ({ message, paths: files }: Params) => {
       const root = p.root();
       const [text, list] = [str(message, "message"), paths(files)];
-      return trusting(
-        root,
-        () => pluginsIpc.gitCommit(p.id, root, text, list),
-        () => {
-          throw new Error(currentStrings().gitTrustRefused);
-        },
-      );
+      return writing(root, () => pluginsIpc.gitCommit(p.id, root, text, list));
+    },
+    "git.fetch": () => {
+      const root = p.root();
+      return writing(root, () => pluginsIpc.gitFetch(p.id, root));
+    },
+    "git.push": () => {
+      const root = p.root();
+      return writing(root, () => pluginsIpc.gitPush(p.id, root));
+    },
+    "git.pull": () => {
+      const root = p.root();
+      return writing(root, () => pluginsIpc.gitPull(p.id, root));
     },
   };
 }
