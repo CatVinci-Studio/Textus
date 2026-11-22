@@ -363,3 +363,35 @@ test("a note from a file manager let go on another island opens there, the draft
   // The draft is still there, untouched.
   await expect(draftSide).toHaveText([/plan/, /Untitled/]);
 });
+
+test("a note from a file manager let go on an untouched draft in another island takes its place", async ({
+  page,
+}) => {
+  await openFolder(page);
+  const island = (await page.locator("section.island").boundingBox())!;
+  await dragRow(page, "plan.md", {
+    x: island.x + island.width - 12,
+    y: island.y + island.height / 2,
+  });
+  await page.mouse.up();
+  const islands = page.locator("section.island");
+  await expect(islands).toHaveCount(2);
+  await emit(page, "menu-new-file");
+  const rows = page.locator(".island-row");
+  await expect(rows.nth(1).locator('[role="tab"]')).toHaveText([
+    /plan/,
+    /Untitled/,
+  ]);
+  // The other island in front now; the draft is let go on.
+  await rows.nth(0).locator('[role="tab"]', { hasText: "log" }).click();
+  const right = (await islands.nth(1).boundingBox())!;
+  const at = { x: right.x + right.width / 2, y: right.y + right.height / 2 };
+  const paths = ["/downloads/notes.md"];
+  await emit(page, "tauri://drag-enter", { paths, position: at });
+  await emit(page, "tauri://drag-drop", { paths, position: at });
+  await expect(rows.nth(1).locator('[role="tab"]')).toHaveText([
+    /plan/,
+    /notes/,
+  ]);
+  await expect(rows.nth(0).locator('[role="tab"]')).toHaveText([/log/]);
+});

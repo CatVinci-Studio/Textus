@@ -240,7 +240,8 @@ a JSON file in the plugin holds its grammar.
   - a group with a bound counts each time over: `(\w+\s?){2,40}` and
     `(\d{1,3}){1,10}` are refused, `(\.\d+){3}` and
     `(?:/\d+){0,3}` are fine;
-  - more than 16 repeats and `|` choices in one `match`.
+  - more than 16 repeats and groups of `|` choices in one `match` (a
+    group's own `|`s count once).
 
   These lower the risk; they can't rule out every slow pattern.
 

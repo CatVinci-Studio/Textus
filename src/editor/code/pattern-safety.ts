@@ -12,8 +12,11 @@
 type Atom = { t: "atom"; src: string };
 type Node =
   | Atom
-  /** Matches no text: `^`, `$`, `\b`, `\B`, a lookahead. */
+  /** Matches no text: `^`, `$`, `\b`, `\B`. */
   | { t: "zero" }
+  /** A lookahead: no text either, but tried again each time what comes
+   *  before it gives back a character. */
+  | { t: "ahead"; branches: Node[][] }
   | { t: "group"; branches: Node[][] }
   | { t: "quant"; node: Node; min: number; max: number };
 
@@ -72,12 +75,7 @@ function parse(source: string): Node[][] {
       const branches = alternatives();
       if (source[i] !== ")") throw new Refused("a pattern it can't read");
       i++;
-      // A lookahead is never gone back into: checked on its own.
-      if (ahead) {
-        for (const branch of branches) walk(branch, []);
-        return { t: "zero" };
-      }
-      return { t: "group", branches };
+      return { t: ahead ? "ahead" : "group", branches };
     }
     if (c === "[") return charClass();
     if (c === "\\") return escape();
@@ -100,7 +98,9 @@ function parse(source: string): Node[][] {
       i += braces[0].length;
     } else return node;
     if (source[i] === "?") i++;
-    return node.t === "zero" ? node : { t: "quant", node, min, max };
+    return node.t === "zero" || node.t === "ahead"
+      ? node
+      : { t: "quant", node, min, max };
   };
 
   function alternatives(): Node[][] {
@@ -122,7 +122,12 @@ function parse(source: string): Node[][] {
 let flagsNow = "";
 const sets = new Map<string, CharSet>();
 
-/** The probe characters `src` matches, under the rule's flags. */
+/** Beyond what the probes can tell apart: a character past ASCII, or an
+ *  escape naming one or a Unicode class. */
+const PAST_PROBES = /[^ -~\t\n\r]|\\[uUpP]|\\x[89a-fA-F]/;
+
+/** The probe characters `src` matches, under the rule's flags; all of
+ *  them where the probes can't tell, so it overlaps everything. */
 function setOf(src: string): CharSet {
   const key = `${flagsNow}/${src}`;
   let set = sets.get(key);
@@ -133,6 +138,7 @@ function setOf(src: string): CharSet {
     } catch {
       set = ALL;
     }
+    if (PAST_PROBES.test(src) || !set.some(Boolean)) set = ALL;
     sets.set(key, set);
   }
   return set;
@@ -146,7 +152,7 @@ const union = (sets: CharSet[]) =>
 function setIn(node: Node): CharSet {
   if (node.t === "atom") return setOf(node.src);
   if (node.t === "quant") return setIn(node.node);
-  if (node.t === "zero") return PROBES.map(() => false);
+  if (node.t === "zero" || node.t === "ahead") return PROBES.map(() => false);
   return union(node.branches.flat().map(setIn));
 }
 
@@ -156,6 +162,8 @@ function fixedStart(branch: Node[]): Atom | null {
   for (const node of branch) {
     const one = node.t === "quant" && node.min === node.max ? node.node : node;
     if (one.t === "zero") continue;
+    // Tried again each time over: not one way.
+    if (one.t === "ahead") return null;
     if (one.t !== "atom") return null;
     first ??= one;
   }
@@ -206,6 +214,11 @@ function groupStep(branches: Node[][], turns: Turn[]): Turn[] {
 
 function step(node: Node, turns: Turn[]): Turn[] {
   if (node.t === "zero") return turns;
+  // Each branch from here, against the repeats before it; it takes nothing.
+  if (node.t === "ahead") {
+    for (const branch of node.branches) walk(branch, turns);
+    return turns;
+  }
   if (node.t === "atom") {
     // A character every turn before must leave: those it can't be end.
     const set = setOf(node.src);
@@ -239,7 +252,8 @@ function choices(nodes: Node[][]): number {
   for (const node of nodes.flat()) {
     const inner = node.t === "quant" ? node.node : node;
     if (node.t === "quant" && node.max !== node.min) n++;
-    if (inner.t === "group") n += choices(inner.branches);
+    if (inner.t === "group" || inner.t === "ahead")
+      n += choices(inner.branches);
   }
   return n;
 }
@@ -255,7 +269,7 @@ export function unsafePattern(source: string, flags = ""): string | null {
   try {
     const top = parse(source);
     if (choices(top) > CHOICE_LIMIT)
-      return `more than ${CHOICE_LIMIT} repeats and choices`;
+      return `more than ${CHOICE_LIMIT} repeats and groups of choices`;
     groupStep(top, []);
     return null;
   } catch (err) {

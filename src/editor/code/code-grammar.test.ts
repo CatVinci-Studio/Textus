@@ -116,6 +116,12 @@ describe("a plugin's code grammar", () => {
       "(?:a|ab)(?:a|ab)(?:a|ab)$",
       "(?:a|a){1,30}$",
       "a?".repeat(17),
+      // Characters the probes don't hold still overlap.
+      "ü*ü*ü*$",
+      "[а-я]+[а-я]+[а-я]+$",
+      // A lookahead is tried again as what comes before gives way.
+      "a*(?=a*a*!)",
+      "(?:(?=a*a*$)a)*",
     ])
       expect(unsafePattern(bad), bad).not.toBeNull();
     for (const good of [
@@ -131,6 +137,7 @@ describe("a plugin's code grammar", () => {
       "(?:a|b)*c",
       "\\w+\\s?\\w+$",
       "^\\s*interface\\s+\\S+\\s+\\d+",
+      "\\w+(?=\\s*\\()",
     ])
       expect(unsafePattern(good), good).toBeNull();
     // The official Cisco grammar, as it is published.
