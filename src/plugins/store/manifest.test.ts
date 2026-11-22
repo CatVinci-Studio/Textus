@@ -136,6 +136,29 @@ describe("a plugin's manifest", () => {
     expect(() => folders([{ extension: "textbundle", documents: [] }])).toThrow(
       /empty/,
     );
+    // A code language: names lowercase, a grammar file of its own, Textus's
+    // drawn fences refused.
+    const languages = (codeLanguages: unknown) =>
+      parseManifest({ ...base, contributes: { codeLanguages } }).contributes
+        .codeLanguages;
+    expect(
+      languages([
+        { id: "Cisco", aliases: ["IOS", "cisco-ios"], path: "cisco.json" },
+      ]),
+    ).toEqual([
+      { id: "cisco", aliases: ["ios", "cisco-ios"], path: "cisco.json" },
+    ]);
+    expect(languages([{ id: "x", path: "x.json" }])[0].aliases).toEqual([]);
+    expect(() => languages([{ id: "mermaid", path: "m.json" }])).toThrow(
+      /Textus itself/,
+    );
+    expect(() => languages([{ id: "a b", path: "m.json" }])).toThrow(
+      /fence's language/,
+    );
+    expect(() => languages([{ id: "x", path: "../x.json" }])).toThrow(
+      /\.json file/,
+    );
+    expect(() => languages([{ id: "x", path: "x.js" }])).toThrow(/\.json file/);
     // Traditional Chinese reads the English, not the Simplified.
     expect(localize(m, m.contributes.commands[0].title, "zh-Hant")).toBe(
       "Say hello",

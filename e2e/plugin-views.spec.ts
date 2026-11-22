@@ -193,6 +193,72 @@ test("a text file no plugin opens shows read-only, not as Markdown to rewrite", 
   await expect(editor).toHaveAttribute("contenteditable", "false");
 });
 
+test("a plugin's code language is coloured in the editor and source mode, by any of its names, and offered in the language menu", async ({
+  page,
+}) => {
+  const manifest = {
+    id: "example.cisco",
+    name: "Cisco",
+    version: "0.1.0",
+    publisher: "example",
+    engines: { textus: ">=1.4.6" },
+    contributes: {
+      codeLanguages: [{ id: "cisco", aliases: ["ios"], path: "cisco.json" }],
+    },
+  };
+  const grammar = JSON.stringify({
+    flags: "i",
+    rules: [
+      { token: "comment", match: "^\\s*!.*" },
+      { token: "keyword", match: "\\b(?:interface|shutdown)\\b" },
+    ],
+  });
+  await page.addInitScript(
+    ({ manifest, grammar }) => {
+      if (window.top !== window) return;
+      const w = window as unknown as Record<string, unknown>;
+      w.__devPlugins = [
+        {
+          id: manifest.id,
+          dir: `/plugins/${manifest.id}`,
+          manifest: JSON.stringify(manifest),
+          dev: false,
+          files: { "cisco.json": grammar },
+        },
+      ];
+      w.__devFs = {
+        "/work/r1.md": "```IOS\n! core\ninterface Gi0/1\n shutdown\n```\n",
+      };
+      w.__devPluginState = {
+        allOn: true,
+        plugins: { [manifest.id]: { enabled: true, granted: [] } },
+      };
+    },
+    { manifest, grammar },
+  );
+  await openApp(page);
+  await openPath(page, "/work/r1.md");
+  const code = page.locator('[data-active-tab="true"] .ProseMirror pre code');
+  await expect(code.locator(".token.keyword")).toHaveText([
+    "interface",
+    "shutdown",
+  ]);
+  await expect(code.locator(".token.comment")).toHaveText("! core");
+  const picker = page.locator(".code-block-language-select").first();
+  await page.locator(".code-block-wrapper").first().hover();
+  await picker.click();
+  await expect(
+    page.locator(".code-language-menu [role=option]", { hasText: /^cisco$/ }),
+  ).toHaveCount(1);
+  await page.keyboard.press("Escape");
+  // Source mode reads the same grammar: the keyword a token of its own.
+  await emit(page, "menu-toggle-source-mode");
+  const line = page.locator('[data-active-tab="true"] .source-view .cm-line', {
+    hasText: "interface Gi0/1",
+  });
+  await expect(line.locator("span", { hasText: /^interface$/ })).toHaveCount(1);
+});
+
 test("a plugin's page is in the UI's language, and changes with it; a board's list moves by its head", async ({
   page,
 }) => {

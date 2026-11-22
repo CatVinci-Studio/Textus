@@ -384,6 +384,34 @@
             }
           }
         },
+        "codeLanguages": {
+          "type": "array",
+          "description": "From 1.4.7: code languages coloured from a grammar file of the plugin, in the editor, source mode and exports. Textus's own languages win over a plugin's.",
+          "items": {
+            "type": "object",
+            "required": ["id", "path"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9+#._-]{0,31}$",
+                "description": "The fence's language: \"cisco\". Read in any case."
+              },
+              "aliases": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9+#._-]{0,31}$"
+                },
+                "description": "Other names a fence may use: [\"ios\", \"cisco-ios\"]."
+              },
+              "path": {
+                "type": "string",
+                "pattern": "\\.json$",
+                "description": "The grammar, a JSON file in the plugin: { flags?, rules: [{ token, match, flags? }] }. See the plugin guide's Code languages."
+              }
+            }
+          }
+        },
         "settings": {
           "type": "array",
           "items": {

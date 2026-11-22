@@ -157,6 +157,7 @@ made when they are first shown.
 | `documentTypes`   | `{ extensions: ["qmd"], keep: { blockStarts: [":::"], braces: true, jsx: false } }`: a file type opened as a document in Textus's own editor. `keep` names what of its syntax is shown as source and saved exactly as written: paragraphs starting with one of `blockStarts` (with the blocks after while a bracket is open), `{…}` with `braces`, JSX tags with `jsx`. Turned off, the plugin's files open read-only as text. Textus's own types (md, markdown, mdx, txt, text) can't be taken. From 1.4.3.                                                                                                                                         |
 | `folderDocuments` | `[{ extension: "textbundle", documents: ["text.md"] }]`: a folder with this extension shows in the sidebar as one document and opens the first of `documents` found inside it, its tab named after the folder. From 1.4.6.                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `codeBlocks`      | `{ language, title, frame, size }`: fenced blocks in that language drawn by the plugin (`views.registerCodeBlock`), in a box like a figure, or on the page with `frame: "none"`. With `size: "interface"` the block draws at the interface's text size instead of the document's and its zoom, for an overview (a table, a board) that shows more as the column widens. Textus's own languages (mermaid, math…) can't be taken.                                                                                                                                                                                                                      |
+| `codeLanguages`   | `{ id, aliases?, path }`: syntax colours for code blocks in a language Textus doesn't colour (` ```cisco `), from the grammar in `path`, a JSON file of the plugin. A fence names it by `id` or an alias, in any case. See [Code languages](#code-languages). From 1.4.7.                                                                                                                                                                                                                                                                                                                                                                            |
 | `suggestFor`      | `["wikilinks"]`: what a document can hold that the plugin works with. An official one is suggested, once, for a document that holds it while no installed plugin does.                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `completions`     | `{ id, where: "math" \| "text" \| "any", pattern, title }`: completions as you type when what is before the caret matches `pattern` (`editor.registerCompletion`), grouped under `title` in the `/` panel. Needs `editor.read`.                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `aiTools`         | `{ name, description, parameters }`: tools Textus AI can call (`ai.registerTool`); `parameters` is a JSON schema.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
@@ -177,6 +178,58 @@ A menu item's `when` is a small expression over the moment it is shown:
 1.4.1), and from 1.6 the plugin's own keys set with
 `textus.commands.setContext("jane.focus.on", true)`; joined with `&&`, `||`
 and `!`.
+
+### Code languages
+
+A code block in a language Textus doesn't colour is plain text. A plugin
+colours one with no code at all: `contributes.codeLanguages` names it, and
+a JSON file in the plugin holds its grammar.
+
+```json
+"contributes": {
+  "codeLanguages": [
+    { "id": "cisco", "aliases": ["ios", "cisco-ios"], "path": "cisco.json" }
+  ]
+}
+```
+
+```json
+{
+  "flags": "i",
+  "rules": [
+    { "token": "comment", "match": "^\\s*!.*" },
+    { "token": "keyword", "match": "\\b(?:interface|hostname|shutdown)\\b" },
+    { "token": "number", "match": "\\b\\d{1,3}(?:\\.\\d{1,3}){3}\\b" }
+  ]
+}
+```
+
+- A block is read a line at a time. At each place the first rule whose
+  `match` matches there takes the text up to where it ends; where none
+  does, one character stays plain. So order the rules: comments and
+  strings first.
+- `match` is a JavaScript regular expression, as a JSON string. `^` is
+  the line's start. `flags` may hold `i` (any case) and `u`; the file's
+  `flags` are every rule's unless a rule has its own.
+- `token` is one of `comment`, `string`, `number`, `constant`, `keyword`,
+  `operator`, `function`, `type`, `tag`, `attribute`, `punctuation`. They are coloured as Textus's own languages are, so the
+  theme colours them too.
+- The same colours show in the editor, in source mode and in HTML and PDF
+  exports. The file is read only when a block first uses the language.
+- Textus's own languages win: a name it already colours (`python`, `js`)
+  stays its own. Two plugins naming one language: the first turned on
+  colours it.
+- A rule Textus can't use is left out, and why is written to the
+  console; the others still colour. To keep the editor from hanging, a
+  line longer than 500 characters stays plain, a file reads at most 200
+  rules of up to 1,000 characters each, and a grammar that takes over
+  20 ms for one line, or 500 ms for one block, is turned off until
+  Textus starts again. A `match` may not use backreferences or
+  lookbehind (Safari before 16.4 can't run it), nor repeat a group
+  without bound (`+`, `*`, `{2,}`) that itself holds a repeat (`?` too)
+  or `|`: write `(a|b)+` as `[ab]+`. A repeat with a bound,
+  `(\.\d+){3}`, is fine. These lower the risk; they can't rule out
+  every slow pattern.
 
 ## Permissions
 
