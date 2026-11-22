@@ -196,7 +196,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::auth::keys::provider_api_key_status,
                 crate::auth::keys::clear_provider_api_key,
                 crate::auth::custom_endpoint::set_custom_endpoint,
-                crate::auth::custom_endpoint::custom_endpoint_status,
+                crate::auth::custom_endpoint::custom_endpoints_status,
                 crate::auth::custom_endpoint::clear_custom_endpoint,
                 crate::auth::custom_endpoint::fetch_custom_models,
             ]),

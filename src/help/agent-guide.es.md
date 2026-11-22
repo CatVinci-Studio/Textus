@@ -7,7 +7,7 @@ Textus incluye una IA pensada para escribir, Textus AI: autocompletado, revisió
 Todo lo relativo a la IA está en **Ajustes › Textus AI**, en cuatro páginas: **Modelos**, **Chat y escritura**, **Memoria y habilidades** y **Herramientas externas**.
 
 1. En **Modelos**, elige el servicio en la lista **Proveedores**. Inicia sesión con tu cuenta (**Cuenta**) o pega una clave (**Clave de API**), según lo que admita ese servicio. Un punto en la lista marca cada servicio que ya has configurado.
-2. Para un **Endpoint personalizado** (cualquier servidor compatible con OpenAI: modelos locales, proxies), escribe la URL base, una clave si la necesita y el nombre del modelo, y guarda.
+2. Para un servidor propio (cualquier servidor compatible con OpenAI: modelos locales, relays, proxies), elige **Añadir endpoint personalizado** al final de la lista, ponle un nombre, escribe la URL base, una clave si la necesita y el nombre del modelo, y guarda. Puedes añadir varios: cada uno aparece con su nombre aquí y donde eliges un modelo.
 3. En **Elección de modelo**, arriba en la misma página, elige el **Proveedor del chat** y el **Modelo de chat** y, para el autocompletado y la gramática, el **Proveedor de escritura** (**Igual que el chat** por defecto) y el **Modelo de asistencia**.
 
 El inicio de sesión se hace en el navegador. Que puedas usar imágenes, búsqueda web y cambios en el documento depende del servicio y del modelo que elijas.

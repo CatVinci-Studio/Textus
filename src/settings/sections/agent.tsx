@@ -13,6 +13,7 @@ import { useSettings } from "../../prefs/SettingsContext";
 import { localeOf, type Strings } from "../../i18n/strings";
 import { SIGN_IN_MODELS, type SignInModels } from "../../ai/sign-in-models";
 import { useProviderCatalog } from "../../ai/provider-catalog";
+import { isCustomId } from "../../ai/custom-endpoints";
 import { useSignedIn } from "../../ai/provider-connection";
 import { writingProviderOf } from "../../prefs/settings-types";
 import { ai } from "../../platform/ipc";
@@ -35,7 +36,7 @@ function useSignInModels(provider: string): SignInModels | null {
  *  endpoint's (its panel lists them) nor a sign-in's fixed models. */
 export function useModelListShown(provider: string): boolean {
   const signIn = useSignInModels(provider);
-  return provider !== "custom" && !signIn;
+  return !isCustomId(provider) && !signIn;
 }
 
 /// Model picker for writing (completion and grammar) or the chat. Seeded

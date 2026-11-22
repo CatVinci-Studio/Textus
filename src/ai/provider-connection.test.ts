@@ -8,7 +8,7 @@ vi.mock("../platform/ipc", () => ({
   auth: {
     oauthStatus: async () => ({ configured: signedIn }),
     providerApiKeyStatus: async () => false,
-    customEndpointStatus: async () => null,
+    customEndpointsStatus: async () => [],
   },
 }));
 

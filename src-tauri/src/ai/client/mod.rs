@@ -45,7 +45,7 @@ pub(crate) async fn call(
         }
         "openai-chat-completions" => {
             let (base_url, api_key, default_model) =
-                route::resolve_chat_completions(app, entry).await?;
+                route::resolve_chat_completions(app, provider, entry).await?;
             let model = model
                 .map(str::to_string)
                 .or(default_model)
@@ -78,6 +78,7 @@ pub(crate) async fn stream(
     let entry = catalog::find(provider).ok_or_else(|| format!("unknown provider: {provider}"))?;
     let agent = route::agent_provider(
         app,
+        provider,
         entry,
         model.map(str::to_string),
         aicompat::capabilities::ThinkingLevel::Auto,
@@ -99,8 +100,8 @@ pub(crate) async fn stream(
     }
 }
 
-/// Live model list for the agent model picker in Settings. "custom" has
-/// fetch_custom_models instead.
+/// Live model list for the agent model picker in Settings. A custom
+/// endpoint has fetch_custom_models instead.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn fetch_agent_models(app: AppHandle, provider: String) -> Result<Vec<String>, String> {
@@ -118,15 +119,9 @@ pub async fn fetch_agent_models(app: AppHandle, provider: String) -> Result<Vec<
                 .ok_or_else(|| NOT_CONFIGURED.to_string())?;
             custom::list_models("https://api.openai.com/v1", Some(&key)).await
         }
-        "openai-chat-completions" if provider != "custom" => {
+        "openai-chat-completions" if entry.base_url.is_some() => {
             let key = crate::auth::keys::load_provider_key(&app, &provider)?;
-            custom::list_models(
-                entry
-                    .base_url
-                    .expect("chat-completions catalog entries carry a base_url"),
-                key.as_deref(),
-            )
-            .await
+            custom::list_models(entry.base_url.unwrap_or_default(), key.as_deref()).await
         }
         _ => Err(format!("models can't be listed for provider: {provider}")),
     }
