@@ -50,6 +50,16 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      # What android-cache.yml saved on main (a tag can restore only the
+      # default branch's caches): most of Gradle's downloads are then local.
+      - uses: actions/cache/restore@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('src-tauri/Cargo.lock', 'package-lock.json', 'scripts/android-prepare.sh') }}
+          restore-keys: gradle-${{ runner.os }}-
+
       # Gradle's downloads come from Maven Central, which answers a burst of
       # requests with 429: its retries wait seconds and grow, not 125 ms.
       - name: Gradle retries downloads with a back-off
