@@ -46,6 +46,8 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+# Ids for new custom endpoints (every platform) and scheduled notifications.
+uuid = { version = "1", features = ["v4"] }
 # Dates: plugins' scheduled jobs across daylight saving (src/schedule/),
 # memory and past conversations' days, on every platform.
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
@@ -175,7 +177,6 @@ tauri-plugin-deep-link = "2"
 trash = "5"
 # A notification's id, which its click names (src/schedule/notify/): random,
 # so a textus:// link from a web page can't name one. In the tree through tauri.
-uuid = { version = "1", features = ["v4"] }
 
 # macOS-native PDF export (commands/export.rs): the themed document is
 # rendered in an offscreen WKWebView with createPDF and cut into A4 sheets
