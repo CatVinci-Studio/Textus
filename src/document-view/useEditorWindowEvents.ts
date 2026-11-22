@@ -4,6 +4,7 @@ import { useCallback, useEffect } from "react";
 import { insertMarkdown } from "../editor/markdown/parse-markdown-source";
 import { editorViewCtx } from "@milkdown/kit/core";
 import { undoCommand, redoCommand } from "@milkdown/kit/plugin/history";
+import { closeHistory } from "@milkdown/kit/prose/history";
 import type { EditorRunner } from "../editor/useEditorRunner";
 import type { EditorClipboard } from "../editor/clipboard/useEditorClipboard";
 import { applyBlockKind, runCommand } from "../editor/blocks/block-kinds";
@@ -194,8 +195,13 @@ function useFormatEvents(events: Events) {
     const markdown = (e as CustomEvent<string>).detail;
     run((ctx) => {
       const view = ctx.get(editorViewCtx);
+      // Its own undo step, apart from what was typed just before.
       view.dispatch(
-        insertMarkdown(view.state.tr, ctx, markdown).scrollIntoView(),
+        insertMarkdown(
+          closeHistory(view.state.tr),
+          ctx,
+          markdown,
+        ).scrollIntoView(),
       );
       view.focus();
     });

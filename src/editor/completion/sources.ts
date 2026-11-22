@@ -57,6 +57,10 @@ export interface CompletionSource {
   replaceGroup?: number;
   /** Left out when a plugin's source matches from the same place. */
   fallback?: boolean;
+  /** Offered in source mode too: what it puts in reads the same as
+   *  Markdown source. The rest (`/` commands, plugins') are the rich
+   *  editor's. */
+  inSource?: boolean;
   /** The group's heading. */
   title(): string;
   provide(
@@ -98,4 +102,18 @@ export function completionSources(): readonly CompletionSource[] {
     cached = [...core, ...plugins];
   }
   return cached;
+}
+
+let markdownOnly: {
+  from: readonly CompletionSource[];
+  kept: CompletionSource[];
+} = { from: [], kept: [] };
+
+/** The sources that write Markdown as text (`inSource`): source mode's, and
+ *  inside a link's own text. The same array while nothing changed. */
+export function sourceTextSources(): readonly CompletionSource[] {
+  const all = completionSources();
+  if (all !== markdownOnly.from)
+    markdownOnly = { from: all, kept: all.filter((s) => s.inSource) };
+  return markdownOnly.kept;
 }

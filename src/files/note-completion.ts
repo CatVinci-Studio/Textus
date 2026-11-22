@@ -4,7 +4,7 @@ import {
   addCompletionSource,
   type PanelItem,
 } from "../editor/extension-points";
-import { fs } from "../platform/ipc";
+import { folderIndex } from "./folder-index";
 import type { IndexedFile } from "../platform/ipc";
 import { linkToTarget, pathIndex, type LinkStyle } from "./link-resolve";
 import { linkStyleAt } from "./link-style";
@@ -61,7 +61,7 @@ export function noteItems(
 }
 
 function load(folder: string, from: string, key: string): Notes {
-  const lists = Promise.all([fs.indexFolder(folder), linkStyleAt(from)]).then(
+  const lists = Promise.all([folderIndex(folder), linkStyleAt(from)]).then(
     ([index, style]) => {
       const items = noteItems(index.files, folder, from, style);
       return [items, items.map((i) => ({ ...i, replaceAfter: 2 }))] as [

@@ -82,6 +82,9 @@ export interface SourceEditorProps {
   onPaste?: (event: ClipboardEvent, view: EditorView) => boolean;
   /** The tab it edits: a save first pulls in what was just typed. */
   tabId?: string;
+  /** More of CodeMirror's, read once as it mounts: a document's source
+   *  completes link paths (see DocSourceEditor). */
+  extensions?: Extension[];
 }
 
 /**
@@ -98,6 +101,7 @@ export function SourceEditor({
   onScroll,
   onPaste,
   tabId,
+  extensions: more = [],
 }: SourceEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -109,8 +113,17 @@ export function SourceEditor({
     readOnly,
     onScroll,
     tabId,
+    more,
   });
-  latest.current = { value, onChange, typewriter, readOnly, onScroll, tabId };
+  latest.current = {
+    value,
+    onChange,
+    typewriter,
+    readOnly,
+    onScroll,
+    tabId,
+    more,
+  };
   // The extension is built once; it reads the current handler through here.
   const pasteRef = useRef(onPaste);
   pasteRef.current = onPaste;
@@ -170,6 +183,7 @@ export function SourceEditor({
         cut: (_event, view) => (tellSelection(view, true), false),
       }),
       compartment.of(readOnlyOf(latest.current.readOnly)),
+      ...latest.current.more,
       EditorView.updateListener.of((update) => {
         if (update.docChanged || update.selectionSet) touched = true;
         if (

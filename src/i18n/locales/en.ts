@@ -689,6 +689,7 @@ type /name in a conversation to use one.
   docForget: "Remove from List",
   docActionFailed: "Couldn’t do that",
   treeOpen: "Open",
+  treeInsertLink: "Insert Link",
   outlineCollapse: "Collapse",
   outlineExpand: "Expand",
   outlineExpandAll: "Expand All",
@@ -705,6 +706,8 @@ type /name in a conversation to use one.
   completionCommands: "Commands",
   completionEmoji: "Emoji",
   completionNotes: "Notes",
+  completionImages: "Images",
+  completionFiles: "Files",
   tocEmpty: "No headings yet",
   settingsTitle: "Settings",
   /** A Settings tab: the page it shows. */
