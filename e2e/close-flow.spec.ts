@@ -147,7 +147,13 @@ test("a middle click closes a tab, and the tab menu closes those to its right, l
   page,
 }) => {
   await openApp(page, {
-    settings: { language: "en", newDocumentMode: "tab" },
+    // No ghost text: the dev shim's suggestion turned up after the caret
+    // between the two reads on a slow runner, and read as a paste.
+    settings: {
+      language: "en",
+      newDocumentMode: "tab",
+      enableCompletion: false,
+    },
   });
   await openFiles(page, ["a.md", "b.md", "c.md", "d.md", "e.md"]);
   // Text selected in a field, then the caret at e.md's end: Linux pastes
