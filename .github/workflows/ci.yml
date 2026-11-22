@@ -492,7 +492,7 @@ jobs:
     # Not required: its failure shows here without failing the run (or
     # the release that calls it).
     continue-on-error: true
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 60
     env:
       # As in native-platform: no debug info for a build nothing debugs.
@@ -503,10 +503,10 @@ jobs:
       # it is picked this way).
       - name: Select Xcode
         run: |
-          xcode=$(find /Applications -maxdepth 1 -type d -name 'Xcode_26*.app' \
+          xcode=$(find /Applications -maxdepth 1 -type d -name 'Xcode_27*.app' \
             | grep -E '/Xcode_[0-9.]+\.app$' | sort -V | tail -n1)
           if [ -z "$xcode" ]; then
-            echo "::error::no released Xcode 26 on this runner image"
+            echo "::error::no released Xcode 27 on this runner image"
             exit 1
           fi
           sudo xcode-select -s "$xcode"
