@@ -144,6 +144,12 @@ export const fs = {
     docPath && isFarUrl(docPath)
       ? Promise.reject(new Error(ownError("farPictures")))
       : command("save_pasted_image", docPath, dataBase64, ext, folder),
+  /** A file dropped from a file manager, copied where the document's
+   *  pictures go, to link to. */
+  saveDroppedFile: (docPath: string, source: string, folder: string) =>
+    isFarUrl(docPath)
+      ? Promise.reject(new Error(ownError("farPictures")))
+      : command("save_dropped_file", docPath, source, folder),
   /** A replaced picture's file to the Trash, only from the document's folder
    *  or the drafts' images. Desktop only. */
   movePictureToTrash: (docPath: string | null, path: string) =>

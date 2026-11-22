@@ -63,6 +63,14 @@ export const commands = {
 	 */
 	save_pasted_image: (docPath: string | null, dataBase64: string, ext: string, folder: string) => __TAURI_INVOKE<SavedImage_Serialize>("save_pasted_image", { docPath, dataBase64, ext, folder }),
 	/**
+	 *  Copies `source` into the folder a pasted picture of `doc_path` would go
+	 *  to (a vault's attachment folder, else Settings > Images > Folder), under
+	 *  its own name - numbered when another file has it, the same one if it is
+	 *  there already - and returns the link to write. Keep in step with
+	 *  `insertDropped` in file-drop-insert.ts, which writes the link.
+	 */
+	save_dropped_file: (docPath: string, source: string, folder: string) => __TAURI_INVOKE<SavedImage_Serialize>("save_dropped_file", { docPath, source, folder }),
+	/**
 	 *  Brings a document's images into the image folder of the file it was just
 	 *  saved as, rewriting each `src`: a draft's pasted images are moved, and on Save
 	 *  As images relative to the old document are copied. Anything else is left alone.

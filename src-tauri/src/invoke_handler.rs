@@ -75,6 +75,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         write_text_file,
         write_base64_file,
         save_pasted_image,
+        commands::fs::dropped::save_dropped_file,
         commands::vault::resolve_vault_image,
         commands::vault::resolve_note_link,
         commands::link_root::document_link_root,
@@ -250,6 +251,8 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         tab_drag::start_window_drag_tracking,
         #[cfg(desktop)]
         tab_drag::start_floating_tab_drag,
+        #[cfg(desktop)]
+        drag_modifiers::drag_modifiers,
         #[cfg(desktop)]
         commands::floating_window::floating_desktop_supported,
         #[cfg(desktop)]

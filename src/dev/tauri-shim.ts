@@ -672,6 +672,36 @@ export function installDevTauriShim(): void {
         emitSoon("open-paths-as-tabs", args.paths);
         return Promise.resolve(null);
     }
+    // A file is no folder to list, as on disk.
+    const single = w.__devFiles as Record<string, string> | undefined;
+    const named = String(args.path ?? "");
+    if (
+      cmd === "list_dir" &&
+      (named in (files ?? {}) || named in (single ?? {}))
+    )
+      return Promise.reject(new Error("Not a directory"));
+    // `__devDragShift`: Shift held while a file manager's drag is over the window.
+    if (cmd === "drag_modifiers")
+      return Promise.resolve({ shift: !!w.__devDragShift });
+    // `__devPictureSizes`: a picture's size by path, as its header gives it.
+    if (cmd === "picture_size")
+      return Promise.resolve(
+        (w.__devPictureSizes as Record<string, unknown> | undefined)?.[named] ??
+          null,
+      );
+    // A dropped file copied into the document's image folder, under its name.
+    if (cmd === "save_dropped_file") {
+      const source = String(args.source);
+      const name = source.slice(source.lastIndexOf("/") + 1);
+      const folder = String(args.folder)
+        .replace(/^\.\/?/, "")
+        .replace(/\/$/, "");
+      const docDir = String(args.docPath).replace(/\/[^/]*$/, "");
+      const dest = [docDir, folder, name].filter(Boolean).join("/");
+      if (files) files[dest] = files[source] ?? single?.[source] ?? "";
+      const src = [folder, name].filter(Boolean).join("/");
+      return Promise.resolve({ src, embed: null, path: dest });
+    }
     // No fake folder: the folder of a document opened anyway (dropped in,
     // `__devFiles`) lists as empty, as the native side never answers null.
     if (!files) return cmd === "list_dir" ? Promise.resolve([]) : null;
@@ -689,8 +719,6 @@ export function installDevTauriShim(): void {
         return Promise.resolve(null);
       case "file_mtime_ms":
         return Promise.resolve(path in files ? (times[path] ?? 1) : null);
-      case "picture_size":
-        return Promise.resolve(null);
       case "list_dir": {
         const entries = new Map<string, boolean>();
         for (const file of Object.keys(files)) {
