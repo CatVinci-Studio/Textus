@@ -24,6 +24,21 @@ vi.mock("../../platform/ipc", async (real) => ({
   },
 }));
 
+const dialogBreaks = vi.hoisted(() => ({ now: false }));
+vi.mock("./ReportProblem", async (real) => {
+  const { createElement } = await import("react");
+  const actual = await real<typeof import("./ReportProblem")>();
+  return {
+    ...actual,
+    ReportProblemDialog: (
+      props: Parameters<typeof actual.ReportProblemDialog>[0],
+    ) => {
+      if (dialogBreaks.now) throw new Error("the dialog's chunk failed");
+      return createElement(actual.ReportProblemDialog, props);
+    },
+  };
+});
+
 import { AppErrorBoundary, crashDetails } from "./AppErrorBoundary";
 import { reportUrl } from "./report";
 
@@ -49,6 +64,7 @@ describe("AppErrorBoundary", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     opened.length = 0;
     sent.length = 0;
+    dialogBreaks.now = false;
   });
   afterEach(cleanup);
 
@@ -82,6 +98,25 @@ describe("AppErrorBoundary", () => {
       "Crash: cannot read the panel",
     );
     expect(url.searchParams.get("os-version")).toBe("Windows 11");
+  });
+
+  it("keeps the first crash when the Report dialog itself breaks", async () => {
+    dialogBreaks.now = true;
+    render(
+      <AppErrorBoundary>
+        <Broken />
+      </AppErrorBoundary>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Report a Problem" }));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.getByText("cannot read the panel")).toBeInTheDocument();
+    expect(screen.queryByText(/chunk failed/)).toBeNull();
+    // And it can be asked for again.
+    dialogBreaks.now = false;
+    fireEvent.click(screen.getByRole("button", { name: "Report a Problem" }));
+    await waitFor(() =>
+      expect(screen.getByText(/Crash: cannot read the panel/)).toBeVisible(),
+    );
   });
 
   it("keeps each trace short", () => {

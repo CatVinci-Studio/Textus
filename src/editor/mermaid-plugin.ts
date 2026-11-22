@@ -89,17 +89,7 @@ export function createMermaidPreviewPlugin(options: {
       const code = drawingKey(node.attrs.language, node.textContent);
       const to = from + node.nodeSize;
       const drawn = lastRenders.get(code) ?? pendingDrawn.get(code);
-      if (!drawn) {
-        const why = failures.get(code);
-        if (!why) return [];
-        return [
-          Decoration.widget(to, () => diagramErrorWidget(why), {
-            side: 1,
-            key: `mermaid-error-${fnv1a(code).toString(36)}-${fnv1a(why).toString(36)}`,
-            ignoreSelection: true,
-          }),
-        ];
-      }
+      if (!drawn) return failureNote(code, to, failures.get(code));
       const { svg } = drawn;
       if (touches(from, to)) return [];
       return [
@@ -405,6 +395,23 @@ export function createMermaidPreviewPlugin(options: {
       },
     });
   });
+}
+
+/** The note under a diagram that couldn't be drawn (`why`: undefined when
+ *  it didn't fail); a renderer that said nothing still gets its title. */
+export function failureNote(
+  code: string,
+  to: number,
+  why: string | undefined,
+): Decoration[] {
+  if (why === undefined) return [];
+  return [
+    Decoration.widget(to, () => diagramErrorWidget(why), {
+      side: 1,
+      key: `mermaid-error-${fnv1a(code).toString(36)}-${fnv1a(why).toString(36)}`,
+      ignoreSelection: true,
+    }),
+  ];
 }
 
 /** What a renderer threw, as a few lines a person can act on: Mermaid's

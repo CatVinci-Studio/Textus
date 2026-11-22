@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { whyNotDrawn } from "./mermaid-plugin";
+import { failureNote, whyNotDrawn } from "./mermaid-plugin";
 
 describe("why a diagram wasn't drawn", () => {
   it("keeps the renderer's first lines", () => {
@@ -16,5 +16,13 @@ describe("why a diagram wasn't drawn", () => {
     expect(whyNotDrawn(new Error("x".repeat(900)))).toHaveLength(601);
     expect(whyNotDrawn({})).toBe("");
     expect(whyNotDrawn("Lexical error")).toBe("Lexical error");
+  });
+});
+
+describe("the note under a diagram that couldn't be drawn", () => {
+  it("shows whenever it failed, even with nothing said why", () => {
+    expect(failureNote("graph", 9, "")).toHaveLength(1);
+    expect(failureNote("graph", 9, "Parse error")).toHaveLength(1);
+    expect(failureNote("graph", 9, undefined)).toHaveLength(0);
   });
 });

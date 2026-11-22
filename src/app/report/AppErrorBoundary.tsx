@@ -25,6 +25,27 @@ export function crashDetails(error: Error, componentStack?: string | null) {
   ].join("\n");
 }
 
+/** The Report dialog failing (its chunk not loading, say) closes it, and
+ *  the crash it was asked about stays shown instead of being replaced. */
+class ReportBoundary extends Component<
+  { children: ReactNode; onFail: () => void },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch() {
+    this.props.onFail();
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
 interface State {
   error: Error | null;
   components: string | null;
@@ -77,15 +98,17 @@ export class AppErrorBoundary extends Component<
           </button>
         </div>
         {reporting && (
-          <Suspense fallback={null}>
-            <ReportProblemDialog
-              t={t}
-              settings={settings}
-              open
-              onClose={() => this.setState({ reporting: false })}
-              crash={{ message, details: crashDetails(error, components) }}
-            />
-          </Suspense>
+          <ReportBoundary onFail={() => this.setState({ reporting: false })}>
+            <Suspense fallback={null}>
+              <ReportProblemDialog
+                t={t}
+                settings={settings}
+                open
+                onClose={() => this.setState({ reporting: false })}
+                crash={{ message, details: crashDetails(error, components) }}
+              />
+            </Suspense>
+          </ReportBoundary>
         )}
       </div>
     );
