@@ -6,8 +6,8 @@ use super::*;
 /// Copies `source` into the folder a pasted picture of `doc_path` would go
 /// to (a vault's attachment folder, else Settings > Images > Folder), under
 /// its own name - numbered when another file has it, the same one if it is
-/// there already - and returns the link to write. Keep in step with
-/// `insertDropped` in file-drop-insert.ts, which writes the link.
+/// there already - and returns the link to write. Its TypeScript side is
+/// `copiedFileLink` in src/app/file-drop/dropped-markdown.ts.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn save_dropped_file(
@@ -89,11 +89,33 @@ fn copy_in(from: &Path, dir: &Path) -> std::io::Result<String> {
     Err(std::io::Error::other(format!("no free name for {name}")))
 }
 
+/// Read a piece at a time: a file of the same name and size is compared
+/// without holding either whole.
 fn same_bytes(a: &Path, b: &Path) -> bool {
-    let (Ok(ma), Ok(mb)) = (std::fs::metadata(a), std::fs::metadata(b)) else {
+    use std::io::Read;
+    let (Ok(fa), Ok(fb)) = (std::fs::File::open(a), std::fs::File::open(b)) else {
         return false;
     };
-    ma.len() == mb.len() && std::fs::read(a).ok() == std::fs::read(b).ok()
+    let same_len = match (fa.metadata(), fb.metadata()) {
+        (Ok(ma), Ok(mb)) => ma.len() == mb.len(),
+        _ => false,
+    };
+    if !same_len {
+        return false;
+    }
+    let (mut ra, mut rb) = (std::io::BufReader::new(fa), std::io::BufReader::new(fb));
+    let (mut ba, mut bb) = ([0u8; 64 * 1024], [0u8; 64 * 1024]);
+    loop {
+        let Ok(n) = ra.read(&mut ba) else {
+            return false;
+        };
+        if n == 0 {
+            return true;
+        }
+        if rb.read_exact(&mut bb[..n]).is_err() || ba[..n] != bb[..n] {
+            return false;
+        }
+    }
 }
 
 #[cfg(test)]

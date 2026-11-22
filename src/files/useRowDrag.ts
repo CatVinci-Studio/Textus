@@ -95,6 +95,9 @@ export function useRowDrag(
         ? moving.map((row) => ({ path: row.path, isDir: false }))
         : null;
       let shift: ReturnType<typeof heldShift> | null = null;
+      // No Shift under a finger, and no other way yet to choose: a file
+      // a finger drags onto the documents opens there, as it always has.
+      const opens = e.pointerType === "touch";
       /** The tree's box as the drag began: off it, nothing to hit-test. */
       let treeBox: DOMRect | null = null;
       let into: string | null = null;
@@ -129,7 +132,7 @@ export function useRowDrag(
         start: () => {
           shift = heldShift((held) => {
             if (files && !into)
-              documentDrop()?.over(files, last.x, last.y, held);
+              documentDrop()?.over(files, last.x, last.y, held || opens);
           });
           setDragging(true);
           // The copy under the pointer, as every drag elsewhere has it.
@@ -150,7 +153,8 @@ export function useRowDrag(
           if (next !== into) setDrag({ path, isDir, into: next });
           into = next;
           if (shift) shift.held = m.shiftKey;
-          if (!into && files) documentDrop()?.over(files, x, y, m.shiftKey);
+          if (!into && files)
+            documentDrop()?.over(files, x, y, m.shiftKey || opens);
           else documentDrop()?.leave();
         },
         end: (x, y, dropped, up) => {
@@ -168,7 +172,7 @@ export function useRowDrag(
               files,
               x,
               y,
-              up?.shiftKey ?? shift?.held ?? false,
+              (up?.shiftKey ?? shift?.held ?? false) || opens,
             );
           if (!into) return;
           if (group) selection.clear();

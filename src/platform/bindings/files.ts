@@ -66,8 +66,8 @@ export const commands = {
 	 *  Copies `source` into the folder a pasted picture of `doc_path` would go
 	 *  to (a vault's attachment folder, else Settings > Images > Folder), under
 	 *  its own name - numbered when another file has it, the same one if it is
-	 *  there already - and returns the link to write. Keep in step with
-	 *  `insertDropped` in file-drop-insert.ts, which writes the link.
+	 *  there already - and returns the link to write. Its TypeScript side is
+	 *  `copiedFileLink` in src/app/file-drop/dropped-markdown.ts.
 	 */
 	save_dropped_file: (docPath: string, source: string, folder: string) => __TAURI_INVOKE<SavedImage_Serialize>("save_dropped_file", { docPath, source, folder }),
 	/**

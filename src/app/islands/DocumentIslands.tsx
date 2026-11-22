@@ -1,3 +1,4 @@
+import { useIncomingTab } from "../../engine/controls/tabs/incoming-tab";
 import type { FormatBarSide } from "../../prefs/settings-values";
 import { isWindowPanel } from "./panel-pane";
 import { Island } from "../../engine/layout/Island";
@@ -123,6 +124,8 @@ export function DocumentIslands({
   // Zen shows the tab in use alone; the split waits until Zen ends.
   const layout = useIslands(zen);
   const phone = usePhoneLayout();
+  // A file dragged in to open as a tab: its room in that island's row.
+  const incoming = useIncomingTab();
   const panes = panesOf(layout.root);
   // Each pane shows its tab in front; its place in reading order names it.
   const shownIn = new Map(
@@ -238,7 +241,13 @@ export function DocumentIslands({
           placeAmongPinned(index, !!tab && tabPinned(tab), pinned),
         );
       }}
-      previewTab={pane === panes[0]?.id ? previewTab : null}
+      previewTab={
+        incoming?.pane === pane
+          ? { title: incoming.title, dirty: false, x: incoming.x }
+          : pane === panes[0]?.id
+            ? previewTab
+            : null
+      }
       // Open beside and Move to New Window are drags (pullTab).
       menuFor={(id) => [
         ...pathItem(id, byId.get(id)?.path),

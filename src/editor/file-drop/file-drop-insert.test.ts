@@ -37,6 +37,17 @@ describe("files dropped between blocks", () => {
     expect(v.markdown()).toBe("the first\n\nsecond");
   });
 
+  it("keep a picture's path as written", async () => {
+    const v = await openView("first\n");
+    showPulled(v.view, {
+      pos: null,
+      landing: v.view.state.doc.content.size,
+      room: document.createElement("div"),
+    });
+    await fillRooms(v.view, async () => ["![](assets/boat%201.png)"]);
+    expect(v.markdown()).toBe("first\n\n![](assets/boat%201.png)");
+  });
+
   it("put nothing in when nothing came of them", async () => {
     const v = await openView("first\n");
     showPulled(v.view, {

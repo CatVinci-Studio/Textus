@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp, settled, sourceOf } from "./helpers";
+import { emit, MAC, mockInvoke, openApp, settled, sourceOf } from "./helpers";
 
 /*
  * Files dragged into a document: from the sidebar (the app's own pointer
@@ -9,6 +9,7 @@ import { emit, openApp, settled, sourceOf } from "./helpers";
  */
 
 const DOC = "# Trip\n\nFirst day.\n\nSecond day.\n";
+const LONG = "Rain. ".repeat(120).trim();
 
 async function openFolder(page: Page) {
   await page.addInitScript((doc) => {
@@ -19,6 +20,7 @@ async function openFolder(page: Page) {
       "/trip/assets/boat.png": "",
       "/trip/report.pdf": "",
       "/downloads/tickets.pdf": "%PDF",
+      "/downloads/boat 1.png": "",
     };
     w.__devPickFolder = "/trip";
     w.__devPictureSizes = {
@@ -57,7 +59,10 @@ async function dragRow(page: Page, name: string, to: { x: number; y: number }) {
     .boundingBox())!;
   await page.mouse.move(row.x + 20, row.y + row.height / 2);
   await page.mouse.down();
-  await page.mouse.move(to.x, to.y, { steps: 12 });
+  // Up from below: a room opening on the way pushes nothing down past the
+  // place aimed at.
+  await page.mouse.move(to.x, to.y + 200, { steps: 12 });
+  await page.mouse.move(to.x, to.y, { steps: 6 });
 }
 
 test("a picture from the sidebar goes in where it is let go, in one undo step", async ({
@@ -207,4 +212,137 @@ test("the sidebar's Insert Link links to a file at the caret", async ({
   await page.getByRole("menuitem", { name: "Insert link" }).click();
   await expect(paragraph(page, "Second day.")).toContainText("plan");
   expect(await sourceOf(page)).toContain("Second day.[plan](plan.md)");
+});
+
+test("several files from the sidebar go in together in one undo step, a note among them opening", async ({
+  page,
+}) => {
+  await openFolder(page);
+  const row = (name: string) => page.locator(".tree-row", { hasText: name });
+  // Picked by ⌘/Ctrl-click, which starts from the document open (log.md):
+  // that one let go of again.
+  for (const name of ["boat.png", "plan.md", "report.pdf", "log.md"])
+    await row(name).click({ modifiers: [MAC ? "Meta" : "Control"] });
+  await expect(page.locator(".tree-row-picked")).toHaveCount(3);
+  await dragRow(page, "boat.png", await betweenDays(page));
+  // A room each for what goes in, in order; none for the note.
+  await expect(page.locator(".file-drop-room")).toHaveCount(2);
+  await expect(page.locator(".file-drop-room").first()).toHaveClass(
+    /file-drop-room-image/,
+  );
+  await page.mouse.up();
+  await expect(page.locator('[role="tab"]', { hasText: "plan" })).toBeVisible();
+  await page.locator('[role="tab"]', { hasText: "log" }).click();
+  const picture = page.locator(
+    '[data-active-tab="true"] .ProseMirror p.image-paragraph',
+  );
+  await expect(picture).toHaveCount(1);
+  await expect(paragraph(page, "report.pdf")).toHaveCount(1);
+  await paragraph(page, "Second day.").click();
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(picture).toHaveCount(0);
+  await expect(paragraph(page, "report.pdf")).toHaveCount(0);
+  await page.keyboard.press("ControlOrMeta+Shift+z");
+  await expect(picture).toHaveCount(1);
+  expect(await sourceOf(page)).toBe(
+    "# Trip\n\nFirst day.\n\n![](assets/boat.png)\n\n[report.pdf](report.pdf)\n\nSecond day.",
+  );
+});
+
+test("Shift pressed and let go with the pointer still: the room goes and comes back", async ({
+  page,
+}) => {
+  await openFolder(page);
+  await dragRow(page, "report.pdf", await betweenDays(page));
+  const room = page.locator(".file-drop-room");
+  await expect(room).toHaveCount(1);
+  await page.keyboard.down("Shift");
+  await expect(room).toHaveCount(0);
+  await page.keyboard.up("Shift");
+  await expect(room).toHaveCount(1);
+  await page.mouse.up();
+  await expect(paragraph(page, "report.pdf")).toBeVisible();
+});
+
+test("a picture let go on a tab row opens: a tab's room there, nothing put in", async ({
+  page,
+}) => {
+  await openFolder(page);
+  // Two tabs, so the row shows.
+  await page.locator(".tree-row", { hasText: "plan.md" }).dblclick();
+  await page.locator('[role="tab"]', { hasText: "log" }).click();
+  const bar = (await page
+    .locator(".main-pane .tab-bar")
+    .first()
+    .boundingBox())!;
+  await dragRow(page, "boat.png", {
+    x: bar.x + bar.width / 2,
+    y: bar.y + bar.height / 2,
+  });
+  await expect(page.locator(".file-drop-room")).toHaveCount(0);
+  // Its room in the row, as a tab from another window gets.
+  await expect(
+    page.locator(".tab-bar .tab-pill-title", { hasText: "boat.png" }),
+  ).toBeVisible();
+  await page.mouse.up();
+  await page.locator('[role="tab"]', { hasText: "log" }).click();
+  await expect(page.locator(".ProseMirror p.image-paragraph")).toHaveCount(0);
+});
+
+test("the room opens under the pointer below a long paragraph", async ({
+  page,
+}) => {
+  await page.addInitScript((long) => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = {
+      "/trip/log.md": `# Trip\n\n${long}\n\nLast day.\n`,
+      "/trip/report.pdf": "",
+    };
+    w.__devPickFolder = "/trip";
+  }, LONG);
+  await openApp(page, { settings: { language: "en" } });
+  await emit(page, "menu-open-folder");
+  await page.locator(".tree-row", { hasText: "log.md" }).dblclick();
+  const long = (await paragraph(page, "Rain.").boundingBox())!;
+  const last = (await paragraph(page, "Last day.").boundingBox())!;
+  const island = (await page.locator("section.island").boundingBox())!;
+  // Passing the document's left edge on the way, as every drag from the
+  // sidebar does.
+  await dragRow(page, "report.pdf", {
+    x: island.x + island.width / 2,
+    y: (long.y + long.height + last.y) / 2,
+  });
+  const room = page.locator(".file-drop-room");
+  await expect(room).toHaveCount(1);
+  const box = (await room.boundingBox())!;
+  expect(box.y).toBeGreaterThan(long.y + long.height - 4);
+  await page.mouse.up();
+  expect(await sourceOf(page)).toBe(
+    `# Trip\n\n${LONG}\n\n[report.pdf](report.pdf)\n\nLast day.`,
+  );
+});
+
+test("a picture from a file manager goes in where it is let go, stored as a pasted one", async ({
+  page,
+}) => {
+  await openFolder(page);
+  await mockInvoke(page, {
+    read_binary_file_base64: "AAAA",
+    save_pasted_image: {
+      src: "assets/boat%201.png",
+      embed: null,
+      path: "/trip/assets/boat 1.png",
+    },
+  });
+  const at = await betweenDays(page);
+  const paths = ["/downloads/boat 1.png"];
+  await emit(page, "tauri://drag-enter", { paths, position: at });
+  await emit(page, "tauri://drag-over", { position: at });
+  await expect(page.locator(".file-drop-room-image")).toBeVisible();
+  await emit(page, "tauri://drag-drop", { paths, position: at });
+  await expect(page.locator(".ProseMirror p.image-paragraph")).toHaveCount(1);
+  // As a picture pasted or dropped before: the path the store gave.
+  expect(await sourceOf(page)).toMatch(
+    /^# Trip\n\nFirst day\.\n\n!\[\]\(<?assets\/boat(%20| )1\.png>?\)\n\nSecond day\.$/,
+  );
 });

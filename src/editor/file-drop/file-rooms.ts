@@ -84,7 +84,18 @@ function roomsElement(rooms: readonly FileRoom[]): HTMLElement {
 }
 
 let open: Open | null = null;
-const layouts = new Map<EditorView, ReturnType<typeof placesIn>>();
+/** Each show, counted: a retry stands only while it is the last asked. */
+let asks = 0;
+/** Narrower or wider by more than a scroll bar coming or going. */
+const resized = (was: number, now: number) => Math.abs(now - was) > was * 0.05;
+
+/** Each editor's places, and the width they were measured at: measured
+ *  again while it changes (the islands gliding back from a split's
+ *  preview), else kept for the drag. */
+const layouts = new Map<
+  EditorView,
+  { width: number; places: ReturnType<typeof placesIn> }
+>();
 
 /** The editable editor of tab `tabId`: found by its tab, not by what is
  *  under the pointer, which the islands making room may have covered. */
@@ -135,40 +146,62 @@ const rooms: FileRooms = {
       rooms.clear();
       return false;
     }
-    // Not laid out yet (the islands giving back the room they made): the
-    // places are measured on the next move.
-    if (!view.dom.offsetParent) return true;
+    // Not laid out yet (the islands giving back the room they made for a
+    // tab): tried again next frame, unless asked something else by then.
+    if (!view.dom.offsetParent) {
+      const asked = ++asks;
+      requestAnimationFrame(() => {
+        if (asked === asks && view.dom.offsetParent)
+          rooms.show(tabId, x, y, specs);
+      });
+      return true;
+    }
+    asks++;
     const key = JSON.stringify(specs);
     const room =
       open?.view === view && open.key === key ? open.room : roomsElement(specs);
-    let places = layouts.get(view);
-    if (!places) {
-      places = placesIn(view, root);
-      layouts.set(view, places);
+    const width = view.dom.offsetWidth;
+    let kept = layouts.get(view);
+    if (!kept || resized(kept.width, width)) {
+      // Measured as it stands without the room.
+      if (open?.view === view) showOpen(null);
+      kept = { width, places: placesIn(view, root) };
+      layouts.set(view, kept);
     }
-    // As the places stand with the room open where it is now.
-    const tall = open?.view === view ? open.room.offsetHeight : 0;
+    const { places } = kept;
+    // As the places stand with the room open where it is now; over the
+    // room itself, it stays: a tall one (a picture, several files) would
+    // otherwise leave the pointer nearer the place before it.
+    const here = open?.view === view ? open.landing : null;
+    const tall = here === null ? 0 : open!.room.offsetHeight;
     const at = inLayout(root, x, y);
-    const gap = nearestGap(
-      withRoom(places, open?.view === view ? open.landing : null, tall),
-      at.x,
-      at.y,
-    );
+    const held = places.find((p) => p.pos === here);
+    const gap =
+      held && at.y >= held.y - tall / 4 && at.y <= held.y + tall
+        ? held
+        : nearestGap(withRoom(places, here, tall), at.x, at.y);
     if (!gap) return false;
     showOpen({ view, landing: gap.pos, room, key });
     return true;
   },
   clear() {
+    asks++;
     showOpen(null);
     layouts.clear();
   },
-  fill(produce) {
+  async fill(produce, { tabId, x, y, rooms: specs }) {
+    // Laid out again within a frame or two once the islands stop making
+    // room for a tab.
+    for (let frame = 0; !open && frame < 3 && editorOf(tabId); frame++) {
+      if (editorOf(tabId)?.dom.offsetParent) rooms.show(tabId, x, y, specs);
+      if (!open) await new Promise(requestAnimationFrame);
+    }
     const was = open;
     if (!was) return false;
     // The rooms stay as the place holder while the files are copied.
     open = null;
     layouts.clear();
-    void fillRooms(was.view, produce);
+    await fillRooms(was.view, produce);
     return true;
   },
 };

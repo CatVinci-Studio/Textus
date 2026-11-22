@@ -12,7 +12,8 @@ import {
   type DropGeometry,
   type DropTarget,
 } from "../../engine/layout/drop-zones";
-import { shownIsland } from "../../engine/layout/store";
+import { paneOf, shownIsland, windowLayout } from "../../engine/layout/store";
+import { setIncomingTab } from "../../engine/controls/tabs/incoming-tab";
 import { fs } from "../../platform/ipc";
 import { basename } from "../../utils/path";
 import { isDocumentName } from "../../files/document-name";
@@ -52,22 +53,36 @@ interface Planned {
 }
 
 /** Where (x, y) is: a tab row (opens in that island), a document's edge
- *  (split) or its body; null off the documents. */
+ *  (split) or its body; null off the documents. `slot`: where in which
+ *  row a tab opening there would stand - under the pointer on the row,
+ *  at its end from the body - when the island has a row. */
 function placeAt(
   x: number,
   y: number,
   geometry: DropGeometry,
-): { place: DropPlace; target: DropTarget } | null {
+): {
+  place: DropPlace;
+  target: DropTarget;
+  slot: { pane: string; x: number } | null;
+} | null {
   const bar = barDropAt(x, y, "", geometry);
   const front = bar && shownIsland(bar.pane)?.front;
   if (bar && front)
     return {
       place: "bar",
       target: { zone: "center", tabId: front, rect: bar.rect },
+      slot: { pane: bar.pane, x },
     };
   const target = dropTargetAt(x, y, geometry);
   if (!target) return null;
-  return { place: target.zone === "center" ? "body" : "edge", target };
+  if (target.zone !== "center") return { place: "edge", target, slot: null };
+  const pane = paneOf(windowLayout(), target.tabId);
+  const row = geometry.bars.find((b) => b.pane === pane)?.row;
+  return {
+    place: "body",
+    target,
+    slot: row && pane ? { pane, x: row.right } : null,
+  };
 }
 
 /**
@@ -146,6 +161,12 @@ export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
       : { kind: "link", hint: hints.link };
   };
 
+  const clearAll = () => {
+    fileRooms()?.clear();
+    arrival.clear();
+    setIncomingTab(null);
+  };
+
   const reset = () => {
     geometry = null;
     last = null;
@@ -157,71 +178,94 @@ export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
       last = { files, x, y, shift };
       const now = plan(files, x, y, shift);
       if (!now) {
-        fileRooms()?.clear();
-        arrival.clear();
+        clearAll();
         return false;
       }
       const going = now.planned.filter((p) => p.action === "insert");
       if (going.length) {
         // Its island shown as it is, not making room for a tab.
         arrival.clear();
+        setIncomingTab(null);
         const tab = now.target.tabId;
         if (fileRooms()?.show(tab, x, y, going.map(roomFor))) return true;
       }
       fileRooms()?.clear();
-      // A folder alone opens in the sidebar: no room for it here.
-      if (now.planned.some((p) => p.action === "open"))
-        arrival.show(x, y, now.target);
-      else arrival.clear();
+      const opening = now.planned.find((p) => p.action === "open");
+      // Opening in the island: a tab's room in its row, the document
+      // still showing; on an edge, the islands make room. A folder alone
+      // opens in the sidebar: no room for it here.
+      if (opening && now.slot) {
+        arrival.clear();
+        setIncomingTab({ ...now.slot, title: basename(opening.file.path) });
+      } else {
+        setIncomingTab(null);
+        if (opening) arrival.show(x, y, now.target);
+        else arrival.clear();
+      }
       return true;
     },
     leave() {
-      fileRooms()?.clear();
-      arrival.clear();
+      clearAll();
       reset();
     },
     drop(files, x, y, shift) {
       const now = plan(files, x, y, shift);
-      reset();
+      setIncomingTab(null);
       if (!now) {
-        fileRooms()?.clear();
-        arrival.clear();
+        reset();
+        clearAll();
         return false;
       }
       const of = (action: FileAction) =>
         now.planned.filter((p) => p.action === action);
       const going = of("insert");
-      const root = wiring.linkRoot();
-      const filled =
-        going.length > 0 &&
-        !!fileRooms()?.fill(async (target) => {
-          // In order, one after another: a name asked for, or a copy
-          // numbered, is the next file's to see.
-          const markdown: string[] = [];
-          for (const { file, kind } of going) {
-            const fromSystem = !!file.fromSystem;
-            const md = await droppedMarkdown(
-              { path: file.path, kind, fromSystem },
-              target,
-              root,
-            ).catch((err: unknown) => {
-              wiring.failed(file.path, err);
-              return null;
-            });
-            if (md) markdown.push(md);
-          }
-          return markdown;
-        });
-      if (!filled) fileRooms()?.clear();
-      // Rooms that couldn't take them (gone meanwhile): opened instead.
-      const opening = filled ? of("open") : [...going, ...of("open")];
+      const opening = of("open");
+      const where = {
+        tabId: now.target.tabId,
+        x,
+        y,
+        rooms: going.map(roomFor),
+      };
+      reset();
       const target = opening.length
         ? (arrival.take(x, y, now.target) ?? now.target)
         : (arrival.clear(), now.target);
-      opening.forEach(({ file }, i) =>
-        wiring.open(file.path, target, i === 0, !!file.fromSystem),
-      );
+      const open = (planned: Planned[], first: boolean) =>
+        planned.forEach(({ file }, i) =>
+          wiring.open(file.path, target, first && i === 0, !!file.fromSystem),
+        );
       for (const { file } of of("folder")) wiring.openFolder(file.path);
+      if (!going.length) {
+        open(opening, true);
+        return true;
+      }
+      const root = wiring.linkRoot();
+      const produce = async (doc: FileDropTarget) => {
+        // In order, one after another: a name asked for, or a copy
+        // numbered, is the next file's to see.
+        const markdown: string[] = [];
+        for (const { file, kind } of going) {
+          const fromSystem = !!file.fromSystem;
+          const md = await droppedMarkdown(
+            { path: file.path, kind, fromSystem },
+            doc,
+            root,
+          ).catch((err: unknown) => {
+            wiring.failed(file.path, err);
+            return null;
+          });
+          if (md) markdown.push(md);
+        }
+        return markdown;
+      };
+      // What goes in first, while its document is in front; then what
+      // opens. The document gone meanwhile: what would have gone in opens.
+      void (fileRooms()?.fill(produce, where) ?? Promise.resolve(false)).then(
+        (filled) => {
+          if (!filled) fileRooms()?.clear();
+          open(filled ? opening : [...going, ...opening], true);
+        },
+      );
       return true;
     },
   };

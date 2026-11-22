@@ -79,8 +79,13 @@ export interface FileRooms {
   ): boolean;
   clear(): void;
   /** The Markdown `produce` gives put in where the rooms stand, in one undo
-   *  step; the rooms hold the place meanwhile. False when none is open. */
-  fill(produce: (target: FileDropTarget) => Promise<string[]>): boolean;
+   *  step; the rooms hold the place meanwhile. None open yet (let go at
+   *  once, or as the islands gave back the room they made), they open
+   *  `where` first. False when they can't. */
+  fill(
+    produce: (target: FileDropTarget) => Promise<string[]>,
+    where: { tabId: string; x: number; y: number; rooms: readonly FileRoom[] },
+  ): Promise<boolean>;
 }
 
 let rooms: FileRooms | null = null;

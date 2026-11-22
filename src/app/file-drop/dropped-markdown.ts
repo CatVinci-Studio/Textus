@@ -24,7 +24,9 @@ export function folderFileLink(
 ): string {
   const image = kind === "image";
   const link = linkToTarget(paths, path, from, style, { embed: image });
-  return image && !style.wiki ? link.replace(/^!\[[^\]]*\]/, "![]") : link;
+  return image && !style.wiki
+    ? link.replace(/^!\[(?:\\.|[^\\\]])*\]/, "![]")
+    : link;
 }
 
 /** A link to a file from a file manager, once copied beside the document. */
