@@ -1,6 +1,6 @@
 import { canLinkSponsor } from "../platform/capabilities";
 import { useEntriesFromOtherWindows } from "./useEntriesFromOtherWindows";
-import { linkToFile } from "./islands/link-to-file";
+import { linkToFile } from "../files/link-to-file";
 import { holdOnReturn } from "./hold-on-return";
 import { useEffect } from "react";
 import { links } from "../platform/ipc";

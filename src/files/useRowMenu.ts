@@ -25,6 +25,7 @@ import {
 import type { Strings } from "../i18n/strings";
 import { failureText, type TreeDraft } from "./tree-shared";
 import { updateLinksAfterMove } from "./move-links";
+import { linkingDocument, linkToFile } from "./link-to-file";
 import { pathItems } from "../clipboard/copy-path";
 import { heldByFinger } from "../utils/gesture";
 import type { FileOpenHow } from "./tree-shared";
@@ -166,10 +167,19 @@ export function useRowMenu(
       // New things go into the folder clicked, or the one the file is in.
       const dir = isDir ? path : (parentDir(path) ?? root);
       const items: (ContextMenuItem | "separator")[] = [];
+      // Into the document in use; not while it is unsaved or read-only.
+      const linkFrom = isDir ? null : linkingDocument();
       if (path !== root && !isDir)
         items.push(
           // Beside another document: drag it there.
           { label: t.treeOpen, onSelect: () => onFileSelect(path) },
+          {
+            label: t.treeInsertLink,
+            disabled: !linkFrom || linkFrom === path,
+            onSelect: () => {
+              if (linkFrom) void linkToFile(path, linkFrom, linkBase);
+            },
+          },
           ...(isMobileApp
             ? [
                 {
@@ -234,7 +244,7 @@ export function useRowMenu(
         },
       );
     },
-    [root, t, setDraft, rename, trash, onFileSelect, onEnter],
+    [root, linkBase, t, setDraft, rename, trash, onFileSelect, onEnter],
   );
   const onRowMenu = useCallback(
     (e: ReactMouseEvent, path: string, isDir: boolean) => {

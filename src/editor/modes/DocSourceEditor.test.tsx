@@ -8,6 +8,12 @@ import { fs } from "../../platform/ipc";
 import { DocSourceEditor } from "./DocSourceEditor";
 import { sourceViewAt } from "./source-view-registry";
 import { imageMarkdown } from "./useSourceImagePaste";
+import { undo } from "@codemirror/commands";
+import {
+  registerPathCompletion,
+  setPathCompletionRoot,
+} from "../../files/path-completion";
+import { INSERT_MARKDOWN_EVENT, sendAppEvent } from "../../utils/events";
 
 // jsdom has no layout: CodeMirror measures a line with the range's rects, and
 // a focus schedules that measure for the next frame.
@@ -22,8 +28,10 @@ beforeAll(() => {
 });
 
 vi.mock("../../platform/ipc", () => ({
-  fs: { savePastedImage: vi.fn() },
+  fs: { savePastedImage: vi.fn(), indexFolder: vi.fn() },
 }));
+// jsdom lays nothing out, so no editor reads as the one on screen.
+vi.mock("../editor-in-use", () => ({ editorInUse: () => true }));
 vi.mock("../../prefs/SettingsContext", () => ({
   useSettings: () => ({
     settings: { ...DEFAULT_SETTINGS, imageNamingMode: "auto" },
@@ -117,4 +125,65 @@ it("writes a src with a space or a bracket in angle brackets", () => {
   expect(imageMarkdown("assets/a.png")).toBe("![](assets/a.png)");
   expect(imageMarkdown("assets/a b.png")).toBe("![](<assets/a b.png>)");
   expect(imageMarkdown("assets/a(1).png")).toBe("![](<assets/a(1).png>)");
+});
+
+it("completes a picture's path from the folder, the pick one undo step", async () => {
+  vi.mocked(fs.indexFolder).mockResolvedValue({
+    files: [
+      { path: "/notes/b.md", rel: "b.md" },
+      { path: "/notes/assets/a b.png", rel: "assets/a b.png" },
+    ],
+    truncated: false,
+  });
+  setPathCompletionRoot("/notes");
+  const stop = registerPathCompletion({
+    image: () => "Images",
+    link: () => "Files",
+  });
+  try {
+    const { container } = render(
+      <DocSourceEditor
+        docPath="/notes/a.md"
+        value=""
+        typewriter={false}
+        onChange={() => {}}
+      />,
+    );
+    const view = sourceViewAt(container)!.view;
+    view.dispatch({
+      changes: { from: 0, insert: "![](" },
+      selection: { anchor: 4 },
+    });
+    const label = () =>
+      document.querySelector(".completion-list:not([hidden]) .completion-label")
+        ?.textContent;
+    await waitFor(() => expect(label()).toBe("assets/a b.png"));
+    fireEvent.keyDown(view.contentDOM, { key: "Enter" });
+    expect(view.state.doc.toString()).toBe("![](assets/a%20b.png)");
+    undo(view);
+    expect(view.state.doc.toString()).toBe("![](");
+  } finally {
+    stop();
+    setPathCompletionRoot(null);
+  }
+});
+
+it("puts Markdown sent to the document in at the caret, as its own undo step", () => {
+  const { container } = render(
+    <DocSourceEditor
+      docPath="/notes/a.md"
+      value="see "
+      typewriter={false}
+      onChange={() => {}}
+    />,
+  );
+  const view = sourceViewAt(container)!.view;
+  view.dispatch({
+    changes: { from: 4, insert: "x" },
+    selection: { anchor: 5 },
+  });
+  sendAppEvent(INSERT_MARKDOWN_EVENT, "[b](b.md)");
+  expect(view.state.doc.toString()).toBe("see x[b](b.md)");
+  undo(view);
+  expect(view.state.doc.toString()).toBe("see x");
 });

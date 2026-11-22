@@ -6,6 +6,10 @@ import {
   registerNoteCompletion,
   setNoteCompletionRoot,
 } from "../files/note-completion";
+import {
+  registerPathCompletion,
+  setPathCompletionRoot,
+} from "../files/path-completion";
 import { useTabDragMerge } from "./tabs/useTabDragMerge";
 import { useAutosave } from "../document/autosave";
 import { useLastPlaces } from "../document/last-places";
@@ -135,7 +139,16 @@ function useOpening(
   });
   useEffect(() => {
     setNoteCompletionRoot(folderRoot);
-    return registerNoteCompletion(() => t.completionNotes);
+    setPathCompletionRoot(folderRoot);
+    const stopNotes = registerNoteCompletion(() => t.completionNotes);
+    const stopPaths = registerPathCompletion({
+      image: () => t.completionImages,
+      link: () => t.completionFiles,
+    });
+    return () => {
+      stopNotes();
+      stopPaths();
+    };
   }, [folderRoot, t]);
   usePluginWindow({
     t,

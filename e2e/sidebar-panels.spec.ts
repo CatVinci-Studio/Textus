@@ -6,7 +6,10 @@ import {
   openApp,
   pasteMarkdown,
   restedOn,
+  END,
+  selectionRead,
   settled,
+  sourceOf,
 } from "./helpers";
 
 // Sidebar panels: the plugin list opens a plugin's page in a tab of its
@@ -159,6 +162,43 @@ test("a file closed at once opens again at once", async ({ page }) => {
   await expect(tab).toHaveCount(0);
   await row.dblclick();
   await expect(tab).toBeVisible();
+});
+
+test("a picture's path completes from the folder as it is typed; a file's menu inserts a link to it", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = {
+      "/proj/a.md": "# A\n",
+      "/proj/b.md": "# B\n",
+      "/proj/assets/pic.png": "",
+    };
+    w.__devPickFolder = "/proj";
+  });
+  await openApp(page);
+  await emit(page, "menu-open-folder");
+  const row = (name: string) => page.locator(".tree-row", { hasText: name });
+  await row("a.md").dblclick();
+  const doc = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(doc.locator("h1")).toContainText("A");
+  await doc.locator("h1").click();
+  await page.keyboard.press(END);
+  await selectionRead(page);
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("see ![](");
+  const list = page.locator(".completion-list:not([hidden])");
+  // Only images after "![".
+  await expect(list.locator(".completion-label")).toHaveText([
+    "assets/pic.png",
+  ]);
+  await page.keyboard.press("Enter");
+  await expect(list).toHaveCount(0);
+
+  await row("b.md").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "插入链接" }).click();
+  await expect(doc).toContainText("b");
+  expect(await sourceOf(page)).toBe("# A\n\nsee ![](assets/pic.png)[b](b.md)");
 });
 
 test("a file dragged onto a folder moves into it; with Esc it stays; picked files go together", async ({
