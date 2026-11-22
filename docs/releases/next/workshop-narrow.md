@@ -1,3 +1,3 @@
 ### Fixed
 
-- In a narrow window the theme workshop is one column that scrolls: its settings, then the sample page, which was cut off and out of reach.
+- The theme workshop scrolls as one page, as Settings does: its scrollbar at the tab's edge and fading when still, the sample page staying in view beside the rows. In a narrow window it is one column, the sample page under the rows, where it was cut off and out of reach.

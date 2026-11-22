@@ -280,3 +280,24 @@ test("in a narrow window the workshop is one column that scrolls to the page", a
   ).toBeInViewport();
   await expect(page.locator(".theme-workshop-actions .primary")).toBeVisible();
 });
+
+test("the workshop scrolls as one page, its bar at the tab's edge", async ({
+  page,
+}) => {
+  await openWorkshop(page, false);
+  await page.setViewportSize({ width: 1280, height: 600 });
+  const tab = page.locator(".create-tab");
+  await expect(tab).toHaveClass(/tx-scroll-reveal/);
+  // The tab scrolls; the rows don't, on their own.
+  const scrolls = (el: Element) => el.scrollHeight > el.clientHeight + 1;
+  expect(await tab.evaluate(scrolls)).toBe(true);
+  expect(await page.locator(".theme-workshop-controls").evaluate(scrolls)).toBe(
+    false,
+  );
+  // Scrolled to the end, the sample page and the buttons are still in view.
+  await tab.evaluate((el) => el.scrollTo(0, el.scrollHeight));
+  await expect(page.locator(".theme-workshop-preview")).toBeInViewport();
+  await expect(
+    page.locator(".theme-workshop-actions .primary"),
+  ).toBeInViewport();
+});

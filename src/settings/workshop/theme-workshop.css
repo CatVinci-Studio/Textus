@@ -1,27 +1,33 @@
 /* Create's theme workshop: Settings rows on the left, the page they make
    on the right; under each other where there is no room for both. */
+/* One scroller, the tab's own, as a Settings page: its bar at the tab's
+   edge, showing while it moves (tx-scroll-reveal). The sample page stays in
+   view beside the rows. */
+.create-tab:has(> .theme-workshop-studio) {
+  container: workshop / inline-size;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
 .create-tab > .theme-workshop-studio {
+  flex: none;
   max-width: 1280px;
 }
 .theme-workshop {
-  flex: 1;
-  min-height: 0;
   display: flex;
+  align-items: flex-start;
   gap: var(--space-4);
 }
 .theme-workshop-controls {
   flex: 0 1 380px;
   min-width: 300px;
-  max-height: 100%;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
 }
-/* The rows scroll; making the theme and what it made stay in view. */
-.theme-workshop-rows {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
+.theme-workshop-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
 }
 .theme-workshop-slider {
   display: inline-flex;
@@ -35,11 +41,6 @@
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
-.theme-workshop-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: var(--space-2);
-}
 .theme-workshop-made {
   display: flex;
   flex-wrap: wrap;
@@ -50,10 +51,11 @@
   font-size: var(--text-secondary);
 }
 .theme-workshop-preview {
-  position: relative;
+  position: sticky;
+  top: 0;
   flex: 1 1 420px;
   min-width: 300px;
-  min-height: 360px;
+  height: max(360px, calc(100vh - 180px));
   overflow: hidden;
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-m);
@@ -121,29 +123,19 @@
   border: 2px solid var(--ui-accent);
 }
 
-/* Too narrow for both side by side: one column that scrolls as a whole -
-   the rows at their full height, then the buttons, then the sample page. */
-.create-tab:has(> .theme-workshop-studio) {
-  container: workshop / inline-size;
-}
+/* Too narrow for both side by side: one column - the rows, the buttons,
+   then the sample page. */
 @container workshop (max-width: 820px) {
-  .theme-workshop-studio {
-    overflow-y: auto;
-  }
   .theme-workshop {
-    flex: none;
     flex-direction: column;
+    align-items: stretch;
   }
   .theme-workshop-controls {
     flex: none;
     min-width: 0;
-    max-height: none;
-  }
-  .theme-workshop-rows {
-    flex: none;
-    overflow: visible;
   }
   .theme-workshop-preview {
+    position: relative;
     flex: none;
     min-width: 0;
     height: 520px;
