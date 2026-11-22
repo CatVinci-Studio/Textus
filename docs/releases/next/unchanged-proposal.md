@@ -1,3 +1,0 @@
-### Fixed
-
-- An AI rewrite whose new text is the same as the old is no longer shown as the passage deleted and put back; the AI is told nothing would change.
