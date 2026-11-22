@@ -51,6 +51,6 @@ export function storedLook(value: unknown): Look | null {
     typeof v.activityRail === "boolean" &&
     typeof v.titleRowShown === "boolean"
     ? // Kept before 1.4.6 the frame had no setting: its own colour.
-      lookOf({ plainFrame: false, ...v } as unknown as Look)
+      lookOf({ ...v, plainFrame: v.plainFrame === true } as unknown as Look)
     : null;
 }

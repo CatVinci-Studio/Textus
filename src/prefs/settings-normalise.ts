@@ -263,6 +263,14 @@ function readSettings(parsed: Raw | null): Settings {
       // Any profile string is kept - a newer build's may not be in this
       // build's list - but it has to be one.
       lookBeforeClassic: storedLook(parsed.lookBeforeClassic),
+      // Saved before the frame had a setting: on where the classic look is,
+      // which now includes it, so its switch still shows on.
+      plainFrame:
+        typeof parsed.plainFrame === "boolean"
+          ? parsed.plainFrame
+          : parsed.layout === "classic" &&
+            parsed.activityRail === false &&
+            parsed.titleRowShown === true,
       textusAiResumeAt:
         typeof parsed.textusAiResumeAt === "number"
           ? parsed.textusAiResumeAt

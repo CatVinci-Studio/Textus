@@ -372,12 +372,13 @@
   --tone-gray: #98989d;
 }
 
-/* Appearance › "No frame colour": the title bar, rail and sidebar in the
-   page's own background, a theme's or a plugin's paint included; the
-   hairlines and an island's rim still mark the edges. After the dark
-   rules, and over a theme's :root. */
+/* Appearance › "Window background matches the page": the title bar, rail
+   and sidebar in the page's own background, over a theme's frame and its
+   paint (Prism's dark gradient is (0,3,0)) and a plugin's (set
+   !important on :root); the hairlines and an island's rim still mark the
+   edges. */
 html:root[data-plain-frame] {
-  --ui-frame: var(--ui-bg);
-  --ui-frame-sunk: var(--ui-bg);
-  --ui-frame-paint: initial;
+  --ui-frame: var(--ui-bg) !important;
+  --ui-frame-sunk: var(--ui-bg) !important;
+  --ui-frame-paint: initial !important;
 }

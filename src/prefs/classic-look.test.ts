@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_SETTINGS, type Settings } from "./settings-types";
+import { normaliseSettings } from "./settings-normalise";
 import {
   CLASSIC_LOOK,
   classicLookChange,
@@ -72,5 +73,32 @@ describe("the classic look and the frame's colour", () => {
       titleRowShown: false,
       plainFrame: false,
     });
+  });
+});
+
+describe("settings saved before the frame had a setting", () => {
+  const classic = {
+    layout: "classic",
+    activityRail: false,
+    titleRowShown: true,
+  };
+
+  it("keep the classic look's switch on, frame included", () => {
+    const settings = normaliseSettings({ ...classic });
+    expect(settings.plainFrame).toBe(true);
+    expect(isClassicLook(settings)).toBe(true);
+  });
+
+  it("leave the frame alone elsewhere, and a choice made stays", () => {
+    expect(normaliseSettings({ layout: "islands" }).plainFrame).toBe(false);
+    expect(
+      normaliseSettings({ ...classic, plainFrame: false }).plainFrame,
+    ).toBe(false);
+  });
+
+  it("read a kept look's frame as a boolean only", () => {
+    expect(storedLook({ ...classic, plainFrame: "yes" })?.plainFrame).toBe(
+      false,
+    );
   });
 });
