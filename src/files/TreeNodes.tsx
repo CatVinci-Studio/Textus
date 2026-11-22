@@ -9,11 +9,7 @@ import { useFileMark } from "../registry/file-marks";
 import { plural } from "../i18n/plural";
 import { memo, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { type DirEntryInfo } from "../platform/bindings/files";
-import {
-  ChevronIcon,
-  FolderIcon,
-  FolderOpenIcon,
-} from "../engine/controls/icons";
+import { ChevronIcon } from "../engine/controls/icons";
 import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
 import { basename, isInside, onTheWay, parentDir } from "../utils/path";
@@ -31,7 +27,7 @@ import { isWithin } from "../utils/path";
 import { DraftRow } from "./DraftRow";
 import { TreeRowsInSight } from "./TreeRowsInSight";
 import type { FileOpenHow } from "./tree-shared";
-import { fileIconFor } from "../engine/controls/file-icons";
+import { FileIcon, FolderEntryIcon } from "../engine/controls/file-icons";
 
 interface DirNodeProps {
   path: string;
@@ -257,8 +253,6 @@ const FileNode = memo(function FileNode({
   const { t, settings } = useSettings();
   const lang = settings.language;
   const tree = useTreeRowActions();
-  // A folder opened as one document shows its document's icon.
-  const Icon = fileIconFor(folderDocumentOf(entry.name)?.[0] ?? entry.name);
   const picked = useRowPicked(entry.path);
   const mark = useFileMark(entry.path);
   const badge = useFileBadge(entry.path);
@@ -298,7 +292,11 @@ const FileNode = memo(function FileNode({
             : undefined
         }
       >
-        <Icon className="tree-icon" />
+        {/* A folder opened as one document shows its document's icon. */}
+        <FileIcon
+          name={folderDocumentOf(entry.name)?.[0] ?? entry.name}
+          className="tree-icon"
+        />
         <Tooltip text={entry.name} description={null} whenCut>
           <span className="tx-truncate tree-label">{entry.name}</span>
         </Tooltip>
@@ -363,11 +361,11 @@ function FolderRow({
       }
     >
       <ChevronIcon className={`chevron ${open ? "chevron-open" : ""}`} />
-      {open ? (
-        <FolderOpenIcon className="tree-icon" />
-      ) : (
-        <FolderIcon className="tree-icon" />
-      )}
+      <FolderEntryIcon
+        name={basename(path)}
+        open={open}
+        className="tree-icon"
+      />
       <Tooltip text={basename(path)} description={null} whenCut>
         <span className="tx-truncate tree-label">{basename(path)}</span>
       </Tooltip>

@@ -616,3 +616,80 @@ test("a folder a plugin opens as one document: one row in the sidebar, its text 
     "Journey.textbundle",
   );
 });
+
+test("a plugin's file icon theme, picked in Settings, draws the sidebar's icons until Default is picked again", async ({
+  page,
+}) => {
+  const svg = (color: string) =>
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="${color}"/></svg>`;
+  const manifest = {
+    id: "local.icons",
+    name: "Test Icons",
+    version: "1.0.0",
+    publisher: "local",
+    engines: { textus: ">=1.4.0" },
+    permissions: [],
+    contributes: {
+      fileIconThemes: [{ id: "test", label: "Test Icons", path: "theme.json" }],
+    },
+  };
+  const theme = {
+    iconDefinitions: {
+      md: { iconPath: "icons/md.svg" },
+      docs: { iconPath: "icons/docs.svg" },
+    },
+    fileExtensions: { md: "md" },
+    folderNames: { docs: "docs" },
+  };
+  await page.addInitScript(
+    ({ manifest, files }) => {
+      if (window.top !== window) return;
+      const w = window as unknown as Record<string, unknown>;
+      w.__devPlugins = [
+        {
+          id: manifest.id,
+          dir: `/plugins/${manifest.id}`,
+          manifest: JSON.stringify(manifest),
+          dev: false,
+          files,
+        },
+      ];
+      w.__devFs = { "/work/notes.md": "# Notes\n", "/work/docs/a.md": "A\n" };
+      w.__devPluginState = {
+        allOn: true,
+        plugins: { [manifest.id]: { enabled: true, granted: [] } },
+      };
+      w.__devPickFolder = "/work";
+    },
+    {
+      manifest,
+      files: {
+        "theme.json": JSON.stringify(theme),
+        "icons/md.svg": svg("red"),
+        "icons/docs.svg": svg("blue"),
+      },
+    },
+  );
+  await openApp(page);
+  await emit(page, "menu-open-folder");
+  const note = page.locator('.tree-row[data-path="/work/notes.md"] .tree-icon');
+  const docs = page.locator('.tree-row[data-path="/work/docs"] .tree-icon');
+  await expect(note).toHaveJSProperty("tagName", "svg");
+
+  // Settings takes the sidebar; the rail's Files brings the tree back.
+  const pick = async (option: string) => {
+    await emit(page, "menu-settings");
+    await page.getByRole("button", { name: "外观" }).first().click();
+    await page.getByRole("combobox", { name: "文件图标" }).click();
+    await page.getByRole("option", { name: option }).click();
+    await page.getByRole("button", { name: "文件树" }).click();
+  };
+  await pick("Test Icons");
+  await expect(note).toHaveJSProperty("tagName", "IMG");
+  await expect(note).toHaveAttribute("src", /^data:image\/svg\+xml/);
+  await expect(docs).toHaveJSProperty("tagName", "IMG");
+
+  await pick("默认");
+  await expect(note).toHaveJSProperty("tagName", "svg");
+  await expect(docs).toHaveJSProperty("tagName", "svg");
+});

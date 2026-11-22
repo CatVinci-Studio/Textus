@@ -1286,6 +1286,8 @@ export default {
   docLetterSpacingCondensed: "紧缩",
   docLetterSpacingBy: "磅值",
   uiTextScaleLabel: "界面大小",
+  fileIconThemeLabel: "文件图标",
+  fileIconThemeDefault: "默认",
   uiTextSmall: "小",
   uiTextMedium: "中",
   uiTextLarge: "大",

@@ -384,6 +384,30 @@
             }
           }
         },
+        "fileIconThemes": {
+          "type": "array",
+          "description": "From 1.4.7: icon themes for the files and folders listed, picked in Settings › Appearance › File icons.",
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "path"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,63}$",
+                "description": "The theme's id in the plugin: \"material\"."
+              },
+              "label": {
+                "type": "string",
+                "description": "Its name in Settings; may be a %key%."
+              },
+              "path": {
+                "type": "string",
+                "pattern": "\\.json$",
+                "description": "Its JSON in the plugin, VS Code's icon theme cut down: iconDefinitions (SVG paths relative to it), fileExtensions, fileNames, folderNames, folderNamesExpanded, file, folder, folderExpanded and light."
+              }
+            }
+          }
+        },
         "settings": {
           "type": "array",
           "items": {

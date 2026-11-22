@@ -129,6 +129,14 @@ export interface FolderDocumentContribution {
   documents: string[];
 }
 
+/** A set of icons for the files and folders listed, by name and extension,
+ *  picked in Settings › Appearance. `path` is its JSON in the plugin. */
+export interface FileIconThemeContribution {
+  id: string;
+  label: string;
+  path: string;
+}
+
 export type SettingType =
   "boolean" | "string" | "number" | "enum" | "color" | "list" | "button";
 
@@ -254,6 +262,7 @@ export interface Contributes {
   customEditors: CustomEditorContribution[];
   documentTypes: DocumentTypeContribution[];
   folderDocuments: FolderDocumentContribution[];
+  fileIconThemes: FileIconThemeContribution[];
   settings: SettingContribution[];
   /** A page of its own in Settings, a webview. */
   settingsPage: { title: string } | null;

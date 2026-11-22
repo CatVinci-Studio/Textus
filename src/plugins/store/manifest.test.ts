@@ -136,6 +136,33 @@ describe("a plugin's manifest", () => {
     expect(() => folders([{ extension: "textbundle", documents: [] }])).toThrow(
       /empty/,
     );
+    // A file icon theme: an id of its own, a JSON inside the plugin.
+    const iconThemes = (fileIconThemes: unknown) =>
+      parseManifest({ ...base, contributes: { fileIconThemes } }).contributes
+        .fileIconThemes;
+    expect(
+      iconThemes([
+        { id: "material", label: "Material", path: "./icons/theme.json" },
+      ]),
+    ).toEqual([
+      { id: "material", label: "Material", path: "icons/theme.json" },
+    ]);
+    expect(iconThemes(undefined)).toEqual([]);
+    expect(() =>
+      iconThemes([{ id: "m", label: "M", path: "../theme.json" }]),
+    ).toThrow(/in the plugin/);
+    expect(() =>
+      iconThemes([{ id: "m", label: "M", path: "theme.svg" }]),
+    ).toThrow(/\.json/);
+    expect(() =>
+      iconThemes([{ id: "Big Theme", label: "M", path: "t.json" }]),
+    ).toThrow(/lowercase/);
+    expect(() =>
+      iconThemes([
+        { id: "m", label: "M", path: "a.json" },
+        { id: "m", label: "N", path: "b.json" },
+      ]),
+    ).toThrow(/taken/);
     // Traditional Chinese reads the English, not the Simplified.
     expect(localize(m, m.contributes.commands[0].title, "zh-Hant")).toBe(
       "Say hello",
