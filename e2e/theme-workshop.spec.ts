@@ -32,7 +32,8 @@ test("the workshop makes a theme from size and font, with the AI off", async ({
   // Nothing to describe to with the AI off.
   await expect(page.getByText("用 AI 描述")).toHaveCount(0);
   const write = page.frameLocator(".theme-workshop-frame").locator("#write");
-  await expect(write.locator("h1")).toBeVisible();
+  // The page in the reader's language: Chinese here.
+  await expect(write.locator("h1")).toHaveText("红楼梦");
   await expect(write.locator("table")).toBeVisible();
 
   await setNumber(page, "正文字号", "20");
@@ -260,4 +261,50 @@ test("an installed theme exports, imports back and reopens in the workshop as le
   await expect(page.locator(".theme-workshop-actions .primary")).toHaveText(
     "生成主题",
   );
+});
+
+test("in a narrow window the workshop is one column that scrolls to the page", async ({
+  page,
+}) => {
+  await openWorkshop(page, false);
+  await page.setViewportSize({ width: 900, height: 600 });
+  const preview = page.locator(".theme-workshop-preview");
+  const controls = page.locator(".theme-workshop-controls");
+  // Under the rows, not squeezed beside them, once the resize is laid out.
+  await expect
+    .poll(async () => {
+      const box = await preview.boundingBox();
+      const rows = await controls.boundingBox();
+      return box && rows ? box.y - (rows.y + rows.height) : -1;
+    })
+    .toBeGreaterThanOrEqual(0);
+  // ...and tall enough to read.
+  expect((await preview.boundingBox())?.height ?? 0).toBeGreaterThan(400);
+  // Reached by scrolling the workshop.
+  await preview.scrollIntoViewIfNeeded();
+  await expect(
+    page.frameLocator(".theme-workshop-frame").locator("#write h1"),
+  ).toBeInViewport();
+  await expect(page.locator(".theme-workshop-actions .primary")).toBeVisible();
+});
+
+test("the workshop scrolls as one page, its bar at the tab's edge", async ({
+  page,
+}) => {
+  await openWorkshop(page, false);
+  await page.setViewportSize({ width: 1280, height: 600 });
+  const tab = page.locator(".create-tab");
+  await expect(tab).toHaveClass(/tx-scroll-reveal/);
+  // The tab scrolls; the rows don't, on their own.
+  const scrolls = (el: Element) => el.scrollHeight > el.clientHeight + 1;
+  expect(await tab.evaluate(scrolls)).toBe(true);
+  expect(await page.locator(".theme-workshop-controls").evaluate(scrolls)).toBe(
+    false,
+  );
+  // Scrolled to the end, the sample page and the buttons are still in view.
+  await tab.evaluate((el) => el.scrollTo(0, el.scrollHeight));
+  await expect(page.locator(".theme-workshop-preview")).toBeInViewport();
+  await expect(
+    page.locator(".theme-workshop-actions .primary"),
+  ).toBeInViewport();
 });

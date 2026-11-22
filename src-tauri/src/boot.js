@@ -46,6 +46,8 @@ window.__textusBoot = function (boot, themeCss) {
         "data-layout",
         layouts.indexOf(settings.layout) >= 0 ? settings.layout : layouts[0],
       );
+    // The frame in the page's own colour (base.css), from the first frame.
+    if (settings.plainFrame === true) root.setAttribute("data-plain-frame", "");
     if ((tables.contentWidths || []).indexOf(settings.contentWidth) >= 0)
       root.setAttribute("data-content-width", settings.contentWidth);
     // But 1, the stylesheet's own default, and its preset (ui-sizes.css);

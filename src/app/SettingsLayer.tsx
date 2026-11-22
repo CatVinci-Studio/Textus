@@ -65,7 +65,7 @@ const SettingsTab = lazyComponent(
 export function CreateTabPage({ t }: { t: Strings }) {
   return (
     <Suspense fallback={null}>
-      <div className="create-tab">
+      <div className="create-tab tx-scroll-reveal">
         <CreateStudio t={t} />
       </div>
     </Suspense>

@@ -12,41 +12,7 @@ import {
 import type { Settings } from "../../prefs/SettingsContext";
 import type { ThemeCss } from "../../theme/builtin-base";
 import type { FontStacks, TypeMeasure } from "../../theme/theme-typography";
-
-/** One fixed page every theme is judged on: each heading level, Latin and
- *  CJK text, a list, a quote, code, a table and a formula. */
-const SAMPLE = `# 春江花月夜 The River in Spring
-
-The quick brown fox jumps over the lazy dog. Good type is invisible: the reader sees words, not *letters*, and **reading** goes on without effort.
-
-春江潮水连海平，海上明月共潮生。滟滟随波千万里，何处春江无月明！江流宛转绕芳甸，月照花林皆似霰。
-
-## 排版的几个要素 Elements
-
-- 字体与字号 Typeface and size
-- 行高与行宽 Leading and measure
-- 段落间距 Paragraph spacing
-
-> 文章合为时而著，歌诗合为事而作。
-> Form follows function.
-
-### 代码与公式 Code and math
-
-\`\`\`js
-function measure(text, width) {
-  return Math.round(width / text.length);
-}
-\`\`\`
-
-| 要素 Element | 常用值 Common |
-| --- | --- |
-| 行高 Leading | 1.6–1.8 |
-| 行宽 Measure | 35–40 字 / 60–75 chars |
-
-$$
-E = mc^2, \\quad \\int_0^1 x^2\\,dx = \\frac{1}{3}
-$$
-`;
+import { WORKSHOP_SAMPLES } from "./workshop-samples";
 
 /** The page's own stylesheets, less what the theme in use and the reader
  *  put there: those would show the theme in use, not the one built. */
@@ -74,7 +40,8 @@ export async function sampleHtml(
   try {
     const preview = await drawPreview(
       host,
-      SAMPLE,
+      // The page every theme is judged on, in the reader's language.
+      WORKSHOP_SAMPLES[settings.language] ?? WORKSHOP_SAMPLES.en,
       null,
       () => label,
       { current: { ...settings, enableMath: true, codeLineNumbers: false } },

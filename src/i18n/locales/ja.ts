@@ -1124,6 +1124,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   activityRailShow: "アクティビティバーを表示",
   windowLayoutGroup: "ウィンドウのレイアウト",
   layoutLabel: "レイアウト",
+  plainFrameLabel: "ウィンドウの背景を文書と同じにする",
   classicLookLabel: "以前の見た目を使う",
   layoutIslands: "フローティング",
   layoutClassic: "クラシック",

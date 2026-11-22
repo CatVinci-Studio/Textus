@@ -1059,6 +1059,7 @@ export default {
   activityRailShow: "显示图标栏",
   windowLayoutGroup: "窗口布局",
   layoutLabel: "布局",
+  plainFrameLabel: "窗口底色与文档相同",
   classicLookLabel: "使用旧版本样式",
   layoutIslands: "浮动岛",
   layoutClassic: "经典",

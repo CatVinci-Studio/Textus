@@ -1110,6 +1110,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   activityRailShow: "활동 막대 표시",
   windowLayoutGroup: "창 레이아웃",
   layoutLabel: "레이아웃",
+  plainFrameLabel: "창 배경을 문서와 같게",
   classicLookLabel: "이전 버전 스타일 사용",
   layoutIslands: "떠 있는 섬",
   layoutClassic: "클래식",

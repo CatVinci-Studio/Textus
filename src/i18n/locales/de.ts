@@ -1178,6 +1178,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   activityRailShow: "Aktivitätsleiste einblenden",
   windowLayoutGroup: "Fensterlayout",
   layoutLabel: "Layout",
+  plainFrameLabel: "Fensterhintergrund wie die Seite",
   classicLookLabel: "Klassisches Aussehen verwenden",
   layoutIslands: "Schwebende Inseln",
   layoutClassic: "Klassisch",

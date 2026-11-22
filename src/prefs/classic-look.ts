@@ -3,12 +3,18 @@ import { DEFAULT_SETTINGS, type Settings } from "./settings-types";
 /** What "Use the classic look" sets: how Textus looked before 1.4. */
 type Look = NonNullable<Settings["lookBeforeClassic"]>;
 
-const LOOK_KEYS = ["layout", "activityRail", "titleRowShown"] as const;
+const LOOK_KEYS = [
+  "layout",
+  "activityRail",
+  "titleRowShown",
+  "plainFrame",
+] as const;
 
 export const CLASSIC_LOOK: Look = {
   layout: "classic",
   activityRail: false,
   titleRowShown: true,
+  plainFrame: true,
 };
 
 function lookOf(settings: Look): Look {
@@ -17,7 +23,7 @@ function lookOf(settings: Look): Look {
   ) as unknown as Look;
 }
 
-/** On while the three settings are the classic look's, however they got
+/** On while the settings are the classic look's, however they got
  *  there. */
 export function isClassicLook(settings: Settings): boolean {
   return LOOK_KEYS.every((key) => settings[key] === CLASSIC_LOOK[key]);
@@ -44,6 +50,7 @@ export function storedLook(value: unknown): Look | null {
   return (v.layout === "islands" || v.layout === "classic") &&
     typeof v.activityRail === "boolean" &&
     typeof v.titleRowShown === "boolean"
-    ? lookOf(v as unknown as Look)
+    ? // Kept before 1.4.6 the frame had no setting: its own colour.
+      lookOf({ ...v, plainFrame: v.plainFrame === true } as unknown as Look)
     : null;
 }

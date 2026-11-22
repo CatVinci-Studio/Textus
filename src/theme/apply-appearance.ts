@@ -123,6 +123,13 @@ function usePageAttributes(settings: Settings): void {
     document.documentElement.dataset.layout = settings.layout;
   }, [settings.layout]);
 
+  useLayoutEffect(() => {
+    document.documentElement.toggleAttribute(
+      "data-plain-frame",
+      settings.plainFrame,
+    );
+  }, [settings.plainFrame]);
+
   useEffect(() => {
     const root = document.documentElement;
     if (settings.contentWidth === "auto")
