@@ -1,4 +1,5 @@
 import type {
+  CodeLanguageContribution,
   DocumentTypeContribution,
   FolderDocumentContribution,
 } from "./manifest-types";
@@ -70,5 +71,39 @@ export function parseFolderDocuments(c: Json): FolderDocumentContribution[] {
     });
     if (!documents.length) throw new ManifestError(`${at}.documents is empty.`);
     return { extension, documents };
+  });
+}
+
+const LANGUAGE_NAME = /^[a-z0-9][a-z0-9+#._-]{0,31}$/;
+
+/** `contributes.codeLanguages`: languages coloured from a grammar file,
+ *  read only once a fence names one. `taken` are the fences Textus draws
+ *  itself (mermaid, math); a name refractor colours is left to it at
+ *  lookup, as reading its list here would load it at startup. */
+export function parseCodeLanguages(
+  c: Json,
+  taken: readonly string[],
+): CodeLanguageContribution[] {
+  return list(c.codeLanguages, "contributes.codeLanguages").map((x, i) => {
+    const at = `contributes.codeLanguages[${i}]`;
+    const o = object(x, at);
+    const name = (value: unknown, what: string) => {
+      const word = text(value, what).toLowerCase();
+      if (!LANGUAGE_NAME.test(word))
+        throw new ManifestError(`${what} "${word}" isn't a fence's language.`);
+      if (taken.includes(word))
+        throw new ManifestError(`${what} "${word}" is drawn by Textus itself.`);
+      return word;
+    };
+    const path = text(o.path, `${at}.path`);
+    if (!/\.json$/i.test(path) || path.split(/[\\/]/).includes(".."))
+      throw new ManifestError(`${at}.path must be a .json file of the plugin.`);
+    return {
+      id: name(o.id, `${at}.id`),
+      aliases: list(o.aliases, `${at}.aliases`).map((a, j) =>
+        name(a, `${at}.aliases[${j}]`),
+      ),
+      path,
+    };
   });
 }

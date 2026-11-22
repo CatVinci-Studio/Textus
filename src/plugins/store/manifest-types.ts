@@ -129,6 +129,15 @@ export interface FolderDocumentContribution {
   documents: string[];
 }
 
+/** A code language coloured from a grammar file of the plugin's
+ *  (editor/code/code-grammar.ts), named in a fence by its id or an alias. */
+export interface CodeLanguageContribution {
+  id: string;
+  aliases: string[];
+  /** The grammar's JSON file, inside the plugin. */
+  path: string;
+}
+
 export type SettingType =
   "boolean" | "string" | "number" | "enum" | "color" | "list" | "button";
 
@@ -264,6 +273,7 @@ export interface Contributes {
   links: LinkContribution[];
   statusItems: StatusItemContribution[];
   codeBlocks: CodeBlockContribution[];
+  codeLanguages: CodeLanguageContribution[];
   floatingViews: FloatingViewContribution[];
   agents: AgentContribution[];
   /** Suggested, once, for a document with these. */

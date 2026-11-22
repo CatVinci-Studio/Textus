@@ -30,6 +30,8 @@ import {
 } from "../store/plugin-records";
 import { evaluateWhen, type WhenContext } from "./when";
 import { addCodeBlockLanguage } from "./code-blocks";
+import { addCodeLanguage } from "../../editor/extension-points";
+import { readPluginFile } from "../store/files";
 import { addSlashItems, askBlockMenu } from "./slash-commands";
 import { snippetItem } from "./snippets";
 import { pluginKey } from "./plugin-keys";
@@ -233,6 +235,18 @@ export function applyContributions(
   for (const block of codeBlocks)
     undo.push(
       addCodeBlockLanguage(block.language, id, block.frame, block.size),
+    );
+  // Only the names now: the grammar is read when a block first uses one.
+  for (const language of manifest.contributes.codeLanguages)
+    undo.push(
+      addCodeLanguage({
+        id: language.id,
+        aliases: language.aliases,
+        load: () =>
+          readPluginFile(id, record.origin, language.path).then((bytes) =>
+            new TextDecoder().decode(bytes),
+          ),
+      }),
     );
   for (const key of ownedClaims(manifest.contributes))
     undo.push(claim(key, id));

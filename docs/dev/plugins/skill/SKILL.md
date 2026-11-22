@@ -102,7 +102,10 @@ exports.activate = function (ctx) {
   `ai.stream` (with a `signal`, as `ai.complete` takes too),
   `views.registerDatabaseView`, `files.registerConventionReader`,
   `files.registerProvider` / `openFolder`, `textus.ssh` and the manifest's
-  `contributes.folderDocuments`. Use them rather than drawing your own.
+  `contributes.folderDocuments`. API 1.10 adds `contributes.codeLanguages`:
+  a code block language coloured from a JSON grammar of ordered
+  `{ token, match }` rules, no code (the guide's Code languages). Use them
+  rather than drawing your own.
 - Data: `ctx.storage.global` (Textus's config folder),
   `ctx.storage.project` (the open folder, needs `project.data`),
   `ctx.storage.document(path)`; settings from `contributes.settings` via

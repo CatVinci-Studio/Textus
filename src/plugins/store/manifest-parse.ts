@@ -10,7 +10,11 @@ import type {
   ViewType,
 } from "./manifest-types";
 import { ManifestError, list, object, text } from "./manifest-json";
-import { parseDocumentTypes, parseFolderDocuments } from "./manifest-documents";
+import {
+  parseCodeLanguages,
+  parseDocumentTypes,
+  parseFolderDocuments,
+} from "./manifest-documents";
 import { parseSnippets, parseWalkthroughs } from "./manifest-guides";
 import { number, parseSetting } from "./manifest-settings";
 
@@ -408,6 +412,7 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     customEditors,
     documentTypes: parseDocumentTypes(c),
     folderDocuments: parseFolderDocuments(c),
+    codeLanguages: parseCodeLanguages(c, BUILT_IN_BLOCKS),
     settings,
     settingsPage: page && {
       title: text(page.title, "contributes.settingsPage.title"),
