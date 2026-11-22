@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { pluginsCheckout } from "../vite.dev-plugins";
 import { emit, mockInvoke, openApp, settled, sourceOf } from "./helpers";
 import {
@@ -617,9 +617,9 @@ test("a folder a plugin opens as one document: one row in the sidebar, its text 
   );
 });
 
-test("a plugin's file icon theme, picked in Settings, draws the sidebar's icons until Default is picked again", async ({
-  page,
-}) => {
+/** A plugin giving one file icon theme, "Test Icons" (`local.icons#test`):
+ *  Markdown files and a docs folder, Markdown in another icon when light. */
+async function withIconTheme(page: Page) {
   const svg = (color: string) =>
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="${color}"/></svg>`;
   const manifest = {
@@ -636,10 +636,12 @@ test("a plugin's file icon theme, picked in Settings, draws the sidebar's icons 
   const theme = {
     iconDefinitions: {
       md: { iconPath: "icons/md.svg" },
+      mdLight: { iconPath: "icons/md-light.svg" },
       docs: { iconPath: "icons/docs.svg" },
     },
     fileExtensions: { md: "md" },
     folderNames: { docs: "docs" },
+    light: { fileExtensions: { md: "mdLight" } },
   };
   await page.addInitScript(
     ({ manifest, files }) => {
@@ -666,10 +668,17 @@ test("a plugin's file icon theme, picked in Settings, draws the sidebar's icons 
       files: {
         "theme.json": JSON.stringify(theme),
         "icons/md.svg": svg("red"),
+        "icons/md-light.svg": svg("green"),
         "icons/docs.svg": svg("blue"),
       },
     },
   );
+}
+
+test("a plugin's file icon theme, picked in Settings, draws the sidebar's icons until Default is picked again", async ({
+  page,
+}) => {
+  await withIconTheme(page);
   await openApp(page);
   await emit(page, "menu-open-folder");
   const note = page.locator('.tree-row[data-path="/work/notes.md"] .tree-icon');
@@ -692,4 +701,20 @@ test("a plugin's file icon theme, picked in Settings, draws the sidebar's icons 
   await pick("默认");
   await expect(note).toHaveJSProperty("tagName", "svg");
   await expect(docs).toHaveJSProperty("tagName", "svg");
+});
+
+test("a file icon theme chosen before the window opens draws as soon as its plugin loads, light and dark", async ({
+  page,
+}) => {
+  await withIconTheme(page);
+  await openApp(page, { settings: { fileIconTheme: "local.icons#test" } });
+  await emit(page, "menu-open-folder");
+  const note = page.locator('.tree-row[data-path="/work/notes.md"] .tree-icon');
+  await expect(note).toHaveJSProperty("tagName", "IMG");
+  const light = await note.getAttribute("src");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(note).not.toHaveAttribute("src", light!);
+  await expect(note).toHaveJSProperty("tagName", "IMG");
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(note).toHaveAttribute("src", light!);
 });
