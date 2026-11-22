@@ -26,6 +26,7 @@
       "editor.edit",
       "codeBlock.setSource",
       "editor.registerPasteHandler",
+      "editor.registerDropHandler",
       "editor.insertText",
       "editor.replaceSelection",
       "setSource"

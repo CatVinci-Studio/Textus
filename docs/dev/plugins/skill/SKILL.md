@@ -45,8 +45,8 @@ messages. The full API is in [references/textus.d.ts](references/textus.d.ts)
   `dates`, `templates`, `files.appSettings` and `layout.panels` need
   `">=1.3.10"`; API 1.8's calls and manifest keys (below) need
   `">=1.4.4-rc.1"`, API 1.9's `">=1.4.6-rc.1"`, API 1.10's (the
-  manifest's `contributes.codeLanguages` and `contributes.fileIconThemes`)
-  `">=1.4.7"`.
+  manifest's `contributes.codeLanguages` and `contributes.fileIconThemes`,
+  and `editor.registerDropHandler`) `">=1.4.7"`.
 - `permissions` lists only what the code uses: `editor.read`,
   `editor.write`, `editor.propose`, `editor.input`, `files.read`,
   `files.write` (includes reading), `project.data`, `clipboard`,
@@ -106,9 +106,11 @@ exports.activate = function (ctx) {
   `files.registerProvider` / `openFolder`, `textus.ssh` and the manifest's
   `contributes.folderDocuments`. API 1.10 adds `contributes.codeLanguages`:
   a code block language coloured from a JSON grammar of ordered
-  `{ token, match }` rules, no code (the guide's Code languages), and
+  `{ token, match }` rules, no code (the guide's Code languages);
   `contributes.fileIconThemes`: file and folder icons picked in
-  Settings › Appearance. Use them rather than drawing your own.
+  Settings › Appearance; and `editor.registerDropHandler`: a file dragged
+  into the document written as the plugin's own Markdown. Use them rather
+  than drawing your own.
 - Data: `ctx.storage.global` (Textus's config folder),
   `ctx.storage.project` (the open folder, needs `project.data`),
   `ctx.storage.document(path)`; settings from `contributes.settings` via

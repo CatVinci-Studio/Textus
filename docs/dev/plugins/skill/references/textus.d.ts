@@ -745,6 +745,34 @@ declare global {
         pattern: RegExp | string,
         provide: (text: string) => string | null | Promise<string | null>,
       ): Disposable;
+      /** From 1.10 (Textus 1.4.7, editor.write): a file dragged into a
+       *  document's body that `match` names - by kind ("image",
+       *  "attachment", "note") or by extension ("csv") - is handed to
+       *  `provide`, and the Markdown it answers goes in where it is let go
+       *  instead of Textus's picture or link. Answering null (or not within
+       *  1.5 s) lets Textus write it as usual. A file from a file manager
+       *  (`fromSystem`) is handed over where it is, not copied; with Shift,
+       *  on a document's edge or on a tab row the file opens and no handler
+       *  is asked. Several match: asked in plugin id order, the first
+       *  answer wins.
+       *
+       *      textus.editor.registerDropHandler({ extensions: ["csv"] },
+       *        async (file) => csvToTable(await readCsv(file.path)));
+       */
+      registerDropHandler(
+        match: {
+          kinds?: ("image" | "attachment" | "note")[];
+          extensions?: string[];
+        },
+        provide: (file: {
+          path: string;
+          name: string;
+          kind: "image" | "attachment" | "note";
+          fromSystem: boolean;
+          /** The document it goes into; null for one never saved. */
+          document: string | null;
+        }) => string | null | Promise<string | null>,
+      ): Disposable;
       /** The blocks the `/` menu can offer now: Textus's own (`source`
        *  "textus": its id as `textus.insertBlock` takes it) and plugins'.
        *  From 1.8. */

@@ -5,10 +5,10 @@
  * paste goes on as usual without asking anyone.
  */
 
+import { firstAnswer } from "./first-answer";
+
 type Provide = (text: string) => Promise<string | null>;
 
-/** How long a plugin has to answer before the next is asked. */
-const ANSWER_MS = 1500;
 /** More than this is no "snippet" to look at. */
 const MAX_TEXT = 20_000;
 
@@ -56,15 +56,6 @@ export function pasteMatches(text: string): boolean {
 }
 
 /** The first Markdown a plugin has for `text`, in plugin id order. */
-export async function providePaste(text: string): Promise<string | null> {
-  for (const { provide } of takers(text)) {
-    const markdown = await Promise.race([
-      provide(text).catch(() => null),
-      new Promise<null>((resolve) =>
-        setTimeout(() => resolve(null), ANSWER_MS),
-      ),
-    ]);
-    if (typeof markdown === "string") return markdown;
-  }
-  return null;
+export function providePaste(text: string): Promise<string | null> {
+  return firstAnswer(takers(text), ({ provide }) => provide(text));
 }

@@ -1,6 +1,5 @@
 import { canLinkSponsor } from "../platform/capabilities";
 import { useEntriesFromOtherWindows } from "./useEntriesFromOtherWindows";
-import { linkToFile } from "../files/link-to-file";
 import { holdOnReturn } from "./hold-on-return";
 import { useEffect } from "react";
 import { links } from "../platform/ipc";
@@ -16,7 +15,8 @@ import {
   useNativeMenuChecks,
 } from "./menu/menu-bridge";
 import { useStartupRestore } from "../document/startup-restore";
-import { useOpenPathsPush, useFileDrop } from "./window-file-events";
+import { useOpenPathsPush } from "./window-file-events";
+import { useFileDrops } from "./file-drop/useFileDrops";
 import { useSettingsCommands } from "./useSettingsCommands";
 import { useCliRequests } from "./useCliRequests";
 import { useDocumentActions } from "./useDocumentActions";
@@ -30,13 +30,10 @@ import {
   usePracticeTabFront,
   useTutorialTabRecovery,
 } from "./onboarding-wiring";
-import { setDocumentDrop } from "../engine/controls/document-drop";
-import { fileDropOnDocuments } from "./islands/split-drop";
 import type { WindowShell } from "./useWindowShell";
 import type { WindowDocuments } from "./useWindowDocuments";
 import type { Settings, useSettings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
-import { tabInUse } from "../engine/layout/store";
 import { pageOf } from "./tabs/page-tabs";
 
 /** The documents' scrollers: rendered, the split's preview, source. */
@@ -107,7 +104,7 @@ function useTabsAndTour(input: WiringInput) {
 function useWhatOpens(input: WiringInput) {
   const { shell, docs, settings, setSettings } = input;
   const { tabState, tutorial } = shell;
-  const { activeTabId, setTabs, liveTabs } = tabState;
+  const { activeTabId, setTabs } = tabState;
   const { activeTab, openFolder, openFile, openPathInTab } = docs;
   // What opens at launch (OS-opened files, recovered drafts, a dragged-in
   // tab, a Help doc). Runs only once, at mount.
@@ -138,23 +135,15 @@ function useWhatOpens(input: WiringInput) {
     settings,
     setSettings,
   });
-  useFileDrop(openFile, openPathInTab, openFolder.openFolder);
-  // A file from the sidebar dragged over the documents opens where it is
-  // let go.
-  useEffect(() => {
-    setDocumentDrop(
-      fileDropOnDocuments((path, drop) => void openPathInTab(path, { drop }), {
-        // With Shift: a link to it in the document in use (one never
-        // saved has no place to link from: it opens instead).
-        link: (path) => {
-          const from = liveTabs().find((tab) => tab.id === tabInUse())?.path;
-          if (from) void linkToFile(path, from, openFolder.folder);
-          else void openPathInTab(path);
-        },
-      }),
-    );
-    return () => setDocumentDrop(null);
-  }, [openPathInTab, liveTabs, openFolder.folder]);
+  // Files dropped on the window, or dragged over the documents from the
+  // sidebar: put in where they are let go, or opened there.
+  useFileDrops({
+    openFile,
+    openPathInTab,
+    openFolder: openFolder.openFolder,
+    folder: openFolder.folder,
+    t: input.t,
+  });
 }
 
 /** Closing the window with unsaved work, files changed on disk, and the

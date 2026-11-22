@@ -5,4 +5,4 @@
 
 ### Fixed
 
-- Markdown put in at the caret (**Insert at cursor** on an AI reply, a snippet, a file Shift-dragged from the sidebar) now reaches the document in source mode and split view too, and is one undo step of its own. A Shift-dragged image goes in as a picture rather than a link.
+- Markdown put in at the caret (**Insert at cursor** on an AI reply, a snippet, **Insert Link** from the sidebar) now reaches the document in source mode and split view too, and is one undo step of its own.

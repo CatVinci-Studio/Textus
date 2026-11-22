@@ -10,6 +10,7 @@ import {
 } from "../../engine/controls/app-dialog";
 import { removeOutlineProvider } from "../contributions/outline-providers";
 import { forgetPasteHandlers } from "../contributions/paste-handlers";
+import { forgetDropHandlers } from "../contributions/drop-handlers";
 import { forgetFileBadges } from "../contributions/file-badges";
 import {
   endProgress,
@@ -275,6 +276,7 @@ export function stopPluginUi(plugin: string): void {
   forgetPluginWhenKeys(plugin);
   forgetFileBadges(plugin);
   forgetPasteHandlers(plugin);
+  forgetDropHandlers(plugin);
   removeOutlineProvider(plugin);
   for (const remove of menuProviders.get(plugin)?.values() ?? []) remove();
   menuProviders.delete(plugin);
