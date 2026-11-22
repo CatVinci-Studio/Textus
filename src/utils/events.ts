@@ -12,14 +12,17 @@ export const INSERT_LINK_EVENT = "textus:insert-link";
 /// detail: Markdown put in at the caret of the document on screen (an AI
 /// reply's Insert at Cursor).
 export const INSERT_MARKDOWN_EVENT = "textus:insert-markdown";
+/// detail: a file's path - the file tree's Insert Link: a link to it at the
+/// caret of the document in use, written as that folder writes links.
+export const LINK_TO_FILE_EVENT = "textus:link-to-file";
 /// detail: a sidebar tab's id - a plugin asked for it to be shown
 /// (layout.showSidebarTab); the sidebar opens on it.
 export const SHOW_SIDEBAR_TAB_EVENT = "textus:show-sidebar-tab";
 /// Closes the find bar: the iPhone's sidebar drawer opens over it.
 export const CLOSE_FIND_REPLACE_EVENT = "textus:close-find-replace";
 
-/// detail: `{ paths, point }`, image files dropped on the window from a file
-/// manager and where they landed; the editor on screen inserts them.
+/// detail: `{ paths, point }`, image files dropped on the window from another
+/// app (iPad) and where they landed; the editor on screen inserts them.
 export const DROP_IMAGE_FILES_EVENT = "textus:drop-image-files";
 
 /// A saved conversation is waiting to be restored by the editor it is for.
@@ -129,6 +132,7 @@ interface AppEvents {
   [FIND_NEXT_EVENT]: undefined;
   [INSERT_LINK_EVENT]: undefined;
   [INSERT_MARKDOWN_EVENT]: string;
+  [LINK_TO_FILE_EVENT]: string;
   [SHOW_SIDEBAR_TAB_EVENT]: string;
   [CLOSE_FIND_REPLACE_EVENT]: undefined;
   [DROP_IMAGE_FILES_EVENT]: {

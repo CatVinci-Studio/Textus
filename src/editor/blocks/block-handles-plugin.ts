@@ -64,11 +64,17 @@ function blockHandlesPlugin(grip: boolean) {
 
 const pulled = new PluginKey<Pulled | null>("block-handles");
 
-/** What `view` shows of a block being pulled; null: nothing. */
-const showPulled = (view: EditorView, state: Pulled | null) =>
+/** What `view` shows of a block being pulled, or of files dragged in
+ *  (file-rooms.ts); null: nothing. */
+export const showPulled = (view: EditorView, state: Pulled | null) =>
   view.dispatch(
     view.state.tr.setMeta(pulled, state).setMeta("addToHistory", false),
   );
+
+/** Where the room open in `view` stands now, moved with the edits made
+ *  since it opened; null when none is. */
+export const pulledLanding = (view: EditorView): number | null =>
+  pulled.getState(view.state)?.landing ?? null;
 
 /** `grip`: ⋮⋮ shows; a preview has only the fold carets. */
 export const createBlockHandlesPlugin = ({ grip = true } = {}) =>

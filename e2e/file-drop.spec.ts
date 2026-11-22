@@ -1,0 +1,210 @@
+import { expect, test, type Page } from "@playwright/test";
+import { emit, openApp, settled, sourceOf } from "./helpers";
+
+/*
+ * Files dragged into a document: from the sidebar (the app's own pointer
+ * drag) and from a file manager (Tauri's drag events, emitted here as Rust
+ * sends them). Pictures and other files go in between blocks where they
+ * are let go; a note, Shift, an edge or a tab row opens them.
+ */
+
+const DOC = "# Trip\n\nFirst day.\n\nSecond day.\n";
+
+async function openFolder(page: Page) {
+  await page.addInitScript((doc) => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = {
+      "/trip/log.md": doc,
+      "/trip/plan.md": "# Plan\n",
+      "/trip/assets/boat.png": "",
+      "/trip/report.pdf": "",
+      "/downloads/tickets.pdf": "%PDF",
+    };
+    w.__devPickFolder = "/trip";
+    w.__devPictureSizes = {
+      "/trip/assets/boat.png": { width: 40, height: 20 },
+    };
+  }, DOC);
+  await openApp(page, { settings: { language: "en" } });
+  await emit(page, "menu-open-folder");
+  await page.locator(".tree-row", { hasText: "assets" }).click();
+  await page.locator(".tree-row", { hasText: "log.md" }).dblclick();
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toContainText("Second day.");
+}
+
+const paragraph = (page: Page, text: string) =>
+  page.locator('[data-active-tab="true"] .ProseMirror p', { hasText: text });
+
+/** Between "First day." and "Second day.", across the middle of the
+ *  document: well off its edges, which split. */
+async function betweenDays(page: Page) {
+  const island = (await page.locator("section.island").boundingBox())!;
+  const first = (await paragraph(page, "First day.").boundingBox())!;
+  const second = (await paragraph(page, "Second day.").boundingBox())!;
+  return {
+    x: island.x + island.width / 2,
+    y: (first.y + first.height + second.y) / 2,
+  };
+}
+
+/** Presses on a sidebar row and moves to `to`, held there; `release` lets
+ *  go. */
+async function dragRow(page: Page, name: string, to: { x: number; y: number }) {
+  const row = (await page
+    .locator(".tree-row", { hasText: name })
+    .boundingBox())!;
+  await page.mouse.move(row.x + 20, row.y + row.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps: 12 });
+}
+
+test("a picture from the sidebar goes in where it is let go, in one undo step", async ({
+  page,
+}) => {
+  await openFolder(page);
+  await dragRow(page, "boat.png", await betweenDays(page));
+  // Room opens there, saying what letting go does.
+  const room = page.locator(".file-drop-room-image");
+  await expect(room).toBeVisible();
+  await expect(room).toContainText("Insert image · ⇧ Open");
+  await page.mouse.up();
+  await expect(room).toHaveCount(0);
+  const picture = page.locator(
+    '[data-active-tab="true"] .ProseMirror p.image-paragraph',
+  );
+  await expect(picture).toHaveCount(1);
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(picture).toHaveCount(0);
+  await page.keyboard.press("ControlOrMeta+Shift+z");
+  await expect(picture).toHaveCount(1);
+  expect(await sourceOf(page)).toBe(
+    "# Trip\n\nFirst day.\n\n![](assets/boat.png)\n\nSecond day.",
+  );
+});
+
+test("a PDF from the sidebar goes in as a link; a note opens; Shift opens", async ({
+  page,
+}) => {
+  await openFolder(page);
+  await dragRow(page, "report.pdf", await betweenDays(page));
+  await expect(page.locator(".file-drop-room-link")).toContainText(
+    "Insert link · ⇧ Open",
+  );
+  await page.mouse.up();
+  await expect(paragraph(page, "report.pdf")).toBeVisible();
+
+  // A note opens in a tab of its own: no room for it.
+  await dragRow(page, "plan.md", await betweenDays(page));
+  await expect(page.locator(".file-drop-room")).toHaveCount(0);
+  await page.mouse.up();
+  await expect(page.locator('[role="tab"]', { hasText: "plan" })).toBeVisible();
+
+  // Shift, pressed with the pointer still: the room goes, and the PDF
+  // opens instead of going in.
+  await page.locator('[role="tab"]', { hasText: "log" }).click();
+  await dragRow(page, "report.pdf", await betweenDays(page));
+  await expect(page.locator(".file-drop-room")).toHaveCount(1);
+  await page.keyboard.down("Shift");
+  await expect(page.locator(".file-drop-room")).toHaveCount(0);
+  await page.mouse.up();
+  await page.keyboard.up("Shift");
+  expect(await sourceOf(page)).toBe(
+    "# Trip\n\nFirst day.\n\n[report.pdf](report.pdf)\n\nSecond day.",
+  );
+});
+
+test("a file from the sidebar let go on a document's edge opens beside it", async ({
+  page,
+}) => {
+  await openFolder(page);
+  const island = (await page.locator("section.island").boundingBox())!;
+  await dragRow(page, "plan.md", {
+    x: island.x + island.width - 12,
+    y: island.y + island.height / 2,
+  });
+  await expect(page.locator(".file-drop-room")).toHaveCount(0);
+  await page.mouse.up();
+  await expect(page.locator("section.island")).toHaveCount(2);
+});
+
+test("a file from a file manager is copied beside the document and linked; Shift opens", async ({
+  page,
+}) => {
+  await openFolder(page);
+  const at = await betweenDays(page);
+  await emit(page, "tauri://drag-enter", {
+    paths: ["/downloads/tickets.pdf"],
+    position: at,
+  });
+  await emit(page, "tauri://drag-over", { position: at });
+  await expect(page.locator(".file-drop-room-link")).toBeVisible();
+  await emit(page, "tauri://drag-drop", {
+    paths: ["/downloads/tickets.pdf"],
+    position: at,
+  });
+  await expect(paragraph(page, "tickets.pdf")).toBeVisible();
+  const copied = await page.evaluate(() =>
+    Object.keys(
+      (window as unknown as { __devFs: Record<string, string> }).__devFs,
+    ).filter((p) => p.endsWith("/tickets.pdf")),
+  );
+  expect(copied.some((p) => p.startsWith("/trip/"))).toBe(true);
+  expect(await sourceOf(page)).toMatch(
+    /First day\.\n\n\[tickets\.pdf\]\([^)]*tickets\.pdf\)\n\nSecond day\./,
+  );
+
+  // With Shift held (asked of the system): no room, and it opens instead.
+  const before = await sourceOf(page);
+  await page.evaluate(() => {
+    (window as unknown as Record<string, unknown>).__devDragShift = true;
+  });
+  await emit(page, "tauri://drag-enter", {
+    paths: ["/downloads/tickets.pdf"],
+    position: at,
+  });
+  await emit(page, "tauri://drag-over", { position: at });
+  await settled(page);
+  await expect(page.locator(".file-drop-room")).toHaveCount(0);
+  await emit(page, "tauri://drag-drop", {
+    paths: ["/downloads/tickets.pdf"],
+    position: at,
+  });
+  await settled(page);
+  expect(await sourceOf(page)).toBe(before);
+});
+
+test("a file from a file manager let go on a document's edge opens beside it", async ({
+  page,
+}) => {
+  await openFolder(page);
+  const island = (await page.locator("section.island").boundingBox())!;
+  const edge = {
+    x: island.x + island.width - 12,
+    y: island.y + island.height / 2,
+  };
+  await emit(page, "tauri://drag-enter", {
+    paths: ["/trip/plan.md"],
+    position: edge,
+  });
+  await emit(page, "tauri://drag-drop", {
+    paths: ["/trip/plan.md"],
+    position: edge,
+  });
+  await expect(page.locator("section.island")).toHaveCount(2);
+});
+
+test("the sidebar's Insert Link links to a file at the caret", async ({
+  page,
+}) => {
+  await openFolder(page);
+  await paragraph(page, "Second day.").click();
+  await page.keyboard.press("End");
+  await page.locator(".tree-row", { hasText: "plan.md" }).click({
+    button: "right",
+  });
+  await page.getByRole("menuitem", { name: "Insert link" }).click();
+  await expect(paragraph(page, "Second day.")).toContainText("plan");
+  expect(await sourceOf(page)).toContain("Second day.[plan](plan.md)");
+});

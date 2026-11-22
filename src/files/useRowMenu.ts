@@ -1,6 +1,10 @@
 import { farEntries } from "../platform/far-files";
 import { emitPluginEvent } from "../plugins/app-bridge";
-import { ENTRY_TRASHED_EVENT, sendAppEvent } from "../utils/events";
+import {
+  ENTRY_TRASHED_EVENT,
+  LINK_TO_FILE_EVENT,
+  sendAppEvent,
+} from "../utils/events";
 import { fill } from "../i18n/fill";
 import {
   useCallback,
@@ -170,6 +174,11 @@ export function useRowMenu(
         items.push(
           // Beside another document: drag it there.
           { label: t.treeOpen, onSelect: () => onFileSelect(path) },
+          // A drag puts pictures and files in, but opens a note.
+          {
+            label: t.treeInsertLink,
+            onSelect: () => sendAppEvent(LINK_TO_FILE_EVENT, path),
+          },
           ...(isMobileApp
             ? [
                 {
