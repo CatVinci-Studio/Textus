@@ -83,6 +83,7 @@ describe("a plugin's code grammar", () => {
       "(?:a|ab)*c",
       "(x(?:y*))+",
       "(\\d{1,3}\\.)+",
+      "(?:a?a?)+$",
       "(a)\\1",
       "(?<=a)b",
     ])
@@ -93,18 +94,27 @@ describe("a plugin's code grammar", () => {
       "[(+*)]+",
       "(?:ab)+",
       "\\(a+\\)+",
+      "(?:a+?b)",
+      "(?::\\d+)?",
     ])
       expect(unsafePattern(good), good).toBeNull();
   });
 
-  it("leaves a line past the limit plain, and gives up on a slow block", () => {
+  it("leaves a line past the limit plain, and gives up on a slow line or block", () => {
     const g = grammar([{ token: "keyword", match: "a" }]);
     expect(tokenizeLine(g, "a".repeat(LINE_LIMIT + 1))).toEqual([]);
     expect(tokenizeBlock(g, "a\na")).toEqual([
       { from: 0, to: 1, type: "keyword" },
       { from: 2, to: 3, type: "keyword" },
     ]);
+    // Each line's reading timed: one slow line is enough.
     let clock = 0;
-    expect(tokenizeBlock(g, "a\na", 50, () => (clock += 60))).toBeNull();
+    expect(tokenizeBlock(g, "a\na", () => (clock += 30))).toBeNull();
+    // Quick lines, but too many of them.
+    clock = 0;
+    const lines = Array(60).fill("a").join("\n");
+    expect(tokenizeBlock(g, lines, () => (clock += 10))).toBeNull();
+    clock = 0;
+    expect(tokenizeBlock(g, "a\na", () => (clock += 10))).toHaveLength(2);
   });
 });

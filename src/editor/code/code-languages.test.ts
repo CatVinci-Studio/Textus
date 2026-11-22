@@ -50,6 +50,24 @@ it("colours a block in a plugin's language by any of its names, reading the gram
   expect(load).toHaveBeenCalledTimes(1);
 });
 
+it("leaves every block of a language plain once one takes too long", async () => {
+  addCisco();
+  const t = await openView(
+    "```cisco\ninterface a\n```\n\n```ios\nshutdown\n```",
+  );
+  await vi.waitFor(() => expect(tokens(t.view.dom)).toHaveLength(2));
+  // The next reading of a line takes a second.
+  let clock = 0;
+  const now = vi
+    .spyOn(performance, "now")
+    .mockImplementation(() => (clock += 1000));
+  t.caretAt("interface");
+  t.type("x");
+  now.mockRestore();
+  await vi.waitFor(() => expect(tokens(t.view.dom)).toEqual([]));
+  expect(fenceLanguage("cisco")).not.toBeNull();
+});
+
 it("reads no grammar for a document without the language, and leaves Textus's own languages to refractor", async () => {
   const load = addCisco();
   undo.push(

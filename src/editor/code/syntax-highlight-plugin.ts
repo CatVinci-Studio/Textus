@@ -62,6 +62,20 @@ const all = (doc: ProseNode): Highlights => ({
   set: decorateAll(doc, isCodeBlock, tokens),
 });
 
+/** Whether `doc` has a block refractor leaves to the added languages:
+ *  only then can one coming or going change its colours. */
+function hasAddedLanguageBlock(doc: ProseNode): boolean {
+  let found = false;
+  doc.descendants((node) => {
+    if (found) return false;
+    if (!isCodeBlock(node)) return true;
+    const language = node.attrs.language as string | null;
+    found = !!language && !refractor.registered(language);
+    return false;
+  });
+  return found;
+}
+
 const key = new PluginKey<Highlights>("syntax-highlight");
 
 /**
@@ -94,6 +108,7 @@ export const syntaxHighlightPlugin = $prose(
           if (view.isDestroyed) return;
           if (key.getState(view.state)?.version === addedLanguagesVersion())
             return;
+          if (!hasAddedLanguageBlock(view.state.doc)) return;
           view.dispatch(view.state.tr.setMeta(key, true));
         };
         queueMicrotask(refresh);

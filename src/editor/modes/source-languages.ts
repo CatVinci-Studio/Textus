@@ -4,21 +4,18 @@ import {
   StreamLanguage,
 } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
-import {
-  LINE_LIMIT,
-  TOKEN_TYPES,
-  matchAt,
-  type Grammar,
-} from "../code/code-grammar";
+import { LINE_LIMIT, TOKEN_TYPES, matchAt } from "../code/code-grammar";
 import { addedLanguage, type AddedLanguage } from "../code/code-languages";
 
 /** A plugin's grammar as a CodeMirror language: the same rules read at the
- *  same places as the rich editor's (code-grammar.ts). */
-function streamLanguage(name: string, grammar: Grammar | null) {
+ *  same places as the rich editor's (code-grammar.ts). Asked each time,
+ *  so a grammar the editor dropped as too slow goes plain here too. */
+function streamLanguage(added: AddedLanguage) {
   return StreamLanguage.define<null>({
-    name,
+    name: added.language.id,
     startState: () => null,
     token(stream) {
+      const grammar = added.now();
       if (!grammar || stream.string.length > LINE_LIMIT) {
         stream.skipToEnd();
         return null;
@@ -46,9 +43,7 @@ function description(added: AddedLanguage): LanguageDescription {
       // Read when a fence first names it; a grammar that can't be used
       // leaves the block plain rather than failing the parse.
       load: () =>
-        added
-          .load()
-          .then((grammar) => new LanguageSupport(streamLanguage(id, grammar))),
+        added.load().then(() => new LanguageSupport(streamLanguage(added))),
     });
     described.set(added, found);
   }

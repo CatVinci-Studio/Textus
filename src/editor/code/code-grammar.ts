@@ -20,7 +20,6 @@ export const TOKEN_TYPES = {
   tag: { prism: "tag", tag: "tagName" },
   attribute: { prism: "attr-name", tag: "attributeName" },
   punctuation: { prism: "punctuation", tag: "punctuation" },
-  variable: { prism: "variable", tag: "variableName" },
 } as const;
 export type TokenType = keyof typeof TOKEN_TYPES;
 
@@ -79,6 +78,8 @@ export function unsafePattern(source: string): string | null {
       if (repeats) mark();
     } else if (c === "|") mark();
     else if (c === "*" || c === "+") mark();
+    // `?` after a quantifier only makes it lazy; after `(` it starts `(?:`.
+    else if (c === "?" && source[i - 1] !== "(") mark();
     else if (c === "{" && /^\{\d+(?:,\d*)?\}/.test(source.slice(i))) mark();
   }
   return null;
@@ -159,16 +160,22 @@ export function tokenizeLine(grammar: Grammar, line: string): Token[] {
   return out;
 }
 
-/** A block's tokens, offsets into `text`, or null once reading it has
- *  taken longer than `budgetMs`: the grammar is too slow to keep using. */
+/** One line may take this long, and a whole block this long, before the
+ *  grammar counts as too slow: a long configuration of ordinary lines
+ *  reads in a few milliseconds. */
+const LINE_BUDGET_MS = 20;
+const BLOCK_BUDGET_MS = 500;
+
+/** A block's tokens, offsets into `text`, or null once a line or the
+ *  block has taken too long: the grammar is too slow to keep using. */
 export function tokenizeBlock(
   grammar: Grammar,
   text: string,
-  budgetMs = 50,
   now: () => number = () => performance.now(),
 ): Token[] | null {
   const out: Token[] = [];
   const start = now();
+  let lineStart = start;
   let offset = 0;
   for (const line of text.split("\n")) {
     for (const token of tokenizeLine(grammar, line))
@@ -178,7 +185,10 @@ export function tokenizeBlock(
         type: token.type,
       });
     offset += line.length + 1;
-    if (now() - start > budgetMs) return null;
+    const at = now();
+    if (at - lineStart > LINE_BUDGET_MS || at - start > BLOCK_BUDGET_MS)
+      return null;
+    lineStart = at;
   }
   return out;
 }

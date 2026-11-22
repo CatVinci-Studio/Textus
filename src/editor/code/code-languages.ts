@@ -54,7 +54,9 @@ export class AddedLanguage {
     if (this.grammar === null) return;
     console.warn(`Code language ${this.language.id} is too slow; left plain.`);
     this.grammar = null;
-    changed();
+    // Not now: this runs inside an editor's state update, and the change
+    // makes every editor dispatch.
+    queueMicrotask(changed);
   }
 }
 

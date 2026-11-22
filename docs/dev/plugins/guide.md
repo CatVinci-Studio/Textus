@@ -212,8 +212,7 @@ a JSON file in the plugin holds its grammar.
   the line's start. `flags` may hold `i` (any case) and `u`; the file's
   `flags` are every rule's unless a rule has its own.
 - `token` is one of `comment`, `string`, `number`, `constant`, `keyword`,
-  `operator`, `function`, `type`, `tag`, `attribute`, `punctuation`,
-  `variable`. They are coloured as Textus's own languages are, so the
+  `operator`, `function`, `type`, `tag`, `attribute`, `punctuation`. They are coloured as Textus's own languages are, so the
   theme colours them too.
 - The same colours show in the editor, in source mode and in HTML and PDF
   exports. The file is read only when a block first uses the language.
@@ -224,10 +223,13 @@ a JSON file in the plugin holds its grammar.
   console; the others still colour. To keep the editor from hanging, a
   line longer than 500 characters stays plain, a file reads at most 200
   rules of up to 1,000 characters each, and a grammar that takes over
-  50 ms for one block is turned off until Textus starts again. A
-  `match` may not use backreferences or lookbehind (Safari before 16.4
-  can't run it), nor repeat a group without bound (`+`, `*`, `{2,}`) that
-  itself holds a repeat or `|`: write `(a|b)+` as `[ab]+`.
+  20 ms for one line, or 500 ms for one block, is turned off until
+  Textus starts again. A `match` may not use backreferences or
+  lookbehind (Safari before 16.4 can't run it), nor repeat a group
+  without bound (`+`, `*`, `{2,}`) that itself holds a repeat (`?` too)
+  or `|`: write `(a|b)+` as `[ab]+`. A repeat with a bound,
+  `(\.\d+){3}`, is fine. These lower the risk; they can't rule out
+  every slow pattern.
 
 ## Permissions
 
