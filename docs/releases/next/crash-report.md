@@ -1,3 +1,3 @@
 ### Improved
 
-- When a window runs into an error it can't draw past, its "Something went wrong" page has a Report a Problem button: it opens a filled-in bug report that says where the error happened, so it can be found and fixed.
+- When a window runs into an error it can't draw past, its "Something went wrong" page has Report a Problem: the usual report, with where the error happened already in its details, to send as it is or submit on GitHub.

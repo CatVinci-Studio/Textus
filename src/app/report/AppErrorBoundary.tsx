@@ -1,31 +1,12 @@
-import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, Suspense, type ErrorInfo, type ReactNode } from "react";
 import { resolveStrings } from "../../i18n/strings";
 import { loadSettings } from "../../prefs/SettingsContext";
-import { links, systemIpc } from "../../platform/ipc";
-import { reportDetails, reportUrl } from "./report";
+import { ReportProblemDialog } from "./report-open";
 import "./AppErrorBoundary.css";
 
 /** Lines of each trace a report carries: enough to find the place, short
- *  enough for the issue form's address. */
+ *  enough to read. */
 const TRACE_LINES = 12;
-
-/** The longest issue address sent: GitHub turns longer ones away. */
-const URL_LIMIT = 7000;
-
-/** The issue form's address with `details`, its last lines left off until
- *  it fits; the crash itself is at the top, so it always stays. */
-export function fittedReportUrl(
-  url: (details: string) => string,
-  details: string,
-): string {
-  const lines = details.split("\n");
-  let address = url(details);
-  while (address.length > URL_LIMIT && lines.length > 1) {
-    lines.pop();
-    address = url(`${lines.join("\n")}\n…`);
-  }
-  return address;
-}
 
 /** What broke and where, for a report: the message, the code's trace and
  *  the components it broke in. */
@@ -44,16 +25,22 @@ export function crashDetails(error: Error, componentStack?: string | null) {
   ].join("\n");
 }
 
+interface State {
+  error: Error | null;
+  components: string | null;
+  reporting: boolean;
+}
+
 /**
  * A render error anywhere takes the window down with it: without this the
  * page goes blank and nothing answers. What broke is said, with a way back
- * and a report that carries where it broke.
+ * and Report a Problem, its details carrying where it broke.
  */
 export class AppErrorBoundary extends Component<
   { children: ReactNode },
-  { error: Error | null; components: string | null }
+  State
 > {
-  state = { error: null as Error | null, components: null as string | null };
+  state: State = { error: null, components: null, reporting: false };
 
   static getDerivedStateFromError(error: Error) {
     return { error };
@@ -63,26 +50,16 @@ export class AppErrorBoundary extends Component<
     this.setState({ components: info.componentStack ?? null });
   }
 
-  private report = async (error: Error) => {
-    const settings = loadSettings();
-    const info = await systemIpc
-      .info()
-      .catch(() => ({ os: navigator.platform, arch: "", webview: "" }));
-    const facts = { ...info, language: settings.language, settings };
-    const details = `${crashDetails(error, this.state.components)}\n${reportDetails(facts)}`;
-    void links.openWebLink(
-      fittedReportUrl((text) => reportUrl(facts, "", text), details),
-    );
-  };
-
   render() {
-    const { error } = this.state;
+    const { error, components, reporting } = this.state;
     if (!error) return this.props.children;
-    const t = resolveStrings(loadSettings().language);
+    const settings = loadSettings();
+    const t = resolveStrings(settings.language);
+    const message = error.message || String(error);
     return (
       <div className="app-error" role="alert">
         <h1>{t.appErrorTitle}</h1>
-        <p className="app-error-detail">{error.message || String(error)}</p>
+        <p className="app-error-detail">{message}</p>
         <div className="app-error-actions">
           <button
             type="button"
@@ -94,11 +71,22 @@ export class AppErrorBoundary extends Component<
           <button
             type="button"
             className="app-error-report"
-            onClick={() => void this.report(error)}
+            onClick={() => this.setState({ reporting: true })}
           >
             {t.reportTitle}
           </button>
         </div>
+        {reporting && (
+          <Suspense fallback={null}>
+            <ReportProblemDialog
+              t={t}
+              settings={settings}
+              open
+              onClose={() => this.setState({ reporting: false })}
+              crash={{ message, details: crashDetails(error, components) }}
+            />
+          </Suspense>
+        )}
       </div>
     );
   }
