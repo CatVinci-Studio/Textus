@@ -761,3 +761,27 @@ fn opencode_gets_a_steady_session_id_and_others_none() {
     let other = request("https://api.deepseek.com/v1");
     assert!(other.headers().get("x-opencode-session").is_none());
 }
+
+/// Gemini's OpenAI-compatible layer answers a key in `x-goog-api-key` with
+/// "Missing or invalid Authorization header"; Vertex AI wants it there.
+#[test]
+fn gemini_takes_its_key_as_bearer_and_vertex_ai_in_x_goog_api_key() {
+    for (url, header) in [
+        (
+            "https://generativelanguage.googleapis.com/v1beta/openai",
+            KeyHeader::Bearer,
+        ),
+        (
+            "https://aiplatform.googleapis.com/v1/projects/p/locations/global/endpoints/openapi",
+            KeyHeader::GoogApiKey,
+        ),
+        (
+            "https://us-central1-aiplatform.googleapis.com/v1/projects/p/locations/us-central1/endpoints/openapi",
+            KeyHeader::GoogApiKey,
+        ),
+        ("https://opencode.ai/zen/go/v1", KeyHeader::OpenCode),
+        ("https://api.deepseek.com/v1", KeyHeader::Bearer),
+    ] {
+        assert_eq!(key_header(url), header, "{url}");
+    }
+}

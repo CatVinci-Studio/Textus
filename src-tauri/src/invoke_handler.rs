@@ -7,7 +7,7 @@ use ai::client::{ai_complete, ai_grammar_check, fetch_agent_models};
 use ai::{agent::ai_agent_message, cancel::ai_cancel, steer::ai_steer};
 use auth::claude::{claude_auth_status, claude_login, claude_logout};
 use auth::custom_endpoint::{
-    clear_custom_endpoint, custom_endpoint_status, fetch_custom_models, set_custom_endpoint,
+    clear_custom_endpoint, custom_endpoints_status, fetch_custom_models, set_custom_endpoint,
 };
 use auth::keys::{clear_provider_api_key, provider_api_key_status, set_provider_api_key};
 use auth::openai_codex::{codex_auth_status, codex_login, codex_logout};
@@ -156,7 +156,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         provider_api_key_status,
         clear_provider_api_key,
         set_custom_endpoint,
-        custom_endpoint_status,
+        custom_endpoints_status,
         clear_custom_endpoint,
         fetch_custom_models,
         export_save_dialog,

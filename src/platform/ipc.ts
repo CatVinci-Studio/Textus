@@ -52,7 +52,12 @@ export {
   type CliStatus,
   type DefaultEditorStatus,
 } from "./bindings/app";
-export { type CustomEndpointConfig, auth, imageHostAuth } from "./ipc-auth";
+export {
+  type CustomEndpointConfig,
+  type CustomEndpointEdit,
+  auth,
+  imageHostAuth,
+} from "./ipc-auth";
 export {
   AI_CANCELLED,
   type GeneratedImageData,

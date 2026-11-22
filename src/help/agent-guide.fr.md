@@ -7,7 +7,7 @@ Textus intègre une IA conçue pour l'écriture, Textus AI : complétion, vérif
 Tout ce qui touche à l'IA se trouve dans **Réglages › Textus AI**, sur quatre pages : **Modèles**, **Discussion et écriture**, **Mémoire et compétences** et **Outils externes**.
 
 1. Sur **Modèles**, choisissez le service dans la liste **Fournisseurs**. Connectez-vous à votre compte (**Compte**) ou collez une clé (**Clé API**), selon ce que ce service propose. Un point dans la liste marque chaque service que vous avez configuré.
-2. Pour un **Serveur personnalisé** (tout serveur compatible avec OpenAI : modèles locaux, proxys), saisissez l'URL de base, une clé si le serveur en demande une et le nom du modèle, puis enregistrez.
+2. Pour un serveur à vous (tout serveur compatible avec OpenAI : modèles locaux, relais, proxys), choisissez **Ajouter un serveur personnalisé** en bas de la liste, donnez-lui un nom, saisissez l'URL de base, une clé si le serveur en demande une et le nom du modèle, puis enregistrez. Vous pouvez en ajouter plusieurs : chacun apparaît sous son nom, ici et partout où vous choisissez un modèle.
 3. Sous **Choix du modèle**, en haut de la même page, choisissez le **Fournisseur du chat** et le **Modèle de discussion**, et, pour la complétion et la grammaire, le **Fournisseur de l'écriture** (**Comme le chat** par défaut) et le **Modèle d'assistance**.
 
 La connexion à un compte se fait dans votre navigateur. La prise en charge des images, de la recherche web et des modifications du document dépend du service et du modèle choisis.
