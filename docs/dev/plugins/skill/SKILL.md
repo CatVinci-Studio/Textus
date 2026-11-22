@@ -106,7 +106,8 @@ exports.activate = function (ctx) {
   `files.registerProvider` / `openFolder`, `textus.ssh` and the manifest's
   `contributes.folderDocuments`. API 1.10 adds `contributes.codeLanguages`:
   a code block language coloured from a JSON grammar of ordered
-  `{ token, match }` rules, no code (the guide's Code languages);
+  `{ token, match }` rules, no code (the guide's Code languages, with
+  the patterns it refuses as too slow);
   `contributes.fileIconThemes`: file and folder icons picked in
   Settings › Appearance; and `editor.registerDropHandler`: a file dragged
   into the document written as the plugin's own Markdown. Use them rather

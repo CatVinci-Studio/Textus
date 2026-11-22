@@ -6,6 +6,8 @@
  * mode both read lines through `tokenizeLine`, so they colour alike.
  */
 
+import { unsafePattern } from "./pattern-safety";
+
 /** A rule's kind -> the Prism class the rich editor's stylesheet and themes
  *  colour, and the highlight tag source mode's style colours. */
 export const TOKEN_TYPES = {
@@ -42,7 +44,8 @@ export interface Token {
 
 /** A regular expression can't be stopped once it runs, so the guards keep
  *  the slow kinds out instead: longer lines stay plain, patterns are short
- *  and few, and those that can backtrack without end are refused. */
+ *  and few, and those that can backtrack without end are refused
+ *  (pattern-safety.ts). */
 export const LINE_LIMIT = 500;
 const PATTERN_LIMIT = 1000;
 const RULE_LIMIT = 200;
@@ -50,52 +53,17 @@ const RULE_LIMIT = 200;
 const isTokenType = (type: unknown): type is TokenType =>
   typeof type === "string" && Object.hasOwn(TOKEN_TYPES, type);
 
-/** Why `source` could run for ever on a long enough line, or null. A
- *  group repeated without bound may hold no repeat and no `|` (the
- *  `(a+)+` kind); backreferences can't be bounded either. Lookbehind is
- *  refused as Safari before 16.4 can't compile it. */
-export function unsafePattern(source: string): string | null {
-  if (/\\[1-9]|\\k</.test(source)) return "a backreference";
-  if (/\(\?<[=!]/.test(source)) return "a lookbehind";
-  const open: boolean[] = [];
-  const mark = () => {
-    if (open.length) open[open.length - 1] = true;
-  };
-  for (let i = 0; i < source.length; i++) {
-    const c = source[i];
-    if (c === "\\") i++;
-    else if (c === "[") {
-      // A class: nothing in it repeats. A `]` first in it is literal.
-      i += source[i + 1] === "^" ? 2 : 1;
-      if (source[i] === "]") i++;
-      while (i < source.length && source[i] !== "]")
-        i += source[i] === "\\" ? 2 : 1;
-    } else if (c === "(") open.push(false);
-    else if (c === ")") {
-      const repeats = open.pop();
-      if (repeats && /^(?:[*+]|\{\d+,\})/.test(source.slice(i + 1)))
-        return "a group repeated without bound that repeats inside";
-      if (repeats) mark();
-    } else if (c === "|") mark();
-    else if (c === "*" || c === "+") mark();
-    // `?` after a quantifier only makes it lazy; after `(` it starts `(?:`.
-    else if (c === "?" && source[i - 1] !== "(") mark();
-    else if (c === "{" && /^\{\d+(?:,\d*)?\}/.test(source.slice(i))) mark();
-  }
-  return null;
-}
-
 function compileRule(rule: unknown, flags: string): GrammarRule | string {
   if (!rule || typeof rule !== "object") return "isn't an object";
   const { token, match, flags: own } = rule as Record<string, unknown>;
   if (!isTokenType(token)) return `token "${String(token)}" isn't one of ours`;
   if (typeof match !== "string" || !match) return "has no match";
   if (match.length > PATTERN_LIMIT) return "match is too long";
-  const unsafe = unsafePattern(match);
-  if (unsafe) return `match has ${unsafe}`;
   const kept = [...new Set(typeof own === "string" ? own : flags)]
     .filter((f) => f === "i" || f === "u")
     .join("");
+  const unsafe = unsafePattern(match, kept);
+  if (unsafe) return `match has ${unsafe}`;
   try {
     return { type: token, pattern: new RegExp(match, `${kept}y`) };
   } catch {

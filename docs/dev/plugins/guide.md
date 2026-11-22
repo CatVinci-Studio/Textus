@@ -226,11 +226,23 @@ a JSON file in the plugin holds its grammar.
   rules of up to 1,000 characters each, and a grammar that takes over
   20 ms for one line, or 500 ms for one block, is turned off until
   Textus starts again. A `match` may not use backreferences or
-  lookbehind (Safari before 16.4 can't run it), nor repeat a group
-  without bound (`+`, `*`, `{2,}`) that itself holds a repeat (`?` too)
-  or `|`: write `(a|b)+` as `[ab]+`. A repeat with a bound,
-  `(\.\d+){3}`, is fine. These lower the risk; they can't rule out
-  every slow pattern.
+  lookbehind (Safari before 16.4 can't run it), and is refused where it
+  could share one run of text out in many ways:
+  - more than two repeats that could take the same characters in turn:
+    `\s*\s*\s*`, `\w+\s?\w+\s?\w+`, `.*a.*b.*`. Something every one
+    of them must stop at, between them, keeps them apart: `\s*:\s*` is
+    fine;
+  - a group repeated without bound (`+`, `*`, `{2,}`) unless each time
+    over it can match only one way: each of its `|` choices a fixed run
+    of characters, no two starting with the same one. `"(?:\\.|[^"\\])*"`
+    and `(?:ab)+` are fine; `(a+)+`, `(?:a|ab)*` and `(\d+\.)+` aren't
+    (write `(\d{1,3}\.){3}` or `[\d.]+`);
+  - a group with a bound counts each time over: `(\w+\s?){2,40}` and
+    `(\d{1,3}){1,10}` are refused, `(\.\d+){3}` and
+    `(?:/\d+){0,3}` are fine;
+  - more than 16 repeats and `|` choices in one `match`.
+
+  These lower the risk; they can't rule out every slow pattern.
 
 ## Permissions
 

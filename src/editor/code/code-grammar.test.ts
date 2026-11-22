@@ -4,8 +4,23 @@ import {
   compileGrammar,
   tokenizeBlock,
   tokenizeLine,
-  unsafePattern,
 } from "./code-grammar";
+import { unsafePattern } from "./pattern-safety";
+
+/** catvinci.cisco-ios's cisco.json, its rules' patterns verbatim. */
+const CISCO = [
+  "^\\s*!.*",
+  "\\b(?:description|remark)\\s.*",
+  '"[^"]*"',
+  "\\b(?:GigabitEthernet|FastEthernet|TenGigabitEthernet|TwentyFiveGigE|FortyGigabitEthernet|HundredGigE|Ethernet|Serial|Loopback|Tunnel|Vlan|Port-channel|Dialer|Virtual-Template|BVI|Null|Management|mgmt|Gi|Fa|Te|Twe|Fo|Hu|Eth|Et|Se|Lo|Tu|Po|Vl)\\d+(?:/\\d+){0,3}(?:\\.\\d+)?(?::\\d+)?\\b",
+  "\\b\\d{1,3}(?:\\.\\d{1,3}){3}(?:/\\d{1,2})?\\b",
+  "\\b[0-9a-f]{4}\\.[0-9a-f]{4}\\.[0-9a-f]{4}\\b",
+  "\\b[0-9a-f]{1,4}(?::[0-9a-f]{0,4}){2,7}(?:/\\d{1,3})?",
+  "\\b(?:access-list|access-group|access-class|remote-as|router-id|passive-interface|default-gateway|default-router|default-information|excluded-address|domain-name|name-server|helper-address|snmp-server|tacacs-server|radius-server|spanning-tree|channel-group|port-security|storm-control|class-map|policy-map|service-policy|route-map|prefix-list|mac-address|exec-timeout|new-model|running-config|startup-config|config-register|ip-address|key-string)\\b",
+  "\\b(?:interface|ip|ipv6|address|router|ospf|ospfv3|eigrp|bgp|rip|isis|network|area|neighbor|redistribute|summary-address|permit|deny|any|host|eq|neq|gt|lt|range|established|log|shutdown|no|hostname|vlan|name|switchport|mode|access|trunk|allowed|native|encapsulation|dot1q|enable|secret|password|service|line|con|vty|aux|login|local|transport|input|output|username|privilege|portfast|bpduguard|standby|vrrp|preempt|priority|track|nat|inside|outside|overload|pool|route|dhcp|ntp|server|logging|community|crypto|key|generate|rsa|isakmp|ipsec|policy|match|set|version|exit|end|write|memory|copy|duplex|speed|auto|full|half|mtu|bandwidth|clock|rate|banner|motd|aaa|authentication|authorization|accounting|extended|standard|cdp|lldp|run|tunnel|source|destination|keepalive|maximum|violation|sticky|arp|boot|system|vrf|forwarding|unicast-routing|routing|negotiation|description|remark)\\b",
+  "\\b(?:tcp|udp|icmp|esp|gre|ahp|pim|www|http|https|ftp|ftp-data|telnet|ssh|domain|bootps|bootpc|tftp|snmp|smtp|pop3|echo|echo-reply|unreachable)\\b",
+  "\\b\\d+\\b",
+];
 
 const grammar = (rules: unknown[], extra = {}) =>
   compileGrammar({ rules, ...extra }).grammar;
@@ -86,6 +101,21 @@ describe("a plugin's code grammar", () => {
       "(?:a?a?)+$",
       "(a)\\1",
       "(?<=a)b",
+      // Bounded, but each time over shares the run out again.
+      "(a+){1,60}",
+      "(\\w+\\s?){2,40}$",
+      "(\\d{1,3}){1,10}$",
+      // Three repeats taking the same characters in turn.
+      "\\s*\\s*\\s*$",
+      "\\w+\\s?\\w+\\s?\\w+$",
+      ".*a.*a.*$",
+      "\\s*x?\\s*y?\\s*$",
+      // Choices that can match the same text.
+      "(?:a|a)*$",
+      "(?:\\w|\\d)+",
+      "(?:a|ab)(?:a|ab)(?:a|ab)$",
+      "(?:a|a){1,30}$",
+      "a?".repeat(17),
     ])
       expect(unsafePattern(bad), bad).not.toBeNull();
     for (const good of [
@@ -96,8 +126,15 @@ describe("a plugin's code grammar", () => {
       "\\(a+\\)+",
       "(?:a+?b)",
       "(?::\\d+)?",
+      // The usual string with escapes: each time over, one way only.
+      '"(?:\\\\.|[^"\\\\])*"',
+      "(?:a|b)*c",
+      "\\w+\\s?\\w+$",
+      "^\\s*interface\\s+\\S+\\s+\\d+",
     ])
       expect(unsafePattern(good), good).toBeNull();
+    // The official Cisco grammar, as it is published.
+    for (const good of CISCO) expect(unsafePattern(good, "i"), good).toBeNull();
   });
 
   it("leaves a line past the limit plain, and gives up on a slow line or block", () => {
