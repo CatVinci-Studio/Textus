@@ -63,3 +63,23 @@ test("it wins over Prism's dark gradient and a plugin's frame paint", async ({
   expect(after.paint).toBe("none");
   expect(after.frame).toBe(after.paper);
 });
+
+// The paper under a document's scroller is on a layer of its own: WebKit
+// without a GPU (Linux) painted it again, its blurred shadow too, on every
+// frame of a scroll above it. One holding children stays off a layer, which
+// would become the box their fixed popovers are placed in.
+test("a document's sheet is drawn once, on its own layer, not again as the page scrolls", async ({
+  page,
+}) => {
+  await openApp(page);
+  const sheets = await page.evaluate(() =>
+    [...document.querySelectorAll("[data-island]")].map((sheet) => ({
+      empty: sheet.childElementCount === 0,
+      layer: getComputedStyle(sheet).willChange,
+      documents: sheet.getAttribute("data-island") === "documents",
+    })),
+  );
+  expect(sheets.some((s) => s.documents && s.empty)).toBe(true);
+  for (const sheet of sheets)
+    expect(sheet.layer).toBe(sheet.empty ? "transform" : "auto");
+});
