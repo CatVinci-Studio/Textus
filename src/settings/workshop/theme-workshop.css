@@ -7,7 +7,6 @@
   flex: 1;
   min-height: 0;
   display: flex;
-  flex-wrap: wrap;
   gap: var(--space-4);
 }
 .theme-workshop-controls {
@@ -120,4 +119,33 @@
 }
 .workshop-swatch[aria-checked="true"] {
   border: 2px solid var(--ui-accent);
+}
+
+/* Too narrow for both side by side: one column that scrolls as a whole -
+   the rows at their full height, then the buttons, then the sample page. */
+.create-tab:has(> .theme-workshop-studio) {
+  container: workshop / inline-size;
+}
+@container workshop (max-width: 820px) {
+  .theme-workshop-studio {
+    overflow-y: auto;
+  }
+  .theme-workshop {
+    flex: none;
+    flex-direction: column;
+  }
+  .theme-workshop-controls {
+    flex: none;
+    min-width: 0;
+    max-height: none;
+  }
+  .theme-workshop-rows {
+    flex: none;
+    overflow: visible;
+  }
+  .theme-workshop-preview {
+    flex: none;
+    min-width: 0;
+    height: 520px;
+  }
 }

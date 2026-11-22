@@ -1061,6 +1061,7 @@ export default {
   activityRailShow: "顯示圖示列",
   windowLayoutGroup: "視窗版面",
   layoutLabel: "版面",
+  plainFrameLabel: "視窗底色與文件相同",
   classicLookLabel: "使用舊版樣式",
   layoutIslands: "浮動島",
   layoutClassic: "經典",

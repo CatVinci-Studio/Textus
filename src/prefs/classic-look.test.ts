@@ -51,3 +51,26 @@ describe("the classic look", () => {
     expect(storedLook("classic")).toBeNull();
   });
 });
+
+describe("the classic look and the frame's colour", () => {
+  it("puts the frame in the page's colour and gives back the one it left", () => {
+    const on = apply({ ...DEFAULT_SETTINGS }, true);
+    expect(on.plainFrame).toBe(true);
+    expect(apply(on, false).plainFrame).toBe(false);
+  });
+
+  it("reads a look kept before the frame had a setting", () => {
+    expect(
+      storedLook({
+        layout: "islands",
+        activityRail: true,
+        titleRowShown: false,
+      }),
+    ).toEqual({
+      layout: "islands",
+      activityRail: true,
+      titleRowShown: false,
+      plainFrame: false,
+    });
+  });
+});

@@ -1223,6 +1223,7 @@ export default {
   activityRailShow: "Показать панель действий",
   windowLayoutGroup: "Макет окна",
   layoutLabel: "Макет",
+  plainFrameLabel: "Фон окна как у страницы",
   classicLookLabel: "Использовать классический вид",
   layoutIslands: "Плавающие острова",
   layoutClassic: "Классический",

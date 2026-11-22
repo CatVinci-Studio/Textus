@@ -1218,6 +1218,7 @@ para usar una.
   activityRailShow: "Mostrar la barra de actividad",
   windowLayoutGroup: "Diseño de la ventana",
   layoutLabel: "Diseño",
+  plainFrameLabel: "Fondo de la ventana como la página",
   classicLookLabel: "Usar el aspecto clásico",
   layoutIslands: "Islas flotantes",
   layoutClassic: "Clásico",

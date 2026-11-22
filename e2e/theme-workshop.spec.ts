@@ -261,3 +261,22 @@ test("an installed theme exports, imports back and reopens in the workshop as le
     "生成主题",
   );
 });
+
+test("in a narrow window the workshop is one column that scrolls to the page", async ({
+  page,
+}) => {
+  await openWorkshop(page, false);
+  await page.setViewportSize({ width: 900, height: 600 });
+  const preview = page.locator(".theme-workshop-preview");
+  const box = await preview.boundingBox();
+  // Under the rows, not squeezed beside them, and tall enough to read.
+  expect(box?.height ?? 0).toBeGreaterThan(400);
+  const controls = await page.locator(".theme-workshop-controls").boundingBox();
+  expect(box!.y).toBeGreaterThan(controls!.y + controls!.height - 1);
+  // Reached by scrolling the workshop.
+  await preview.scrollIntoViewIfNeeded();
+  await expect(
+    page.frameLocator(".theme-workshop-frame").locator("#write h1"),
+  ).toBeInViewport();
+  await expect(page.locator(".theme-workshop-actions .primary")).toBeVisible();
+});

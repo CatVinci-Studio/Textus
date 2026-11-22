@@ -1223,6 +1223,7 @@ utiliser une.
   activityRailShow: "Afficher la barre d'activité",
   windowLayoutGroup: "Disposition de la fenêtre",
   layoutLabel: "Disposition",
+  plainFrameLabel: "Fond de la fenêtre comme la page",
   classicLookLabel: "Utiliser l’apparence classique",
   layoutIslands: "Îlots flottants",
   layoutClassic: "Classique",

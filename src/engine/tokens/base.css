@@ -371,3 +371,13 @@
   --tone-pink: #ff375f;
   --tone-gray: #98989d;
 }
+
+/* Appearance › "No frame colour": the title bar, rail and sidebar in the
+   page's own background, a theme's or a plugin's paint included; the
+   hairlines and an island's rim still mark the edges. After the dark
+   rules, and over a theme's :root. */
+html:root[data-plain-frame] {
+  --ui-frame: var(--ui-bg);
+  --ui-frame-sunk: var(--ui-bg);
+  --ui-frame-paint: initial;
+}

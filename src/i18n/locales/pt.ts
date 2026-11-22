@@ -1201,6 +1201,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   activityRailShow: "Mostrar a barra de atividade",
   windowLayoutGroup: "Layout da janela",
   layoutLabel: "Layout",
+  plainFrameLabel: "Fundo da janela igual à página",
   classicLookLabel: "Usar a aparência clássica",
   layoutIslands: "Ilhas flutuantes",
   layoutClassic: "Clássico",

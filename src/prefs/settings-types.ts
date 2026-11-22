@@ -192,6 +192,9 @@ export interface Settings {
   /// The window bar is a row of its own, naming the document in front; the
   /// tabs go in the row under it.
   titleRowShown: boolean;
+  /// The frame (title bar, rail, sidebar) in the document's background
+  /// rather than a colour of its own.
+  plainFrame: boolean;
   /// The column of icons at the window's left edge (Files, Outline, plugins'
   /// pages). Off, the sidebar shows its tabs along its own top again.
   activityRail: boolean;
@@ -204,6 +207,7 @@ export interface Settings {
     layout: "islands" | "classic";
     activityRail: boolean;
     titleRowShown: boolean;
+    plainFrame: boolean;
   } | null;
   /// Sidebar tabs the user took off the rail, by id.
   activityRailHidden: string[];
@@ -373,6 +377,7 @@ export const DEFAULT_SETTINGS: Settings = {
   imageAlign: "center",
   menuBarShown: false,
   titleRowShown: false,
+  plainFrame: false,
   activityRail: true,
   layout: "islands",
   lookBeforeClassic: null,

@@ -1149,6 +1149,7 @@ type /name in a conversation to use one.
   activityRailShow: "Show the Activity Bar",
   windowLayoutGroup: "Window Layout",
   layoutLabel: "Layout",
+  plainFrameLabel: "Window background matches the page",
   classicLookLabel: "Use the classic look",
   layoutIslands: "Floating islands",
   layoutClassic: "Classic",

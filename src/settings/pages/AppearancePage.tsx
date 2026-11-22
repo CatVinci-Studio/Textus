@@ -115,6 +115,11 @@ export function AppearancePage({
             onChange={(on) => setSettings({ menuBarShown: on })}
           />
         )}
+        <ToggleRow
+          label={t.plainFrameLabel}
+          checked={settings.plainFrame}
+          onChange={(on) => setSettings({ plainFrame: on })}
+        />
         {canUseWindows && (
           <ToggleRow
             label={t.classicLookLabel}
