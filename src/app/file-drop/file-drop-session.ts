@@ -56,13 +56,15 @@ interface Planned {
 }
 
 /** Where (x, y) is: a tab row (opens in that island), a document's edge
- *  (split) or its body; null off the documents. `slot`: where in which
+ *  (split, by a file's narrow bands) or its body; null off the documents.
+ *  `held`: the place aimed at until now. `slot`: where in which
  *  row a tab opening there would stand - under the pointer on the row,
  *  at its end from the body - when the island has a row. */
 function placeAt(
   x: number,
   y: number,
   geometry: DropGeometry,
+  held: DropTarget | null,
 ): {
   place: DropPlace;
   target: DropTarget;
@@ -76,7 +78,7 @@ function placeAt(
       target: { zone: "center", tabId: front, rect: bar.rect },
       slot: { pane: bar.pane, x },
     };
-  const target = dropTargetAt(x, y, geometry);
+  const target = dropTargetAt(x, y, geometry, "file", held);
   if (!target) return null;
   if (target.zone !== "center") return { place: "edge", target, slot: null };
   const pane = paneOf(windowLayout(), target.tabId);
@@ -97,6 +99,9 @@ function placeAt(
 export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
   const arrival = arrivalPreview();
   let geometry: DropGeometry | null = null;
+  /** The place the drag aims at, held a little past its line
+   *  (dropTargetAt), so the drop lands where the last move showed. */
+  let aimed: DropTarget | null = null;
   /** Pictures' sizes, read from their files once a drag; null: unknown. */
   const sizes = new Map<string, Size | null>();
   let last: {
@@ -113,7 +118,8 @@ export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
     shift: boolean,
   ) => {
     geometry ??= dropGeometry();
-    const at = placeAt(x, y, geometry);
+    const at = placeAt(x, y, geometry, aimed);
+    aimed = at?.place === "bar" ? null : (at?.target ?? null);
     if (!at) return null;
     const doc: FileDropTarget | null =
       at.place === "body"
@@ -172,6 +178,7 @@ export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
 
   const reset = () => {
     geometry = null;
+    aimed = null;
     last = null;
     sizes.clear();
   };

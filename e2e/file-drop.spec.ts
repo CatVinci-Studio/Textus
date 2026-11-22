@@ -136,6 +136,38 @@ test("a file from the sidebar let go on a document's edge opens beside it", asyn
   await expect(page.locator("section.island")).toHaveCount(2);
 });
 
+test("a file splits off only close by a document's side, never at its foot", async ({
+  page,
+}) => {
+  await openFolder(page);
+  const island = (await page.locator("section.island").boundingBox())!;
+  // Past a file's band (80 px at most), well inside a tab's (a fifth).
+  await dragRow(page, "plan.md", {
+    x: island.x + island.width - 90,
+    y: island.y + island.height / 2,
+  });
+  await page.mouse.up();
+  await expect(page.locator('[role="tab"]', { hasText: "plan" })).toBeVisible();
+  await expect(page.locator("section.island")).toHaveCount(1);
+  // Near the foot, where a tab would stack one below.
+  await emit(page, "tauri://drag-enter", {
+    paths: ["/downloads/todo.md"],
+    position: {
+      x: island.x + island.width / 2,
+      y: island.y + island.height - 20,
+    },
+  });
+  await emit(page, "tauri://drag-drop", {
+    paths: ["/downloads/todo.md"],
+    position: {
+      x: island.x + island.width / 2,
+      y: island.y + island.height - 20,
+    },
+  });
+  await expect(page.locator('[role="tab"]', { hasText: "todo" })).toBeVisible();
+  await expect(page.locator("section.island")).toHaveCount(1);
+});
+
 test("a file from a file manager is copied beside the document and linked; Shift opens", async ({
   page,
 }) => {
