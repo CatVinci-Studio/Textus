@@ -576,14 +576,13 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - run: npm ci
       # Gradle's downloads: Maven Central has refused a cold run (429).
-      # This job runs only in the full suite, never on main, so it saves
-      # wherever it runs.
+      # android-cache.yml saves them on main under the same key.
       - uses: actions/cache@v6
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('src-tauri/Cargo.lock', 'package-lock.json') }}
+          key: gradle-${{ runner.os }}-${{ hashFiles('src-tauri/Cargo.lock', 'package-lock.json', 'scripts/android-prepare.sh') }}
           restore-keys: gradle-${{ runner.os }}-
       # Retries that wait seconds and grow, not 125 ms, when Central says 429.
       - name: Gradle retries downloads with a back-off
