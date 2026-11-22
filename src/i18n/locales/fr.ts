@@ -1463,6 +1463,8 @@ utiliser une.
   docLetterSpacingCondensed: "Condensé",
   docLetterSpacingBy: "De",
   uiTextScaleLabel: "Taille de l'interface",
+  fileIconThemeLabel: "Icônes de fichier",
+  fileIconThemeDefault: "Par défaut",
   uiTextSmall: "Petite",
   uiTextMedium: "Moyenne",
   uiTextLarge: "Grande",

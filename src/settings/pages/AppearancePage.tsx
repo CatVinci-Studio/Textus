@@ -13,9 +13,10 @@ import { ThemeSection, ThemesTab } from "../sections/theme";
 import { Select } from "../../engine/controls/Select";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { canUseWindows, isMobileApp } from "../../platform/capabilities";
+import { useFileIconThemes } from "../../plugins/contributions/file-icon-themes";
 
 /** Appearance › Basics: light or dark, the editor's theme and importing
- *  one, the interface's size; then the window's layout, its rail, title row
+ *  one, the interface's size, file icons; then the window's layout, its rail, title row
  *  and menu bar, and a button back to the look from before 1.4; one's own CSS
  *  under Advanced. */
 const SIZE_NAMES = {
@@ -51,6 +52,7 @@ export function AppearancePage({
             ))}
           </Select>
         </SettingRow>
+        <FileIconThemeRow t={t} settings={settings} setSettings={setSettings} />
       </SettingsGroup>
       {/* How a document's text is set: its own, whatever the theme. */}
       <SettingsGroup title={t.appearanceTextGroup}>
@@ -129,6 +131,36 @@ export function AppearancePage({
         )}
       </SettingsGroup>
     </>
+  );
+}
+
+/** The file icon themes plugins give. One whose plugin is off shows as
+ *  Default, but stays chosen for when it is back. */
+function FileIconThemeRow({
+  t,
+  settings,
+  setSettings,
+}: Pick<SettingsPageProps, "t" | "settings" | "setSettings">) {
+  const themes = useFileIconThemes();
+  const chosen = themes.some((x) => x.id === settings.fileIconTheme)
+    ? settings.fileIconTheme
+    : "";
+  return (
+    <SettingRow label={t.fileIconThemeLabel}>
+      <Select
+        className="settings-select"
+        aria-label={t.fileIconThemeLabel}
+        value={chosen}
+        onChange={(e) => setSettings({ fileIconTheme: e.target.value })}
+      >
+        <option value="">{t.fileIconThemeDefault}</option>
+        {themes.map((x) => (
+          <option key={x.id} value={x.id}>
+            {x.label}
+          </option>
+        ))}
+      </Select>
+    </SettingRow>
   );
 }
 

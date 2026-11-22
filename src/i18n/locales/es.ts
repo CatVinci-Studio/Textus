@@ -1457,6 +1457,8 @@ para usar una.
   docLetterSpacingCondensed: "Comprimido",
   docLetterSpacingBy: "En",
   uiTextScaleLabel: "Tamaño de la interfaz",
+  fileIconThemeLabel: "Iconos de archivo",
+  fileIconThemeDefault: "Predeterminados",
   uiTextSmall: "Pequeño",
   uiTextMedium: "Mediano",
   uiTextLarge: "Grande",

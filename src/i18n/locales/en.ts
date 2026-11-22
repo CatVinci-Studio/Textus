@@ -1388,6 +1388,8 @@ type /name in a conversation to use one.
   docLetterSpacingCondensed: "Condensed",
   docLetterSpacingBy: "By",
   uiTextScaleLabel: "Interface size",
+  fileIconThemeLabel: "File icons",
+  fileIconThemeDefault: "Default",
   uiTextSmall: "Small",
   uiTextMedium: "Medium",
   uiTextLarge: "Large",

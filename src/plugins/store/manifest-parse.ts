@@ -15,6 +15,7 @@ import {
   parseDocumentTypes,
   parseFolderDocuments,
 } from "./manifest-documents";
+import { parseFileIconThemes } from "./manifest-icon-themes";
 import { parseSnippets, parseWalkthroughs } from "./manifest-guides";
 import { number, parseSetting } from "./manifest-settings";
 
@@ -413,6 +414,7 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     documentTypes: parseDocumentTypes(c),
     folderDocuments: parseFolderDocuments(c),
     codeLanguages: parseCodeLanguages(c, BUILT_IN_BLOCKS),
+    fileIconThemes: parseFileIconThemes(c),
     settings,
     settingsPage: page && {
       title: text(page.title, "contributes.settingsPage.title"),

@@ -358,6 +358,16 @@ describe("language", () => {
   });
 });
 
+describe("file icon theme", () => {
+  it("keeps a file icon theme it can't see yet, and drops one that isn't a name", () => {
+    // The plugin giving it loads after the settings: kept, not reset.
+    expect(
+      normaliseSettings({ fileIconTheme: "jane.icons#neon" }).fileIconTheme,
+    ).toBe("jane.icons#neon");
+    expect(normaliseSettings({ fileIconTheme: 3 }).fileIconTheme).toBe("");
+  });
+});
+
 describe("interface text size", () => {
   it("keeps a size it offers and falls back to 100% for any other", () => {
     expect(normaliseSettings({ uiTextScale: 1.25 }).uiTextScale).toBe(1.25);

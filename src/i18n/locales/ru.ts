@@ -1461,6 +1461,8 @@ export default {
   docLetterSpacingCondensed: "Уплотнённый",
   docLetterSpacingBy: "На",
   uiTextScaleLabel: "Размер интерфейса",
+  fileIconThemeLabel: "Значки файлов",
+  fileIconThemeDefault: "Стандартные",
   uiTextSmall: "Мелкий",
   uiTextMedium: "Средний",
   uiTextLarge: "Крупный",

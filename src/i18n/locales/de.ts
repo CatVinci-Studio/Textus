@@ -1417,6 +1417,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   docLetterSpacingCondensed: "Schmal",
   docLetterSpacingBy: "Um",
   uiTextScaleLabel: "Größe der Oberfläche",
+  fileIconThemeLabel: "Dateisymbole",
+  fileIconThemeDefault: "Standard",
   uiTextSmall: "Klein",
   uiTextMedium: "Mittel",
   uiTextLarge: "Groß",

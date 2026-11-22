@@ -192,6 +192,10 @@ export interface Settings {
   /// The window bar is a row of its own, naming the document in front; the
   /// tabs go in the row under it.
   titleRowShown: boolean;
+  /// A plugin's file icon theme for the files and folders listed, as
+  /// `<plugin id>#<theme id>`; "" for the app's own icons. Kept while its
+  /// plugin is off, so turning it back on brings the icons back.
+  fileIconTheme: string;
   /// The frame (title bar, rail, sidebar) in the document's background
   /// rather than a colour of its own.
   plainFrame: boolean;
@@ -377,6 +381,7 @@ export const DEFAULT_SETTINGS: Settings = {
   imageAlign: "center",
   menuBarShown: false,
   titleRowShown: false,
+  fileIconTheme: "",
   plainFrame: false,
   activityRail: true,
   layout: "islands",

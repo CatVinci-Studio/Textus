@@ -1345,6 +1345,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   docLetterSpacingCondensed: "좁게",
   docLetterSpacingBy: "간격",
   uiTextScaleLabel: "인터페이스 크기",
+  fileIconThemeLabel: "파일 아이콘",
+  fileIconThemeDefault: "기본",
   uiTextSmall: "작게",
   uiTextMedium: "보통",
   uiTextLarge: "크게",
