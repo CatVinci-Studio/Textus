@@ -44,6 +44,7 @@ const API_PERMISSIONS: readonly {
       "editor.edit",
       "codeBlock.setSource",
       "editor.registerPasteHandler",
+      "editor.registerDropHandler",
     ],
     // A code block's `block.setSource`.
     calls: ["editor.insertText", "editor.replaceSelection", "setSource"],

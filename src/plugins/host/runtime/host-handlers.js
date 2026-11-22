@@ -265,6 +265,12 @@ var handlers = {
     var markdown = await provide(params.text);
     return typeof markdown === "string" ? markdown : null;
   },
+  $provideDrop: async function (params) {
+    var provide = dropHandlers[params.id];
+    if (!provide) return null;
+    var markdown = await provide(params.file);
+    return typeof markdown === "string" ? markdown : null;
+  },
   $provideHover: async function (params) {
     for (var i = 0; i < hoverProviders.length; i++) {
       var card = await hoverProviders[i].provideHover(params.target);
