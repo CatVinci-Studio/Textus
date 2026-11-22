@@ -1,5 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { auth, type CustomEndpointConfig } from "../platform/ipc";
+import { listenToThisWindow } from "../platform/events";
 import { createSubscribers } from "../utils/store";
 
 /** The user's own endpoints, each a provider of its own in every list: the
@@ -64,8 +65,18 @@ export function refreshCustomEndpoints(): Promise<void> {
     });
 }
 
+/** Sent to every window once an endpoint is saved or removed, so a renamed
+ *  one reads anew everywhere. As `CHANGED_EVENT` in Rust's
+ *  auth/custom_endpoint.rs. */
+const CHANGED_EVENT = "custom-endpoints-changed";
+let following = false;
+
 function subscribe(listener: () => void) {
   if (!asked) void refreshCustomEndpoints();
+  if (!following) {
+    following = true;
+    void listenToThisWindow(CHANGED_EVENT, () => void refreshCustomEndpoints());
+  }
   return subscribers.subscribe(listener);
 }
 
