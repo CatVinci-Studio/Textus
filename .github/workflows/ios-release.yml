@@ -33,10 +33,10 @@ concurrency:
 
 jobs:
   testflight:
-    # macos-26 is what macos-latest points at today (same arm64 pool);
-    # pinned, with the Xcode chosen below, so the SDK the upload is built
-    # with only changes on purpose.
-    runs-on: macos-26
+    # The image with Xcode 27 (macOS 27): App Store Connect asks for the
+    # iOS 27 SDK from April 2027. Pinned, with the Xcode chosen below, so
+    # the SDK the upload is built with only changes on purpose.
+    runs-on: xcode-27
     timeout-minutes: 90
     # The App Store Connect key lives in the release environment, which only
     # runs from a release tag (ios-v*); only admins can push those.
@@ -57,18 +57,18 @@ jobs:
           fi
 
       # App Store Connect takes uploads built with the current SDK only.
-      # The newest Xcode 26 on the image, chosen explicitly rather than
+      # The newest Xcode 27 on the image, chosen explicitly rather than
       # trusting the image's default to be it - and only a released one:
       # uploads built with a beta Xcode are refused, and the image installs
-      # betas as e.g. Xcode_26_beta.app, with plain-version symlinks
-      # (Xcode_26.0.app) pointing at them. So real folders only (find
+      # betas as e.g. Xcode_27_beta.app, with plain-version symlinks
+      # (Xcode_27.0.app) pointing at them. So real folders only (find
       # skips symlinks), named by a version number alone.
       - name: Select Xcode
         run: |
-          xcode=$(find /Applications -maxdepth 1 -type d -name 'Xcode_26*.app' \
+          xcode=$(find /Applications -maxdepth 1 -type d -name 'Xcode_27*.app' \
             | grep -E '/Xcode_[0-9.]+\.app$' | sort -V | tail -n1)
           if [ -z "$xcode" ]; then
-            echo "::error::no released Xcode 26 on this runner image"
+            echo "::error::no released Xcode 27 on this runner image"
             exit 1
           fi
           sudo xcode-select -s "$xcode"
