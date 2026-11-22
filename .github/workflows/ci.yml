@@ -518,6 +518,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-ios, aarch64-apple-ios-sim
+          # Xcode 27's SwiftPM hides the Swift plugins' @_cdecl exports;
+          # swift-rs makes them global again with rustup's llvm-objcopy.
+          components: llvm-tools
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: "./src-tauri -> target"
