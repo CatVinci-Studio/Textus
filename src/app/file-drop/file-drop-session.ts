@@ -31,13 +31,14 @@ import { droppedMarkdown } from "./dropped-markdown";
 type Size = { width: number; height: number };
 
 export interface FileDropWiring {
-  /** Opens `path` where it was let go; `first`: the first of the drop. */
+  /** Opens `path` where it was let go; `first`: the first of the drop.
+   *  Settled once it has opened, or failed to. */
   open(
     path: string,
     target: DropTarget,
     first: boolean,
     fromSystem: boolean,
-  ): void;
+  ): Promise<void>;
   openFolder(path: string): void;
   /** Where the folder's links resolve; null with no folder open. */
   linkRoot(): string | null;
@@ -50,6 +51,8 @@ interface Planned {
   file: DraggedFile;
   kind: FileKind;
   action: FileAction;
+  /** Whether Textus itself can put it in, should its plugin decline. */
+  own: boolean;
 }
 
 /** Where (x, y) is: a tab row (opens in that island), a document's edge
@@ -124,16 +127,16 @@ export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
         kind !== "folder" && dropClaimed(basename(file.path), kind);
       // A link is written from the document's own place; a picture from a
       // file manager is kept with a draft's until it is saved.
-      const canInsert =
-        !!doc &&
-        (claimed || !!doc.docPath || (!!file.fromSystem && kind === "image"));
+      const own =
+        !!doc && (!!doc.docPath || (!!file.fromSystem && kind === "image"));
+      const canInsert = !!doc && (claimed || own);
       const action = fileAction(kind, {
         place: at.place,
         shift,
         canInsert,
         claimed,
       });
-      return { file, kind, action };
+      return { file, kind, action, own };
     });
     return { ...at, planned };
   };
@@ -230,21 +233,27 @@ export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
       const target = opening.length
         ? (arrival.take(x, y, now.target) ?? now.target)
         : (arrival.clear(), now.target);
-      const open = (planned: Planned[], first: boolean) =>
-        planned.forEach(({ file }, i) =>
-          wiring.open(file.path, target, first && i === 0, !!file.fromSystem),
-        );
+      // One after another: the tabs keep the order dropped, and only the
+      // first may take an untouched draft's place.
+      const open = async (planned: Planned[]) => {
+        for (const [i, { file }] of planned.entries())
+          await wiring.open(file.path, target, i === 0, !!file.fromSystem);
+      };
       for (const { file } of of("folder")) wiring.openFolder(file.path);
       if (!going.length) {
-        open(opening, true);
+        void open(opening);
         return true;
       }
       const root = wiring.linkRoot();
+      /** Claimed by a plugin that then gave nothing, where Textus can't put
+       *  them in either: opened instead of lost. */
+      const declined: Planned[] = [];
       const produce = async (doc: FileDropTarget) => {
         // In order, one after another: a name asked for, or a copy
         // numbered, is the next file's to see.
         const markdown: string[] = [];
-        for (const { file, kind } of going) {
+        for (const planned of going) {
+          const { file, kind } = planned;
           const fromSystem = !!file.fromSystem;
           const md = await droppedMarkdown(
             { path: file.path, kind, fromSystem },
@@ -252,9 +261,10 @@ export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
             root,
           ).catch((err: unknown) => {
             wiring.failed(file.path, err);
-            return null;
+            return undefined;
           });
           if (md) markdown.push(md);
+          else if (md === null && !planned.own) declined.push(planned);
         }
         return markdown;
       };
@@ -263,7 +273,9 @@ export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
       void (fileRooms()?.fill(produce, where) ?? Promise.resolve(false)).then(
         (filled) => {
           if (!filled) fileRooms()?.clear();
-          open(filled ? opening : [...going, ...opening], true);
+          void open(
+            filled ? [...declined, ...opening] : [...going, ...opening],
+          );
         },
       );
       return true;

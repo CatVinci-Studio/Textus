@@ -21,6 +21,8 @@ async function openFolder(page: Page) {
       "/trip/report.pdf": "",
       "/downloads/tickets.pdf": "%PDF",
       "/downloads/boat 1.png": "",
+      "/downloads/notes.md": "# Notes\n\nFrom the desktop.\n",
+      "/downloads/todo.md": "# Todo\n",
     };
     w.__devPickFolder = "/trip";
     w.__devPictureSizes = {
@@ -331,4 +333,33 @@ test("a picture from a file manager goes in where it is let go, stored as a past
   expect(await sourceOf(page)).toMatch(
     /^# Trip\n\nFirst day\.\n\n!\[\]\(<?assets\/boat(%20| )1\.png>?\)\n\nSecond day\.$/,
   );
+});
+
+test("a note from a file manager let go on another island opens there, the draft in front left be", async ({
+  page,
+}) => {
+  await openFolder(page);
+  const island = (await page.locator("section.island").boundingBox())!;
+  await dragRow(page, "plan.md", {
+    x: island.x + island.width - 12,
+    y: island.y + island.height / 2,
+  });
+  await page.mouse.up();
+  const islands = page.locator("section.island");
+  await expect(islands).toHaveCount(2);
+  // A fresh draft in front, in the island on the right.
+  await emit(page, "menu-new-file");
+  const rows = page.locator(".island-row");
+  const draftSide = rows.nth(1).locator('[role="tab"]');
+  await expect(draftSide).toHaveText([/plan/, /Untitled/]);
+  const left = (await islands.nth(0).boundingBox())!;
+  const at = { x: left.x + left.width / 2, y: left.y + left.height / 2 };
+  const paths = ["/downloads/notes.md", "/downloads/todo.md"];
+  await emit(page, "tauri://drag-enter", { paths, position: at });
+  await emit(page, "tauri://drag-drop", { paths, position: at });
+  // Both open where they were let go, in the order dropped.
+  const tabs = rows.nth(0).locator('[role="tab"]');
+  await expect(tabs).toHaveText([/log/, /notes/, /todo/]);
+  // The draft is still there, untouched.
+  await expect(draftSide).toHaveText([/plan/, /Untitled/]);
 });

@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import {
   documentDrop,
   setDocumentDrop,
-  type DraggedFile,
 } from "../../engine/controls/document-drop";
 import { showMessage } from "../../engine/controls/app-dialog";
 import { filesDropAsContents, isMobileApp } from "../../platform/capabilities";
@@ -17,7 +16,7 @@ import { fileDropOnDocuments } from "./file-drop-session";
 import { watchSystemDrags } from "./finder-drag";
 
 interface FileDropInput {
-  openFile: (path: string) => Promise<void>;
+  openFile: (path: string, open?: OpenOptions) => Promise<void>;
   openPathInTab: (path: string, open?: OpenOptions) => Promise<void>;
   openFolder: (path: string) => void;
   /** The folder open in the sidebar; null with none. */
@@ -48,9 +47,9 @@ export function useFileDrops(input: FileDropInput): void {
         // Only the first from a file manager may take an untouched draft's
         // place, as before.
         open: (path, drop, first, fromSystem) =>
-          void opened(path, () =>
+          opened(path, () =>
             fromSystem && first && drop.zone === "center"
-              ? openFile(path)
+              ? openFile(path, { drop })
               : openPathInTab(path, { drop }),
           ),
         openFolder,
@@ -74,14 +73,16 @@ export function useFileDrops(input: FileDropInput): void {
         leave: () => documentDrop()?.leave(),
         drop: (files, at, shift) => {
           if (documentDrop()?.drop(files, at.x, at.y, shift)) return;
-          // Off the documents (the sidebar, the window's bar): opened.
-          files.forEach((file: DraggedFile, i) =>
-            file.isDir
-              ? openFolder(file.path)
-              : void opened(file.path, () =>
+          // Off the documents (the sidebar, the window's bar): opened, one
+          // after another, so the tabs keep the order dropped.
+          void (async () => {
+            for (const [i, file] of files.entries())
+              if (file.isDir) openFolder(file.path);
+              else
+                await opened(file.path, () =>
                   i === 0 ? openFile(file.path) : openPathInTab(file.path),
-                ),
-          );
+                );
+          })();
         },
       },
       isFolder,
