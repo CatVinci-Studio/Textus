@@ -8,15 +8,19 @@ import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { isImeKeydown } from "../../utils/ime";
 import { wikilinksIn } from "../markdown/wikilink";
+import { LINK } from "../markdown/link-source";
 import {
   CONTEXT_CHARS,
   completionSession,
   type CaretContext,
   type CompletionSession,
 } from "./completion-session";
-import { completionSources } from "./sources";
+import { completionSources, sourceTextSources } from "./sources";
 
 const MATH_NODES = new Set(["math_inline", "math_block"]);
+/** Inline nodes holding their Markdown as text: a link's target is
+ *  retyped there. */
+const SOURCE_NODES = new Set([LINK]);
 
 /** What is around the caret in its paragraph or formula; null where
  *  nothing is typed. A selection in one block counts from its end: "[["
@@ -27,7 +31,10 @@ function contextAt(view: EditorView): CaretContext | null {
   const parent = $to.parent;
   const inMath = MATH_NODES.has(parent.type.name);
   // Code is typed as it is: "/usr" or "a :b" there are no commands.
-  if (!inMath && (!parent.isTextblock || parent.type.spec.code)) return null;
+  const typed =
+    (parent.isTextblock && !parent.type.spec.code) ||
+    SOURCE_NODES.has(parent.type.name);
+  if (!inMath && !typed) return null;
   const at = $to.parentOffset;
   return {
     text: parent.textBetween(
@@ -76,7 +83,11 @@ export function createCompletionPlugin(
           const session = completionSession({
             context: () => contextAt(view),
             path: docPath,
-            sources: completionSources,
+            // In a link's own text only what writes Markdown: no blocks.
+            sources: () =>
+              SOURCE_NODES.has(view.state.selection.$to.parent.type.name)
+                ? sourceTextSources()
+                : completionSources(),
             insert: (insert, from, to) =>
               view.dispatch(pickedText(view.state, insert, from, to)),
             coords: (pos) => view.coordsAtPos(pos),

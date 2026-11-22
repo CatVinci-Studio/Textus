@@ -197,8 +197,28 @@ test("a picture's path completes from the folder as it is typed; a file's menu i
 
   await row("b.md").click({ button: "right" });
   await page.getByRole("menuitem", { name: "插入链接" }).click();
-  await expect(doc).toContainText("b");
-  expect(await sourceOf(page)).toBe("# A\n\nsee ![](assets/pic.png)[b](b.md)");
+  await expect(doc.locator("a")).toHaveCount(1);
+  // Its own undo step: the picture stays.
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(doc.locator("a")).toHaveCount(0);
+  expect(await sourceOf(page)).toBe("# A\n\nsee ![](assets/pic.png)");
+
+  // The same in source mode: a link lists notes first.
+  await emit(page, "menu-toggle-source-mode");
+  const source = page.locator(
+    '[data-active-tab="true"] .source-view .cm-content',
+  );
+  await source.click();
+  await page.keyboard.press("ControlOrMeta+End");
+  await page.keyboard.type(" [x](");
+  await expect(list.locator(".completion-label").first()).toHaveText("b.md");
+  await page.keyboard.press("Enter");
+  await expect(list).toHaveCount(0);
+  await row("b.md").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "插入链接" }).click();
+  await expect(source).toContainText(
+    "see ![](assets/pic.png) [x](b.md)[b](b.md)",
+  );
 });
 
 test("a file dragged onto a folder moves into it; with Esc it stays; picked files go together", async ({

@@ -9,10 +9,7 @@ import {
   type CaretContext,
   type CompletionSession,
 } from "../completion/completion-session";
-import {
-  completionSources,
-  type CompletionSource,
-} from "../completion/sources";
+import { sourceTextSources } from "../completion/sources";
 
 /**
  * The rich editor's completion panel in source mode, for the sources whose
@@ -39,19 +36,6 @@ function contextAt(view: EditorView): CaretContext | null {
   };
 }
 
-let sourceSources: {
-  from: readonly CompletionSource[];
-  kept: CompletionSource[];
-} = { from: [], kept: [] };
-
-/** The sources offered here, worked out again only when they change. */
-function inSource(): readonly CompletionSource[] {
-  const all = completionSources();
-  if (all !== sourceSources.from)
-    sourceSources = { from: all, kept: all.filter((s) => s.inSource) };
-  return sourceSources.kept;
-}
-
 /** `insert` over `from`-`to`, the caret at its `$0`: its own undo step. */
 function put(view: EditorView, insert: string, from: number, to: number) {
   const at = insert.indexOf("$0");
@@ -75,7 +59,7 @@ class SourceCompletion {
     this.session = completionSession({
       context: () => contextAt(view),
       path: docPath,
-      sources: inSource,
+      sources: sourceTextSources,
       insert: (insert, from, to) => put(view, insert, from, to),
       coords: (pos) => {
         const rect = view.coordsAtPos(pos);

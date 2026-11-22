@@ -47,6 +47,8 @@ describe("a target lists the folder's files by their path from the document", ()
     const [spaced] = targetItems(files, "/v", "/v/notes/Today.md", "image");
     expect(spaced.insert).toBe("(../assets/a%20b.png");
     expect(spaced.keywords).toBe("../assets/a%20b.png");
+    const [beside] = targetItems(files, "/v", "/v/notes/Today.md", "link");
+    expect(beside.keywords).toBe("./Plan.md");
   });
 });
 
@@ -59,8 +61,8 @@ afterEach(async () => {
   stop?.();
   stop = null;
   setPathCompletionRoot(null);
-  vi.restoreAllMocks();
   await closeViews();
+  vi.restoreAllMocks();
 });
 
 const panel = () =>
@@ -71,15 +73,15 @@ const rows = () =>
   );
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-async function editorAt(docPath: string | null) {
+async function editorAt(docPath: string | null, markdown = "") {
   vi.spyOn(fs, "indexFolder").mockResolvedValue({ files, truncated: false });
   // A saved document keeps its undo history in a file: none here.
   vi.spyOn(undoFiles, "load").mockResolvedValue(null as never);
   vi.spyOn(undoFiles, "save").mockResolvedValue(undefined as never);
   setPathCompletionRoot("/v");
   stop = registerPathCompletion({ image: () => "Images", link: () => "Files" });
-  return openView("", {}, (markdown, settings) =>
-    createTestEditor(markdown, settings, docPath),
+  return openView(markdown, {}, (text, settings) =>
+    createTestEditor(text, settings, docPath),
   );
 }
 
@@ -109,6 +111,17 @@ describe("typing a target in the rich editor", () => {
     expect(t.markdown()).toBe("see [plan](Plan.md)");
     t.press("Mod+z");
     expect(t.caretLine()).toBe("see [plan](|)");
+  });
+
+  it("lists paths again where an existing link's target is retyped", async () => {
+    const t = await editorAt("/v/notes/Today.md", "see [plan](old.md) now");
+    expect(t.view.state.doc.firstChild?.child(1).type.name).toBe("link");
+    t.caretAt("[plan](old.md)", 7, 6);
+    t.type("P");
+    await settle();
+    expect(rows()[0]).toBe("Plan.md");
+    t.press("Enter");
+    expect(t.markdown()).toBe("see [plan](Plan.md) now");
   });
 
   it("offers nothing in an unsaved document", async () => {

@@ -103,3 +103,17 @@ export function completionSources(): readonly CompletionSource[] {
   }
   return cached;
 }
+
+let markdownOnly: {
+  from: readonly CompletionSource[];
+  kept: CompletionSource[];
+} = { from: [], kept: [] };
+
+/** The sources that write Markdown as text (`inSource`): source mode's, and
+ *  inside a link's own text. The same array while nothing changed. */
+export function sourceTextSources(): readonly CompletionSource[] {
+  const all = completionSources();
+  if (all !== markdownOnly.from)
+    markdownOnly = { from: all, kept: all.filter((s) => s.inSource) };
+  return markdownOnly.kept;
+}

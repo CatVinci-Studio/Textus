@@ -12,9 +12,7 @@ const linkTo = (path: string, wiki: boolean) =>
 
 describe("a link to a file from the tree", () => {
   it("is a picture for an image, in either link style", () => {
-    expect(linkTo("/v/assets/a b.png", false)).toBe(
-      "![a b.png](../assets/a%20b.png)",
-    );
+    expect(linkTo("/v/assets/a b.png", false)).toBe("![](../assets/a%20b.png)");
     expect(linkTo("/v/assets/a b.png", true)).toBe("![[a b.png]]");
   });
 

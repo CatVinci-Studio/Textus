@@ -63,11 +63,16 @@ export function targetItems(
   return ordered.map((f) => {
     const path = relativePath(from, f.rel);
     const dest = linkPath(path);
+    // Found as typed with "./" too, and escaped.
+    const also = [
+      ...(path.startsWith("../") ? [] : [`./${path}`]),
+      ...(dest !== path ? [dest] : []),
+    ];
     return {
       label: path,
       insert: `(${dest}`,
       icon: "file",
-      ...(dest !== path ? { keywords: dest } : {}),
+      ...(also.length ? { keywords: also.join(" ") } : {}),
     };
   });
 }

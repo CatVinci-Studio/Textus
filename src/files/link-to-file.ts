@@ -12,16 +12,22 @@ import {
   type PathIndex,
 } from "./link-resolve";
 
+/** A Markdown picture's alt text, up to its "](". */
+const ALT = /^!\[(?:\\.|[^\]\\])*\]/;
+
 /** The link to `path` written in the document `from`: a picture for an
- *  image (`![name](…)`, `![[name]]`), else a link, in the folder's style. */
+ *  image (`![](…)` with no alt, as a pasted picture is written, or
+ *  `![[name]]`), else a link, in the folder's style. */
 export function fileLinkSource(
   paths: PathIndex,
   path: string,
   from: string,
   style: LinkStyle,
 ): string {
-  const embed = imageMimeForPath(path) !== null;
-  return linkToTarget(paths, path, from, style, embed ? { embed } : {});
+  if (imageMimeForPath(path) === null)
+    return linkToTarget(paths, path, from, style);
+  const embed = linkToTarget(paths, path, from, style, { embed: true });
+  return style.wiki ? embed : embed.replace(ALT, "![]");
 }
 
 /** The document a link to a file goes into: the tab in use, saved, a note,
