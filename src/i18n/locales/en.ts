@@ -126,6 +126,7 @@ type /name in a conversation to use one.
   menuBlockWide: "Wide",
   menuBlockZoom: "Size",
   diagramViewerLabel: "Diagram",
+  diagramError: "This diagram can't be drawn",
   pictureZoom: "Enlarge picture",
   pictureViewerLabel: "Picture",
   pictureViewerPrevious: "Previous picture",

@@ -133,6 +133,7 @@ export default {
   menuBlockWide: "Во всю ширину",
   menuBlockZoom: "Масштаб",
   diagramViewerLabel: "Диаграмма",
+  diagramError: "Эту диаграмму не удаётся нарисовать",
   pictureZoom: "Увеличить изображение",
   pictureViewerLabel: "Изображение",
   pictureViewerPrevious: "Предыдущее изображение",

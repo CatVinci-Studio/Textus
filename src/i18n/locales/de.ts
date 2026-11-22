@@ -128,6 +128,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuBlockWide: "Breit anzeigen",
   menuBlockZoom: "Größe",
   diagramViewerLabel: "Diagramm",
+  diagramError: "Dieses Diagramm kann nicht gezeichnet werden",
   pictureZoom: "Bild vergrößern",
   pictureViewerLabel: "Bild",
   pictureViewerPrevious: "Vorheriges Bild",

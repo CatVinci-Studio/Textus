@@ -131,6 +131,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuBlockWide: "Exibição larga",
   menuBlockZoom: "Tamanho",
   diagramViewerLabel: "Diagrama",
+  diagramError: "Este diagrama não pode ser desenhado",
   pictureZoom: "Ampliar imagem",
   pictureViewerLabel: "Imagem",
   pictureViewerPrevious: "Imagem anterior",

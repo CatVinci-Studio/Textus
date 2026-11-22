@@ -120,6 +120,7 @@ export default {
   menuBlockWide: "寬螢幕顯示",
   menuBlockZoom: "縮放",
   diagramViewerLabel: "圖表",
+  diagramError: "圖表無法繪製",
   pictureZoom: "放大圖片",
   pictureViewerLabel: "圖片",
   pictureViewerPrevious: "上一張",

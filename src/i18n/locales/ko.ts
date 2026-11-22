@@ -125,6 +125,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuBlockWide: "넓게 보기",
   menuBlockZoom: "크기",
   diagramViewerLabel: "다이어그램",
+  diagramError: "이 다이어그램을 그릴 수 없습니다",
   pictureZoom: "이미지 확대",
   pictureViewerLabel: "이미지",
   pictureViewerPrevious: "이전 이미지",

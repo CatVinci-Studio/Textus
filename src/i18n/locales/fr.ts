@@ -138,6 +138,7 @@ utiliser une.
   menuBlockWide: "Affichage large",
   menuBlockZoom: "Taille",
   diagramViewerLabel: "Diagramme",
+  diagramError: "Ce diagramme ne peut pas être dessiné",
   pictureZoom: "Agrandir l'image",
   pictureViewerLabel: "Image",
   pictureViewerPrevious: "Image précédente",
