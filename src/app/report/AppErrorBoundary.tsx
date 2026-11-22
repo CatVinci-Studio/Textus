@@ -9,6 +9,24 @@ import "./AppErrorBoundary.css";
  *  enough for the issue form's address. */
 const TRACE_LINES = 12;
 
+/** The longest issue address sent: GitHub turns longer ones away. */
+const URL_LIMIT = 7000;
+
+/** The issue form's address with `details`, its last lines left off until
+ *  it fits; the crash itself is at the top, so it always stays. */
+export function fittedReportUrl(
+  url: (details: string) => string,
+  details: string,
+): string {
+  const lines = details.split("\n");
+  let address = url(details);
+  while (address.length > URL_LIMIT && lines.length > 1) {
+    lines.pop();
+    address = url(`${lines.join("\n")}\n…`);
+  }
+  return address;
+}
+
 /** What broke and where, for a report: the message, the code's trace and
  *  the components it broke in. */
 export function crashDetails(error: Error, componentStack?: string | null) {
@@ -52,7 +70,9 @@ export class AppErrorBoundary extends Component<
       .catch(() => ({ os: navigator.platform, arch: "", webview: "" }));
     const facts = { ...info, language: settings.language, settings };
     const details = `${crashDetails(error, this.state.components)}\n${reportDetails(facts)}`;
-    void links.openWebLink(reportUrl(facts, "", details));
+    void links.openWebLink(
+      fittedReportUrl((text) => reportUrl(facts, "", text), details),
+    );
   };
 
   render() {

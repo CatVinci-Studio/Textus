@@ -18,7 +18,11 @@ vi.mock("../../platform/ipc", () => ({
   },
 }));
 
-import { AppErrorBoundary, crashDetails } from "./AppErrorBoundary";
+import {
+  AppErrorBoundary,
+  crashDetails,
+  fittedReportUrl,
+} from "./AppErrorBoundary";
 
 function Broken(): never {
   throw new Error("cannot read the panel");
@@ -66,5 +70,18 @@ describe("AppErrorBoundary", () => {
       12,
     );
     expect(text).toContain("Components:\nin A\nin B");
+  });
+
+  it("leaves the last lines off an address too long for GitHub, never the crash", () => {
+    const details = [
+      "Crash: x",
+      ...Array.from({ length: 900 }, (_, i) => `line ${i}`),
+    ].join("\n");
+    const url = fittedReportUrl(
+      (text) => `https://x/?d=${encodeURIComponent(text)}`,
+      details,
+    );
+    expect(url.length).toBeLessThanOrEqual(7000);
+    expect(decodeURIComponent(url)).toContain("Crash: x\nline 0");
   });
 });
