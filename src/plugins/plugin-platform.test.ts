@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { parseManifest } from "./store/manifest";
-import { offeredHere, onlyForAi } from "./plugin-platform";
+import { desktopOnly, offeredHere } from "./plugin-platform";
 
 const tool = { name: "search", description: "Searches the web." };
-const manifest = (id: string, contributes: object) =>
+const manifest = (id: string, extra: object) =>
   parseManifest({
     id,
     name: id,
@@ -12,47 +12,53 @@ const manifest = (id: string, contributes: object) =>
     engines: { textus: ">=1.3.0" },
     platforms: ["desktop", "ios"],
     main: "host.js",
-    contributes,
+    ...extra,
   });
-const command = (id: string) => ({ command: `${id}.go`, title: "Go" });
 
-// The official plugins as they were when the rule was written: only
-// Keenable and Openverse give nothing but tools for Textus AI.
+// Keenable gives only tools and says it needs Textus AI; Heading Numbers
+// gives tools too but does without; a plugin may say so though it gives
+// more than tools, and the store goes by what it says.
 const keenable = manifest("catvinci.keenable", {
-  aiTools: [tool],
-  commands: [command("catvinci.keenable")],
+  needsTextusAi: true,
+  contributes: { aiTools: [tool] },
 });
-const openverse = manifest("catvinci.openverse", { aiTools: [tool] });
 const headingNumbers = manifest("catvinci.heading-numbers", {
-  aiTools: [tool],
-  settings: [{ key: "on", type: "boolean", default: true, title: "On" }],
+  contributes: {
+    aiTools: [tool],
+    settings: [{ key: "on", type: "boolean", default: true, title: "On" }],
+  },
 });
-const abc = manifest("catvinci.abc", {
-  aiTools: [tool],
-  codeBlocks: [{ language: "abc" }],
+const aiPanel = manifest("a.ai-panel", {
+  needsTextusAi: true,
+  contributes: {
+    sidebarTabs: [{ id: "a.ai-panel.t", title: "T", type: "list" }],
+  },
 });
-const wakatime = manifest("catvinci.wakatime", {
-  commands: [command("catvinci.wakatime")],
-});
-const templates = manifest("catvinci.templates", {
-  aiTools: [tool],
-  commands: [command("catvinci.templates")],
-  menus: { "app/plugins": [{ command: "catvinci.templates.go" }] },
-});
+const toolsOnly = manifest("a.tools", { contributes: { aiTools: [tool] } });
 
-describe("plugins only for Textus AI", () => {
-  it("are the ones whose every contribution goes with its tools", () => {
-    expect(onlyForAi(keenable)).toBe(true);
-    expect(onlyForAi(openverse)).toBe(true);
-    for (const m of [headingNumbers, abc, wakatime, templates])
-      expect(onlyForAi(m), m.id).toBe(false);
+describe("plugins that need Textus AI", () => {
+  it("aren't offered where there is none, and are where there is", () => {
+    expect(offeredHere(keenable, false)).toBe(false);
+    expect(offeredHere(aiPanel, false)).toBe(false);
+    expect(offeredHere(keenable, true)).toBe(true);
+    expect(offeredHere(aiPanel, true)).toBe(true);
   });
 
-  it("aren't offered where there is no Textus AI, and are where there is", () => {
-    expect(offeredHere(keenable, false)).toBe(false);
-    expect(offeredHere(openverse, false)).toBe(false);
-    for (const m of [headingNumbers, abc, wakatime, templates])
-      expect(offeredHere(m, false), m.id).toBe(true);
-    expect(offeredHere(keenable, true)).toBe(true);
+  it("are the ones that say so, whatever they contribute", () => {
+    expect(offeredHere(headingNumbers, false)).toBe(true);
+    expect(offeredHere(toolsOnly, false)).toBe(true);
+  });
+});
+
+describe("the store's computer-only mark", () => {
+  it("goes on a plugin whose platforms leave out ios", () => {
+    expect(desktopOnly(manifest("a.b", { platforms: ["desktop"] }))).toBe(true);
+    expect(desktopOnly(keenable)).toBe(false);
+    // Background work without platforms is the desktop's.
+    expect(
+      desktopOnly(
+        manifest("a.c", { platforms: undefined, background: "jobs.js" }),
+      ),
+    ).toBe(true);
   });
 });

@@ -1,7 +1,7 @@
 import { explainError } from "../../utils/error-explain";
 import { fill } from "../../i18n/fill";
-import { useState, type ReactNode } from "react";
-import { Byline, CatalogRow } from "./CatalogRow";
+import { Fragment, useState, type ReactNode } from "react";
+import { Byline, CatalogRow, DesktopOnlyMark } from "./CatalogRow";
 import { CatalogProblem, catalogMessage, catalogStatus } from "./CatalogStatus";
 import { PluginIcon } from "./PluginArt";
 import type { Strings } from "../../i18n/strings";
@@ -17,11 +17,13 @@ import {
 import { Select } from "../../engine/controls/Select";
 import { AvailableSection } from "./AvailableSection";
 import { installsText } from "./installs-text";
+import { desktopOnly } from "../../plugins/plugin-platform";
+import { byCategory } from "../../plugins/store/plugin-categories";
 
 const SORTS: CatalogSort[] = ["popular", "newest", "name"];
 
-/** The catalog's plugins not installed yet, the most installed first (or
- *  as sorted), each opening its page. */
+/** The catalog's plugins not installed yet, by category, the most installed
+ *  first in each (or as sorted), each opening its page. */
 export function AvailablePlugins({
   t,
   catalog,
@@ -45,12 +47,15 @@ export function AvailablePlugins({
     name: t.pluginsSortName,
   };
   const ready = catalog.status === "ready";
-  const shown = ready
-    ? offeredItems(
-        sortCatalog(searchCatalog(catalog.items, query), sort),
-        installed,
-      )
-    : [];
+  const { items: shown, headings } = byCategory(
+    ready
+      ? offeredItems(
+          sortCatalog(searchCatalog(catalog.items, query), sort),
+          installed,
+        )
+      : [],
+    t,
+  );
   const message = catalogMessage({
     t,
     status: catalogStatus(catalog),
@@ -92,13 +97,19 @@ export function AvailablePlugins({
         )
       }
       rows={shown.map((item) => (
-        <CatalogCard
-          key={item.id}
-          item={item}
-          t={t}
-          action={actionFor(item.id)}
-          onOpen={() => onOpen(item)}
-        />
+        <Fragment key={item.id}>
+          {headings.has(item.id) && (
+            <h4 className="tx-list-heading plugin-subgroup-title">
+              {headings.get(item.id)}
+            </h4>
+          )}
+          <CatalogCard
+            item={item}
+            t={t}
+            action={actionFor(item.id)}
+            onOpen={() => onOpen(item)}
+          />
+        </Fragment>
       ))}
     />
   );
@@ -137,7 +148,9 @@ function CatalogCard({
           author={item.manifest.author || item.manifest.publisher}
           version={item.manifest.version}
           installs={installs}
-        />
+        >
+          {desktopOnly(item.manifest) && <DesktopOnlyMark t={t} />}
+        </Byline>
       }
       openLabel={fill(t.pluginOpenDetails, { name })}
       onOpen={onOpen}

@@ -18,6 +18,8 @@
       "platforms": ["desktop", "ios"]
     },
     { "main": ["a.js", "b.js"] },
+    { "needsTextusAi": true, "category": "ai" },
+    { "category": "a-newer-one" },
     { "l10n": { "en": { "x": "X" } } },
     {
       "permissions": ["files.read"],
@@ -59,6 +61,8 @@
     { "background": "jobs.js", "platforms": ["desktop", "ios"] }
   ],
   "invalidInWindow": [
+    { "needsTextusAi": "yes" },
+    { "category": 3 },
     { "contributes": { "snippets": [{ "label": "Box" }] } },
     {
       "contributes": {

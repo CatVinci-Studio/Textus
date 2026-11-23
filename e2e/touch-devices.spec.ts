@@ -8,7 +8,7 @@ import {
   settled,
   TABLET,
 } from "./helpers";
-import { openPath } from "./plugin-helpers";
+import { hasPlugin, openPath } from "./plugin-helpers";
 
 // The everyday flows on a touch screen: a phone (its own layout) and a
 // tablet (the desktop's layout, by touch).
@@ -64,6 +64,61 @@ for (const device of DEVICES)
         page.locator('[role="dialog"], .settings-tab-page').first(),
       ).toBeVisible();
       expect(await naming()).toEqual([]);
+    });
+
+    test("its plugins store lists nothing that needs Textus AI, nor a README's tools for it", async ({
+      page,
+    }) => {
+      test.skip(!hasPlugin("catvinci.abc"), "No textus-plugins checkout");
+      // As the official manifests say it from their next release.
+      await page.addInitScript(() =>
+        Object.assign(window, {
+          __devCatalogManifests: {
+            "catvinci.keenable": { needsTextusAi: true },
+            "catvinci.openverse": { needsTextusAi: true },
+          },
+        }),
+      );
+      await openApp(page, { settings: { language: "en" } });
+      // Settings' store on the phone, the sidebar's on the tablet.
+      const phone = device.device === PHONE;
+      const store = phone
+        ? page.getByRole("tabpanel", { name: "Plugins" })
+        : page.getByRole("complementary", { name: "Sidebar" });
+      if (phone) {
+        await page.getByRole("button", { name: "Menu", exact: true }).tap();
+        await page.getByRole("menuitem", { name: /Settings/ }).tap();
+        await page.getByRole("button", { name: "Extensions" }).tap();
+        await page.getByRole("tab", { name: "Plugins" }).tap();
+        await store.getByRole("button", { name: "Search" }).first().tap();
+      } else {
+        await page
+          .getByRole("navigation", { name: "Activity bar" })
+          .getByRole("button", { name: "Plugins" })
+          .tap();
+      }
+      const search = store.getByRole("searchbox");
+      const card = (id: string) =>
+        store.locator(
+          phone ? `[data-catalog="${id}"]` : `[data-plugin="${id}"]`,
+        );
+      // The catalog read: a plugin that does without is there.
+      await search.fill("Sheet Music");
+      await expect(card("catvinci.abc")).toBeVisible();
+      for (const [name, id] of [
+        ["Keenable", "catvinci.keenable"],
+        ["Openverse", "catvinci.openverse"],
+      ]) {
+        await search.fill(name);
+        await expect(card(id)).toHaveCount(0);
+      }
+      await search.fill("Sheet Music");
+      await card("catvinci.abc")
+        .locator(phone ? ".plugin-card-open" : ".plugins-panel-open")
+        .tap();
+      const readme = page.locator(".plugin-readme");
+      await expect(readme).toContainText("ABC notation");
+      await expect(readme).not.toContainText("Tools for Textus AI");
     });
 
     test("draws the document at the text size saved in Settings", async ({

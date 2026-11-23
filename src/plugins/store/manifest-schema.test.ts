@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { isPermission } from "./manifest";
 import { REQUIRED_SETTINGS } from "./manifest-types";
 import { MENU_IDS } from "./manifest-parse";
+import { PLUGIN_CATEGORIES } from "./plugin-categories";
 
 /**
  * The manifest JSON schema says what the parser reads: the same permissions,
@@ -49,11 +50,12 @@ describe("textus-plugin.schema.json", () => {
       expect(isPermission(p), p).toBe(false);
   });
 
-  it("names the menus and the settings a plugin can need", () => {
+  it("names the menus, the settings a plugin can need and the categories", () => {
     expect(contributes.menus.propertyNames.enum).toEqual([...MENU_IDS]);
     expect(props.requires.items.properties.setting.enum).toEqual([
       ...REQUIRED_SETTINGS,
     ]);
+    expect(props.category.enum).toEqual([...PLUGIN_CATEGORIES]);
   });
 
   it("has a field for every one the parser reads", () => {

@@ -1,3 +1,3 @@
 ### Platform notes
 
-- On iPhone and iPad, Settings › Plugins no longer lists plugins whose only job is giving tools to Textus AI (Keenable Search, Openverse Pictures), since Textus AI isn't on iOS.
+- On iPhone and iPad, the plugin store no longer lists plugins that do nothing without Textus AI (Keenable Search, Openverse Pictures), since Textus AI isn't on iOS.

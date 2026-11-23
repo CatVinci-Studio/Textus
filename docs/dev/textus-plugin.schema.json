@@ -137,6 +137,23 @@
         }
       }
     },
+    "needsTextusAi": {
+      "description": "From 1.10 (Textus 1.4.7): it does nothing without Textus AI (it only gives Textus AI tools). Where there is none (iOS), the store doesn't list it.",
+      "type": "boolean"
+    },
+    "category": {
+      "description": "From 1.10 (Textus 1.4.7): where the store lists it. Left out, or one an older Textus doesn't know: under Other.",
+      "enum": [
+        "notes",
+        "editing",
+        "diagrams",
+        "files",
+        "import",
+        "sync",
+        "ai",
+        "companions"
+      ]
+    },
     "contributes": {
       "type": "object",
       "properties": {

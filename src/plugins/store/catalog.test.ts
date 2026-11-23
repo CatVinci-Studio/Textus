@@ -119,30 +119,27 @@ describe("the catalog without Textus AI (iOS)", () => {
       },
     ],
   };
-  const withContributes = (id: string, contributes: object) => {
+  const withManifest = (id: string, extra: object) => {
     const e = entry(id, "1.0.0", `>=${APP_VERSION}`);
-    return { ...e, manifest: { ...e.manifest, contributes } };
+    return { ...e, manifest: { ...e.manifest, ...extra } };
   };
 
-  it("leaves out a plugin that only gives Textus AI tools", async () => {
+  it("leaves out a plugin that says it needs Textus AI", async () => {
     ipc.catalog.mockResolvedValue([
-      withContributes("catvinci.keenable", {
-        ...tools,
-        commands: [{ command: "catvinci.keenable.key", title: "Key" }],
+      withManifest("catvinci.keenable", {
+        needsTextusAi: true,
+        contributes: tools,
       }),
-      withContributes("catvinci.abc", {
-        ...tools,
-        codeBlocks: [{ language: "abc" }],
-      }),
+      withManifest("catvinci.heading-numbers", { contributes: tools }),
     ]);
     textusAi = false;
     await loadCatalog(true);
     const shown = (s = catalogSnapshot()) =>
       s.status === "ready" ? s.items.map((i) => i.id) : [];
-    expect(shown()).toEqual(["catvinci.abc"]);
+    expect(shown()).toEqual(["catvinci.heading-numbers"]);
     textusAi = true;
     await loadCatalog(true);
-    expect(shown()).toEqual(["catvinci.keenable", "catvinci.abc"]);
+    expect(shown()).toEqual(["catvinci.keenable", "catvinci.heading-numbers"]);
   });
 });
 

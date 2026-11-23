@@ -15,34 +15,18 @@ export function runsHere(manifest: PluginManifest): boolean {
   return manifest.platforms.includes(isMobileApp ? "ios" : "desktop");
 }
 
-/** Contributions that go with tools for Textus AI without being anything
- *  of their own: a command that sets the tools' key. */
-const WITH_AI_TOOLS: ReadonlySet<string> = new Set(["aiTools", "commands"]);
-
-/** Whether all a plugin gives is tools for Textus AI (Keenable,
- *  Openverse): nothing to show or do without it. */
-export function onlyForAi(manifest: Pick<PluginManifest, "contributes">) {
-  const given = Object.entries(manifest.contributes).filter(([, value]) =>
-    Array.isArray(value) ? value.length > 0 : !!value,
-  );
-  return (
-    manifest.contributes.aiTools.length > 0 &&
-    given.every(([key, value]) =>
-      key === "menus"
-        ? Object.values(value as object).every((items) => !items?.length)
-        : WITH_AI_TOOLS.has(key),
-    )
-  );
-}
-
-/** Whether the market offers a plugin here: it runs here, and it gives
- *  something without Textus AI where there is none (iOS). */
+/** Whether the market offers a plugin here: it runs here, and where there
+ *  is no Textus AI (iOS) it doesn't need it. */
 export function offeredHere(
   manifest: PluginManifest,
   textusAi: boolean = hasTextusAi,
 ): boolean {
-  return runsHere(manifest) && (textusAi || !onlyForAi(manifest));
+  return runsHere(manifest) && (textusAi || !manifest.needsTextusAi);
 }
+
+/** Whether the store marks it as the computer's only. */
+export const desktopOnly = (manifest: Pick<PluginManifest, "platforms">) =>
+  !manifest.platforms.includes("ios");
 
 /** Whether a plugin may run in this Textus: its version range and its
  *  platforms both fit. */

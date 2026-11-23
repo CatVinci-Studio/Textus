@@ -148,3 +148,12 @@ export function Byline({
     </span>
   );
 }
+
+/** The store's mark on a plugin that runs on the computer only. */
+export function DesktopOnlyMark({ t }: { t: Strings }) {
+  return (
+    <span className="tx-badge" title={t.pluginStatusDesktopOnly}>
+      {t.pluginDesktopOnlyBadge}
+    </span>
+  );
+}
