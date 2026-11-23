@@ -1,4 +1,9 @@
-import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
+import {
+  useLayoutEffect,
+  useRef,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import {
   givingWayNow,
   setSidebarRoom,
@@ -26,7 +31,8 @@ export function useNarrowSidebar(
   const fits = room - sidebar >= need;
   const before = useRef({ fits, room });
   const putAway = useRef(false);
-  useEffect(() => {
+  // Before paint, or the window shows it squeezed for a frame.
+  useLayoutEffect(() => {
     // What putting it aside would give a split (frame-store).
     setSidebarRoom(open && room !== Infinity ? sidebar : 0);
     const was = before.current;
