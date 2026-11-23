@@ -99,7 +99,7 @@ test.describe("on a tablet", () => {
     const y = done.y + done.height / 2;
     const from = done.x + 8;
     await touch("touchStart", from, y);
-    // Real time: a finger held still long enough to lift (page-drag's 500 ms).
+    // Real time: a finger held still long enough to lift (page-drag's 300 ms).
     await page.waitForTimeout(700);
     const to = todo.x - 20;
     for (let i = 1; i <= 10; i++)

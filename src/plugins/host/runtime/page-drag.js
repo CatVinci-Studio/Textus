@@ -5,7 +5,7 @@
   var DRAG_START_PX = 5;
   // A finger: held still this long it lifts the item; moved further first,
   // it scrolls.
-  var HOLD_MS = 500;
+  var HOLD_MS = 300; // the app's hold-drag.ts and the plugins' shared/drag.js
   var TOUCH_SLOP_PX = 10;
   // Near the scroller's edge the drag scrolls it, faster the further in
   // (edge-scroll.ts's pace).
