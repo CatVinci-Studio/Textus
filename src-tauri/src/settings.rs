@@ -19,6 +19,8 @@ mod stores;
 pub(crate) use stores::*;
 mod app;
 pub(crate) use app::*;
+mod window_background;
+pub(crate) use window_background::*;
 mod ai_records;
 
 #[derive(Serialize)]

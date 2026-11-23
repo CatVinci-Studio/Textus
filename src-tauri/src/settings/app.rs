@@ -213,17 +213,19 @@ pub(crate) fn emit_to_all<S: Serialize + Clone>(app: &AppHandle, event: &str, pa
     }
 }
 
-/// The script every app webview runs first: it publishes `window.__BOOT__` (its
-/// shape is `Boot` in src/storage/boot.ts) and applies the appearance. Read when
-/// the window is built, so the frontend treats it as a first-paint hint and
-/// re-reads live values.
-pub fn boot_script(app: &AppHandle, label: &str) -> String {
+/// The script every app webview runs first, and the window's background it
+/// paints with. The script publishes `window.__BOOT__` (what the frontend reads
+/// of it is `Boot` in src/storage/boot.ts; boot.js reads the rest) and applies
+/// the appearance. Read when the window is built, so the frontend treats it as
+/// a first-paint hint and re-reads live values.
+pub fn boot_script(app: &AppHandle, label: &str) -> (String, Option<tauri::window::Color>) {
     let Some(stores) = app.try_state::<Stores>() else {
-        return String::new();
+        return (String::new(), None);
     };
     let (settings, rev) = stores.settings.snapshot();
     let (ui_state, _) = stores.ui_state.snapshot();
     let theme_css = user_theme_css(app, &settings);
+    let background = window_background(&settings, &ui_state, &theme_css, system_dark());
     let boot = json!({
         "settings": settings,
         "rev": rev,
@@ -238,7 +240,7 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
         "restoring": crate::launch::window_restores(app, label),
         "detachedTab": detached_tab(app, label),
         // The theme's page colour, for index.html's first paint.
-        "background": window_background(&settings, &ui_state, system_dark())
+        "background": background
             .map(|tauri::window::Color(r, g, b, _)| format!("#{r:02x}{g:02x}{b:02x}")),
         // The settings' values the boot script turns into the page's look:
         // the frontend's own tables, one file.
@@ -247,10 +249,11 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
         ))
         .unwrap_or(Value::Null),
     });
-    format!(
+    let script = format!(
         "{}\n;window.__textusBoot({boot}, {theme_css});",
         include_str!("../boot.js")
-    )
+    );
+    (script, background)
 }
 
 #[cfg(desktop)]
@@ -273,9 +276,9 @@ fn windows_10() -> bool {
     false
 }
 
-/// Above this an imported theme is left to the frontend's async load rather
-/// than copied into every boot script.
-pub(crate) const MAX_BOOT_THEME_CSS: u64 = 2 * 1024 * 1024;
+/// Above this a text (an imported theme, a dragged-out tab) is left to the
+/// frontend to load rather than copied into a boot script.
+pub(crate) const MAX_BOOT_TEXT: usize = 2 * 1024 * 1024;
 
 /// The selected imported theme's stylesheets, as `{light, dark}` JSON (or
 /// `null` for a built-in theme).
@@ -309,7 +312,7 @@ pub(crate) fn user_theme_css(app: &AppHandle, settings: &Value) -> Value {
     let read = |name: &str| -> Option<String> {
         let path = dir.join(name);
         let size = std::fs::metadata(&path).ok()?.len();
-        (size <= MAX_BOOT_THEME_CSS)
+        (size <= MAX_BOOT_TEXT as u64)
             .then(|| std::fs::read_to_string(&path).ok())
             .flatten()
     };
@@ -332,155 +335,14 @@ pub fn with_boot<'a, R: tauri::Runtime, M: Manager<R>>(
     app: &AppHandle,
     label: &str,
 ) -> tauri::WebviewWindowBuilder<'a, R, M> {
-    let builder =
-        crate::window_guard::guard(builder.initialization_script(boot_script(app, label)));
+    let (script, background) = boot_script(app, label);
+    let builder = crate::window_guard::guard(builder.initialization_script(script));
     #[cfg(any(target_os = "linux", windows))]
-    let builder = match app.try_state::<Stores>().and_then(|stores| {
-        window_background(
-            &stores.settings.snapshot().0,
-            &stores.ui_state.snapshot().0,
-            system_dark(),
-        )
-    }) {
+    let builder = match background {
         Some(color) => builder.background_color(color),
         None => builder,
     };
+    #[cfg(not(any(target_os = "linux", windows)))]
+    let _ = background;
     builder
-}
-
-/// The colour a window shows before its page has painted: the page's own
-/// background, `--ui-bg`, for the theme and appearance. Linux GTK and
-/// Windows' WebView2 otherwise show white first: at launch, and on Windows
-/// again whenever the window is maximized or comes back. "system" follows
-/// `system_dark`, left alone where that is unknown: guessing wrong would flash.
-pub(crate) fn window_background(
-    settings: &Value,
-    ui_state: &Value,
-    system_dark: Option<bool>,
-) -> Option<tauri::window::Color> {
-    let dark = match settings.get("theme").map(Value::as_str) {
-        Some(Some("dark")) => true,
-        Some(Some("light")) => false,
-        Some(Some("system")) | None => system_dark?,
-        _ => return None,
-    };
-    let theme = settings
-        .get("themeId")
-        .and_then(Value::as_str)
-        .unwrap_or_default();
-    Some(
-        builtin_background(theme, dark)
-            .or_else(|| imported_background(theme, ui_state, dark))
-            .unwrap_or(if dark {
-                tauri::window::Color(0x1c, 0x1c, 0x1e, 0xff)
-            } else {
-                tauri::window::Color(0xff, 0xff, 0xff, 0xff)
-            }),
-    )
-}
-
-/// A built-in theme's page colour, from its own stylesheet.
-fn builtin_background(theme: &str, dark: bool) -> Option<tauri::window::Color> {
-    const CSS: &str = include_str!("../../../src/theme/content-themes.css");
-    if theme.is_empty() || !theme.chars().all(|c| c.is_ascii_alphanumeric()) {
-        return None;
-    }
-    let rule = if dark {
-        format!(":root[data-theme=\"dark\"][data-content-theme=\"{theme}\"] {{")
-    } else {
-        format!("\n[data-content-theme=\"{theme}\"] {{")
-    };
-    css_color(declared(CSS, &rule, "--doc-bg:")?)
-}
-
-/// An imported theme's, from the chrome the frontend last derived for it
-/// (ui-state's `themeChrome`, which the boot script paints the first frame
-/// with), when that was for this theme in this appearance.
-fn imported_background(theme: &str, ui_state: &Value, dark: bool) -> Option<tauri::window::Color> {
-    let chrome = ui_state.get("themeChrome")?;
-    if chrome.get("id")?.as_str()? != theme || chrome.get("dark")?.as_bool()? != dark {
-        return None;
-    }
-    let css = chrome.get("css")?.as_str()?;
-    css_color(
-        declared(css, ":root {", "--ui-bg:")?
-            .trim_end_matches("!important")
-            .trim(),
-    )
-}
-
-/// The value `property` has in the first rule that starts with `rule`.
-fn declared<'a>(css: &'a str, rule: &str, property: &str) -> Option<&'a str> {
-    let body = &css[css.find(rule)? + rule.len()..];
-    let body = &body[..body.find('}')?];
-    let value = &body[body.find(property)? + property.len()..];
-    Some(value.split(';').next()?.trim())
-}
-
-/// `#rgb`, `#rrggbb` or `rgb(r, g, b)` as an opaque colour; None for anything else.
-fn css_color(value: &str) -> Option<tauri::window::Color> {
-    let channels: Vec<u8> = if let Some(hex) = value.strip_prefix('#') {
-        let wide = match hex.len() {
-            3 => hex.chars().flat_map(|c| [c, c]).collect(),
-            6 => hex.to_string(),
-            _ => return None,
-        };
-        (0..3)
-            .map(|i| u8::from_str_radix(&wide[i * 2..i * 2 + 2], 16).ok())
-            .collect::<Option<_>>()?
-    } else {
-        value
-            .strip_prefix("rgb(")?
-            .strip_suffix(')')?
-            .split(',')
-            .map(|n| n.trim().parse().ok())
-            .collect::<Option<_>>()?
-    };
-    match channels[..] {
-        [r, g, b] => Some(tauri::window::Color(r, g, b, 0xff)),
-        _ => None,
-    }
-}
-
-/// Whether the system is in dark mode, where it can be read before a window
-/// exists: Windows' own setting for apps.
-#[cfg(windows)]
-pub(crate) fn system_dark() -> Option<bool> {
-    let key = windows_registry::CURRENT_USER
-        .open(r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize")
-        .ok()?;
-    Some(key.get_u32("AppsUseLightTheme").ok()? == 0)
-}
-
-#[cfg(not(windows))]
-pub(crate) fn system_dark() -> Option<bool> {
-    None
-}
-
-/// Gives every open app window the background `with_boot` would give it now,
-/// so unpainted edges (during a resize) don't keep the old appearance's colour.
-#[cfg(any(target_os = "linux", windows))]
-pub(crate) fn apply_window_backgrounds(app: &AppHandle) {
-    let Some(stores) = app.try_state::<Stores>() else {
-        return;
-    };
-    let color = window_background(
-        &stores.settings.snapshot().0,
-        &stores.ui_state.snapshot().0,
-        system_dark(),
-    );
-    // The webview's own colour too, which WebView2 shows on maximize: the
-    // window's alone left a theme changed since launch flashing the old one.
-    for (label, window) in app.webview_windows() {
-        // Only the windows the user sees: not the transparent tab-drag
-        // pill, the hidden PDF-export renderers or background host.
-        use crate::windows::WindowKind;
-        if matches!(
-            WindowKind::of(&label),
-            Some(WindowKind::DragPill | WindowKind::BackgroundHost | WindowKind::PdfExport)
-        ) {
-            continue;
-        }
-        let _ = window.set_background_color(color);
-    }
 }

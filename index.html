@@ -16,11 +16,11 @@
          checks these colours against base.css). -->
     <style>
       html {
-        background: #ffffff;
+        background: var(--boot-bg, #ffffff);
       }
       @media (prefers-color-scheme: dark) {
         html {
-          background: #1c1c1e;
+          background: var(--boot-bg, #1c1c1e);
         }
       }
       html[data-theme="light"] {
