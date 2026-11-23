@@ -2,6 +2,7 @@ import { InputRule } from "@milkdown/kit/prose/inputrules";
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import { $inputRule } from "@milkdown/kit/utils";
 import { LINK } from "./link-source";
+import { parseLink } from "./link-syntax";
 
 /**
  * `[text](url)` typed out becomes a link as its `)` goes in. A run holding an
@@ -29,7 +30,8 @@ export function typedLink(
   return match[1].trim() ? linkNodeAt(state, match[0], start, end) : null;
 }
 
-/** `source` at start..end as a link node; null where none may go. */
+/** `source` at start..end as a link node, or null: none may go there, or Markdown
+ *  wouldn't read it as one link (link-normalize would undo it, forever). */
 export function linkNodeAt(
   state: EditorState,
   source: string,
@@ -40,6 +42,7 @@ export function linkNodeAt(
   const $start = state.doc.resolve(start);
   if (
     !link ||
+    !parseLink(source) ||
     $start.parent.type.spec.code ||
     !$start.parent.canReplaceWith(
       $start.index(),
