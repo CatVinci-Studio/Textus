@@ -4,9 +4,11 @@ import {
   blockAt,
   holdBlock,
   holdBy,
+  holdText,
   holdStill,
   keepWhile,
   pageIsTheHands,
+  textAt,
 } from "./scroll-hold";
 
 describe("what is on screen held still", () => {
@@ -126,6 +128,31 @@ describe("holding a scroll position", () => {
       () => (rect = { top: 60, height: 200, bottom: 260 }),
     );
     expect(el.scrollTop).toBeCloseTo(100 + 60 + 0.245 * 200 - 74.5);
+  });
+
+  it("holds the character at a point, at the end of its text too, and none off text", () => {
+    const within = document.body.appendChild(document.createElement("p"));
+    const text = within.appendChild(document.createTextNode("abc"));
+    let top = 40;
+    const rects = vi
+      .spyOn(Range.prototype, "getClientRects")
+      .mockImplementation(() => [{ top }] as unknown as DOMRectList);
+    const hitAt = (node: Node, offset: number) =>
+      (document.caretRangeFromPoint = () =>
+        ({ startContainer: node, startOffset: offset }) as Range);
+    hitAt(text, 3);
+    const held = textAt(within, 0, 0)!;
+    expect(held.range.startOffset).toBe(2);
+    expect(held.top).toBe(40);
+    // The text rewraps: its character's line put back where it was.
+    const el = scroller(100);
+    holdText(el, held, () => (top = 75));
+    expect(el.scrollTop).toBe(135);
+    hitAt(within, 0);
+    expect(textAt(within, 0, 0)).toBeNull();
+    rects.mockRestore();
+    Reflect.deleteProperty(document, "caretRangeFromPoint");
+    within.remove();
   });
 
   it("finds the block at a line, else the first below it", () => {

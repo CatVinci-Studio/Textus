@@ -4,11 +4,15 @@ import { tabInUse, windowLayout } from "../engine/layout/store";
 import { paneById } from "../engine/layout/tree";
 import { useEffect, useRef } from "react";
 import { onFlush } from "../storage/pending-writes";
-import { isMobileApp } from "../platform/capabilities";
+import { isMobileApp, pinchFromTouches } from "../platform/capabilities";
+import { listenToTouchPinch, type PinchAt } from "./touch-pinch";
 import {
   blockAt,
   holdBlock,
+  holdText,
   keepNextFrame,
+  textAt,
+  type HeldText,
 } from "../engine/controls/scroll-hold";
 import { listenToThisWindow, unlistenAll } from "../platform/events";
 import type { EditorView } from "@codemirror/view";
@@ -45,14 +49,6 @@ const SCROLL_GESTURE_MS = 250;
 const PERSIST_DELAY_MS = 400;
 /// A wheel pinch (no gesture end of its own) has ended after this still.
 const PINCH_REST_MS = 150;
-
-/// WebKit's proprietary pinch events (gesturestart/change/end) - not in
-/// lib.dom because no other engine implements them.
-interface WebKitGestureEvent extends UIEvent {
-  readonly scale: number;
-  readonly clientX: number;
-  readonly clientY: number;
-}
 
 function clamp(zoom: number): number {
   return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom));
@@ -106,16 +102,24 @@ function zoomPane(
   );
 }
 
-/// Keeps the line at viewport y `line` in place: the block under it keeps
-/// its share of its height. Scaling the offset alone drifts as text rewraps.
+/// Keeps the line at viewport y `line` in place: the character at `x` on
+/// it (or `held`, read off a pinch's preview), else the block under it
+/// keeps its share of its height. Scaling the offset alone drifts as text
+/// rewraps.
 function holdRendered(
   scroller: HTMLElement,
   content: Element,
+  x: number,
   line: number,
   prev: number,
   next: number,
   setZoomVar: () => void,
+  held = textAt(content, x, line),
 ) {
+  if (held) {
+    holdText(scroller, held, setZoomVar);
+    return;
+  }
   const blocks = content.querySelector(".ProseMirror");
   const block = blocks && blockAt(blocks, line);
   if (block) {
@@ -232,10 +236,14 @@ export function useZoom(
     // The tab the next apply zooms, and to what.
     let target: HTMLElement | null = null;
 
+    // The character a pinch's preview showed at its line, held as it lands.
+    let previewText: HeldText | null = null;
+
     const apply = () => {
       const tab = target;
       if (!tab) return;
       zoomTo(tab);
+      previewText = null;
       if (isMobileApp) caretAgain(tab);
     };
 
@@ -266,10 +274,12 @@ export function useZoom(
         holdRendered(
           pane.scroller,
           pane.content()!,
+          anchorClientX ?? box.left + box.width / 2,
           line,
           prev,
           next,
           setZoomVar,
+          previewText ?? undefined,
         );
       // Split panes sync on scroll, and the held pane may not have moved:
       // let the other follow it.
@@ -339,9 +349,11 @@ export function useZoom(
       if (!shown) return;
       preview = null;
       clearTimeout(pinchRest);
-      endPreview(shown);
       const box = shown.column.getBoundingClientRect();
       const point = { clientX: box.left + box.width / 2, clientY: shown.line };
+      // Read while still drawn scaled: what the fingers see, panned or not.
+      previewText = textAt(shown.column, point.clientX, point.clientY);
+      endPreview(shown);
       setZoom(() => zoomRef.current, true, point, shown.tab);
       // In this frame, or the column shows at its old size for one.
       if (raf) {
@@ -357,37 +369,43 @@ export function useZoom(
     // The restored zoom is the starting state, not a step to anchor.
     if (zoomRef.current !== 1) setWindowZoom(zoomRef.current);
 
-    // Trackpad pinch: scale is cumulative from the gesture's start, so the
-    // zoom at gesturestart is the base it multiplies.
+    // A pinch: scale is cumulative from its start, so the zoom then is the
+    // base it multiplies. WebKit's gesture events (a trackpad, an iPhone)
+    // or, where a web view has none, two fingers' touches.
     let pinchBase = 1;
     let pinchTab: HTMLElement | null = null;
-    const onGestureStart = (e: Event) => {
-      e.preventDefault();
-      const { clientX, clientY } = e as WebKitGestureEvent;
+    const pinchStart = ({ clientX, clientY }: PinchAt) => {
       pinchTab = zoomTab(clientX, clientY);
       pinchBase = pinchTab ? contentZoom(pinchTab) : 1;
       commitPreview();
       preview = pinchTab && startPreview(pinchTab, pinchBase, clientY);
+      return pinchTab !== null;
     };
-    const onGestureChange = (e: Event) => {
-      e.preventDefault();
-      const { scale } = e as WebKitGestureEvent;
+    const pinchChange = (at: PinchAt) => {
+      const { scale } = at;
       if (scale > 0 && preview) previewTo(pinchBase * scale);
       else if (scale > 0 && pinchTab)
-        setZoom(
-          () => pinchBase * scale,
-          false,
-          e as WebKitGestureEvent,
-          pinchTab,
-        );
+        setZoom(() => pinchBase * scale, false, at, pinchTab);
     };
-    const onGestureEnd = (e: Event) => {
-      e.preventDefault();
+    const pinchEnd = (at: PinchAt) => {
       if (preview) commitPreview();
-      else if (pinchTab)
-        setZoom(() => zoomRef.current, true, e as WebKitGestureEvent, pinchTab);
+      else if (pinchTab) setZoom(() => zoomRef.current, true, at, pinchTab);
       pinchTab = null;
     };
+    const gesture = (handle: (at: PinchAt) => void) => (e: Event) => {
+      e.preventDefault();
+      handle(e as Event & PinchAt);
+    };
+    const onGestureStart = gesture(pinchStart);
+    const onGestureChange = gesture(pinchChange);
+    const onGestureEnd = gesture(pinchEnd);
+    const unlistenTouchPinch = pinchFromTouches
+      ? listenToTouchPinch(window, {
+          start: pinchStart,
+          change: pinchChange,
+          end: pinchEnd,
+        })
+      : () => {};
 
     // mod+wheel zoom. Exponential, so steps are proportional to the current
     // level. Chromium reports trackpad pinch as ctrl+wheel too. As in VS
@@ -444,6 +462,7 @@ export function useZoom(
       window.removeEventListener("gesturechange", onGestureChange);
       window.removeEventListener("gestureend", onGestureEnd);
       window.removeEventListener("wheel", onWheel);
+      unlistenTouchPinch();
       if (raf) cancelAnimationFrame(raf);
       clearTimeout(pinchRest);
       if (preview) endPreview(preview);
