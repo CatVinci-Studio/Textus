@@ -9,9 +9,11 @@ import {
   setTabOrder,
   subscribeSplit,
   setSplitLayout,
+  startWindowTabs,
   setWindowTabs,
   splitLayout,
   tabInUse,
+  windowTabs,
 } from "./store";
 import { pairLayout } from "./ops";
 import { pane, panesOf, type Branch } from "./tree";
@@ -121,6 +123,19 @@ describe("the document in front", () => {
     expect(documentInFront()).toBe("b");
     setWindowTabs((now) => now.filter((tab) => tab.id !== "b"));
     expect(documentInFront()).toBe("a");
+  });
+
+  it("keeps a tab when every one is taken away at once", () => {
+    // Putting the AI's tabs away with no document left took the window's
+    // last one: what reads the tab in use had nothing to read.
+    startWindowTabs<{ id: string; view?: unknown }>(
+      [{ id: "ai", view: {} }],
+      () => ({ id: "blank" }),
+    );
+    setWindowTabs(() => []);
+    expect(windowTabs()).toEqual([{ id: "blank" }]);
+    expect(tabInUse()).toBe("blank");
+    expect(documentInFront()).toBe("blank");
   });
 
   it("closing the tab in use goes back to the one in use before it, not the first", () => {

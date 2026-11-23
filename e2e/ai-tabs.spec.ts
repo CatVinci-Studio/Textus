@@ -78,6 +78,32 @@ test("a conversation keeps its turns when the document in front is closed and an
   await expect(turns).not.toContainText("第三章写了什么？");
 });
 
+test("hiding the AI with the last document closed shows the start page, not an empty window", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as unknown as Record<string, unknown>).__devFs = {
+      "/w/a.md": "# A\n",
+    };
+  });
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await openPath(page, "/w/a.md");
+  await aiButton(page).click();
+  await expect(tabs(page)).toHaveText(["a.md", "Textus AI"]);
+  // The document goes; the conversation stays.
+  const doc = tabs(page).filter({ hasText: "a.md" });
+  await doc.hover();
+  await doc.locator(".tab-pill-close").click();
+  await expect(tabs(page)).toHaveText(["Textus AI"]);
+  // The AI's tabs were the window's last: put away, they leave the start
+  // page, not a window with no tab in use (which took the whole window down).
+  await page.keyboard.press("ControlOrMeta+Shift+KeyL");
+  await expect(tabs(page)).toHaveText(["起始页"]);
+  await expect(page.locator(".start-page")).toBeVisible();
+  await expect(page.locator(".app-error")).toHaveCount(0);
+});
+
 test("messages sent during a reply wait their turn; a failure holds them until the user goes on", async ({
   page,
 }) => {

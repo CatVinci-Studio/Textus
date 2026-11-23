@@ -15,7 +15,11 @@ import {
   setLiveConversation,
 } from "../../ai/chat/conversation-scope";
 import { useChatHistory } from "../../ai/chat/chat-history";
-import { makeBlankTab, type DocTab } from "../../document/doc-tabs";
+import {
+  makeBlankTab,
+  makeStartTab,
+  type DocTab,
+} from "../../document/doc-tabs";
 import {
   documentInFront,
   ifFits,
@@ -272,10 +276,13 @@ export function useAiTabs({
         );
     }
     if (gone.length || made.length)
-      setTabs((prev) => [
-        ...prev.filter((tab) => !gone.includes(tab.id)),
-        ...made,
-      ]);
+      setTabs((prev) => {
+        const next = [...prev.filter((tab) => !gone.includes(tab.id)), ...made];
+        // Hiding the AI must not leave a window with nothing open (the
+        // store's own guard would put a blank document there): the start
+        // page is what a window with no tab in use shows.
+        return next.length ? next : [makeStartTab()];
+      });
     // Opened with the button, the AI is what is in use; so is one a + made.
     const front = made.find((tab) => conversationOf(tab) === ask?.id);
     if (front) {
