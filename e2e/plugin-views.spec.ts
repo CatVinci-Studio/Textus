@@ -424,19 +424,25 @@ test("a plugin's block opened again starts at its page's height, not growing to 
   const height = await frame.evaluate((f) => f.getBoundingClientRect().height);
   await emit(page, "menu-close-tab");
   await expect(frame).toHaveCount(0);
-  // Every frame's height of the block from the moment it is there again.
+  // Every frame's height of the block from the moment it is there again,
+  // until its page is in it and its height has held for a while.
   const seen = page.evaluate(
     () =>
       new Promise<number[]>((done) => {
         const heights: number[] = [];
-        const until = performance.now() + 4000;
+        let held = 0;
         const sample = () => {
           const holder = document.querySelector(
             '[data-active-tab="true"] .plugin-code-holder',
           );
-          if (holder) heights.push(holder.getBoundingClientRect().height);
-          if (performance.now() < until) requestAnimationFrame(sample);
-          else done(heights);
+          const height = holder?.getBoundingClientRect().height;
+          if (height !== undefined) {
+            const same = height === heights[heights.length - 1];
+            held = same && holder!.querySelector("iframe") ? held + 1 : 0;
+            heights.push(height);
+          }
+          if (held >= 30 || heights.length > 600) done(heights);
+          else requestAnimationFrame(sample);
         };
         requestAnimationFrame(sample);
       }),

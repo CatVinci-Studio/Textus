@@ -191,9 +191,9 @@ function contentHeight() {
         (parseFloat(style.marginBottom) || 0),
     );
   }
-  // Nothing drawn yet: no height, or a frame opened at its last height
-  // shrank to nothing for a moment and grew back.
-  if (!drawn) return -1;
+  // Nothing drawn yet, before its first height: none, or a frame opened
+  // at its last height shrank to nothing for a moment and grew back.
+  if (!drawn && told < 0) return -1;
   return (
     bottom +
     (parseFloat(getComputedStyle(body).paddingBottom) || 0) +
