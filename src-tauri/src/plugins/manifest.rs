@@ -145,8 +145,10 @@ pub fn check(manifest: &str) -> Result<(), String> {
         }
     }
 
+    // Background code runs on the desktop only; a plugin that only asks to
+    // keep Textus running (requires runInBackground) may name ios, where it
+    // runs without (src/plugins/store/manifest.ts, the same rule).
     let background = optional_text(m.get("background"), "background")?;
-    let mut in_background = background.is_some();
     for (i, r) in list(m.get("requires"), "requires")?.iter().enumerate() {
         let need = object(r, &format!("requires[{i}]"))?;
         let setting = text(need.get("setting"), &format!("requires[{i}].setting"))?;
@@ -157,7 +159,6 @@ pub fn check(manifest: &str) -> Result<(), String> {
             ));
         }
         optional_text(need.get("reason"), &format!("requires[{i}].reason"))?;
-        in_background |= setting == "runInBackground";
     }
     if m.get("platforms").is_some() {
         let platforms = list(m.get("platforms"), "platforms")?;
@@ -169,7 +170,7 @@ pub fn check(manifest: &str) -> Result<(), String> {
                 return Err(format!("No platform {p}: desktop or ios."));
             }
         }
-        if in_background && platforms.iter().any(|p| p == "ios") {
+        if background.is_some() && platforms.iter().any(|p| p == "ios") {
             return Err(
                 "The background is the desktop's only: platforms can't name ios.".to_string(),
             );
@@ -373,7 +374,7 @@ mod tests {
         let mut m: Value = serde_json::from_str(GOOD).unwrap();
         m["requires"] = serde_json::json!([{ "setting": "runInBackground" }]);
         m["platforms"] = serde_json::json!(["desktop", "ios"]);
-        assert!(check(&m.to_string()).is_err());
+        assert!(check(&m.to_string()).is_ok());
         assert!(check(&with("requires", Some(r#"[{"setting":"sudo"}]"#))).is_err());
     }
 }

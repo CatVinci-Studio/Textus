@@ -101,7 +101,10 @@ export function parseManifest(raw: string | unknown): PluginManifest {
       reason: text(need.reason, `requires[${i}].reason`, true) || undefined,
     };
   });
-  // Background code, or Textus kept running in the background: the desktop's.
+  // Background code, or Textus kept running in the background: the
+  // desktop's, unless platforms says otherwise. Background code can't run
+  // anywhere else; a plugin that only asks to keep Textus running works
+  // without it where there is no tray, and naming ios says so.
   const inBackground =
     !!background || requires.some((r) => r.setting === "runInBackground");
   // An agent is a program on the computer: the desktop's too.
@@ -118,7 +121,7 @@ export function parseManifest(raw: string | unknown): PluginManifest {
             );
           return p as PluginPlatform;
         });
-  if (inBackground && platforms.includes("ios"))
+  if (background && platforms.includes("ios"))
     throw new ManifestError(
       "The background is the desktop's only: platforms can't name ios.",
     );

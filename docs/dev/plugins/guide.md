@@ -951,7 +951,9 @@ What differs is room and what the system allows:
   `"platforms": ["desktop"]`, and Textus on iOS neither lists nor loads it.
   A plugin that works in the background, with `background` code or
   `requires` Keep running in the background (`runInBackground`), is
-  desktop-only by default, and naming `ios` beside it is an error. Check a
+  desktop-only by default. `background` code can't name `ios`; a plugin
+  that only `requires` Keep running in the background may, and on iOS and
+  Android it runs without it - nobody is asked to turn it on. Check a
   plugin you offer on iOS in a phone-sized window, or the simulator, before
   you publish.
 - Files a user opens from the Files app are reached through iOS's own
