@@ -24,7 +24,7 @@ Chat has three surfaces and two conversations, all owned by the editor
 
 All render the same `ChatBody`, and all feed one resolution pipeline:
 `MilkdownEditor → usePendingEdits → pending-edit-plugin`. Anchors resolve in
-**markdown source space** (`ai/doc-markdown.ts`), matching what the model was
+**markdown source space** (`editor/markdown/doc-markdown.ts`), matching what the model was
 shown. Previews are pure decorations - until the user clicks Accept, the
 document text is untouched. Accept (`applyEditRange`) is the **only** write
 path: one transaction, one undo step, no direct-apply fallback.
@@ -77,7 +77,7 @@ frontend (`StreamEvent::Picture`), which draws the line as its frame
 ## Where a proposal points: blocks
 
 The blocks are the editor's own top-level nodes: the request carries them,
-each with its id and kind (`ai/doc-blocks.ts`, made by `doc-markdown.ts`'s
+each with its id and kind (`editor/markdown/doc-blocks.ts`, made by `doc-markdown.ts`'s
 `serializeBlocks`), and the backend shows the model each after its id
 (`[#k3f9] `, `ai/doc_blocks.rs`) without splitting the document itself - a
 list or a quote is one block, as it is one node. Every call that points
@@ -501,7 +501,7 @@ file goes once the last of them is decided.
 | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `ai/revision/proposal-stream.ts`                                    | Writing-phase machine: place/feed/finalize/discard, a call's result                                  |
 | `ai/revision/proposal-display.ts`                                   | How a draft is shown: typed in, or drawn again as it grows                                           |
-| `ai/doc-blocks.ts`, `src-tauri/src/ai/doc_blocks.rs`                | The editor's blocks with their ids and kinds, and what a call naming them stands for                 |
+| `editor/markdown/doc-blocks.ts`, `src-tauri/src/ai/doc_blocks.rs`   | The editor's blocks with their ids and kinds, and what a call naming them stands for                 |
 | `ai/revision/sentence-diff.ts`                                      | A rewrite's changes, and how finely each is decided (`regroup`)                                      |
 | `ai/revision/usePendingEdits.ts`                                    | Anchor resolution, accept/reject/rejectAll, status map, review navigation                            |
 | `ai/revision/pending-edit-plugin.ts`                                | Decorations, hover tint, typewriter + settle, the progress cursor, staleness and `rebase`, shortcuts |

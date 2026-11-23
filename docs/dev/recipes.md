@@ -49,7 +49,7 @@ the same menu in HTML, and the phone has its own.
    `item(...)` or, for an on/off item, `check(...)`, with an English
    label; a fixed, OS-convention key is its `.accelerator(...)`. Put it in
    its submenu.
-3. **The menu model**: in `src/app/menu/app-menu-model.ts`, add the id to
+3. **The menu model**: in `src/registry/menu/app-menu-model.ts`, add the id to
    `NativeMenuId` and an entry `{ label: t.…, action: { native: "…" } }`
    (with `checked` or `accel` as needed) to `buildAppMenu`, and to
    `buildMobileMenu` if the phone has it. The macOS bar's labels are read
@@ -73,7 +73,7 @@ the same menu in HTML, and the phone has its own.
    in the built app on a Mac.
 7. **The command palette** lists every menu item from the model, so it
    needs nothing. A command with no menu item is `registerCommand`
-   (`src/app/commands.ts`).
+   (`src/registry/commands.ts`).
 8. **Strings** for the label in all ten locales, and `e2e/` coverage via
    `emit(page, "menu-<id>")`.
 
@@ -94,8 +94,8 @@ Example: the draft commands (`src-tauri/src/commands/drafts.rs`,
    Types it takes or returns carry `#[cfg_attr(test, derive(specta::Type))]`
    and a comment naming their TypeScript side.
 
-2. **Register it** in `run()`'s `invoke_handler` list in
-   `src-tauri/src/lib.rs`: in the shared half if iOS has it, else in the
+2. **Register it** in the `invoke_handler` list in
+   `src-tauri/src/invoke_handler.rs`: in the shared half if iOS has it, else in the
    second half with `#[cfg(desktop)]` in front. A shared command may only
    read state managed in the shared part of `run()`; state that only
    `desktop_builder` manages aborts the iOS app when the page calls it
@@ -175,14 +175,14 @@ Example: `layout.panels()` and `onDidChangePanels` (commit 36709ec9), or
    `src-tauri/src/ai/skills/plugin.md`; `src/plugins/plugin-guide.test.ts`
    fails on a call it doesn't name.
 7. **The version**: a release that adds calls raises `API_VERSION` in
-   `host.js`, the version in `textus.d.ts`'s header, and the table in
+   `src/plugins/host/runtime/host-core.js`, the version in `textus.d.ts`'s header, and the table in
    `docs/dev/plugins/versions.md` (`plugin-docs-facts.test.ts` holds them
    together).
 8. **The browser**: if the call reaches a new backend command, the dev
    shim answers it (`src/dev/plugin-shim-api.ts` for files and the index).
 9. **A test**: unit tests for the handler or helper, and an e2e flow with
-   a plugin for what crosses the frame (`e2e/plugin-text-api.spec.ts` is an
-   example; [testing.md](testing.md#the-official-plugins)).
+   a plugin for what crosses the frame (`e2e/plugin-views.spec.ts` has
+   examples; [testing.md](testing.md#the-official-plugins)).
 
 ## Add an e2e test
 
