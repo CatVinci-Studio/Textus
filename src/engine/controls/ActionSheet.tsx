@@ -67,9 +67,11 @@ export function ActionSheet({
                   data-depth={item.depth}
                   aria-current={item.current ? "location" : undefined}
                   className={`action-sheet-item${item.danger ? " action-sheet-item-danger" : ""}`}
+                  // The choice first: a menu whose closing means "nothing
+                  // chosen" (a plugin page's) must hear the choice before.
                   onClick={() => {
-                    onClose();
                     item.onSelect();
+                    onClose();
                   }}
                 >
                   {item.label}

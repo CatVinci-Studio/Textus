@@ -396,6 +396,59 @@ test("a plugin's block is on the page as a table is, its edge shown only while p
   await expect(block).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
 });
 
+test("a block whose plugin asks for no frame, a base, shows no edge when pointed at, only its source button", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.database"), "no plugins checkout");
+  await openWithPlugins(page, {
+    plugins: { "catvinci.database": permissions("catvinci.database") },
+    folder: {
+      "/work/notes/Plan.md":
+        "# Plan\n\n```base\nviews:\n  - type: table\n    name: Table\n```\n",
+      "/work/notes/One.md": "---\ndue: 2026-11-23\n---\n",
+    },
+  });
+  await openPath(page, "/work/notes/Plan.md");
+  const block = page.locator('[data-active-tab="true"] .plugin-code-block');
+  await expect(block.locator(".plugin-webview-frame")).toBeVisible();
+  await block.hover();
+  await expect(block.locator(".plugin-code-edit")).toHaveCSS("opacity", "1");
+  await expect(block).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+});
+
+test("a database's column heads centre their icon on their name, a Chinese one too", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.database"), "no plugins checkout");
+  await openWithPlugins(page, {
+    plugins: { "catvinci.database": permissions("catvinci.database") },
+    folder: {
+      "/work/notes/Plan.md":
+        "# Plan\n\n```base\nfilters:\n  and:\n    - file.inFolder(this.file.folder)\n    - file.path != this.file.path\nviews:\n  - type: table\n    name: Table\n    order: [file.name, due]\n```\n",
+      "/work/notes/One.md": "---\ndue: 2026-11-23\n---\n",
+    },
+    language: "zh",
+  });
+  await openPath(page, "/work/notes/Plan.md");
+  const heads = page
+    .frameLocator(
+      '[data-active-tab="true"] .plugin-code-block .plugin-webview-frame',
+    )
+    .locator("th[data-key]");
+  await expect(heads.first()).toContainText("页面");
+  for (const head of await heads.all()) {
+    const off = await head.evaluate((th) => {
+      const text = [...th.childNodes].find((n) => n.nodeType === 3)!;
+      const range = document.createRange();
+      range.selectNodeContents(text);
+      const name = range.getBoundingClientRect();
+      const icon = th.querySelector(".tx-icon")!.getBoundingClientRect();
+      return name.top + name.height / 2 - (icon.top + icon.height / 2);
+    });
+    expect(Math.abs(off)).toBeLessThanOrEqual(1.5);
+  }
+});
+
 test.describe("on a touch screen", () => {
   test.use({ hasTouch: true, isMobile: true });
 

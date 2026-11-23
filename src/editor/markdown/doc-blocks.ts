@@ -217,53 +217,151 @@ export function textParagraphs(
   return spans.map(([from, to]) => ({ text: text.slice(from, to), from, to }));
 }
 
+/** An address as written in `<>`, without them; a lone `<` or `>` is part
+ *  of it. The backend's unbracket. */
+function unbracket(src: string): string {
+  return src.length > 1 && src.startsWith("<") && src.endsWith(">")
+    ? src.slice(1, -1)
+    : src;
+}
+
+/** A picture's address: what makes it the same picture whatever its
+ *  description says. `![alt](<a b.png> "title")` is `a b.png`; an `<img>`'s
+ *  src may be unquoted, and one with none is known by its text. Must match
+ *  the backend's picture_src (src-tauri/src/ai/doc_blocks/pictures.rs). */
+function pictureSrc(picture: string): string {
+  const t = picture.trim();
+  const md = /^!\[[^\]\n]*\]\(\s*(<[^>\n]*>|[^)\s]*)/.exec(t);
+  if (md) return unbracket(md[1]);
+  const img =
+    /^<img\s[^>]*\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/i.exec(t);
+  return img ? (img[1] ?? img[2] ?? img[3]) : t;
+}
+
+/** `original` with the description `rewritten` gives it: the writer's
+ *  address and title stay. An `<img>` stays as it is. */
+function withDescription(original: string, rewritten: string): string {
+  const alt = /^!\[([^\]\n]*)\]\(/.exec(rewritten.trim())?.[1];
+  const rest = /^!\[[^\]\n]*\](\(.*\))$/.exec(original.trim())?.[1];
+  return alt === undefined || rest === undefined
+    ? original.trim()
+    : `![${alt}]${rest}`;
+}
+
+/** `text` with each line that is one of `srcs`' pictures in a paragraph of
+ *  other lines put in a paragraph of its own, as the writer's picture is:
+ *  "![a](a.png)\n*Figure 1*" would read as one paragraph, the picture
+ *  beside its caption. A line in a fence or `$$` block, or in an HTML
+ *  block, is that block's and stays. Must match the backend's
+ *  pictures_apart (src-tauri/src/ai/doc_blocks/pictures.rs). */
+function picturesApart(text: string, srcs: ReadonlySet<string>): string {
+  let out = text;
+  for (const p of textParagraphs(text).reverse()) {
+    const lines = p.text.split("\n");
+    if (lines.length < 2 || opensHtml(lines[0])) continue;
+    const code: boolean[] = [];
+    eachLine(p.text, (_line, i, isCode) => (code[i] = isCode), { math: true });
+    const apart = lines.map(
+      (line, i) => !code[i] && isPicture(line) && srcs.has(pictureSrc(line)),
+    );
+    if (!apart.includes(true)) continue;
+    const groups: string[][] = [];
+    let lastApart = false;
+    lines.forEach((line, i) => {
+      const last = groups.at(-1);
+      if (apart[i] || !last || lastApart) groups.push([line]);
+      else last.push(line);
+      lastApart = apart[i];
+    });
+    const parts = groups.map((g) => g.join("\n"));
+    out = `${out.slice(0, p.from)}${parts.join("\n\n")}${out.slice(p.to)}`;
+  }
+  return out;
+}
+
+/** Whether a paragraph whose first line is `line` is an HTML block: it
+ *  opens with a tag, and isn't one of the pictures. */
+function opensHtml(line: string): boolean {
+  return /^ {0,3}<[A-Za-z/!?]/.test(line) && !isPicture(line);
+}
+
 /**
- * `text`, a rewrite of `run`, with the run's pictures as they were: a new
- * picture where one was is taken out, and each one left out goes back by its
- * paragraph. While streaming (`!complete`), pictures not yet reached wait.
+ * `text`, a rewrite of `run`, with the run's pictures as they were: a
+ * picture is the same by its address, so the rewrite may change its
+ * description but never what it shows; a new picture where one was is
+ * taken out, and each one left out goes back by its paragraph. While
+ * streaming (`!complete`), pictures not yet reached wait. Must match the
+ * backend's keep_pictures (src-tauri/src/ai/doc_blocks/pictures.rs).
  */
 export function keepPictures(
   run: readonly { markdown: string }[],
   text: string,
   complete: boolean,
 ): { text: string; swapped: number } {
-  const originals = run.map((b) => b.markdown.trim()).filter(isPicture);
-  const missing = originals.filter((p) => !text.includes(p)).length;
+  const blocks = run.map((b) => b.markdown.trim());
+  const originals = blocks.flatMap((b, i) => {
+    return isPicture(b) ? [{ at: i, markdown: b, src: pictureSrc(b) }] : [];
+  });
+  if (originals.length === 0) return { text, swapped: 0 };
+  const srcs = new Set(originals.map((o) => o.src));
+  const shown = new Set<number>();
+  // The writer's picture the rewrite's `src` is, not taken yet.
+  const take = (src: string) => {
+    const o = originals.find((p) => p.src === src && !shown.has(p.at));
+    if (o) shown.add(o.at);
+    return o;
+  };
+  const spaced = picturesApart(text, srcs);
+  // Once: this runs on every streamed chunk.
+  const spacedParts = textParagraphs(spaced);
+  const paragraphs = spacedParts.map((p) => {
+    if (isPicture(p.text)) {
+      const o = take(pictureSrc(p.text));
+      return { text: o ? withDescription(o.markdown, p.text) : p.text, o };
+    }
+    // A picture inside the words is shown there.
+    for (const m of p.text.matchAll(PICTURES_IN_TEXT)) take(unbracket(m[2]));
+    return { text: p.text, o: undefined };
+  });
+  const missing = originals.length - shown.size;
   let swapped = 0;
-  const kept = textParagraphs(text).filter((b) => {
-    const isNew = isPicture(b.text) && !originals.includes(b.text.trim());
+  const kept = paragraphs.filter((p) => {
+    const isNew = !p.o && isPicture(p.text) && !srcs.has(pictureSrc(p.text));
     if (isNew && swapped < missing) {
       swapped++;
       return false;
     }
     return true;
   });
-  let out = swapped ? kept.map((b) => b.text).join("\n\n") : text;
+  const rewritten =
+    spaced !== text ||
+    swapped > 0 ||
+    paragraphs.some((p, k) => p.text !== spacedParts[k].text);
+  let out = rewritten ? kept.map((p) => p.text).join("\n\n") : text;
   let wordsBefore = 0;
   // Pictures in the new text so far: each moves the later places on by one.
   let put = 0;
-  for (const block of run) {
-    const picture = block.markdown.trim();
-    if (!isPicture(picture)) {
+  blocks.forEach((picture, i) => {
+    if (!originals.some((o) => o.at === i)) {
       wordsBefore++;
-      continue;
+      return;
     }
     // Kept where the rewrite has it, it takes a place all the same.
-    if (out.includes(picture)) {
+    if (shown.has(i)) {
       put++;
-      continue;
+      return;
     }
-    const paragraphs = textParagraphs(out);
     const at = wordsBefore + put;
+    const spans = textParagraphs(out);
     if (at === 0) out = `${picture}\n\n${out.trimStart()}`;
-    else if (at < paragraphs.length) {
-      const end = paragraphs[at - 1].to;
+    else if (at < spans.length) {
+      const end = spans[at - 1].to;
       out = `${out.slice(0, end)}\n\n${picture}\n\n${out.slice(end).trimStart()}`;
-    } else if (complete && paragraphs.length > 0)
+    } else if (complete && spans.length > 0)
       out = `${out.trimEnd()}\n\n${picture}`;
-    else continue;
+    else return;
     put++;
-  }
+  });
   return { text: out, swapped };
 }
 

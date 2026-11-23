@@ -252,6 +252,22 @@ also when its anchor spans several paragraphs, which resolve to their whole
 blocks (`sentence-locate.ts` skips the text before the anchor). One that
 can't be (a heading or list turned into something else) is shown whole,
 and the views apply to it as one change with one card.
+A rewrite never changes what a picture shows: a picture is the same by its
+address (`keepPictures` / `keep_pictures`, cases in
+`ai/keep-pictures-cases.json`), so a new description is taken with the
+writer's address and title, a picture written on a line of its own next to
+its caption is set apart in its own paragraph rather than kept twice, a new
+address where a picture was is taken out, and one left out goes back.
+A bare address right after text is written `[url](url)`, as the model sees
+it, while the editor holds the address alone; the pieces are found by
+either (`indexOfShown`), and a sentence never ends at an address's `?` or
+`!` (`splitSentences`). A rewrite streamed sentence by sentence that
+settles without its pieces found is drawn whole too, not left in its
+streamed layout (1.4.7). A change's new text that is blocks of its own - a
+list, paragraphs, a heading after text - is drawn as those blocks after the
+block it lands in (`blocksAfter`), and its pictures are found beside the
+document, a missing one the editor's missing-picture card
+(`pending-doc-pictures.ts`).
 
 **The text reads as the result.** Where a view takes the originals out of
 the text ("Changes in the text", "Result only"), a block whose text is
