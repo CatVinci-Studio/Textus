@@ -164,7 +164,9 @@ pub(crate) fn watch() {
 }
 
 /// Shows or hides `window`'s three lights, for one of Textus's windows (one
-/// with a bar height). Main thread.
+/// with a bar height): the title bar's container they sit in, as Electron
+/// does. AppKit makes new buttons while full screen comes and goes, so hiding
+/// the buttons themselves misses the ones it shows. Main thread.
 #[cfg(target_os = "macos")]
 fn show(window: *mut std::ffi::c_void, visible: bool) {
     use objc2::msg_send;
@@ -181,12 +183,18 @@ fn show(window: *mut std::ffi::c_void, visible: bool) {
     // object checked before it is messaged.
     unsafe {
         let window = &*(window as *const AnyObject);
-        let alpha: f64 = if visible { 1.0 } else { 0.0 };
-        for kind in [0usize, 1, 2] {
-            let button: *mut AnyObject = msg_send![window, standardWindowButton: kind];
-            if !button.is_null() {
-                let _: () = msg_send![&*button, setAlphaValue: alpha];
-            }
+        let button: *mut AnyObject = msg_send![window, standardWindowButton: 0usize];
+        if button.is_null() {
+            return;
         }
+        let title_view: *mut AnyObject = msg_send![&*button, superview];
+        if title_view.is_null() {
+            return;
+        }
+        let container: *mut AnyObject = msg_send![&*title_view, superview];
+        if container.is_null() {
+            return;
+        }
+        let _: () = msg_send![&*container, setHidden: !visible];
     }
 }
