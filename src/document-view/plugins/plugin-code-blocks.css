@@ -35,6 +35,16 @@
   }
 }
 
+/* A block that reads as part of the page (the manifest's `frame: "none"`:
+   a database's table, which draws its own lines): no edge round it while
+   pointed at or clicked into, only the source button; a keyboard
+   selection of the whole block still shows. */
+.plugin-code-block-plain:is(:hover, :focus-within):not(
+    .ProseMirror-selectednode
+  ) {
+  border-color: transparent;
+}
+
 /* Folded: the line alone, no edge however pointed at. */
 .plugin-code-block[data-folded]:is(*, :hover, :focus-within) {
   border-color: transparent;

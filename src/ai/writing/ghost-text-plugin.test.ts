@@ -100,6 +100,54 @@ describe("one-line blocks", () => {
   });
 });
 
+describe("the text around the caret a completion is asked with", () => {
+  const schema = new Schema({
+    nodes: {
+      doc: { content: "block+" },
+      paragraph: { group: "block", content: "inline*" },
+      heading: { group: "block", content: "inline*" },
+      code_block: {
+        group: "block",
+        content: "text*",
+        code: true,
+        attrs: { language: { default: "" } },
+      },
+      text: { group: "inline" },
+    },
+  });
+  const base = schema.node(
+    "code_block",
+    { language: "base" },
+    schema.text("filters:\n  and:\n    - file.inFolder(this.file.folder)"),
+  );
+  const drawn = (language: string) => language === "base";
+
+  it("leaves out a drawn block's source under a heading", () => {
+    const heading = schema.node("heading", null, schema.text("2026 Calendar"));
+    const doc = schema.node("doc", null, [
+      heading,
+      base,
+      schema.node("paragraph", null, schema.text("Weeks below.")),
+    ]);
+    const end = heading.nodeSize - 1;
+    const { before, after } = completionContext(doc, end, drawn);
+    expect(before).toBe("2026 Calendar");
+    expect(after).toBe("Weeks below.");
+    // Without the plugin drawing it, the source is code the writer reads.
+    expect(completionContext(doc, end).after).toContain("file.inFolder");
+  });
+
+  it("leaves it out before the caret too, keeping the paragraphs apart", () => {
+    const doc = schema.node("doc", null, [
+      schema.node("paragraph", null, schema.text("Intro")),
+      base,
+      schema.node("paragraph", null, schema.text("Then")),
+    ]);
+    const { before } = completionContext(doc, doc.content.size - 1, drawn);
+    expect(before).toBe("Intro\n\nThen");
+  });
+});
+
 describe("the prose a completion reads its language from", () => {
   const schema = new Schema({
     nodes: {
