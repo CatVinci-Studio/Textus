@@ -234,6 +234,9 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
         "label": label,
         // Built without its shadow (editor_windows.rs): the page draws the edge.
         "windows10": windows_10(),
+        // Something to open as it starts: its first frame is held back (startup-restore.ts).
+        "restoring": crate::launch::window_restores(app, label),
+        "detachedTab": detached_tab(app, label),
         // The settings' values the boot script turns into the page's look:
         // the frontend's own tables, one file.
         "tables": serde_json::from_str::<Value>(include_str!(
@@ -245,6 +248,16 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
         "{}\n;window.__textusBoot({boot}, {theme_css});",
         include_str!("../boot.js")
     )
+}
+
+#[cfg(desktop)]
+fn detached_tab(app: &AppHandle, label: &str) -> Value {
+    json!(crate::tab_drag::boot_detached_tab(app, label))
+}
+
+#[cfg(not(desktop))]
+fn detached_tab(_app: &AppHandle, _label: &str) -> Value {
+    Value::Null
 }
 
 #[cfg(windows)]

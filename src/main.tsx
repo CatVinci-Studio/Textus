@@ -10,6 +10,10 @@ import { installDevTauriShim } from "./dev/tauri-shim";
 import { installPolyfills } from "./utils/polyfills";
 import { watchMemory } from "./app/watch-memory";
 import { publishWindowChrome } from "./platform/window-chrome";
+import { holdSheetsWhileRestoring } from "./document/first-tab";
+import { showsStartPage, type DocTab } from "./document/doc-tabs";
+import { windowTabs } from "./engine/layout/store";
+import { startPageModule } from "./app/start-page-module";
 import { WindowEdges, WindowOutline } from "./app/frame/WindowEdges";
 import { installWebviewGuards } from "./engine/controls/webview-guards";
 import { installLinkGuard } from "./app/link-guard";
@@ -84,39 +88,45 @@ if (view === "background") {
     m.runBackgroundHost(),
   );
 } else {
+  // A document window opening documents shows none of the blank one first.
+  if (!view) holdSheetsWhileRestoring();
   // The UI's language loads first, so the first frame is already in it; one
-  // that fails to load shows in English.
-  void loadLocale(loadSettings().language)
-    .catch(() => {})
-    .then(() => {
-      ReactDOM.createRoot(
-        document.getElementById("root") as HTMLElement,
-      ).render(
-        <React.StrictMode>
-          <AppErrorBoundary>
-            <SettingsProvider>
-              <AppearanceSync />
-              {view === "floating" ? (
-                <Suspense fallback={null}>
-                  <FloatingWindowApp />
-                </Suspense>
-              ) : view === "chat" ? (
-                <Suspense fallback={null}>
-                  <ChatWindowApp />
-                </Suspense>
-              ) : (
-                <App />
-              )}
-              {view !== "floating" && <WindowEdges />}
-              {view !== "floating" && <WindowOutline />}
-            </SettingsProvider>
-          </AppErrorBoundary>
-        </React.StrictMode>,
-      );
-      // The parts likely to be opened next load once the window is idle.
-      startWarming();
-      // Caches and idle views are given back once the window is left alone,
-      // and as much is kept as the machine's memory allows.
-      watchMemory();
-    });
+  // that fails to load shows in English. So does the start page, when the
+  // window opens on it.
+  const startPage =
+    !view && windowTabs<DocTab>().some(showsStartPage)
+      ? startPageModule.load().catch(() => {})
+      : null;
+  void Promise.all([
+    loadLocale(loadSettings().language).catch(() => {}),
+    startPage,
+  ]).then(() => {
+    ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+      <React.StrictMode>
+        <AppErrorBoundary>
+          <SettingsProvider>
+            <AppearanceSync />
+            {view === "floating" ? (
+              <Suspense fallback={null}>
+                <FloatingWindowApp />
+              </Suspense>
+            ) : view === "chat" ? (
+              <Suspense fallback={null}>
+                <ChatWindowApp />
+              </Suspense>
+            ) : (
+              <App />
+            )}
+            {view !== "floating" && <WindowEdges />}
+            {view !== "floating" && <WindowOutline />}
+          </SettingsProvider>
+        </AppErrorBoundary>
+      </React.StrictMode>,
+    );
+    // The parts likely to be opened next load once the window is idle.
+    startWarming();
+    // Caches and idle views are given back once the window is left alone,
+    // and as much is kept as the machine's memory allows.
+    watchMemory();
+  });
 }

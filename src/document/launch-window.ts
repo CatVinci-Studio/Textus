@@ -19,14 +19,19 @@ let taken: Promise<WindowSession | null> | null = null;
  *  the page, not the window. */
 const STARTED = "textus-window-started";
 
-function reloaded(): boolean {
+let wasReloaded: boolean | undefined;
+
+/** Whether this page is a reload of the window's, not its first start:
+ *  read once, as reading marks the window started. */
+export function pageReloaded(): boolean {
+  if (wasReloaded !== undefined) return wasReloaded;
   try {
-    const again = sessionStorage.getItem(STARTED) === "1";
+    wasReloaded = sessionStorage.getItem(STARTED) === "1";
     sessionStorage.setItem(STARTED, "1");
-    return again;
   } catch {
-    return false;
+    wasReloaded = false;
   }
+  return wasReloaded;
 }
 
 /** What this window was opened with, asked once: a session's window, or
@@ -34,7 +39,7 @@ function reloaded(): boolean {
  *  last told, so the reload keeps its folder and islands. */
 export function takeWindowSession(): Promise<WindowSession | null> {
   taken ??= (
-    reloaded()
+    pageReloaded()
       ? windowIpc.currentWindowSession()
       : windowIpc.takePendingWindow()
   )

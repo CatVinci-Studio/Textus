@@ -39,6 +39,9 @@ pub struct DetachedTab {
 }
 pub struct PendingDetachedTabs(pub Mutex<HashMap<String, DetachedTab>>);
 
+mod boot;
+pub use boot::boot_detached_tab;
+
 /// Windows with a live drag-tracking thread, so onMoved firing again doesn't
 /// spawn a second poller.
 #[derive(Default)]
