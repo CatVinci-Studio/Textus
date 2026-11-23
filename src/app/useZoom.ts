@@ -4,6 +4,7 @@ import { tabInUse, windowLayout } from "../engine/layout/store";
 import { paneById } from "../engine/layout/tree";
 import { useEffect, useRef } from "react";
 import { onFlush } from "../storage/pending-writes";
+import { isMobileApp } from "../platform/capabilities";
 import {
   blockAt,
   holdBlock,
@@ -175,6 +176,23 @@ function holdSource(
   });
 }
 
+/** A phone's WebKit places its own caret only as the selection changes:
+ *  the text zoomed and scrolled under it, the caret stayed where the text
+ *  was. The same selection set again has it placed anew. */
+function caretAgain(tab: HTMLElement) {
+  const selection = document.getSelection();
+  const { anchorNode, anchorOffset, focusNode, focusOffset } = selection ?? {};
+  if (!selection || !anchorNode || !focusNode || !tab.contains(focusNode))
+    return;
+  selection.removeAllRanges();
+  selection.setBaseAndExtent(
+    anchorNode,
+    anchorOffset!,
+    focusNode,
+    focusOffset!,
+  );
+}
+
 /** A source pane's anchor while a zoom waits for CodeMirror's measure. */
 const heldSource = new WeakMap<
   HTMLElement,
@@ -217,6 +235,11 @@ export function useZoom(
     const apply = () => {
       const tab = target;
       if (!tab) return;
+      zoomTo(tab);
+      if (isMobileApp) caretAgain(tab);
+    };
+
+    const zoomTo = (tab: HTMLElement) => {
       const next = zoomRef.current;
       const prev = contentZoom(tab);
       const setZoomVar = () => {
