@@ -12,6 +12,7 @@ vi.mock("pele/lazy", () => pele);
 vi.mock("mermaid", () => ({ default: mermaid }));
 
 import {
+  diagramColours,
   diagramRenderer,
   mermaidTheme,
   peleMayDraw,
@@ -165,6 +166,24 @@ describe("mermaidTheme", () => {
     expect(mermaidTheme(true)).toBe("dark");
     document.body.style.setProperty("--doc-mermaid-theme", "null");
     expect(mermaidTheme(false)).toBe("neutral");
+  });
+});
+
+describe("diagramColours", () => {
+  afterEach(() => {
+    document.body.style.removeProperty("--doc-mermaid-theme");
+    delete document.documentElement.dataset.themeId;
+  });
+
+  it("changes with an imported theme, and again once its palette has loaded", () => {
+    document.documentElement.dataset.themeId = "theme-a";
+    const a = diagramColours();
+    document.documentElement.dataset.themeId = "theme-b";
+    const chosen = diagramColours();
+    expect(chosen).not.toBe(a);
+    // Theme B's stylesheet lands after its id: its palette redraws again.
+    document.body.style.setProperty("--doc-mermaid-theme", "forest");
+    expect(diagramColours()).not.toBe(chosen);
   });
 });
 
