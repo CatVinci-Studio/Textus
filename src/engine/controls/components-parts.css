@@ -182,8 +182,11 @@
   font-weight: 500;
   word-break: keep-all;
 }
+/* Centred on the head's name, which is smaller than the icon: on the
+   baseline rule a CJK name ("页面") sat below its icon. */
 .tx-table th .tx-icon {
   margin-right: var(--space-1);
+  vertical-align: middle;
 }
 @media (any-hover: hover) {
   .tx-table tbody tr:hover > td {
