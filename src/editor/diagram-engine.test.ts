@@ -185,6 +185,13 @@ describe("diagramColours", () => {
     document.body.style.setProperty("--doc-mermaid-theme", "forest");
     expect(diagramColours()).not.toBe(chosen);
   });
+
+  it("changes as an imported theme's stylesheet takes over", () => {
+    const before = diagramColours();
+    document.documentElement.setAttribute("data-user-theme", "");
+    expect(diagramColours()).not.toBe(before);
+    document.documentElement.removeAttribute("data-user-theme");
+  });
 });
 
 describe("peleMayDraw", () => {

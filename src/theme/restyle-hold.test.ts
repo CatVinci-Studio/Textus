@@ -2,7 +2,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { holdTransitionsOnThemeChange } from "./restyle-hold";
-import { onAppearance } from "../engine/tokens/appearance";
+import { onAppearance, writeThemeStyle } from "../engine/tokens/appearance";
 
 const root = document.documentElement;
 const settle = () => new Promise((done) => setTimeout(done, 0));
@@ -45,6 +45,23 @@ describe("holdTransitionsOnThemeChange", () => {
     // Its own mark is no change of look.
     expect(heard).toHaveBeenCalledTimes(1);
     stopHearing();
+  });
+
+  it("tells a theme's stylesheet rewritten without reading its text", async () => {
+    const style = document.createElement("style");
+    style.id = "textus-user-css";
+    let reads = 0;
+    Object.defineProperty(style, "textContent", {
+      get: () => (reads++, "a"),
+      set: () => {},
+      configurable: true,
+    });
+    document.head.appendChild(style);
+    writeThemeStyle(style, "b");
+    await settle();
+    expect(root.hasAttribute("data-restyling")).toBe(true);
+    expect(reads).toBe(0);
+    style.remove();
   });
 
   it("leaves other changes of look their animations", async () => {

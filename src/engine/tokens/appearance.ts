@@ -84,6 +84,37 @@ export function appearanceIsDark(): boolean {
   return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
 }
 
+/** What sets the page's theme: built-in or imported, the appearance chosen
+ *  and the system's. */
+const THEME_MARKS = [
+  "data-theme",
+  "data-theme-id",
+  "data-content-theme",
+  "data-user-theme",
+  "data-light-page",
+];
+
+/** The page's theme now, as a key that changes when it does. */
+export function themeKey(): string {
+  const root = document.documentElement;
+  // JSON: an attribute that is there but empty differs from none.
+  return JSON.stringify([
+    ...THEME_MARKS.map((name) => root.getAttribute(name)),
+    window.matchMedia?.("(prefers-color-scheme: dark)").matches,
+  ]);
+}
+
+let themeStyleWrites = 0;
+
+/** Sets a theme <style>'s text, counted: a theme switch is then told
+ *  without reading stylesheets that may be megabytes long. */
+export function writeThemeStyle(style: HTMLStyleElement, css: string): void {
+  style.textContent = css;
+  themeStyleWrites++;
+}
+
+export const themeStyleVersion = (): number => themeStyleWrites;
+
 /** Whether the window shows its dark appearance now. */
 export function windowIsDark(): boolean {
   return getComputedStyle(document.documentElement).colorScheme === "dark";

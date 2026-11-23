@@ -7,6 +7,7 @@ import {
 } from "../storage/ui-state";
 import type { ThemeMode, UserThemeMeta } from "../prefs/SettingsContext";
 import { applyThemeChrome } from "../engine/tokens/palette";
+import { writeThemeStyle } from "../engine/tokens/appearance";
 import { isIOSApp } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
 import {
@@ -123,7 +124,10 @@ export function applyImportedTheme(
       styleEl.id = STYLE_ID;
     }
     const adapted = compat.adaptTyporaCss(css ?? "");
-    styleEl.textContent = isIOSApp ? compat.namedSystemFonts(adapted) : adapted;
+    writeThemeStyle(
+      styleEl,
+      isIOSApp ? compat.namedSystemFonts(adapted) : adapted,
+    );
     document.head.appendChild(styleEl);
     // The built-in theme stands down only now, with this one in: in the
     // wait the page keeps the look it had.

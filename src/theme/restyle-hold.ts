@@ -1,4 +1,9 @@
-import { onAppearance, RESTYLING } from "../engine/tokens/appearance";
+import {
+  onAppearance,
+  RESTYLING,
+  themeKey,
+  themeStyleVersion,
+} from "../engine/tokens/appearance";
 import { CHROME_STYLE_ID } from "../engine/tokens/palette";
 import {
   CUSTOM_CSS_STYLE_ID,
@@ -8,12 +13,6 @@ import {
 
 /** What a theme switch changes on the page. Other changes of look (zen,
  *  the keyboard, a stylesheet loading) keep their animations. */
-const THEME_MARKS = [
-  "data-theme",
-  "data-content-theme",
-  "data-user-theme",
-  "data-light-page",
-];
 const THEME_STYLES = [
   USER_THEME_STYLE_ID,
   CHROME_STYLE_ID,
@@ -22,12 +21,11 @@ const THEME_STYLES = [
 ];
 
 function themeNow(): string {
-  const root = document.documentElement;
   return [
-    ...THEME_MARKS.map((name) => root.getAttribute(name)),
-    window.matchMedia?.("(prefers-color-scheme: dark)").matches,
-    ...THEME_STYLES.map((id) => document.getElementById(id)?.textContent),
-  ].join("\0");
+    themeKey(),
+    themeStyleVersion(),
+    ...THEME_STYLES.map((id) => !!document.getElementById(id)),
+  ].join("|");
 }
 
 /** While the theme changes, transitions are off for two frames (base.css):

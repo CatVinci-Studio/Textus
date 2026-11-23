@@ -3,7 +3,7 @@
 
 import type { DiagramEngine } from "../prefs/SettingsContext";
 import { lazyModule } from "../lazy/lazy-module";
-import { appearanceIsDark } from "../engine/tokens/appearance";
+import { appearanceIsDark, themeKey } from "../engine/tokens/appearance";
 
 export type MermaidApi = (typeof import("mermaid"))["default"];
 /** The theme names Mermaid itself knows. */
@@ -55,16 +55,7 @@ export function mermaidTheme(dark = appearanceIsDark()): MermaidThemeName {
  *  the appearance, and the Mermaid palette that resolves to, which an
  *  imported theme's stylesheet sets only once it has loaded. */
 export function diagramColours(): string {
-  const root = document.documentElement.dataset;
-  const dark = window.matchMedia?.("(prefers-color-scheme: dark)");
-  return [
-    root.theme,
-    root.themeId,
-    root.contentTheme,
-    root.lightPage,
-    dark?.matches,
-    mermaidTheme(),
-  ].join("|");
+  return `${themeKey()}|${mermaidTheme()}`;
 }
 
 // Re-applied before every pass because the width follows the text column:

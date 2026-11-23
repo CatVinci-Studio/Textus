@@ -16,6 +16,7 @@ import { isIOSApp } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
 import { holdTransitionsOnThemeChange } from "./restyle-hold";
 import { tokenPx } from "../engine/tokens/token-px";
+import { writeThemeStyle } from "../engine/tokens/appearance";
 import { useFileIconThemeChoice } from "../plugins/contributions/file-icon-themes";
 import {
   CUSTOM_CSS_STYLE_ID,
@@ -200,7 +201,7 @@ function useApplyAppearance(
     const show = async (css: string) => {
       const { withCurrentVariables } = await legacy.load();
       if (!current) return;
-      style.textContent = withCurrentVariables(css);
+      writeThemeStyle(style, withCurrentVariables(css));
       if (style.sheet) promoteCustomProperties(style.sheet.cssRules);
     };
     // In the document first: a <style> has a sheet to promote only there.
