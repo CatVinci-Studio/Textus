@@ -2171,8 +2171,9 @@ declare global {
       /** From 1.7: a list dragged into a new order, the app's way: the
        *  item lifts, the others make room; `onDrop(from, to)` once let go
        *  somewhere new. `handle`: only from inside it. Esc puts it back.
-       *  A finger lifts it once held still half a second; near the edge
-       *  of its scroller the drag scrolls it. */
+       *  A finger lifts it once held still a moment; a press in a text
+       *  field is the field's. Near the edge of its scroller the drag
+       *  scrolls it. */
       drag: {
         reorder(
           container: Element,

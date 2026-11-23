@@ -49,7 +49,8 @@ test("the plugins offered come by category, a computer-only one marked so", asyn
     Object.assign(window, {
       __devCatalogManifests: {
         "catvinci.tags": { category: "notes" },
-        "catvinci.zotero": { category: "sync" },
+        // No line: the mark stands alone.
+        "catvinci.zotero": { category: "sync", description: undefined },
       },
     }),
   );
@@ -92,6 +93,9 @@ test("the plugins offered come by category, a computer-only one marked so", asyn
     available.locator(`[data-plugin="${id}"]`).getByText("Computer only");
   await expect(mark("catvinci.zotero")).toBeVisible();
   await expect(mark("catvinci.tags")).toHaveCount(0);
+  await expect(
+    available.locator('[data-plugin="catvinci.zotero"] .plugins-panel-line'),
+  ).toHaveCount(0);
 });
 
 test("too narrow for the islands at their least, the sidebar steps aside, then the AI folds; they come back in turn", async ({

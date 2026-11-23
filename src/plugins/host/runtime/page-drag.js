@@ -14,7 +14,8 @@
   var EDGE_MAX_STEP = 40;
   // A press here is the field's own: selecting its text, its menu.
   var FIELD =
-    "input, textarea, select, [contenteditable]:not([contenteditable='false'])";
+    "textarea, select, [contenteditable]:not([contenteditable='false'])," +
+    " input:not([type='checkbox']):not([type='radio']):not([type='button'])";
 
   // ---- A list dragged into a new order: the item lifts and follows the
   // pointer, the others make room as it passes them (the window's tabs'

@@ -409,7 +409,7 @@ describe("what every plugin page gets", () => {
 
   it("gives the page its own selection back, and leaves a text field's press to it", () => {
     vi.useFakeTimers();
-    document.body.innerHTML = `<ul><li>a <input></li><li>b</li><li>c</li></ul>`;
+    document.body.innerHTML = `<ul><li>a <input></li><li>b</li><li>c <input type="checkbox"></li></ul>`;
     document.body.style.userSelect = "text";
     const items = [...document.querySelectorAll("li")];
     items.forEach((li, i) => {
@@ -450,6 +450,11 @@ describe("what every plugin page gets", () => {
     expect(items[0].classList.contains("is-drag-lifted")).toBe(false);
     expect(document.body.style.userSelect).toBe("text");
     finger("pointerup", 10);
+    // A checkbox is no text field: held, its item lifts.
+    finger("pointerdown", 50, document.querySelector("[type=checkbox]")!);
+    vi.advanceTimersByTime(600);
+    expect(items[2].classList.contains("is-drag-lifted")).toBe(true);
+    finger("pointerup", 50);
     document.body.style.userSelect = "";
     handle.dispose();
     vi.runOnlyPendingTimers();
