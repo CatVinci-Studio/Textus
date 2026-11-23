@@ -238,16 +238,10 @@ class TextusFilesPlugin: Plugin, UIDocumentPickerDelegate {
       ? URL(string: args.path) : URL(fileURLWithPath: args.path)
     guard let target = target else { return invoke.reject("Invalid path") }
     do {
+      // No file coordinator around it: trashItem coordinates the move
+      // itself, and inside our own claim it waits on that claim forever.
       try withAccess(to: target) {
-        var result: Result<Void, Error> = .success(())
-        var coordError: NSError?
-        NSFileCoordinator().coordinate(
-          writingItemAt: target, options: .forDeleting, error: &coordError
-        ) { u in
-          result = Result { try FileManager.default.trashItem(at: u, resultingItemURL: nil) }
-        }
-        if let coordError = coordError { throw coordError }
-        try result.get()
+        try FileManager.default.trashItem(at: target, resultingItemURL: nil)
       }
       invoke.resolve()
     } catch {
