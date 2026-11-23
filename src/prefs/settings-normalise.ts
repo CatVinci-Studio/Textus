@@ -263,6 +263,8 @@ function readSettings(parsed: Raw | null): Settings {
       // Any profile string is kept - a newer build's may not be in this
       // build's list - but it has to be one.
       lookBeforeClassic: storedLook(parsed.lookBeforeClassic),
+      // Asked unless the user said not to: only a stored false stops it.
+      confirmTreeCopy: parsed.confirmTreeCopy !== false,
       fileIconTheme:
         typeof parsed.fileIconTheme === "string"
           ? parsed.fileIconTheme

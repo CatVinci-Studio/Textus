@@ -80,6 +80,10 @@ export const canPickPluginFolder = isDesktopApp;
  *  paths (an iPad's HTML5 drop), not as the desktop's drop of paths. */
 export const filesDropAsContents = isIOSApp;
 
+/** Files from a file manager can be let go on the file tree's folders,
+ *  copied in: a phone's or an iPad's drags never reach the tree. */
+export const canDropFilesIntoTree = isDesktopApp;
+
 /** A folder picker: the dialog plugin's on desktop, Files' on iOS. */
 export const canPickFolder = isDesktopApp || isIOSApp;
 

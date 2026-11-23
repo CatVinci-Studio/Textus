@@ -80,6 +80,12 @@ export const fs = {
       ? far.moveEntry(path, from, into)
       : command("tree_move_entry", path, into);
   },
+  /** A file or folder from a file manager copied into the tree's folder
+   *  `into`, numbered when its name is taken; returns the copy's path.
+   *  Rust side: `copy_into_folder` (commands/fs/copy_into.rs). Desktop
+   *  only, and never into a far folder (the tree doesn't offer it). */
+  copyIntoFolder: (source: string, into: string): Promise<string> =>
+    command("copy_into_folder", source, into),
   /** A new name in the same folder; returns the new path. */
   renameEntry: (path: string, name: string): Promise<string> =>
     farEntries(path)?.renameEntry(path, name) ??

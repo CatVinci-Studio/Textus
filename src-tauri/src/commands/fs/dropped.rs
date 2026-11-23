@@ -62,31 +62,58 @@ fn copy_in(from: &Path, dir: &Path) -> std::io::Result<String> {
     {
         return Ok(name);
     }
-    for n in 0..10_000 {
-        let candidate = numbered_name(&name, n);
+    into_free_name(
+        dir,
+        (0..10_000).map(|n| numbered_name(&name, n)),
+        |path| copy_file_new(from, path),
+        |path| same_bytes(from, path),
+    )
+}
+
+/// Makes something in `dir` under the first of `names` that is free and
+/// returns that name: `make` makes it at a path, failing with
+/// AlreadyExists when the name is taken (create_new, create_dir), so two
+/// at once can't take one name; a name taken by what `reuse` accepts is
+/// taken as it is. Every copy into a folder names itself here.
+pub(super) fn into_free_name(
+    dir: &Path,
+    names: impl Iterator<Item = String>,
+    mut make: impl FnMut(&Path) -> std::io::Result<()>,
+    reuse: impl Fn(&Path) -> bool,
+) -> std::io::Result<String> {
+    let mut first = None;
+    for candidate in names {
+        first.get_or_insert_with(|| candidate.clone());
         let path = dir.join(&candidate);
-        match std::fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&path)
-        {
-            Ok(claimed) => {
-                drop(claimed);
-                if let Err(e) = std::fs::copy(from, &path) {
-                    let _ = std::fs::remove_file(&path);
-                    return Err(e);
-                }
-                return Ok(candidate);
-            }
+        match make(&path) {
+            Ok(()) => return Ok(candidate),
             Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
-                if same_bytes(from, &path) {
+                if reuse(&path) {
                     return Ok(candidate);
                 }
             }
             Err(e) => return Err(e),
         }
     }
-    Err(std::io::Error::other(format!("no free name for {name}")))
+    Err(std::io::Error::other(format!(
+        "no free name for {}",
+        first.unwrap_or_default()
+    )))
+}
+
+/// Copies the file `from` to `to`, claimed with create_new: AlreadyExists
+/// when `to` is taken, and nothing left behind when the copy fails.
+pub(super) fn copy_file_new(from: &Path, to: &Path) -> std::io::Result<()> {
+    drop(
+        std::fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(to)?,
+    );
+    std::fs::copy(from, to).map(|_| ()).map_err(|e| {
+        let _ = std::fs::remove_file(to);
+        e
+    })
 }
 
 /// Read a piece at a time: a file of the same name and size is compared

@@ -671,6 +671,7 @@ para usar una.
   errorBadName:
     "Ese nombre no se puede usar. Un nombre no puede estar vacío ni contener / o \\.",
   errorMoveIntoItself: "Una carpeta no se puede mover dentro de sí misma.",
+  errorCopyIntoItself: "Una carpeta no se puede copiar dentro de sí misma.",
   errorPluginTooBig: "Este plugin es demasiado grande para instalarlo.",
   errorCatalogNewer:
     "La tienda de plugins necesita una versión más reciente de Textus. Actualiza Textus para verla.",
@@ -735,6 +736,20 @@ para usar una.
   fileDropInsertImage: "Insertar imagen · ⇧ Abrir",
   fileDropInsertLink: "Insertar enlace · ⇧ Abrir",
   fileDropFailed: "No se pudo añadir {name}",
+  treeCopyAsk: {
+    one: "¿Copiar {n} elemento a «{folder}»?",
+    many: "¿Copiar {n} elementos a «{folder}»?",
+    other: "¿Copiar {n} elementos a «{folder}»?",
+  },
+  treeCopyMore: { one: "y {n} más", many: "y {n} más", other: "y {n} más" },
+  treeCopyDontAsk: "No volver a preguntar",
+  treeCopying: "Copiando a «{folder}»…",
+  treeCopied: {
+    one: "{n} elemento copiado a «{folder}»",
+    many: "{n} elementos copiados a «{folder}»",
+    other: "{n} elementos copiados a «{folder}»",
+  },
+  treeCopyFailed: "No se pudo copiar {name}",
   outlineCollapse: "Contraer",
   outlineExpand: "Expandir",
   outlineExpandAll: "Expandir todo",
@@ -1483,6 +1498,8 @@ para usar una.
     "Elige un documento de {folder} en la barra lateral para empezar.",
   startPageRecentFiles: "Archivos recientes",
   autoSuggestFilenameLabel: "Sugerir un nombre al guardar un archivo nuevo",
+  confirmTreeCopyLabel:
+    "Preguntar antes de copiar archivos soltados en el árbol de archivos",
   autosaveLabel: "Guardar automáticamente",
   settingsFileLabel: "Archivo de ajustes",
   settingsFileSummary:

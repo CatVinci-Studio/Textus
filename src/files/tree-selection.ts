@@ -96,6 +96,13 @@ export class TreeSelection {
     this.set([]);
   }
 
+  /** `row` alone picked, and where the next range starts: what was just
+   *  made (copied in), shown as the one row in hand. */
+  only(row: TreeRow): void {
+    this.anchor = row.path;
+    this.set([row]);
+  }
+
   /** The picked rows, if `path` is one of two or more; else none. */
   groupOf(path: string): readonly TreeRow[] | null {
     return this.rows.length > 1 && this.has(path) ? this.rows : null;

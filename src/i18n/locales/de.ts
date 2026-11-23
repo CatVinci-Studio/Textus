@@ -652,6 +652,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Dieser Name geht nicht. Ein Name darf nicht leer sein und kein / oder \\ enthalten.",
   errorMoveIntoItself:
     "Ein Ordner kann nicht in sich selbst verschoben werden.",
+  errorCopyIntoItself: "Ein Ordner kann nicht in sich selbst kopiert werden.",
   errorPluginTooBig: "Dieses Plugin ist zu groß für die Installation.",
   errorCatalogNewer:
     "Der Plugin-Store braucht eine neuere Textus-Version. Aktualisiere Textus, um ihn zu sehen.",
@@ -709,6 +710,18 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   fileDropInsertImage: "Bild einfügen · ⇧ Öffnen",
   fileDropInsertLink: "Link einfügen · ⇧ Öffnen",
   fileDropFailed: "{name} konnte nicht hinzugefügt werden",
+  treeCopyAsk: {
+    one: "{n} Element nach „{folder}“ kopieren?",
+    other: "{n} Elemente nach „{folder}“ kopieren?",
+  },
+  treeCopyMore: { one: "und {n} weiteres", other: "und {n} weitere" },
+  treeCopyDontAsk: "Nicht mehr fragen",
+  treeCopying: "Wird nach „{folder}“ kopiert …",
+  treeCopied: {
+    one: "{n} Element nach „{folder}“ kopiert",
+    other: "{n} Elemente nach „{folder}“ kopiert",
+  },
+  treeCopyFailed: "{name} konnte nicht kopiert werden",
   outlineCollapse: "Einklappen",
   outlineExpand: "Ausklappen",
   outlineExpandAll: "Alle aufklappen",
@@ -1444,6 +1457,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   startPageRecentFiles: "Letzte Dateien",
   autoSuggestFilenameLabel:
     "Dateinamen beim Speichern neuer Dateien vorschlagen",
+  confirmTreeCopyLabel:
+    "Vor dem Kopieren von Dateien fragen, die auf den Dateibaum gezogen werden",
   autosaveLabel: "Automatisch speichern",
   settingsFileLabel: "Einstellungsdatei",
   settingsFileSummary:

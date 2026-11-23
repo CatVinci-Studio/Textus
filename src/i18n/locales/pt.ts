@@ -658,6 +658,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   errorBadName:
     "Esse nome não pode ser usado. Um nome não pode ficar vazio nem conter / ou \\.",
   errorMoveIntoItself: "Uma pasta não pode ser movida para dentro dela mesma.",
+  errorCopyIntoItself: "Uma pasta não pode ser copiada para dentro dela mesma.",
   errorPluginTooBig: "Este plugin é grande demais para instalar.",
   errorCatalogNewer:
     "A loja de plugins precisa de uma versão mais nova do Textus. Atualize o Textus para vê-la.",
@@ -721,6 +722,20 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   fileDropInsertImage: "Inserir imagem · ⇧ Abrir",
   fileDropInsertLink: "Inserir link · ⇧ Abrir",
   fileDropFailed: "Não foi possível adicionar {name}",
+  treeCopyAsk: {
+    one: "Copiar {n} item para “{folder}”?",
+    many: "Copiar {n} itens para “{folder}”?",
+    other: "Copiar {n} itens para “{folder}”?",
+  },
+  treeCopyMore: { one: "e mais {n}", many: "e mais {n}", other: "e mais {n}" },
+  treeCopyDontAsk: "Não perguntar de novo",
+  treeCopying: "Copiando para “{folder}”…",
+  treeCopied: {
+    one: "{n} item copiado para “{folder}”",
+    many: "{n} itens copiados para “{folder}”",
+    other: "{n} itens copiados para “{folder}”",
+  },
+  treeCopyFailed: "Não foi possível copiar {name}",
   outlineCollapse: "Recolher",
   outlineExpand: "Expandir",
   outlineExpandAll: "Expandir tudo",
@@ -1466,6 +1481,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Escolha um documento de {folder} na barra lateral para começar.",
   startPageRecentFiles: "Arquivos recentes",
   autoSuggestFilenameLabel: "Sugerir um nome ao salvar um arquivo novo",
+  confirmTreeCopyLabel:
+    "Perguntar antes de copiar arquivos soltos na árvore de arquivos",
   autosaveLabel: "Salvar automaticamente",
   settingsFileLabel: "Arquivo de ajustes",
   settingsFileSummary:

@@ -14,6 +14,7 @@ import { isFolder } from "../window-file-events";
 import type { OpenOptions } from "../useFileOpening";
 import { fileDropOnDocuments } from "./file-drop-session";
 import { watchSystemDrags } from "./finder-drag";
+import { treeFileDrop } from "../../files/tree-file-drop";
 
 interface FileDropInput {
   openFile: (path: string, open?: OpenOptions) => Promise<void>;
@@ -68,13 +69,25 @@ export function useFileDrops(input: FileDropInput): void {
     if (filesDropAsContents || isMobileApp) return () => setDocumentDrop(null);
     const stop = watchSystemDrags(
       {
-        over: (files, at, shift) =>
-          documentDrop()?.over(files, at.x, at.y, shift),
-        leave: () => documentDrop()?.leave(),
+        // Over the file tree with a folder open, copied in there
+        // (useTreeFileDrop); else over the documents.
+        over: (files, at, shift) => {
+          if (treeFileDrop()?.over(at.x, at.y)) documentDrop()?.leave();
+          else documentDrop()?.over(files, at.x, at.y, shift);
+        },
+        leave: () => {
+          treeFileDrop()?.leave();
+          documentDrop()?.leave();
+        },
         drop: (files, at, shift) => {
+          if (treeFileDrop()?.drop(files, at.x, at.y)) {
+            documentDrop()?.leave();
+            return;
+          }
           if (documentDrop()?.drop(files, at.x, at.y, shift)) return;
-          // Off the documents (the sidebar, the window's bar): opened, one
-          // after another, so the tabs keep the order dropped.
+          // Off the documents (the window's bar, the sidebar with no
+          // folder open): opened, one after another, so the tabs keep the
+          // order dropped.
           void (async () => {
             for (const [i, file] of files.entries())
               if (file.isDir) openFolder(file.path);

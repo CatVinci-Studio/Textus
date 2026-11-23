@@ -624,6 +624,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   errorBadName:
     "この名前は使えません。名前は空にできず、/ や \\ も含められません。",
   errorMoveIntoItself: "フォルダをそれ自身の中には移動できません。",
+  errorCopyIntoItself: "フォルダをそれ自身の中にはコピーできません。",
   errorPluginTooBig: "このプラグインは大きすぎてインストールできません。",
   errorCatalogNewer:
     "プラグインストアには新しい Textus が必要です。Textus をアップデートしてください。",
@@ -679,6 +680,12 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   fileDropInsertImage: "画像を挿入 · ⇧ 開く",
   fileDropInsertLink: "リンクを挿入 · ⇧ 開く",
   fileDropFailed: "{name} を追加できませんでした",
+  treeCopyAsk: { other: "{n} 個の項目を「{folder}」にコピーしますか？" },
+  treeCopyMore: { other: "ほか {n} 個" },
+  treeCopyDontAsk: "今後は確認しない",
+  treeCopying: "「{folder}」にコピーしています…",
+  treeCopied: { other: "{n} 個の項目を「{folder}」にコピーしました" },
+  treeCopyFailed: "{name} をコピーできませんでした",
   outlineCollapse: "折りたたむ",
   outlineExpand: "展開",
   outlineExpandAll: "すべて展開",
@@ -1384,6 +1391,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   startPagePickDocument: "サイドバーから {folder} の文書を選んで始めましょう。",
   startPageRecentFiles: "最近のファイル",
   autoSuggestFilenameLabel: "新規ファイルの保存時にファイル名を提案",
+  confirmTreeCopyLabel:
+    "ファイルツリーにドロップしたファイルをコピーする前に確認する",
   autosaveLabel: "自動保存",
   settingsFileLabel: "設定ファイル",
   settingsFileSummary: "アプリの設定と AI の履歴を読み込み／書き出します",

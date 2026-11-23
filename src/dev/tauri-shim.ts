@@ -808,6 +808,30 @@ export function installDevTauriShim(): void {
         }
         return Promise.resolve(target);
       }
+      // From a file manager onto the tree: copied, its name numbered as
+      // the backend's (" 2", a file's before its extension).
+      case "copy_into_folder": {
+        const source = String(args.source);
+        const into = String(args.into);
+        if (into === source || into.startsWith(`${source}/`))
+          return Promise.reject(ownError("copyIntoItself"));
+        const name = source.slice(source.lastIndexOf("/") + 1);
+        const isDir = Object.keys(files).some((f) =>
+          f.startsWith(`${source}/`),
+        );
+        const dot = isDir ? -1 : name.lastIndexOf(".");
+        const [stem, ext] =
+          dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ""];
+        const taken = (p: string) =>
+          Object.keys(files).some((f) => f === p || f.startsWith(`${p}/`));
+        let target = `${into}/${name}`;
+        for (let n = 2; taken(target); n++)
+          target = `${into}/${stem} ${n}${ext}`;
+        for (const file of Object.keys(files))
+          if (file === source || file.startsWith(`${source}/`))
+            files[target + file.slice(source.length)] = files[file];
+        return Promise.resolve(target);
+      }
       case "tree_rename_entry": {
         const name = String(args.name).trim();
         if (!name || name.includes("/"))

@@ -7,6 +7,7 @@ import { BackgroundSection } from "../sections/background";
 import { ProxySection } from "../sections/proxy";
 import { Select } from "../../engine/controls/Select";
 import {
+  canDropFilesIntoTree,
   canInstallCliCommand,
   canSetDefaultEditor,
   canUseWindows,
@@ -109,6 +110,13 @@ export function GeneralPage({ t, settings, setSettings }: SettingsPageProps) {
           checked={settings.autoSuggestFilename}
           onChange={(v) => setSettings({ autoSuggestFilename: v })}
         />
+        {canDropFilesIntoTree && (
+          <ToggleRow
+            label={t.confirmTreeCopyLabel}
+            checked={settings.confirmTreeCopy}
+            onChange={(v) => setSettings({ confirmTreeCopy: v })}
+          />
+        )}
       </SettingsGroup>
 
       {/* The proxy, then a desktop's own: the phone has no windows to

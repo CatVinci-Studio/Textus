@@ -10,7 +10,7 @@ import { showMessage } from "../engine/controls/app-dialog";
 import { documentDrop, setDragging } from "../engine/controls/document-drop";
 import { basename, parentDir } from "../utils/path";
 import { updateLinksAfterMove } from "./move-links";
-import { canMoveInto, failureText } from "./tree-shared";
+import { canMoveInto, dropDirAt, failureText } from "./tree-shared";
 import { dragGhost } from "../engine/drag/ghost";
 import { trackDrag } from "../engine/drag/pointer-drag";
 import { holdToDrag } from "../engine/drag/hold-drag";
@@ -104,18 +104,8 @@ export function useRowDrag(
       const ghost = { current: null as ReturnType<typeof dragGhost> | null };
       const targetAt = (x: number, y: number) => {
         treeBox ??= treeRef.current?.getBoundingClientRect() ?? null;
-        const over =
-          treeBox &&
-          x >= treeBox.left &&
-          x <= treeBox.right &&
-          y >= treeBox.top &&
-          y <= treeBox.bottom;
-        if (!over) return null;
-        const el = document
-          .elementFromPoint(x, y)
-          ?.closest<HTMLElement>("[data-drop-dir]");
-        const dir = el?.dataset.dropDir;
-        return dir && treeRef.current?.contains(el) && fits(dir) ? dir : null;
+        const dir = dropDirAt(treeRef.current, x, y, treeBox);
+        return dir && fits(dir) ? dir : null;
       };
       // Near the tree's top or bottom it scrolls on while the pointer rests
       // there, over the tree.

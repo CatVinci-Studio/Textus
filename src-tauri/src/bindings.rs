@@ -32,6 +32,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                     crate::commands::fs::write_base64_file,
                     crate::commands::fs::save_pasted_image,
                     crate::commands::fs::dropped::save_dropped_file,
+                    crate::commands::fs::copy_into::copy_into_folder,
                     crate::commands::fs::migrate_draft_images,
                     crate::commands::fs::move_picture_to_trash,
                     crate::commands::folder::index_folder,

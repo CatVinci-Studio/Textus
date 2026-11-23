@@ -71,6 +71,14 @@ export const commands = {
 	 */
 	save_dropped_file: (docPath: string, source: string, folder: string) => __TAURI_INVOKE<SavedImage_Serialize>("save_dropped_file", { docPath, source, folder }),
 	/**
+	 *  Copies the file or folder `source` (a folder with all it holds) into the
+	 *  folder `into` under its own name, or numbered as a file manager names a
+	 *  copy (`report 2.pdf`, `photos 2`) when that is taken, and returns the
+	 *  copy's path in `into`'s spelling. A folder is never copied into itself.
+	 *  Its TypeScript side is `fs.copyIntoFolder` in src/platform/ipc-files.ts.
+	 */
+	copy_into_folder: (source: string, into: string) => __TAURI_INVOKE<string>("copy_into_folder", { source, into }),
+	/**
 	 *  Brings a document's images into the image folder of the file it was just
 	 *  saved as, rewriting each `src`: a draft's pasted images are moved, and on Save
 	 *  As images relative to the old document are copied. Anything else is left alone.

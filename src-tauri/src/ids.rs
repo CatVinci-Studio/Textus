@@ -38,17 +38,24 @@ pub(crate) fn path_key(path: &str, bytes: usize) -> String {
     hex(&digest[..bytes.min(digest.len())])
 }
 
-/// How a taken name is numbered: `notes-2.md` or `report (2).pdf`.
+/// How a taken name is numbered: `notes-2.md`, `report (2).pdf`, or as a
+/// file manager names a copy, `report 2.pdf` (a folder's `photos 2`, after
+/// its whole name: a dot in it starts no extension).
 #[derive(Clone, Copy)]
 pub(crate) enum Numbered {
     Dash,
     Paren,
+    Space,
+    SpaceWhole,
 }
 
 /// `name` numbered `n`, before its extension; `n` 0 is `name` itself.
 pub(crate) fn numbered(name: &str, n: usize, style: Numbered) -> String {
     if n == 0 {
         return name.to_string();
+    }
+    if let Numbered::SpaceWhole = style {
+        return format!("{name} {n}");
     }
     let (stem, ext) = match name.rsplit_once('.') {
         Some((stem, ext)) if !stem.is_empty() => (stem, format!(".{ext}")),
@@ -57,6 +64,7 @@ pub(crate) fn numbered(name: &str, n: usize, style: Numbered) -> String {
     match style {
         Numbered::Dash => format!("{stem}-{n}{ext}"),
         Numbered::Paren => format!("{stem} ({n}){ext}"),
+        Numbered::Space | Numbered::SpaceWhole => format!("{stem} {n}{ext}"),
     }
 }
 

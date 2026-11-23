@@ -274,6 +274,10 @@ export interface Settings {
   autoSuggestFilename: boolean;
   /** Write a document that has a file back to it once typing rests. */
   autosave: boolean;
+  /** Files from a file manager let go on the file tree: asked before they
+   *  are copied into its folder (the dialog's Don't Ask Again turns it
+   *  off). */
+  confirmTreeCopy: boolean;
   /** Export as PDF numbers each page in its bottom margin. */
   pdfPageNumbers: boolean;
   /** The paper, margins and text size a PDF export prints with. */
@@ -411,6 +415,7 @@ export const DEFAULT_SETTINGS: Settings = {
   addTabShowsStartPage: false,
   autoSuggestFilename: true,
   autosave: false,
+  confirmTreeCopy: true,
   pdfPageNumbers: false,
   pdfPaper: "a4",
   pdfMargin: "normal",

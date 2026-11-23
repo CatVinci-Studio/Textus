@@ -13,13 +13,15 @@ const SECRET_FILES: [&str; 5] = [
     crate::plugins::files::SECRETS_FILE,
 ];
 
-pub(super) fn not_a_secret(app: &tauri::AppHandle, path: &str) -> Result<(), String> {
+/// Where the app keeps its config, keys among it, as a canonical path.
+pub(super) fn own_config_dir(app: &tauri::AppHandle) -> Option<std::path::PathBuf> {
     use tauri::Manager;
-    let Ok(config) = app
-        .path()
-        .own_config_dir()
-        .and_then(|c| Ok(std::fs::canonicalize(c)?))
-    else {
+    let dir = app.path().own_config_dir().ok()?;
+    std::fs::canonicalize(dir).ok()
+}
+
+pub(super) fn not_a_secret(app: &tauri::AppHandle, path: &str) -> Result<(), String> {
+    let Some(config) = own_config_dir(app) else {
         return Ok(());
     };
     // Where it really is (a link elsewhere may lead here), named in any case

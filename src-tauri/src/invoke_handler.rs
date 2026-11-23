@@ -76,6 +76,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         write_base64_file,
         save_pasted_image,
         commands::fs::dropped::save_dropped_file,
+        commands::fs::copy_into::copy_into_folder,
         commands::vault::resolve_vault_image,
         commands::vault::resolve_note_link,
         commands::link_root::document_link_root,

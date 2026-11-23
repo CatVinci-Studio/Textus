@@ -368,6 +368,18 @@ describe("file icon theme", () => {
   });
 });
 
+describe("files dropped on the file tree", () => {
+  it("asks before copying unless the user said not to", () => {
+    expect(normaliseSettings({ language: "en" }).confirmTreeCopy).toBe(true);
+    expect(normaliseSettings({ confirmTreeCopy: "no" }).confirmTreeCopy).toBe(
+      true,
+    );
+    expect(normaliseSettings({ confirmTreeCopy: false }).confirmTreeCopy).toBe(
+      false,
+    );
+  });
+});
+
 describe("interface text size", () => {
   it("keeps a size it offers and falls back to 100% for any other", () => {
     expect(normaliseSettings({ uiTextScale: 1.25 }).uiTextScale).toBe(1.25);

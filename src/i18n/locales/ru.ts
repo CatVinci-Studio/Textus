@@ -672,6 +672,7 @@ export default {
   errorBadName:
     "Такое имя нельзя использовать. Имя не может быть пустым или содержать / или \\.",
   errorMoveIntoItself: "Папку нельзя переместить внутрь неё самой.",
+  errorCopyIntoItself: "Папку нельзя скопировать внутрь неё самой.",
   errorPluginTooBig: "Этот плагин слишком большой для установки.",
   errorCatalogNewer:
     "Для магазина плагинов нужна более новая версия Textus. Обновите Textus.",
@@ -733,6 +734,27 @@ export default {
   fileDropInsertImage: "Вставить изображение · ⇧ Открыть",
   fileDropInsertLink: "Вставить ссылку · ⇧ Открыть",
   fileDropFailed: "Не удалось добавить {name}",
+  treeCopyAsk: {
+    one: "Скопировать {n} элемент в «{folder}»?",
+    few: "Скопировать {n} элемента в «{folder}»?",
+    many: "Скопировать {n} элементов в «{folder}»?",
+    other: "Скопировать {n} элемента в «{folder}»?",
+  },
+  treeCopyMore: {
+    one: "и ещё {n}",
+    few: "и ещё {n}",
+    many: "и ещё {n}",
+    other: "и ещё {n}",
+  },
+  treeCopyDontAsk: "Больше не спрашивать",
+  treeCopying: "Копирование в «{folder}»…",
+  treeCopied: {
+    one: "{n} элемент скопирован в «{folder}»",
+    few: "{n} элемента скопированы в «{folder}»",
+    many: "{n} элементов скопированы в «{folder}»",
+    other: "{n} элемента скопированы в «{folder}»",
+  },
+  treeCopyFailed: "Не удалось скопировать {name}",
   outlineCollapse: "Свернуть",
   outlineExpand: "Развернуть",
   outlineExpandAll: "Развернуть все",
@@ -1487,6 +1509,8 @@ export default {
     "Выберите документ из {folder} на боковой панели, чтобы начать.",
   startPageRecentFiles: "Недавние файлы",
   autoSuggestFilenameLabel: "Предлагать имя при сохранении нового файла",
+  confirmTreeCopyLabel:
+    "Спрашивать перед копированием файлов, перетащенных в дерево файлов",
   autosaveLabel: "Сохранять автоматически",
   settingsFileLabel: "Файл настроек",
   settingsFileSummary: "Импорт и экспорт настроек приложения и истории ИИ",

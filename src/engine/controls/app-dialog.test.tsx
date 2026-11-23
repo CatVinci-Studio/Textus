@@ -9,7 +9,12 @@ import {
   screen,
 } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { AppDialogHost, showConfirm, showMessage } from "./app-dialog";
+import {
+  AppDialogHost,
+  showConfirm,
+  showConfirmCheck,
+  showMessage,
+} from "./app-dialog";
 
 afterEach(cleanup);
 
@@ -53,6 +58,37 @@ describe("app dialogs", () => {
     expect(screen.getByRole("button", { name: "Cancel" })).toHaveFocus();
     fireEvent.click(document.activeElement!);
     await expect(answer).resolves.toBe(false);
+  });
+
+  it("says whether its box was ticked, and never on cancel", async () => {
+    render(<AppDialogHost okLabel="OK" />);
+    const ask = () => {
+      let answer!: Promise<{ ok: boolean; checked: boolean }>;
+      act(() => {
+        answer = showConfirmCheck("Copy 2 items?", {
+          okLabel: "Copy",
+          cancelLabel: "Cancel",
+          checkLabel: "Don't ask again",
+        });
+      });
+      return answer;
+    };
+    let answer = ask();
+    expect(
+      screen.getByRole("checkbox", { name: "Don't ask again" }),
+    ).not.toBeChecked();
+    fireEvent.click(screen.getByRole("button", { name: "Copy" }));
+    await expect(answer).resolves.toEqual({ ok: true, checked: false });
+
+    answer = ask();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Don't ask again" }));
+    fireEvent.click(screen.getByRole("button", { name: "Copy" }));
+    await expect(answer).resolves.toEqual({ ok: true, checked: true });
+
+    answer = ask();
+    fireEvent.click(screen.getByRole("checkbox", { name: "Don't ask again" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await expect(answer).resolves.toEqual({ ok: false, checked: false });
   });
 
   it("queues a second notice behind the first", async () => {

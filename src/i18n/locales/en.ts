@@ -639,6 +639,7 @@ type /name in a conversation to use one.
   errorBadName:
     "That name can't be used. A name can't be empty or contain / or \\.",
   errorMoveIntoItself: "A folder can't be moved into itself.",
+  errorCopyIntoItself: "A folder can't be copied into itself.",
   errorPluginTooBig: "This plugin is too large to install.",
   errorCatalogNewer:
     "The plugin store needs a newer Textus. Update Textus to see it.",
@@ -693,6 +694,18 @@ type /name in a conversation to use one.
   fileDropInsertImage: "Insert image · ⇧ Open",
   fileDropInsertLink: "Insert link · ⇧ Open",
   fileDropFailed: "Couldn't add {name}",
+  treeCopyAsk: {
+    one: "Copy {n} item to “{folder}”?",
+    other: "Copy {n} items to “{folder}”?",
+  },
+  treeCopyMore: { one: "and {n} more", other: "and {n} more" },
+  treeCopyDontAsk: "Don't ask again",
+  treeCopying: "Copying to “{folder}”…",
+  treeCopied: {
+    one: "Copied {n} item to “{folder}”",
+    other: "Copied {n} items to “{folder}”",
+  },
+  treeCopyFailed: "Couldn't copy {name}",
   outlineCollapse: "Collapse",
   outlineExpand: "Expand",
   outlineExpandAll: "Expand All",
@@ -1414,6 +1427,7 @@ type /name in a conversation to use one.
     "Pick a document in {folder} from the sidebar to start.",
   startPageRecentFiles: "Recent Files",
   autoSuggestFilenameLabel: "Suggest a filename when saving a new file",
+  confirmTreeCopyLabel: "Ask before copying files dropped onto the file tree",
   autosaveLabel: "Save automatically",
   settingsFileLabel: "Settings file",
   settingsFileSummary: "Import or export the app’s settings and AI history",

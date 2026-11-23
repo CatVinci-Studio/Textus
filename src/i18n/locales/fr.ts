@@ -674,6 +674,7 @@ utiliser une.
   errorBadName:
     "Ce nom ne peut pas être utilisé. Un nom ne peut pas être vide ni contenir / ou \\.",
   errorMoveIntoItself: "Un dossier ne peut pas être déplacé dans lui-même.",
+  errorCopyIntoItself: "Un dossier ne peut pas être copié dans lui-même.",
   errorPluginTooBig: "Ce plugin est trop volumineux pour être installé.",
   errorCatalogNewer:
     "La boutique de plugins nécessite une version plus récente de Textus. Mettez Textus à jour pour la voir.",
@@ -737,6 +738,24 @@ utiliser une.
   fileDropInsertImage: "Insérer l'image · ⇧ Ouvrir",
   fileDropInsertLink: "Insérer un lien · ⇧ Ouvrir",
   fileDropFailed: "Impossible d'ajouter {name}",
+  treeCopyAsk: {
+    one: "Copier {n} élément dans «\u00a0{folder}\u00a0»\u00a0?",
+    many: "Copier {n} éléments dans «\u00a0{folder}\u00a0»\u00a0?",
+    other: "Copier {n} éléments dans «\u00a0{folder}\u00a0»\u00a0?",
+  },
+  treeCopyMore: {
+    one: "et {n} autre",
+    many: "et {n} autres",
+    other: "et {n} autres",
+  },
+  treeCopyDontAsk: "Ne plus demander",
+  treeCopying: "Copie dans «\u00a0{folder}\u00a0»…",
+  treeCopied: {
+    one: "{n} élément copié dans «\u00a0{folder}\u00a0»",
+    many: "{n} éléments copiés dans «\u00a0{folder}\u00a0»",
+    other: "{n} éléments copiés dans «\u00a0{folder}\u00a0»",
+  },
+  treeCopyFailed: "Impossible de copier {name}",
   outlineCollapse: "Replier",
   outlineExpand: "Déplier",
   outlineExpandAll: "Tout déplier",
@@ -1490,6 +1509,8 @@ utiliser une.
   startPageRecentFiles: "Fichiers récents",
   autoSuggestFilenameLabel:
     "Suggérer un nom de fichier au premier enregistrement",
+  confirmTreeCopyLabel:
+    "Demander avant de copier les fichiers déposés dans l'arborescence",
   autosaveLabel: "Enregistrer automatiquement",
   settingsFileLabel: "Fichier de réglages",
   settingsFileSummary:

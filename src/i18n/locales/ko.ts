@@ -613,6 +613,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   errorBadName:
     "이 이름은 사용할 수 없습니다. 이름은 비워 둘 수 없고 / 또는 \\를 포함할 수 없습니다.",
   errorMoveIntoItself: "폴더를 자기 자신 안으로 옮길 수 없습니다.",
+  errorCopyIntoItself: "폴더를 자기 자신 안으로 복사할 수 없습니다.",
   errorPluginTooBig: "이 플러그인은 너무 커서 설치할 수 없습니다.",
   errorCatalogNewer:
     "플러그인 스토어를 보려면 최신 Textus가 필요합니다. Textus를 업데이트하세요.",
@@ -667,6 +668,12 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   fileDropInsertImage: "이미지 삽입 · ⇧ 열기",
   fileDropInsertLink: "링크 삽입 · ⇧ 열기",
   fileDropFailed: "{name}을(를) 추가할 수 없습니다",
+  treeCopyAsk: { other: "항목 {n}개를 ‘{folder}’에 복사할까요?" },
+  treeCopyMore: { other: "외 {n}개" },
+  treeCopyDontAsk: "다시 묻지 않기",
+  treeCopying: "‘{folder}’에 복사하는 중…",
+  treeCopied: { other: "항목 {n}개를 ‘{folder}’에 복사했습니다" },
+  treeCopyFailed: "{name}을(를) 복사할 수 없습니다",
   outlineCollapse: "접기",
   outlineExpand: "펼치기",
   outlineExpandAll: "모두 펼치기",
@@ -1370,6 +1377,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   startPagePickDocument: "사이드바에서 {folder}의 문서를 골라 시작하세요.",
   startPageRecentFiles: "최근 파일",
   autoSuggestFilenameLabel: "새 파일을 저장할 때 파일 이름 제안",
+  confirmTreeCopyLabel: "파일 트리에 놓은 파일을 복사하기 전에 묻기",
   autosaveLabel: "자동 저장",
   settingsFileLabel: "설정 파일",
   settingsFileSummary: "앱 설정과 AI 기록을 가져오거나 내보냅니다",
