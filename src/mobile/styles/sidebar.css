@@ -16,9 +16,10 @@
   border-right: none;
 }
 
-/* Moved only while open: a moved box holds its contents' layers, and
-   the tabs rise over the bar's row only while the page is still. Later in
-   the page than the sidebar, it is drawn over it as it slides. */
+/* Moved only while open: a moved box holds its contents' layers, so the
+   tabs rise over the bar's row only while the page is still (the bar is
+   see-through for them, base.css). Later in the page than the sidebar, it
+   is drawn over it as it slides. */
 :root[data-window-chrome="mobile"] :is(.window-bar, .main-pane) {
   transition: transform calc(var(--dur-settle) * var(--motion-travel))
     var(--ease-settle);
@@ -44,7 +45,7 @@
 
 :root[data-window-chrome="mobile"]
   .app-shell
-  > :is(.activity-rail, .sidebar, .window-bar, .main-pane) {
+  > :is(.activity-rail, .sidebar, .main-pane) {
   background-attachment: scroll;
   background-size: 100vw 100vh;
   background-position: calc(-1 * var(--frame-shift)) 0;
@@ -56,13 +57,6 @@
 
 :root[data-window-chrome="mobile"] .app-shell > .activity-rail {
   background-position: 0 0;
-}
-
-/* Its tabs show through the moved bar. */
-:root[data-window-chrome="mobile"]
-  .app-shell[data-sidebar="open"]
-  > .window-bar {
-  background: transparent;
 }
 
 :root[data-window-chrome="mobile"] .main-pane {
