@@ -106,6 +106,7 @@ export function withAiPlugins(
       .use(
         createPendingEditPlugin({
           ...pendingEdits,
+          docPath: () => docPath.current,
           animationEnabled: () => !prefersReducedMotion(),
           sentenceLabels: () => {
             const t = resolveStrings(settings.current.language);

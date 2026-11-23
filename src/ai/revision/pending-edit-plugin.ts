@@ -1,3 +1,4 @@
+import { setProposalDocPath } from "./pending-doc-pictures";
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import { Plugin } from "@milkdown/kit/prose/state";
 import { DecorationSet } from "@milkdown/kit/prose/view";
@@ -67,6 +68,8 @@ export function createPendingEditPlugin(options: {
   /** How a rewrite is drawn, already fallen back where there's no margin;
    *  read live, applied on the next transaction. */
   revisionDisplay?: () => RevisionDisplay;
+  /** The document's path: a proposal's pictures are relative to it. */
+  docPath?: () => string | null;
 }) {
   const animate = () => options.animationEnabled?.() ?? false;
   const hooks: SentenceHooks = {
@@ -325,6 +328,7 @@ export function createPendingEditPlugin(options: {
           },
         },
         view(editorView) {
+          if (options.docPath) setProposalDocPath(editorView, options.docPath);
           let last: PendingPreview[] = [];
           let lastApplied: AppliedEdit[] = [];
           let lastDecoration: DecorationSet | null = null;

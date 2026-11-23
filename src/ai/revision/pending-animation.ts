@@ -14,6 +14,7 @@ import {
 } from "./sentence-stream";
 import { pendingEditKey, type PendingSentence } from "./pending-types";
 import { renderPendingHtml } from "./pending-fill";
+import { proposalDocPath } from "./pending-doc-pictures";
 
 /** New text coming into the document: one reveal per proposal and the green
  *  text it fills in. DOM side effects only, kept outside the editor state
@@ -265,7 +266,7 @@ export function renderAnimation(anim: InsertAnimation) {
   const shown = fresh ? "" : (anim.drawn ?? "");
   const before = fresh ? 0 : anim.span.children.length;
   const height = fresh ? 0 : anim.span.offsetHeight;
-  renderPendingHtml(anim.span, text);
+  renderPendingHtml(anim.span, text, proposalDocPath(anim.view));
   anim.drawn = text;
   anim.span.dataset.drawn = "true";
   // Each landed block fades in rising, all at once. Text replaced rather

@@ -94,7 +94,10 @@ function wholeStrike(p: PendingPreview): { from: number; to: number } | null {
 }
 
 /** A streaming rewrite's sentence layout, started when first drawn; null
- *  where it streams in whole. A settled one keeps it until its sentences come.
+ *  where it streams in whole. Settled without sentences (its changes not
+ *  found in the text), it is shown whole, as Accept and the review bar take
+ *  it: the layout kept, its pieces stood inline where they didn't belong,
+ *  their Markdown as text, with ✓ / ✕ that decided nothing (1.4.7).
  *  A layout is of the originals it was made for: the call's final arguments
  *  can name other ones than its draft did, and are laid out anew. */
 function streamFor(p: PendingPreview, animate: boolean): StreamState | null {
@@ -103,7 +106,14 @@ function streamFor(p: PendingPreview, animate: boolean): StreamState | null {
   const originals = p.streamSource!.sentences;
   if (anim?.stream && !sameUnits(anim.stream.sentences, originals))
     anim.stream = null;
-  if (!p.streaming) return anim?.stream ?? null;
+  if (!p.streaming) {
+    // Its widget types from the text, not from the layout's partial
+    // sentence. A stopped one's layout holds what Stop kept, which its
+    // re-add reads (stoppedRewrite), and stays as it was.
+    if (anim?.stream?.stopped !== undefined) return anim.stream;
+    if (anim) anim.stream = null;
+    return null;
+  }
   if (!anim) {
     anim = newAnimation(p.callId, p.proposal.text ?? "", false);
     animations.set(p.callId, anim);
@@ -134,7 +144,7 @@ function decorationsFor(
   hooks: SentenceHooks,
 ): Decoration[] {
   if (p.sentences && !p.streaming)
-    return sentenceDecorations(p, p.sentences.changes, hooks);
+    return sentenceDecorations(doc, p, p.sentences.changes, hooks);
   const stream = p.streamSource && streamFor(p, animate);
   if (stream) return streamDecorations(doc, p, p.streamSource!, stream, hooks);
   // A picture being redone: the old one stays as it is, veiled, until the

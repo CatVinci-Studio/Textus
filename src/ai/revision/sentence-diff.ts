@@ -26,6 +26,20 @@ export function inlineSentence(sentence: string): string {
   return trimBreaks(sentence).replace(/^#{1,6}[ \t]+/, "");
 }
 
+/** A line's leading marks: a quote's `>`s, then a heading's `#`s or a list
+ *  item's marker. */
+const LINE_MARKS =
+  /^(?:>[ \t]?)*(?:#{1,6}[ \t]+|[-*+][ \t]+(?:\[[ xX]\][ \t]+)?|\d+[.)][ \t]+)?/;
+
+/** A change's new text as drawn in the line of its original: one line
+ *  rewriting a list item or a quote's line is drawn in that line without
+ *  its marker, which would show as text there. */
+export function inlineChange(before: string, after: string): string {
+  const text = inlineSentence(after);
+  if (text.includes("\n") || !LINE_MARKS.exec(before.trim())?.[0]) return text;
+  return text.replace(LINE_MARKS, "");
+}
+
 /** Several lines or blocks as one line, for a row that shows only its
  *  start: the lines joined, without their list, quote or heading marks. */
 export function oneLine(markdown: string): string {
