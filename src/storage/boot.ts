@@ -18,8 +18,8 @@ interface Boot {
   windows10: boolean;
   /** Something may open in this window as it starts (window_restores). */
   restoring: boolean;
-  /** The tab dragged out into this window, unless too large to copy here. */
-  /** As take_detached_tab gives it (its help guide a HelpDoc id). */
+  /** The tab dragged out into this window, unless too large to copy here;
+   *  as take_detached_tab gives it (its help guide a HelpDoc id). */
   detachedTab: DetachedTabDoc | null;
 }
 
