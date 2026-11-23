@@ -55,6 +55,18 @@ const PENDING_KEPT = 30;
 // each other's measuring node mid-render.
 let renderIdCounter = 0;
 
+/** A drawing another editor made, under ids of this one's own: two tabs
+ *  showing one SVG shared its marker and style ids. */
+function adopt(drawn: Drawn): Drawn {
+  const id = ++renderIdCounter;
+  const ids = new RegExp(`mermaid-preview-${drawn.id}(?!\\d)`, "g");
+  return {
+    ...drawn,
+    id,
+    svg: drawn.svg.replace(ids, `mermaid-preview-${id}`),
+  };
+}
+
 /**
  * A live diagram preview below every ```mermaid and ```chart block. While
  * the cursor is away from a drawn block its source hides; moving back in, or
@@ -96,11 +108,11 @@ export function createMermaidPreviewPlugin(options: {
       const code = drawingKey(node.attrs.language, node.textContent);
       const to = from + node.nodeSize;
       const failed = failures.get(code);
+      let drawn = lastRenders.get(code) ?? pendingDrawn.get(code);
       // A tab made again shows the last drawing until its first pass.
-      const drawn =
-        lastRenders.get(code) ??
-        pendingDrawn.get(code) ??
-        (failed === undefined ? lastDrawing(code) : undefined);
+      const last =
+        drawn || failed !== undefined ? undefined : lastDrawing(code);
+      if (last) lastRenders.set(code, (drawn = adopt(last)));
       if (!drawn) return failureNote(code, to, failed);
       const { svg } = drawn;
       if (touches(from, to)) return [];
@@ -281,10 +293,9 @@ export function createMermaidPreviewPlugin(options: {
             // A pass only draws sources it hasn't drawn for the same width, face and
             // engine.
             const own = lastRenders.get(key) ?? pendingDrawn.get(key);
-            const cached =
-              own && own.style === styleOf(own.engine)
-                ? own
-                : drawingFor(key, styles);
+            const fresh = own && own.style === styleOf(own.engine);
+            const shared = fresh ? undefined : drawingFor(key, styles);
+            const cached = fresh ? own : shared && adopt(shared);
             if (cached) {
               rendered.set(key, cached);
               continue;

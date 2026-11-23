@@ -60,4 +60,23 @@ describe("a diagram in a tab made again", () => {
     await new Promise((resolve) => setTimeout(resolve, 300));
     expect(render).toHaveBeenCalledTimes(1);
   });
+
+  it("gives each open tab's copy of a drawing ids of its own", async () => {
+    const doc = DOC.replace("A --> B", "C --> D");
+    const front = await createTestEditor(doc, { diagramEngine: "mermaid" });
+    editors.push(front);
+    await vi.waitFor(() => expect(shown(front)).not.toBeNull());
+    const back = await createTestEditor(doc, { diagramEngine: "mermaid" });
+    editors.push(back);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    const id = (editor: Editor) =>
+      editor.action(
+        (ctx) =>
+          ctx.get(editorViewCtx).dom.querySelector(".mermaid-preview svg")?.id,
+      );
+    // One id twice in the window: arrowheads pointed at the hidden tab's
+    // markers, and its styles applied to both.
+    expect(id(back)).toMatch(/^mermaid-preview-/);
+    expect(id(back)).not.toBe(id(front));
+  });
 });
