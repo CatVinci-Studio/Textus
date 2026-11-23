@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { eachLine } from "../../utils/markdown-lines";
 import {
   blockIds,
   keepPictures,
@@ -10,6 +11,12 @@ import {
   type SentBlock,
 } from "./doc-blocks";
 import keepCases from "../../ai/keep-pictures-cases.json";
+
+// Counted, to see how often a text is read line by line.
+vi.mock("../../utils/markdown-lines", async (original) => {
+  const real = await original<typeof import("../../utils/markdown-lines")>();
+  return { ...real, eachLine: vi.fn(real.eachLine) };
+});
 
 /** Blocks as serializeBlocks sends them: `[kind, markdown]` each. */
 function sent(...blocks: [BlockKind, string][]): SentBlock[] {
@@ -154,6 +161,18 @@ describe("keepPictures", () => {
         swapped: c.swapped ?? 0,
       });
     }
+  });
+
+  it("reads the rewrite's paragraphs a set number of times, however many there are", () => {
+    // It runs on every streamed chunk: once per paragraph was quadratic.
+    const reads = (n: number) => {
+      const words = Array.from({ length: n }, (_, i) => `Para ${i}.`);
+      const text = ["![a](a.png)", ...words].join("\n\n");
+      vi.mocked(eachLine).mockClear();
+      keepPictures([{ markdown: "![a](a.png)" }], text, false);
+      return vi.mocked(eachLine).mock.calls.length;
+    };
+    expect(reads(40)).toBe(reads(5));
   });
 
   it("keeps a fenced block whole: a shorter fence inside doesn't close it", () => {

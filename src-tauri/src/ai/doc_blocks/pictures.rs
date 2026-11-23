@@ -1,7 +1,7 @@
 //! A rewrite's pictures: a text edit never changes a picture, so
 //! `keep_pictures` puts back the ones a rewrite left out or swapped.
 
-use super::paragraphs;
+use super::{fence_opening, paragraphs};
 use regex::Regex;
 use std::sync::LazyLock;
 
@@ -28,21 +28,32 @@ pub(super) fn is_picture(block: &str) -> bool {
 }
 
 /// A picture's address: what makes it the same picture whatever its
-/// description says. `![alt](<a b.png> "title")` is `a b.png`. Keep in step
-/// with the frontend's pictureSrc.
-pub(super) fn picture_src(picture: &str) -> Option<String> {
+/// description says. `![alt](<a b.png> "title")` is `a b.png`; an `<img>`'s
+/// src may be unquoted, and one with none is known by its text. Keep in step
+/// with the frontend's pictureSrc (src/editor/markdown/doc-blocks.ts).
+pub(super) fn picture_src(picture: &str) -> String {
     static MARKDOWN: LazyLock<Regex> =
         LazyLock::new(|| Regex::new(r"^!\[[^\]\n]*\]\(\s*(<[^>\n]*>|[^)\s]*)").unwrap());
-    static IMG: LazyLock<Regex> =
-        LazyLock::new(|| Regex::new(r#"(?i)^<img\s[^>]*\bsrc\s*=\s*["']([^"']*)["']"#).unwrap());
+    static IMG: LazyLock<Regex> = LazyLock::new(|| {
+        Regex::new(r#"(?i)^<img\s[^>]*\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))"#).unwrap()
+    });
     let t = picture.trim();
     if let Some(m) = MARKDOWN.captures(t) {
-        return Some(unbracket(&m[1]).to_string());
+        return unbracket(&m[1]).to_string();
     }
-    IMG.captures(t).map(|m| m[1].to_string())
+    match IMG.captures(t) {
+        Some(m) => m
+            .get(1)
+            .or_else(|| m.get(2))
+            .or_else(|| m.get(3))
+            .map_or("", |g| g.as_str())
+            .to_string(),
+        None => t.to_string(),
+    }
 }
 
-/// An address as written in `<>`, without them.
+/// An address as written in `<>`, without them; a lone `<` or `>` is part of
+/// it. The frontend's unbracket.
 fn unbracket(src: &str) -> &str {
     src.strip_prefix('<')
         .and_then(|s| s.strip_suffix('>'))
@@ -67,28 +78,78 @@ fn with_description(original: &str, rewritten: &str) -> String {
 /// `text` with each line that is one of `srcs`' pictures in a paragraph of
 /// other lines put in a paragraph of its own, as the writer's picture is:
 /// "![a](a.png)\n*Figure 1*" would read as one paragraph, the picture beside
-/// its caption.
+/// its caption. A line in a fence or `$$` block, or in an HTML block, is
+/// that block's and stays. Keep in step with the frontend's picturesApart
+/// (src/editor/markdown/doc-blocks.ts).
 fn pictures_apart(text: &str, srcs: &[&str]) -> String {
-    let apart = |line: &str| {
-        is_picture(line) && picture_src(line).is_some_and(|s| srcs.contains(&s.as_str()))
-    };
     let mut out = text.to_string();
     for (from, to) in paragraphs(text).into_iter().rev() {
         let lines: Vec<&str> = text[from..to].split('\n').collect();
-        if lines.len() < 2 || !lines.iter().any(|l| apart(l)) {
+        if lines.len() < 2 || opens_html(lines[0]) {
+            continue;
+        }
+        let code = code_lines(&lines);
+        let apart: Vec<bool> = lines
+            .iter()
+            .zip(&code)
+            .map(|(line, &code)| {
+                !code && is_picture(line) && srcs.contains(&picture_src(line).as_str())
+            })
+            .collect();
+        if !apart.contains(&true) {
             continue;
         }
         let mut groups: Vec<Vec<&str>> = Vec::new();
-        for line in lines {
+        let mut last_apart = false;
+        for (line, &this_apart) in lines.iter().zip(&apart) {
             match groups.last_mut() {
-                Some(last) if !apart(line) && !apart(last[0]) => last.push(line),
+                Some(last) if !this_apart && !last_apart => last.push(line),
                 _ => groups.push(vec![line]),
             }
+            last_apart = this_apart;
         }
         let parts: Vec<String> = groups.iter().map(|g| g.join("\n")).collect();
         out = format!("{}{}{}", &out[..from], parts.join("\n\n"), &out[to..]);
     }
     out
+}
+
+/// Whether a paragraph whose first line is `line` is an HTML block: it opens
+/// with a tag, and isn't one of the pictures.
+fn opens_html(line: &str) -> bool {
+    let indent = line.len() - line.trim_start_matches(' ').len();
+    let rest = &line[indent..];
+    indent <= 3
+        && rest.strip_prefix('<').is_some_and(|r| {
+            r.starts_with(|c: char| c.is_ascii_alphabetic() || matches!(c, '/' | '!' | '?'))
+        })
+        && !is_picture(line)
+}
+
+/// Each of a paragraph's lines, whether it is in a fence or `$$` block (its
+/// fences too), as `paragraphs` finds them.
+fn code_lines(lines: &[&str]) -> Vec<bool> {
+    let mut fence: Option<&str> = None;
+    lines
+        .iter()
+        .map(|line| {
+            if let Some(close) = fence {
+                if line.trim_start().starts_with(close) {
+                    fence = None;
+                }
+                return true;
+            }
+            let Some(close) = fence_opening(line) else {
+                return false;
+            };
+            // A one-line `$$x$$` closes itself.
+            let rest = &line.trim_start()[close.len()..];
+            if !(close == "$$" && rest.trim_end().ends_with("$$")) {
+                fence = Some(close);
+            }
+            true
+        })
+        .collect()
 }
 
 /// `text`, a rewrite of `run`, with the run's pictures as they were: a
@@ -98,7 +159,8 @@ fn pictures_apart(text: &str, srcs: &[&str]) -> String {
 /// back (the swap is generate_image's to propose). `complete`: all of `text`
 /// is there; while streaming, a picture whose place isn't reached yet is left
 /// out. Returns the text and how many were taken out. Keep in step with the
-/// frontend's keepPictures (shared cases file).
+/// frontend's keepPictures (src/editor/markdown/doc-blocks.ts; shared cases
+/// file).
 pub(crate) fn keep_pictures(run: &[&str], text: &str, complete: bool) -> (String, usize) {
     static IN_TEXT: LazyLock<Regex> = LazyLock::new(|| {
         Regex::new(r#"!\[([^\]]*)\]\((<[^>]*>|[^)\s]*)(?:\s+"[^"]*")?\)"#).unwrap()
@@ -109,7 +171,7 @@ pub(crate) fn keep_pictures(run: &[&str], text: &str, complete: bool) -> (String
         .iter()
         .enumerate()
         .filter(|(_, b)| is_picture(b))
-        .filter_map(|(i, b)| picture_src(b).map(|src| (i, *b, src)))
+        .map(|(i, b)| (i, *b, picture_src(b)))
         .collect();
     if originals.is_empty() {
         return (text.to_string(), 0);
@@ -135,7 +197,7 @@ pub(crate) fn keep_pictures(run: &[&str], text: &str, complete: bool) -> (String
         .map(|&(s, e)| {
             let p = &spaced[s..e];
             if is_picture(p) {
-                return match picture_src(p).and_then(|src| take(&src, &mut shown)) {
+                return match take(&picture_src(p), &mut shown) {
                     Some((_, md)) => (with_description(md, p), true),
                     None => (p.to_string(), false),
                 };
@@ -152,9 +214,7 @@ pub(crate) fn keep_pictures(run: &[&str], text: &str, complete: bool) -> (String
     let kept: Vec<&(String, bool)> = parts
         .iter()
         .filter(|(p, ours)| {
-            let new = !ours
-                && is_picture(p)
-                && !picture_src(p).is_some_and(|s| srcs.contains(&s.as_str()));
+            let new = !ours && is_picture(p) && !srcs.contains(&picture_src(p).as_str());
             if new && swapped < missing {
                 swapped += 1;
                 return false;
