@@ -151,7 +151,12 @@ describe("what every plugin page gets", () => {
     });
     const pointer = (type: string, y: number, target: EventTarget = window) =>
       target.dispatchEvent(
-        new MouseEvent(type, { bubbles: true, clientY: y, button: 0 }),
+        new MouseEvent(type, {
+          bubbles: true,
+          clientY: y,
+          button: 0,
+          buttons: type === "pointerup" ? 0 : 1,
+        }),
       );
     pointer("pointerdown", 10, items[0]);
     pointer("pointermove", 30);
@@ -222,7 +227,12 @@ describe("what every plugin page gets", () => {
     });
     const pointer = (type: string, y: number, target: EventTarget = window) =>
       target.dispatchEvent(
-        new MouseEvent(type, { bubbles: true, clientY: y, button: 0 }),
+        new MouseEvent(type, {
+          bubbles: true,
+          clientY: y,
+          button: 0,
+          buttons: type === "pointerup" ? 0 : 1,
+        }),
       );
     pointer("pointerdown", 10, items[0]);
     pointer("pointermove", 30);
@@ -260,6 +270,7 @@ describe("what every plugin page gets", () => {
         cancelable: true,
         clientY: y,
         button: 0,
+        buttons: type === "pointerup" ? 0 : 1,
       });
       Object.assign(e, { pointerType: "touch", pointerId: 7 });
       target.dispatchEvent(e);
@@ -328,7 +339,12 @@ describe("what every plugin page gets", () => {
     });
     const pointer = (type: string, y: number, target: EventTarget = window) =>
       target.dispatchEvent(
-        new MouseEvent(type, { bubbles: true, clientY: y, button: 0 }),
+        new MouseEvent(type, {
+          bubbles: true,
+          clientY: y,
+          button: 0,
+          buttons: type === "pointerup" ? 0 : 1,
+        }),
       );
     pointer("pointerdown", 70, items[0]);
     pointer("pointermove", 195);
@@ -339,7 +355,104 @@ describe("what every plugin page gets", () => {
       `translateY(${125 + scroller.scrollTop}px)`,
     );
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+
+    // At the slowest pace on a 144 Hz screen it still goes, a pixel every
+    // few frames: as far in a second as at 60 Hz.
+    scroller.scrollTop = 0;
+    frames.length = 0;
+    pointer("pointerdown", 70, items[0]);
+    pointer("pointermove", 165);
+    for (let now = 0; now <= 1000 && frames.length; now += 1000 / 144)
+      frames.shift()!(now);
+    expect(scroller.scrollTop).toBeGreaterThan(50);
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     handle.dispose();
     vi.restoreAllMocks();
+  });
+
+  it("drops where a drag is when its release went unheard, and a new press ends it", () => {
+    document.body.innerHTML = `<ul><li>a</li><li>b</li><li>c</li></ul>`;
+    const items = [...document.querySelectorAll("li")];
+    items.forEach((li, i) => {
+      li.getBoundingClientRect = () =>
+        ({ top: i * 20, height: 20, left: 0, width: 100 }) as DOMRect;
+    });
+    const onDrop = vi.fn();
+    const handle = page().drag.reorder(document.querySelector("ul")!, {
+      items: "li",
+      onDrop,
+    });
+    const pointer = (
+      type: string,
+      y: number,
+      target: EventTarget = window,
+      buttons = 1,
+    ) =>
+      target.dispatchEvent(
+        new MouseEvent(type, { bubbles: true, clientY: y, button: 0, buttons }),
+      );
+    // WebView2 missed the release: the next move has no button down.
+    pointer("pointerdown", 10, items[0]);
+    pointer("pointermove", 45);
+    pointer("pointermove", 45, window, 0);
+    expect(onDrop).toHaveBeenCalledWith(0, 1);
+    expect(items[0].classList.contains("is-drag-lifted")).toBe(false);
+
+    pointer("pointerdown", 10, items[1]);
+    pointer("pointermove", 45);
+    expect(items[1].classList.contains("is-drag-lifted")).toBe(true);
+    pointer("pointerdown", 100, document.body);
+    expect(items[1].classList.contains("is-drag-lifted")).toBe(false);
+    expect(onDrop).toHaveBeenCalledTimes(1);
+    handle.dispose();
+  });
+
+  it("gives the page its own selection back, and leaves a text field's press to it", () => {
+    vi.useFakeTimers();
+    document.body.innerHTML = `<ul><li>a <input></li><li>b</li><li>c</li></ul>`;
+    document.body.style.userSelect = "text";
+    const items = [...document.querySelectorAll("li")];
+    items.forEach((li, i) => {
+      li.getBoundingClientRect = () =>
+        ({ top: i * 20, height: 20, left: 0, width: 100 }) as DOMRect;
+    });
+    const onDrop = vi.fn();
+    const handle = page().drag.reorder(document.querySelector("ul")!, {
+      items: "li",
+      onDrop,
+    });
+    const finger = (type: string, y: number, target: EventTarget = window) => {
+      const e = new MouseEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        clientY: y,
+        button: 0,
+        buttons: type === "pointerup" ? 0 : 1,
+      });
+      Object.assign(e, { pointerType: "touch", pointerId: 3 });
+      target.dispatchEvent(e);
+    };
+    // A tap.
+    finger("pointerdown", 30, items[1]);
+    finger("pointerup", 30);
+    expect(document.body.style.userSelect).toBe("text");
+    // A hold and a drag.
+    finger("pointerdown", 30, items[1]);
+    vi.advanceTimersByTime(600);
+    expect(document.body.style.userSelect).toBe("none");
+    finger("pointermove", 55);
+    finger("pointerup", 55);
+    expect(onDrop).toHaveBeenCalledWith(1, 2);
+    expect(document.body.style.userSelect).toBe("text");
+    // Held on a text field: its own long press (select, the menu).
+    finger("pointerdown", 10, document.querySelector("input")!);
+    vi.advanceTimersByTime(600);
+    expect(items[0].classList.contains("is-drag-lifted")).toBe(false);
+    expect(document.body.style.userSelect).toBe("text");
+    finger("pointerup", 10);
+    document.body.style.userSelect = "";
+    handle.dispose();
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
   });
 });

@@ -13,7 +13,9 @@ the Textus it needs, and the store.
   call ([versions.md](versions.md)); a Textus outside it doesn't load the
   plugin, and the store tells the user to update Textus.
 - `platforms` says where it runs (`["desktop"]`, or with `"ios"`); the
-  store marks one without `"ios"` as the computer's only.
+  store marks one without `"ios"` as the computer's only. A plugin that
+  `requires` `runInBackground` and names `"ios"` needs `engines.textus`
+  `>=1.4.7`: an older Textus refuses that manifest.
 - `category` is where the store lists it, and `needsTextusAi` keeps it out
   of the store where there is no Textus AI
   ([the manifest](guide.md#the-manifest)).

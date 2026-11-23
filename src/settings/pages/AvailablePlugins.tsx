@@ -1,7 +1,7 @@
 import { explainError } from "../../utils/error-explain";
 import { fill } from "../../i18n/fill";
-import { Fragment, useState, type ReactNode } from "react";
-import { Byline, CatalogRow, DesktopOnlyMark } from "./CatalogRow";
+import { useState, type ReactNode } from "react";
+import { Byline, CatalogRow, DesktopOnlyMark, headedRows } from "./CatalogRow";
 import { CatalogProblem, catalogMessage, catalogStatus } from "./CatalogStatus";
 import { PluginIcon } from "./PluginArt";
 import type { Strings } from "../../i18n/strings";
@@ -54,10 +54,10 @@ export function AvailablePlugins({
         installed,
       )
     : [];
-  const { items: shown, headings } =
+  const shown =
     sort === "popular" || query.trim()
       ? byCategory(offered, t)
-      : { items: offered, headings: new Map<string, string>() };
+      : offered.map((item) => ({ item }));
   const message = catalogMessage({
     t,
     status: catalogStatus(catalog),
@@ -98,20 +98,13 @@ export function AvailablePlugins({
           />
         )
       }
-      rows={shown.map((item) => (
-        <Fragment key={item.id}>
-          {headings.has(item.id) && (
-            <h4 className="tx-list-heading plugin-subgroup-title">
-              {headings.get(item.id)}
-            </h4>
-          )}
-          <CatalogCard
-            item={item}
-            t={t}
-            action={actionFor(item.id)}
-            onOpen={() => onOpen(item)}
-          />
-        </Fragment>
+      rows={headedRows(shown, "plugin-subgroup-title", (item) => (
+        <CatalogCard
+          item={item}
+          t={t}
+          action={actionFor(item.id)}
+          onOpen={() => onOpen(item)}
+        />
       ))}
     />
   );

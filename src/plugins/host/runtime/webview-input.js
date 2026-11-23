@@ -178,10 +178,11 @@ function twoFingers(touches) {
     clientY: (a.clientY + b.clientY) / 2,
   };
 }
-// Its touchmove listener is there only while two fingers are: one held
-// for every touch would hold up each scroll's start.
+// Its touchmove listener is held from the start: one added with the second
+// finger comes after Chromium has made the touch's moves uncancelable. A
+// move without a pinch on returns at once.
 function pinchMove(event) {
-  if (!spread || event.touches.length !== 2 || spread.page === false) return;
+  if (!spread || spread.page === false || event.touches.length !== 2) return;
   var at = twoFingers(event.touches);
   if (!(at.apart > 0)) return;
   var ratio = at.apart / spread.last;
@@ -191,8 +192,9 @@ function pinchMove(event) {
 }
 function pinchEnd() {
   spread = null;
-  window.removeEventListener("touchmove", pinchMove);
 }
+if (!("ongesturestart" in window))
+  window.addEventListener("touchmove", pinchMove, { passive: false });
 window.addEventListener("touchstart", function (event) {
   pinchEnd();
   var gestures = "ongesturestart" in window;
@@ -200,7 +202,6 @@ window.addEventListener("touchstart", function (event) {
   var at = twoFingers(event.touches);
   if (!(at.apart > 0)) return;
   spread = { last: at.apart, page: null };
-  window.addEventListener("touchmove", pinchMove, { passive: false });
 });
 window.addEventListener("touchend", function (event) {
   if (event.touches.length < 2) pinchEnd();

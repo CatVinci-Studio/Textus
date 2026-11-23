@@ -6,7 +6,6 @@ import {
   PLUGIN_CATEGORIES,
   byCategory,
   categoryLabel,
-  groupByCategory,
 } from "./plugin-categories";
 
 const manifest = (id: string, extra: object = {}) =>
@@ -45,12 +44,14 @@ describe("the store's categories", () => {
       manifest("a.new", { category: "games" }),
     ].map((m) => ({ id: m.id, manifest: m }));
     expect(
-      groupByCategory(items).map((g) => [g.group, g.items.map((i) => i.id)]),
+      byCategory(items, en as Strings).map((r) => [r.item.id, r.heading]),
     ).toEqual([
-      ["notes", ["a.tags"]],
-      ["diagrams", ["a.chart", "a.plot"]],
-      ["companions", ["a.pet"]],
-      ["other", ["a.x", "a.new"]],
+      ["a.tags", en.pluginCategoryNotes],
+      ["a.chart", en.pluginCategoryDiagrams],
+      ["a.plot", undefined],
+      ["a.pet", en.pluginCategoryCompanions],
+      ["a.x", en.pluginCategoryOther],
+      ["a.new", undefined],
     ]);
   });
 
@@ -64,14 +65,15 @@ describe("the store's categories", () => {
       [item("a.x"), item("a.tags", "notes"), item("a.plot", "diagrams")],
       t,
     );
-    expect(listed.items.map((i) => i.id)).toEqual(["a.tags", "a.plot", "a.x"]);
-    expect([...listed.headings]).toEqual([
+    expect(listed.map((r) => [r.item.id, r.heading])).toEqual([
       ["a.tags", en.pluginCategoryNotes],
       ["a.plot", en.pluginCategoryDiagrams],
       ["a.x", en.pluginCategoryOther],
     ]);
     // A catalog from before categories: all Other, no heading.
-    expect(byCategory([item("a.x"), item("a.y")], t).headings.size).toBe(0);
+    expect(
+      byCategory([item("a.x"), item("a.y")], t).filter((r) => r.heading),
+    ).toEqual([]);
   });
 
   it("each have a name", () => {

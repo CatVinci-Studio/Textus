@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
+import type { CategoryRow } from "../../plugins/store/plugin-categories";
 import { fill } from "../../i18n/fill";
 import type { Strings } from "../../i18n/strings";
 
@@ -156,4 +157,20 @@ export function DesktopOnlyMark({ t }: { t: Strings }) {
       {t.pluginDesktopOnlyBadge}
     </span>
   );
+}
+
+/** A list's rows by category, each category's heading before its first. */
+export function headedRows<T extends { id: string }>(
+  rows: readonly CategoryRow<T>[],
+  headingClass: string,
+  row: (item: T) => ReactNode,
+): ReactNode[] {
+  return rows.map(({ item, heading }) => (
+    <Fragment key={item.id}>
+      {heading && (
+        <h4 className={`tx-list-heading ${headingClass}`}>{heading}</h4>
+      )}
+      {row(item)}
+    </Fragment>
+  ));
 }

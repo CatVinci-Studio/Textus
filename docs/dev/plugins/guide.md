@@ -965,7 +965,9 @@ What differs is room and what the system allows:
   `requires` Keep running in the background (`runInBackground`), is
   desktop-only by default. `background` code can't name `ios`; a plugin
   that only `requires` Keep running in the background may, and on iOS and
-  Android it runs without it - nobody is asked to turn it on. Check a
+  Android it runs without it - nobody is asked to turn it on. Such a
+  plugin raises `engines.textus` to `>=1.4.7`: an older Textus refuses its
+  manifest everywhere, the desktop too. Check a
   plugin you offer on iOS in a phone-sized window, or the simulator, before
   you publish.
 - iOS has no Textus AI. A plugin that does nothing without it says

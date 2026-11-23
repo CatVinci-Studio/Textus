@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { ESLint } from "eslint";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { WEBVIEW_RUNTIME as webview } from "../webview-runtime";
 
 type Handlers = Record<string, (params: unknown) => void>;
@@ -86,11 +86,22 @@ it("offers a page two fingers' pinch as the ctrl+wheel it zooms by, where no ges
   };
 
   canvas.addEventListener("wheel", zoomsItself);
+  // Its touchmove listener is there before the touch: Chromium makes the
+  // moves uncancelable when one comes only with the second finger.
+  const added = vi.spyOn(window, "addEventListener");
   fingers("touchstart", 50);
+  expect(added.mock.calls.map(([type]) => type)).not.toContain("touchmove");
+  added.mockRestore();
   // Twice as far apart: one step in, and the web view does nothing else.
   expect(fingers("touchmove", 100)).toBe(true);
   expect(steps).toHaveLength(1);
   expect(steps[0]).toBeCloseTo(-100 * Math.log(2));
+
+  // One finger is left to scroll.
+  const one = new Event("touchmove", { cancelable: true });
+  Object.assign(one, { touches: [{ clientX: 100, clientY: 100 }] });
+  window.dispatchEvent(one);
+  expect(one.defaultPrevented).toBe(false);
 
   // A page that doesn't zoom itself keeps the touch as it was.
   canvas.removeEventListener("wheel", zoomsItself);

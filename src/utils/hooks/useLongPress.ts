@@ -59,7 +59,11 @@ export function useLongPress(onHold?: (at: { x: number; y: number }) => void) {
         }
         cancel();
       },
-      onTouchCancel: cancel,
+      // A cancelled touch sends no click either.
+      onTouchCancel: () => {
+        fired.current = false;
+        cancel();
+      },
     },
   };
 }

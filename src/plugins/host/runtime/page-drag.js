@@ -8,9 +8,13 @@
   var HOLD_MS = 300; // the app's hold-drag.ts and the plugins' shared/drag.js
   var TOUCH_SLOP_PX = 10;
   // Near the scroller's edge the drag scrolls it, faster the further in
-  // (edge-scroll.ts's pace).
+  // (edge-scroll.ts's pace). Raw pixels, not the window's scaledPx: a
+  // plugin page has its own zoom.
   var EDGE_PX = 36;
   var EDGE_MAX_STEP = 40;
+  // A press here is the field's own: selecting its text, its menu.
+  var FIELD =
+    "input, textarea, select, [contenteditable]:not([contenteditable='false'])";
 
   // ---- A list dragged into a new order: the item lifts and follows the
   // pointer, the others make room as it passes them (the window's tabs'
@@ -23,6 +27,7 @@
       if (event.button !== 0) return;
       var grip = event.target instanceof Element ? event.target : null;
       if (options.handle && !(grip && grip.closest(options.handle))) return;
+      if (grip && grip.closest(FIELD)) return;
       var item = grip && grip.closest(options.items);
       if (!item || !container.contains(item)) return;
       if (event.pointerType === "touch") holdToLift(event, start);
@@ -88,6 +93,8 @@
       }
       function move(e) {
         if (e.pointerId !== event.pointerId) return;
+        // A release WebView2 never told: the buttons are up.
+        if (e.buttons === 0) return end(true);
         pointer = pos(e);
         if (!dragging) {
           if (Math.abs(pointer - origin) < DRAG_START_PX) return;
@@ -101,6 +108,7 @@
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", up);
         window.removeEventListener("pointercancel", cancel);
+        window.removeEventListener("pointerdown", pressed, true);
         window.removeEventListener("keydown", key, true);
         pinned = false;
         scroll.stop();
@@ -136,6 +144,11 @@
       var cancel = function (e) {
         if (e.pointerId === event.pointerId) end(false);
       };
+      // A new press while this one is still followed: its release went
+      // unheard, and the drag ends dropping nothing.
+      var pressed = function () {
+        end(false);
+      };
       var key = function (e) {
         if (e.key !== "Escape" || !dragging) return;
         e.preventDefault();
@@ -145,6 +158,7 @@
       window.addEventListener("pointermove", move);
       window.addEventListener("pointerup", up);
       window.addEventListener("pointercancel", cancel);
+      window.addEventListener("pointerdown", pressed, true);
       window.addEventListener("keydown", key, true);
       if (lifted) lift();
     }
@@ -165,13 +179,27 @@
     };
   }
 
-  // No text selected, no system menu, while a drag is coming or going on.
+  // No text selected, no system menu, while a drag is coming or going on;
+  // after it, the page's own settings again. All are read before any is
+  // set: webkitUserSelect is userSelect in Chromium.
+  var QUIETED = ["userSelect", "webkitUserSelect", "webkitTouchCallout"];
+  var kept = null;
   function quiet(on) {
     var style = document.body.style;
-    style.userSelect = style.webkitUserSelect = on ? "none" : "";
-    style.webkitTouchCallout = on ? "none" : "";
-    if (on) window.addEventListener("contextmenu", swallow, true);
-    else window.removeEventListener("contextmenu", swallow, true);
+    if (on === !!kept) return;
+    if (on) {
+      kept = QUIETED.map(function (name) {
+        return style[name];
+      });
+      QUIETED.forEach(function (name) {
+        style[name] = "none";
+      });
+      window.addEventListener("contextmenu", swallow, true);
+    } else {
+      for (var i = QUIETED.length - 1; i >= 0; i--) style[QUIETED[i]] = kept[i];
+      kept = null;
+      window.removeEventListener("contextmenu", swallow, true);
+    }
   }
 
   // A finger's press that lifts what it is on once held still HOLD_MS:
@@ -232,21 +260,32 @@
       return 0;
     }
     // The pace is per 60 Hz frame; it goes by time, so a 120 Hz screen
-    // scrolls no faster.
+    // scrolls no faster. Less than a pixel's share carries to the next
+    // frame, or a slow pace at 144 Hz rounds to nothing every frame.
     var then = 0;
+    var carry = 0;
     function run(now) {
       frame = 0;
       var step = pace();
       var gap = then ? Math.min(now - then, 50) : 1000 / 60;
       then = step ? now : 0;
-      if (!step) return;
-      var before = scroller[key];
-      scroller[key] = before + Math.round((step * gap * 60) / 1000);
-      if (scroller[key] === before) {
-        then = 0;
+      if (!step) {
+        carry = 0;
         return;
       }
-      scrolled();
+      var want = (step * gap * 60) / 1000 + (carry * step > 0 ? carry : 0);
+      var whole = Math.trunc(want);
+      carry = want - whole;
+      if (whole) {
+        var before = scroller[key];
+        scroller[key] = before + whole;
+        if (scroller[key] === before) {
+          then = 0;
+          carry = 0;
+          return;
+        }
+        scrolled();
+      }
       frame = requestAnimationFrame(run);
     }
     return {
@@ -261,6 +300,7 @@
         cancelAnimationFrame(frame);
         frame = 0;
         then = 0;
+        carry = 0;
       },
     };
   }

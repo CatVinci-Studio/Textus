@@ -1,13 +1,12 @@
 import { byCategory } from "../../plugins/store/plugin-categories";
 import { desktopOnly } from "../../plugins/plugin-platform";
-import { DesktopOnlyMark } from "./CatalogRow";
+import { DesktopOnlyMark, headedRows } from "./CatalogRow";
 import { pluginLead } from "./plugin-lead";
 import { useMutedCards } from "../../plugins/store/usePluginCard";
 import { setAllPlugins } from "../../plugins/plugin-switches";
 import { catalogMessage, catalogStatus } from "./CatalogStatus";
 import { fill } from "../../i18n/fill";
 import {
-  Fragment,
   useEffect,
   useState,
   useSyncExternalStore,
@@ -98,7 +97,7 @@ export function PluginsPanel({
         )
       : [];
   const installed = plugins.records.filter((r) => pluginMatches(r, query));
-  const { items: offered, headings } = byCategory(
+  const offered = byCategory(
     catalog.status === "ready"
       ? offeredItems(
           sortCatalog(searchCatalog(catalog.items, query), "popular"),
@@ -208,40 +207,33 @@ export function PluginsPanel({
               query,
               shown: offered.length,
             }) ??
-            offered.map((item) => (
-              <Fragment key={item.id}>
-                {headings.has(item.id) && (
-                  <h4 className="tx-list-heading plugins-panel-category">
-                    {headings.get(item.id)}
-                  </h4>
+            headedRows(offered, "plugins-panel-category", (item) => (
+              <PluginRow
+                id={item.id}
+                name={pluginName({ id: item.id, manifest: item.manifest })}
+                line={pluginText(
+                  { manifest: item.manifest },
+                  item.manifest.description,
                 )}
-                <PluginRow
-                  id={item.id}
-                  name={pluginName({ id: item.id, manifest: item.manifest })}
-                  line={pluginText(
-                    { manifest: item.manifest },
-                    item.manifest.description,
-                  )}
-                  picked={picked === item.id}
-                  onOpen={() => onPick(item.id)}
-                  mark={desktopOnly(item.manifest) && <DesktopOnlyMark t={t} />}
-                  end={
-                    <AvailableButton
-                      t={t}
-                      item={item}
-                      installing={installing}
-                      onInstall={() => void install(item)}
-                    />
-                  }
-                  icon={
-                    <PluginIcon
-                      id={item.id}
-                      manifest={item.manifest}
-                      url={item.icon}
-                    />
-                  }
-                />
-              </Fragment>
+                picked={picked === item.id}
+                onOpen={() => onPick(item.id)}
+                mark={desktopOnly(item.manifest) && <DesktopOnlyMark t={t} />}
+                end={
+                  <AvailableButton
+                    t={t}
+                    item={item}
+                    installing={installing}
+                    onInstall={() => void install(item)}
+                  />
+                }
+                icon={
+                  <PluginIcon
+                    id={item.id}
+                    manifest={item.manifest}
+                    url={item.icon}
+                  />
+                }
+              />
             )))}
       </section>
     </div>
@@ -288,20 +280,16 @@ function PluginRow({
         {icon}
         <span className="plugins-panel-text">
           <span className="tx-truncate plugins-panel-name">{name}</span>
-          {mark ? (
+          {mark || line ? (
             <span className="plugins-panel-marked">
               {mark}
-              <span className="tx-truncate plugins-panel-line">
-                {pluginLead(line)}
-              </span>
+              {line && (
+                <span className="tx-truncate plugins-panel-line">
+                  {pluginLead(line)}
+                </span>
+              )}
             </span>
-          ) : (
-            line && (
-              <span className="tx-truncate plugins-panel-line">
-                {pluginLead(line)}
-              </span>
-            )
-          )}
+          ) : null}
         </span>
       </button>
       {/* Who made it is on its page. */}

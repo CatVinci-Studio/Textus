@@ -274,7 +274,9 @@ export const PluginListPane = memo(function PluginListPane({
                 style={{ "--depth": depth } as CSSProperties}
                 onMouseEnter={() => setActive(index)}
                 onClick={() => {
-                  if (!press.consumeClick()) select(item);
+                  // Only a row with a hold of its own swallows its click.
+                  if (!(item.actions?.length && press.consumeClick()))
+                    select(item);
                 }}
                 {...(info?.move ? dragHandlers(item, key) : {})}
                 {...(item.actions?.length

@@ -45,7 +45,7 @@ export function readCategory(value: string): PluginCategory | undefined {
 
 /** `items` by category, in the store's order with Other last, each keeping
  *  the order it had; a category with none is left out. */
-export function groupByCategory<
+function groupByCategory<
   T extends { manifest: Pick<PluginManifest, "category"> },
 >(items: readonly T[]): { group: CategoryGroup; items: T[] }[] {
   const order: CategoryGroup[] = [...PLUGIN_CATEGORIES, "other"];
@@ -57,22 +57,23 @@ export function groupByCategory<
     .filter((g) => g.items.length > 0);
 }
 
-/** `items` in category order, and the heading that goes before each
- *  category's first (none when they are all in one): the store lists them
- *  so, still a plugin a row. */
+/** A row of a list by category: the heading before a category's first. */
+export interface CategoryRow<T> {
+  item: T;
+  heading?: string;
+}
+
+/** `items` in category order, each category's first headed (none when
+ *  they are all in one): the store lists them so, still a plugin a row. */
 export function byCategory<
-  T extends { id: string; manifest: Pick<PluginManifest, "category"> },
->(
-  items: readonly T[],
-  t: Strings,
-): { items: T[]; headings: Map<string, string> } {
+  T extends { manifest: Pick<PluginManifest, "category"> },
+>(items: readonly T[], t: Strings): CategoryRow<T>[] {
   const groups = groupByCategory(items);
-  return {
-    items: groups.flatMap((g) => g.items),
-    headings: new Map(
-      groups.length > 1
-        ? groups.map((g) => [g.items[0].id, categoryLabel(g.group, t)])
-        : [],
-    ),
-  };
+  return groups.flatMap((g) =>
+    g.items.map((item, i) => ({
+      item,
+      heading:
+        groups.length > 1 && i === 0 ? categoryLabel(g.group, t) : undefined,
+    })),
+  );
 }

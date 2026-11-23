@@ -31,6 +31,13 @@ describe("useLongPress", () => {
     );
     expect(lift.preventDefault).toHaveBeenCalled();
     expect(result.current.consumeClick()).toBe(false);
+
+    // A hold the system takes back sends no click: the next tap, on a row
+    // that has no hold of its own, is still a tap.
+    act(() => result.current.handlers.onTouchStart(touch(40, 120)));
+    act(() => vi.advanceTimersByTime(500));
+    act(() => result.current.handlers.onTouchCancel());
+    expect(result.current.consumeClick()).toBe(false);
   });
 
   it("lets a touch that moves away scroll, not hold", () => {
