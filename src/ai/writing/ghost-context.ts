@@ -114,18 +114,31 @@ function contextText(
 ): string {
   const parts: string[] = [];
   let start = from;
+  // The text between two drawn blocks, kept while it holds a textblock even
+  // an empty one (the caret's, at its end): its break from the next part is
+  // the paragraph break the drawn block stood between.
+  const part = (a: number, b: number) => {
+    let block = false;
+    if (a < b)
+      doc.nodesBetween(a, b, (node) => {
+        block ||= node.isTextblock;
+        return !block && !node.isTextblock;
+      });
+    const text = doc.textBetween(a, b, "\n\n");
+    if (text || block) parts.push(text);
+  };
   doc.nodesBetween(from, to, (node, pos) => {
     if (!node.type.spec.code || !node.isTextblock) return true;
     const end = pos + node.nodeSize;
     const language = String(node.attrs.language ?? "").toLowerCase();
     if (cursorPos > pos && cursorPos < end) return false;
     if (!language || !drawn(language)) return false;
-    parts.push(doc.textBetween(start, Math.max(start, pos), "\n\n"));
+    part(start, Math.max(start, pos));
     start = Math.min(end, to);
     return false;
   });
-  parts.push(doc.textBetween(start, to, "\n\n"));
-  return parts.filter((part, i) => part || i === parts.length - 1).join("\n\n");
+  part(start, to);
+  return parts.join("\n\n");
 }
 
 export function completionContext(

@@ -132,7 +132,8 @@ describe("the text around the caret a completion is asked with", () => {
     const end = heading.nodeSize - 1;
     const { before, after } = completionContext(doc, end, drawn);
     expect(before).toBe("2026 Calendar");
-    expect(after).toBe("Weeks below.");
+    // The paragraph after is still a paragraph of its own.
+    expect(after).toBe("\n\nWeeks below.");
     // Without the plugin drawing it, the source is code the writer reads.
     expect(completionContext(doc, end).after).toContain("file.inFolder");
   });
@@ -145,6 +146,20 @@ describe("the text around the caret a completion is asked with", () => {
     ]);
     const { before } = completionContext(doc, doc.content.size - 1, drawn);
     expect(before).toBe("Intro\n\nThen");
+    // Two drawn blocks in a row, or one at the start: no break of their own.
+    const twice = schema.node("doc", null, [
+      base,
+      schema.node("paragraph", null, schema.text("Intro")),
+      base,
+      base,
+      schema.node("paragraph", null, schema.text("Then")),
+    ]);
+    expect(completionContext(twice, twice.content.size - 1, drawn).before).toBe(
+      "Intro\n\nThen",
+    );
+    expect(completionContext(twice, base.nodeSize + 1, drawn).after).toBe(
+      "Intro\n\nThen",
+    );
   });
 });
 
