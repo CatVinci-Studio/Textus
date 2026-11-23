@@ -89,7 +89,7 @@ if (view === "background") {
   );
 } else {
   // A document window opening documents shows none of the blank one first.
-  if (!view) holdSheetsWhileRestoring();
+  if (!view) holdSheetsWhileRestoring(() => startPageModule.load());
   // The UI's language loads first, so the first frame is already in it; one
   // that fails to load shows in English. So does the start page, when the
   // window opens on it.

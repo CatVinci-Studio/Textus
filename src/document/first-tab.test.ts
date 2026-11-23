@@ -72,19 +72,46 @@ describe("a window's first tab", () => {
 });
 
 describe("the sheets held back while the window restores", () => {
-  it("show once the restore has opened what it opens", async () => {
+  const noStartPage = () => Promise.resolve();
+
+  it("show once what the restore opened has painted", async () => {
     const { holdSheetsWhileRestoring, keptTabsRestored } = await windowWith({
       restoring: true,
     });
-    holdSheetsWhileRestoring();
+    holdSheetsWhileRestoring(noStartPage);
     expect(restoring()).toBe(true);
     keptTabsRestored();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(restoring()).toBe(true);
+    vi.advanceTimersToNextFrame();
+    expect(restoring()).toBe(true);
+    vi.advanceTimersToNextFrame();
+    expect(restoring()).toBe(false);
+  });
+
+  it("load the start page meanwhile, when the restore may end on it", async () => {
+    const { holdSheetsWhileRestoring, keptTabsRestored } = await windowWith({
+      restoring: true,
+    });
+    let loaded = () => {};
+    const load = vi.fn(() => new Promise<void>((done) => (loaded = done)));
+    holdSheetsWhileRestoring(load);
+    expect(load).toHaveBeenCalledOnce();
+    keptTabsRestored();
+    await vi.advanceTimersByTimeAsync(0);
+    vi.advanceTimersToNextFrame();
+    vi.advanceTimersToNextFrame();
+    expect(restoring()).toBe(true);
+    loaded();
+    await vi.advanceTimersByTimeAsync(0);
+    vi.advanceTimersToNextFrame();
+    vi.advanceTimersToNextFrame();
     expect(restoring()).toBe(false);
   });
 
   it("show after a second at most", async () => {
     const { holdSheetsWhileRestoring } = await windowWith({ restoring: true });
-    holdSheetsWhileRestoring();
+    holdSheetsWhileRestoring(noStartPage);
     vi.advanceTimersByTime(999);
     expect(restoring()).toBe(true);
     vi.advanceTimersByTime(1);
@@ -93,10 +120,10 @@ describe("the sheets held back while the window restores", () => {
 
   it("aren't held with nothing to restore, nor for a tab already there", async () => {
     let window = await windowWith({});
-    window.holdSheetsWhileRestoring();
+    window.holdSheetsWhileRestoring(noStartPage);
     expect(restoring()).toBe(false);
     window = await windowWith({ restoring: true, detachedTab: DRAGGED });
-    window.holdSheetsWhileRestoring();
+    window.holdSheetsWhileRestoring(noStartPage);
     expect(restoring()).toBe(false);
   });
 });
