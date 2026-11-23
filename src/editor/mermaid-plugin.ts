@@ -23,8 +23,7 @@ import {
 } from "./diagram-engine";
 import { drawingFor, keepDrawing, lastDrawing } from "./drawn-diagrams";
 import { keepFresh } from "../utils/keep-fresh";
-import { holdStill } from "../engine/controls/scroll-hold";
-import { stillPoint } from "./lazy/still-point";
+import { holdStillWhile } from "./lazy/still-point";
 import {
   collectMermaidBlocks,
   drawingKey,
@@ -243,14 +242,19 @@ export function createMermaidPreviewPlugin(options: {
         // diagram's source that hides has no place after: its drawing,
         // where the source began, is held instead.
         function redraw() {
-          const scroller = editorView.dom.closest(".editor-scroll");
-          const still = scroller && stillPoint(editorView.dom, scroller);
-          editorView.dispatch(
-            editorView.state.tr.setMeta(mermaidKey, "rerender"),
+          holdStillWhile(
+            editorView.dom,
+            editorView.dom.closest(".editor-scroll"),
+            () =>
+              editorView.dispatch(
+                editorView.state.tr.setMeta(mermaidKey, "rerender"),
+              ),
+            (el: Element | null) => {
+              while (el && !el.getClientRects().length)
+                el = el.nextElementSibling;
+              return el;
+            },
           );
-          let el = still?.el ?? null;
-          while (el && !el.getClientRects().length) el = el.nextElementSibling;
-          if (scroller && still && el) holdStill(scroller, { ...still, el });
         }
 
         async function renderAll(all = false) {

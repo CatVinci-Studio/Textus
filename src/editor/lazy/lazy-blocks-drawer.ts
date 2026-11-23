@@ -1,8 +1,8 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorState, PluginView } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
-import { holdStill, pageIsTheHands } from "../../engine/controls/scroll-hold";
-import { firstBelow, stillPoint } from "./still-point";
+import { pageIsTheHands } from "../../engine/controls/scroll-hold";
+import { firstBelow, holdStillWhile } from "./still-point";
 import { flushDomSelection } from "../modes/mode-switch";
 import {
   DRAW_AHEAD_SCREENS,
@@ -303,26 +303,35 @@ export class LazyBlocksDrawer implements PluginView {
     const scrolling = performance.now() - this.scrolledAt < SETTLE_MS;
     const next = plan(this.view, this.scroller, !scrolling);
     if (!next) return;
-    const still = stillPoint(this.view.dom, this.scroller);
     const doc = this.view.state.doc;
-    const stillAt = still
-      ? blockElements(doc, this.view.dom.children).elementOf.indexOf(still.el)
-      : -1;
-    // Only what is drawn above it moves what the reader sees: drawn below
-    // (reading down), there is nothing to measure before the frame.
-    const above =
-      stillAt < 0 ||
-      still!.el.classList.contains(PLACEHOLDER_CLASS) ||
-      next.release.length > 0 ||
-      next.draw.some((pos) => topLevelIndex(doc, pos) < stillAt);
-    if (next.release.length) this.release(next.release);
-    if (next.draw.length) this.change({ draw: next.draw });
-    if (!above) return;
-    // A placeholder held still is a new element once drawn: its block's.
-    holdStill(this.scroller, still, () =>
-      stillAt < 0 || this.view.state.doc !== doc
-        ? null
-        : blockElements(doc, this.view.dom.children).elementOf[stillAt],
+    let stillAt = -1;
+    holdStillWhile(
+      this.view.dom,
+      this.scroller,
+      (still) => {
+        stillAt = still
+          ? blockElements(doc, this.view.dom.children).elementOf.indexOf(
+              still.el,
+            )
+          : -1;
+        // Only what is drawn above it moves what the reader sees: drawn
+        // below (reading down), there is nothing to measure before the frame.
+        const above =
+          stillAt < 0 ||
+          still!.el.classList.contains(PLACEHOLDER_CLASS) ||
+          next.release.length > 0 ||
+          next.draw.some((pos) => topLevelIndex(doc, pos) < stillAt);
+        if (next.release.length) this.release(next.release);
+        if (next.draw.length) this.change({ draw: next.draw });
+        return above;
+      },
+      // A placeholder held still is a new element once drawn: its block's.
+      (el) =>
+        el.isConnected
+          ? el
+          : stillAt < 0 || this.view.state.doc !== doc
+            ? null
+            : blockElements(doc, this.view.dom.children).elementOf[stillAt],
     );
   }
 

@@ -30,17 +30,10 @@ export interface Still {
   top: number;
 }
 
-/** Scrolls by what `still` moved. `now`: where its block is shown now,
- *  when it was made anew (a placeholder drawn). */
-export function holdStill(
-  scroller: Element,
-  still: Still | null,
-  now: (el: Element) => Element | null | undefined = (el) => el,
-): void {
-  if (pageIsTheHands(scroller)) return;
-  const el = still && (still.el.isConnected ? still.el : now(still.el));
-  if (!el?.isConnected) return;
-  scrollByHeld(scroller, el.getBoundingClientRect().top - still!.top);
+/** Scrolls by what `still` moved. */
+export function holdStill(scroller: Element, still: Still | null): void {
+  if (pageIsTheHands(scroller) || !still?.el.isConnected) return;
+  scrollByHeld(scroller, still.el.getBoundingClientRect().top - still.top);
 }
 
 /** By how much a scroller scrolls when a box that starts above its top
