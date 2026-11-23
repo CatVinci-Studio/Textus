@@ -51,7 +51,7 @@
       }
     },
     "platforms": {
-      "description": "Where it runs: desktop (macOS, Windows, Linux) and ios (iPhone, iPad). Left out, everywhere - unless it works in the background (background code, or requiring runInBackground), which only the desktop does. Textus elsewhere doesn't list or load it.",
+      "description": "Where it runs: desktop (macOS, Windows, Linux) and ios (iPhone, iPad). Left out, everywhere - unless it works in the background (background code, or requiring runInBackground), which only the desktop does. Background code can't name ios; a plugin that only requires runInBackground can, and runs there without it. Textus elsewhere doesn't list or load it.",
       "type": "array",
       "items": { "enum": ["desktop", "ios"] },
       "uniqueItems": true
