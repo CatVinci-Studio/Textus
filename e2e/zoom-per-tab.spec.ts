@@ -79,7 +79,10 @@ test("a trackpad pinch right after a scroll zooms (Windows: ctrl+wheel in fracti
   await page.mouse.move(sheet.x + sheet.width / 2, sheet.y + sheet.height / 2);
   // Two fingers land and drift a little, then spread.
   await page.mouse.wheel(0, 3);
-  await page.evaluate(
+  // Mid-pinch the column is only drawn larger: no relayout of the document.
+  // Read in the same task as the pinch: it rests (and lands) 150 ms after
+  // its last event, sooner than a loaded runner's next round trip.
+  const midPinch = await page.evaluate(
     ({ x, y }) => {
       const target = document.elementFromPoint(x, y)!;
       for (let i = 0; i < 12; i++)
@@ -93,13 +96,18 @@ test("a trackpad pinch right after a scroll zooms (Windows: ctrl+wheel in fracti
             cancelable: true,
           }),
         );
+      const tab = document.querySelector("[data-tab-id]")!;
+      const column = document.querySelector(".editor-content")!;
+      return {
+        zoom: getComputedStyle(tab).getPropertyValue("--content-zoom") || "1",
+        transform: getComputedStyle(column).transform,
+      };
     },
     { x: sheet.x + sheet.width / 2, y: sheet.y + sheet.height / 2 },
   );
-  // Mid-pinch the column is only drawn larger: no relayout of the document.
+  expect(parseFloat(midPinch.zoom)).toBe(1);
+  expect(midPinch.transform).toMatch(/matrix/);
   const column = page.locator(".editor-content").first();
-  expect(await zoomOf(page, 0)).toBe(1);
-  await expect(column).toHaveCSS("transform", /matrix/);
   await expect.poll(() => zoomOf(page, 0)).toBeGreaterThan(1.1);
   await expect(column).toHaveCSS("transform", "none");
 });
