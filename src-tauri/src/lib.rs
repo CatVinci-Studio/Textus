@@ -261,6 +261,8 @@ pub fn run() {
                     crate::ai::file_changes::forget_old_records(&data)
                 });
             }
+            // AI skills only where there is Textus AI: never on iOS.
+            #[cfg(not(target_os = "ios"))]
             tauri::async_runtime::spawn(plugins::moved_skills::install_moved_skills(
                 app.handle().clone(),
             ));
