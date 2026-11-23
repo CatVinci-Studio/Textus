@@ -115,6 +115,40 @@ export function holdBlock(
   scroller.scrollTop += now.top + share * now.height - line;
 }
 
+/** A character on screen, and its top there before a change. */
+export interface HeldText {
+  range: Range;
+  top: number;
+}
+
+/** The character of `within` drawn at viewport point (x, y), hit through
+ *  any transform; null where no text is. */
+export function textAt(within: Element, x: number, y: number): HeldText | null {
+  const at = document.caretRangeFromPoint?.(x, y);
+  const node = at?.startContainer;
+  if (node?.nodeType !== Node.TEXT_NODE || !within.contains(node)) return null;
+  const length = node.textContent?.length ?? 0;
+  if (!length) return null;
+  const from = Math.min(at!.startOffset, length - 1);
+  const range = document.createRange();
+  range.setStart(node, from);
+  range.setEnd(node, from + 1);
+  const top = range.getClientRects()[0]?.top;
+  return top === undefined ? null : { range, top };
+}
+
+/// Runs `change` with `held`'s line back where it was: text that rewraps
+/// keeps its own line still, where a block's share of its height drifts.
+export function holdText(
+  scroller: HTMLElement,
+  held: HeldText,
+  change: () => void,
+) {
+  change();
+  const now = held.range.getClientRects()[0];
+  if (now) scroller.scrollTop += now.top - held.top;
+}
+
 /** `scroller` put back at `top` if something scrolled it; `then` hears
  *  that it was. */
 export function putBack(scroller: HTMLElement, top: number, then?: () => void) {
