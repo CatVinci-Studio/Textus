@@ -20,6 +20,7 @@ import {
   updateAnimation,
 } from "./pending-animation";
 import { renderPendingHtml, hasBlocks } from "./pending-fill";
+import { proposalDocPath } from "./pending-doc-pictures";
 import { CHECK_ICON_HTML, CROSS_ICON_HTML } from "../../engine/controls/icons";
 import { type SentenceHooks } from "./pending-decorations";
 
@@ -55,7 +56,7 @@ export function textWidget(
       // A picture comes in whole: typed out, its Markdown would show
       // character by character first.
       if (!animate || prefersReducedMotion() || p.proposal.image) {
-        renderPendingHtml(span, text);
+        renderPendingHtml(span, text, proposalDocPath(view));
         return span;
       }
       let anim = animations.get(p.callId);
@@ -100,6 +101,7 @@ export interface SentencePickLabels {
  *  and ✓ / ✕. Every view's parts are drawn and CSS picks, so switching views
  *  redraws nothing; keys carry the decision, so deciding replays the entrance. */
 export function sentenceDecorations(
+  doc: ProseNode,
   p: PendingPreview,
   changes: PendingSentence[],
   hooks: SentenceHooks,
@@ -115,6 +117,7 @@ export function sentenceDecorations(
       stagger: streamed ? 0 : index,
       labels,
       decide: hooks.decide,
+      text: doc,
     }),
   );
 }
@@ -132,6 +135,9 @@ interface ChangeDraw {
   /** The document, while it streams: where a change's new text goes is
    *  checked against it (`outOfHeading`). */
   doc?: ProseNode;
+  /** The document, settled or not: new text that is blocks goes after the
+   *  block it lands in (`blocksAfter`). */
+  text?: ProseNode;
 }
 
 /** Where a streaming change's new text goes when it lands inside a heading
@@ -145,6 +151,20 @@ function outOfHeading(
   const $at = doc.resolve(Math.min(at, doc.content.size));
   if ($at.parent.type.name !== "heading") return null;
   return /^#{1,6}\s/.test(after.trimStart()) ? null : $at.after();
+}
+
+/** Where a change's new text goes when it is blocks of its own (a list,
+ *  paragraphs, a heading after text) landing inside a block: after that
+ *  block, drawn as the blocks it will be. Inline, its `-` and `##` showed
+ *  as text and its paragraphs ran on as lines of one (1.4.7). */
+function blocksAfter(
+  doc: ProseNode | undefined,
+  at: number,
+  after: string,
+): number | null {
+  if (!doc || !hasBlocks(inlineSentence(after))) return null;
+  const $at = doc.resolve(Math.min(at, doc.content.size));
+  return $at.depth > 0 ? $at.after(1) : null;
 }
 
 export function changeDecorations(
@@ -172,7 +192,11 @@ export function changeDecorations(
     for (const part of strikeParts(c))
       decos.push(sentenceStrike(callId, index, part, state, focus, stagger));
   // The new text and its ✓ / ✕: after the sentences it replaces.
-  const below = outOfHeading(draw.doc, c.at ?? c.to, c.after);
+  const below =
+    outOfHeading(draw.doc, c.at ?? c.to, c.after) ??
+    (c.block
+      ? null
+      : blocksAfter(draw.text ?? draw.doc, c.at ?? c.to, c.after));
   const block = c.block || below !== null;
   const at = below ?? c.at ?? c.to;
   // While streaming, everything is drawn already, the ✓ / ✕ faint and inert,
@@ -202,7 +226,7 @@ export function changeDecorations(
     decos.push(
       Decoration.widget(
         at,
-        () => {
+        (view) => {
           const span = document.createElement(block ? "div" : "span");
           if (block) span.dataset.blocks = "true";
           span.className = `pending-insert pending-sentence-new pending-sentence-${state}${focus}`;
@@ -211,7 +235,7 @@ export function changeDecorations(
           span.dataset.call = callId;
           span.dataset.index = String(index);
           span.setAttribute("style", stagger);
-          renderPendingHtml(span, after);
+          renderPendingHtml(span, after, proposalDocPath(view));
           if (draw.stream) streamEntrance(span, draw.stream, index, after, at);
           else if (animations.get(callId)?.stream)
             // Streamed, and drawn again only because its place moved a

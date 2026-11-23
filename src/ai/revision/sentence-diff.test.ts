@@ -36,6 +36,19 @@ describe("splitSentences", () => {
     ]);
   });
 
+  it("keeps a link's address whole, its ? and ! with it", () => {
+    // Cut at `forum?`, the halves showed as literal Markdown and couldn't be
+    // found in the text, so the whole rewrite fell back to one change.
+    const link =
+      "🔗 论文链接：[OpenReview](https://openreview.net/forum?id=aWVG2rN4OV)\n";
+    expect(splitSentences(`${link}下一句？`)).toEqual([link, "下一句？"]);
+    expect(
+      splitSentences("See https://x.org/a?b=1! Then https://y.org/c? Done."),
+    ).toEqual(["See https://x.org/a?b=1! ", "Then https://y.org/c? ", "Done."]);
+    const long = `${"https://x.org/a?".repeat(200)} ${"字".repeat(2000)}`;
+    expect(splitSentences(long).join("")).toBe(long);
+  });
+
   it("ends a sentence at a hard break, which goes with it", () => {
     expect(splitSentences("One.\\\nTwo.  \nThree.<br>Four")).toEqual([
       "One.\\\n",
