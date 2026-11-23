@@ -180,11 +180,7 @@ pub async fn agent_step(
         req = with_key(req, base_url, key);
     }
     let res = req.send().await.map_err(|e| e.to_string())?;
-    if !res.status().is_success() {
-        let status = res.status();
-        let text = res.text().await.unwrap_or_default();
-        return Err(format!("Custom endpoint request failed ({status}): {text}"));
-    }
+    let res = crate::http::succeeded(res, "Custom endpoint request failed").await?;
 
     let parsed: Value = res.json().await.map_err(|e| e.to_string())?;
     let mut message = parsed

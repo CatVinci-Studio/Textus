@@ -126,52 +126,26 @@ fn place(window: *mut std::ffi::c_void) {
 /// moves the title bar, and on leaving full screen. Main thread, once.
 #[cfg(target_os = "macos")]
 pub(crate) fn watch() {
-    use objc2_app_kit::{NSWindowDidExitFullScreenNotification, NSWindowDidResizeNotification};
-    use objc2_foundation::{NSNotification, NSNotificationCenter};
-    use std::ptr::NonNull;
-    let center = NSNotificationCenter::defaultCenter();
+    use crate::editor_windows::on_window_note;
+    use objc2_app_kit::{
+        NSWindowDidExitFullScreenNotification, NSWindowDidResizeNotification,
+        NSWindowWillCloseNotification,
+    };
     // SAFETY: AppKit's notification names, constant for the process.
-    let names = unsafe {
-        [
+    let (resized, left_full_screen, closing) = unsafe {
+        (
             NSWindowDidResizeNotification,
             NSWindowDidExitFullScreenNotification,
-        ]
-    };
-    for name in names {
-        let block = block2::RcBlock::new(move |note: NonNull<NSNotification>| {
-            // SAFETY: AppKit hands the block a live notification.
-            let Some(window) = (unsafe { note.as_ref() }).object() else {
-                return;
-            };
-            place(objc2::rc::Retained::as_ptr(&window) as *mut std::ffi::c_void);
-        });
-        // SAFETY: any window's notification (no object), delivered on the
-        // thread that posts it - AppKit's main thread.
-        let observer = unsafe {
-            center.addObserverForName_object_queue_usingBlock(Some(name), None, None, &block)
-        };
-        std::mem::forget(observer);
-    }
-    // A window closing takes its bar height along: kept, one more for each
-    // window opened, and an address AppKit may give a new window later.
-    let gone = block2::RcBlock::new(move |note: NonNull<NSNotification>| {
-        // SAFETY: AppKit hands the block a live notification.
-        let Some(window) = (unsafe { note.as_ref() }).object() else {
-            return;
-        };
-        let key = objc2::rc::Retained::as_ptr(&window) as usize;
-        if let Some(bars) = BARS.lock().unwrap_or_else(|e| e.into_inner()).as_mut() {
-            bars.remove(&key);
-        }
-    });
-    // SAFETY: as above, AppKit's own name, delivered on the main thread.
-    let observer = unsafe {
-        center.addObserverForName_object_queue_usingBlock(
-            Some(objc2_app_kit::NSWindowWillCloseNotification),
-            None,
-            None,
-            &gone,
+            NSWindowWillCloseNotification,
         )
     };
-    std::mem::forget(observer);
+    on_window_note(resized, place);
+    on_window_note(left_full_screen, place);
+    // A window closing takes its bar height along: kept, one more for each
+    // window opened, and an address AppKit may give a new window later.
+    on_window_note(closing, |window| {
+        if let Some(bars) = BARS.lock().unwrap_or_else(|e| e.into_inner()).as_mut() {
+            bars.remove(&(window as usize));
+        }
+    });
 }

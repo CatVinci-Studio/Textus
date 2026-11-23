@@ -91,11 +91,7 @@ pub async fn call_completion(
     }
 
     let res = req.send().await.map_err(|e| e.to_string())?;
-    if !res.status().is_success() {
-        let status = res.status();
-        let text = res.text().await.unwrap_or_default();
-        return Err(format!("Custom endpoint request failed ({status}): {text}"));
-    }
+    let res = crate::http::succeeded(res, "Custom endpoint request failed").await?;
 
     let parsed: ChatResponse = res.json().await.map_err(|e| e.to_string())?;
     Ok(parsed

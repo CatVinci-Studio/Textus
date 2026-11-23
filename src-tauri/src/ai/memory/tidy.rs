@@ -77,15 +77,7 @@ fn tidy_input(memories: &Memories) -> String {
     });
     items
         .iter()
-        .map(|m| {
-            format!(
-                "- [{}] ({}, {}) {}",
-                m.id,
-                m.scope.as_str(),
-                m.kind.as_str(),
-                m.text
-            )
-        })
+        .map(|m| pass::listed(m))
         .collect::<Vec<_>>()
         .join("\n")
 }

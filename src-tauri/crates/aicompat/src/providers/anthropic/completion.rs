@@ -111,11 +111,7 @@ pub async fn call_completion_with_usage(
         .await
         .map_err(|e| e.to_string())?;
 
-    if !res.status().is_success() {
-        let status = res.status();
-        let text = res.text().await.unwrap_or_default();
-        return Err(format!("Claude request failed ({status}): {text}"));
-    }
+    let res = crate::http::succeeded(res, "Claude request failed").await?;
 
     let parsed: MessagesResponse = res.json().await.map_err(|e| e.to_string())?;
     let usage = StepUsage {

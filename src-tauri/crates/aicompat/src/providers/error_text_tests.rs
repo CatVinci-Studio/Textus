@@ -114,3 +114,14 @@ fn a_stream_names_the_status_and_body() {
         .unwrap();
     assert_eq!(err, "Claude request failed (503 Service Unavailable): busy");
 }
+
+/// The token exchanges post to fixed addresses, so only the shape they share
+/// is checked here.
+#[test]
+fn a_token_exchange_names_the_status_and_body() {
+    let err =
+        run(async { crate::http::succeeded(answered(busy()).await, "token refresh failed").await })
+            .err()
+            .unwrap();
+    assert_eq!(err, "token refresh failed (503 Service Unavailable): busy");
+}

@@ -249,44 +249,37 @@ impl SlideReader<'_> {
     fn frame(&self, x: &mut Pull) -> Option<Shape> {
         let mut at = UNPLACED;
         let mut rows: Vec<Vec<String>> = Vec::new();
-        let mut depth = 0usize;
-        loop {
-            match x.next() {
-                Node::Open(tag) => match tag.name.as_str() {
-                    "off" if at == UNPLACED => {
-                        at = position(&tag);
-                        x.skip();
-                    }
-                    "tr" => {
-                        rows.push(Vec::new());
-                        depth += 1;
-                    }
-                    "tc" => {
-                        let mut cell = Vec::new();
-                        loop {
-                            match x.next() {
-                                Node::Open(tag) if tag.name == "txBody" => {
-                                    for (_, _, line) in self.text_body(x) {
-                                        cell.push(line.render());
-                                    }
-                                }
-                                Node::Open(_) => x.skip(),
-                                Node::Close | Node::End => break,
-                                Node::Text(_) => {}
+        x.walk(|x, tag| match tag.name.as_str() {
+            "off" if at == UNPLACED => {
+                at = position(&tag);
+                x.skip();
+                true
+            }
+            "tr" => {
+                rows.push(Vec::new());
+                false
+            }
+            "tc" => {
+                let mut cell = Vec::new();
+                loop {
+                    match x.next() {
+                        Node::Open(tag) if tag.name == "txBody" => {
+                            for (_, _, line) in self.text_body(x) {
+                                cell.push(line.render());
                             }
                         }
-                        if let Some(row) = rows.last_mut() {
-                            row.push(cell.join("\n"));
-                        }
+                        Node::Open(_) => x.skip(),
+                        Node::Close | Node::End => break,
+                        Node::Text(_) => {}
                     }
-                    _ => depth += 1,
-                },
-                Node::Close if depth == 0 => break,
-                Node::Close => depth -= 1,
-                Node::Text(_) => {}
-                Node::End => break,
+                }
+                if let Some(row) = rows.last_mut() {
+                    row.push(cell.join("\n"));
+                }
+                true
             }
-        }
+            _ => false,
+        });
         (!rows.is_empty()).then(|| Shape {
             at,
             title: false,
