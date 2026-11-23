@@ -631,6 +631,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   errorNotFolder: "폴더가 아닙니다.",
   errorTrashShownFolder:
     "파일 트리에 표시된 폴더는 휴지통으로 옮길 수 없습니다.",
+  errorNoTrash: "여기에는 파일을 옮길 휴지통이 없습니다.",
   errorOutsideDocuments: "Textus 폴더 밖에 있습니다.",
   errorPluginBadPackage: "Textus가 설치할 수 있는 플러그인 패키지가 아닙니다.",
   errorPictureTooLarge: "사진이 너무 커서 줄여도 보낼 수 없습니다.",

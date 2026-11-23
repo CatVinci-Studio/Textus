@@ -657,6 +657,7 @@ type /name in a conversation to use one.
   errorNotFolder: "That isn't a folder.",
   errorTrashShownFolder:
     "The folder the tree shows can't be moved to the Trash.",
+  errorNoTrash: "There is no Trash here to move files to.",
   errorOutsideDocuments: "That is outside the Textus folder.",
   errorPluginBadPackage: "This isn't a plugin package Textus can install.",
   errorPictureTooLarge: "That picture is too large to send, even made smaller.",

@@ -165,3 +165,29 @@ fn no_plugin_may_ask_for_a_file_that_holds_keys_or_tokens() {
         assert!(!hidden_file_path(secret), "{secret}");
     }
 }
+
+#[test]
+fn a_plugin_may_trash_a_file_in_its_folder_but_not_the_folder() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = std::fs::canonicalize(tmp.path()).unwrap().join("notes");
+    std::fs::create_dir_all(root.join("sub")).unwrap();
+    std::fs::write(root.join("sub/a.md"), "a").unwrap();
+    let state = |granted: &[&str]| -> PluginsState {
+        serde_json::from_value(serde_json::json!({
+            "plugins": { "a.b": { "enabled": true, "granted": granted } }
+        }))
+        .unwrap()
+    };
+    let writer = state(&["files.write"]);
+    let folder = root.to_string_lossy();
+    let at = |state: &PluginsState, path: &str| trash_path(state, "a.b", &folder, path);
+    assert_eq!(at(&writer, "sub/a.md").unwrap(), root.join("sub/a.md"));
+    assert!(at(&writer, "sub").is_ok());
+    for shown in ["", ".", &folder] {
+        let err = at(&writer, shown).unwrap_err();
+        assert!(err.ends_with("[trashShownFolder]"), "{shown}: {err}");
+    }
+    assert!(at(&writer, "..").is_err());
+    assert!(at(&state(&["files.read"]), "sub/a.md").is_err());
+    assert!(at(&writer, ".env").is_err());
+}

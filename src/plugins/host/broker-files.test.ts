@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 const open = vi.hoisted(() => new Set<string>());
 vi.mock("../app-bridge", async (importOriginal) => ({
@@ -32,6 +32,49 @@ vi.mock("../../platform/ipc", async (importOriginal) => {
         path: string,
         text: string,
       ) => (disk.set(path, text), true),
+    },
+  };
+});
+
+// Below ipc.ts, so plugins.fsTrash runs as it would on a phone.
+const phone = vi.hoisted(() => ({
+  is: "" as "" | "ios" | "android",
+  calls: [] as unknown[][],
+}));
+vi.mock("../../platform/capabilities", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../platform/capabilities")>()),
+  get isIOSApp() {
+    return phone.is === "ios";
+  },
+  get trashesNatively() {
+    return phone.is === "ios";
+  },
+  get isMobileApp() {
+    return phone.is !== "";
+  },
+}));
+vi.mock("../../platform/native-files", async (importOriginal) => {
+  const real =
+    await importOriginal<typeof import("../../platform/native-files")>();
+  return {
+    ...real,
+    nativeFiles: {
+      ...real.nativeFiles,
+      trash: async (path: string) => void phone.calls.push(["native", path]),
+    },
+  };
+});
+vi.mock("../../platform/ipc-call", async (importOriginal) => {
+  const real = await importOriginal<typeof import("../../platform/ipc-call")>();
+  return {
+    ...real,
+    command: (name: string, ...args: unknown[]) => {
+      if (!name.startsWith("plugin_fs_trash"))
+        return (real.command as (...a: unknown[]) => unknown)(name, ...args);
+      phone.calls.push([name, ...args]);
+      return String(args[2]).startsWith("..")
+        ? Promise.reject(new Error("The folder can't be moved [x]"))
+        : Promise.resolve(`/private/var/notes/${String(args[2])}`);
     },
   };
 });
@@ -187,5 +230,46 @@ describe("in an Android folder opened without access to all files", () => {
     });
     window.removeEventListener(FILE_WRITTEN_EVENT, listen);
     expect(heard).toEqual([file]);
+  });
+});
+
+describe("a plugin moving a file to the Trash", () => {
+  const scope = { id: "p", root: () => "/notes" } as PluginScope;
+  afterEach(() => {
+    phone.is = "";
+    phone.calls.length = 0;
+  });
+
+  it("on iOS, sends the path Rust checked to Recently Deleted, as the sidebar does", async () => {
+    phone.is = "ios";
+    await fileHandlers(scope)["files.trash"]({ path: "a.md" });
+    expect(phone.calls).toEqual([
+      ["plugin_fs_trash_path", "p", "/notes", "a.md"],
+      ["native", "/private/var/notes/a.md"],
+    ]);
+  });
+
+  it("on iOS, moves nothing Rust refuses", async () => {
+    phone.is = "ios";
+    await expect(
+      fileHandlers(scope)["files.trash"]({ path: "../a.md" }),
+    ).rejects.toThrow();
+    expect(phone.calls).toEqual([
+      ["plugin_fs_trash_path", "p", "/notes", "../a.md"],
+    ]);
+  });
+
+  it("on the desktop, leaves it to Rust", async () => {
+    await fileHandlers(scope)["files.trash"]({ path: "a.md" });
+    expect(phone.calls).toEqual([["plugin_fs_trash", "p", "/notes", "a.md"]]);
+  });
+
+  it("in an Android folder without access to all files, refuses with noTrash", async () => {
+    const root = "content://com.android.externalstorage.documents/tree/x";
+    const android = { id: "p", root: () => root } as PluginScope;
+    phone.is = "android";
+    await expect(
+      fileHandlers(android)["files.trash"]({ path: "a.md" }),
+    ).rejects.toThrow(/ \[noTrash\]$/);
   });
 });

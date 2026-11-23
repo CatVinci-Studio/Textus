@@ -255,6 +255,7 @@ fn groups() -> Vec<(&'static str, Builder<tauri::Wry>)> {
                 crate::plugins::access::plugin_fs_write,
                 crate::plugins::access::plugin_fs_rename,
                 crate::plugins::access::plugin_fs_trash,
+                crate::plugins::access::plugin_fs_trash_path,
                 crate::plugins::access::plugin_fs_mkdir,
                 crate::plugins::files::plugin_fs_stat,
                 crate::plugins::files::plugin_fs_create,

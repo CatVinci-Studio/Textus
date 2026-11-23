@@ -50,6 +50,7 @@ macro_rules! with_plugin_commands {
             $crate::plugins::catalog::skills::skill_install_catalog,
             $crate::plugins::access::plugin_fs_rename,
             $crate::plugins::access::plugin_fs_trash,
+            $crate::plugins::access::plugin_fs_trash_path,
             $crate::plugins::access::plugin_fs_mkdir,
             $crate::plugins::files::plugin_fs_stat,
             $crate::plugins::files::plugin_fs_create,
