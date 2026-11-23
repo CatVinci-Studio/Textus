@@ -66,6 +66,16 @@ for (const device of DEVICES)
       expect(await naming()).toEqual([]);
     });
 
+    test("draws the document at the text size saved in Settings", async ({
+      page,
+    }) => {
+      await openApp(page, { settings: { docTextSize: 28 } });
+      await expect(page.locator(".milkdown:visible")).toHaveCSS(
+        "font-size",
+        "28px",
+      );
+    });
+
     test("writing, a second tab and back, the sidebar and settings", async ({
       page,
     }) => {

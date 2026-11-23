@@ -54,7 +54,8 @@ let shown: string[] = [];
  *  one last in use - with a conversation or a page in front, the document
  *  the AI reads and writes. */
 let documentId = "";
-/** A blank tab, for a split asked for with no other tab to take. */
+/** A blank tab: for a split asked for with no other tab to take, and for a
+ *  change that would leave the window none. */
 let blankTab: (() => TabRecord) | null = null;
 /** Its islands: one, a branch of one pane, when the window is unsplit. */
 let layout: SplitLayout = oneIsland([], null);

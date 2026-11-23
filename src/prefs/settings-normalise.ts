@@ -115,6 +115,12 @@ export function normaliseSettings(parsed: Raw | null): Settings {
   return hasTextusAi ? settings : { ...settings, textusAi: false };
 }
 
+/** The settings whose choices come in more than one kind (a size in px, or
+ *  "auto"): any kind of their list is theirs, not only their default's. */
+const MIXED_CHOICES: Record<string, readonly unknown[]> = {
+  docTextSize: DOC_TEXT_SIZES,
+};
+
 /** Each setting of another kind than its default (a number where a list
  *  goes, text where a switch goes) back to the default: a hand-edited or
  *  older file can't break what reads it. */
@@ -122,13 +128,15 @@ function withDefaultShapes(settings: Settings): Settings {
   const shape = (value: unknown) =>
     value === null ? "null" : Array.isArray(value) ? "array" : typeof value;
   const out: Record<string, unknown> = { ...settings };
-  for (const [key, fallback] of Object.entries(DEFAULT_SETTINGS))
+  for (const [key, fallback] of Object.entries(DEFAULT_SETTINGS)) {
+    const kinds = (MIXED_CHOICES[key] ?? [fallback]).map(shape);
     if (
       fallback !== null &&
       fallback !== undefined &&
-      shape(out[key]) !== shape(fallback)
+      !kinds.includes(shape(out[key]))
     )
       out[key] = fallback;
+  }
   return out as unknown as Settings;
 }
 

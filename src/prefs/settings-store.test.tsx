@@ -138,6 +138,18 @@ describe("file-backed settings", () => {
     expect(loadSettings().theme).toBe("dark");
   });
 
+  it("takes a document text size picked in Settings", () => {
+    boot({ languageChosen: true });
+    render(
+      <SettingsProvider>
+        <Probe />
+      </SettingsProvider>,
+    );
+    act(() => lastSet({ docTextSize: 24 }));
+    expect(storage.settingsPatch).toHaveBeenCalledWith({ docTextSize: 24 });
+    expect(loadSettings().docTextSize).toBe(24);
+  });
+
   it("sends every keystroke at once, so a quick quit can't lose it", () => {
     // Rust coalesces the disk writes and flushes on exit; a debounce here would
     // lose the last keystrokes before Cmd+Q.

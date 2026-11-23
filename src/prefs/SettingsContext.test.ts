@@ -283,3 +283,24 @@ describe("a setting of the wrong kind", () => {
     expect(settings.zoom).toBe(DEFAULT_SETTINGS.zoom);
   });
 });
+
+describe("the document's text size", () => {
+  beforeAll(installTestLocalStorage);
+  beforeEach(() => localStorage.clear());
+
+  const load = (stored: Record<string, unknown>) => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(stored));
+    return loadSettings().docTextSize;
+  };
+
+  it("keeps a size in px from one launch to the next, or the theme's", () => {
+    expect(load({ docTextSize: 28 })).toBe(28);
+    expect(load({ docTextSize: 12 })).toBe(12);
+    expect(load({ docTextSize: "auto" })).toBe("auto");
+  });
+
+  it("drops a size it doesn't offer", () => {
+    expect(load({ docTextSize: 99 })).toBe("auto");
+    expect(load({ docTextSize: "big" })).toBe("auto");
+  });
+});
