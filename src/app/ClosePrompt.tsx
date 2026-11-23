@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { fill } from "../i18n/fill";
 import { ActionSheet } from "../engine/controls/ActionSheet";
 import { Presence, PresenceDiv } from "../engine/motion/usePresence";
@@ -35,22 +36,12 @@ export function ClosePrompt({
     <>
       <Presence show={open && phone}>
         {open && phone && (
-          // The sheet runs its onClose before the chosen action; the
-          // handlers still hold the pending close they were rendered with.
-          <ActionSheet
-            title={message}
-            items={[
-              {
-                label: t.closePromptSave,
-                onSelect: onSave,
-              },
-              {
-                label: t.closePromptDiscard,
-                danger: true,
-                onSelect: onDiscard,
-              },
-            ]}
-            onClose={onCancel}
+          <CloseSheet
+            message={message}
+            onSave={onSave}
+            onDiscard={onDiscard}
+            onCancel={onCancel}
+            t={t}
           />
         )}
       </Presence>
@@ -91,5 +82,45 @@ export function ClosePrompt({
         )}
       </Presence>
     </>
+  );
+}
+
+/** The prompt as a phone's action sheet. The sheet closes right after any
+ *  choice as well: only a close with nothing chosen is Cancel, which would
+ *  also call off a quit the choice is carrying out. */
+function CloseSheet({
+  message,
+  onSave,
+  onDiscard,
+  onCancel,
+  t,
+}: {
+  message: string;
+  onSave: () => void;
+  onDiscard: () => void;
+  onCancel: () => void;
+  t: Strings;
+}) {
+  const chose = useRef(false);
+  const choose = (action: () => void) => () => {
+    chose.current = true;
+    action();
+  };
+  return (
+    <ActionSheet
+      title={message}
+      items={[
+        { label: t.closePromptSave, onSelect: choose(onSave) },
+        {
+          label: t.closePromptDiscard,
+          danger: true,
+          onSelect: choose(onDiscard),
+        },
+      ]}
+      onClose={() => {
+        if (!chose.current) onCancel();
+        chose.current = false;
+      }}
+    />
   );
 }
