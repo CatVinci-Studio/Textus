@@ -40,7 +40,8 @@ export interface TabState {
 }
 
 // The window starts with one blank document; a split asked for with no
-// other tab to take gets a blank one in the view last chosen.
+// other tab to take, or a change that would leave the window none, gets a
+// blank one in the view last chosen.
 startWindowTabs<DocTab>([makeBlankTab()], () => ({
   ...makeBlankTab(),
   ...lastViewMode(),
