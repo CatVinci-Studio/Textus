@@ -1,7 +1,8 @@
 import { isRecord } from "../utils/is-record";
 
-/** The snapshot Rust hands every webview before the page loads, so settings
- *  and UI state are there synchronously. A reload replays an old one, so stores
+/** The snapshot Rust hands every webview before the page loads (boot_script
+ *  in src-tauri/src/settings/app.rs), so settings and UI state are there
+ *  synchronously. A reload replays an old one, so stores
  *  re-read live values; with no snapshot they fall back to localStorage. */
 interface Boot {
   settings: Record<string, unknown>;
@@ -12,6 +13,8 @@ interface Boot {
   newProfile: boolean;
   /** This window's label, to recognise the events its own changes cause. */
   label: string;
+  /** Windows 10, whose window the page draws the edge of. */
+  windows10: boolean;
 }
 
 let cached: Boot | null | undefined;
@@ -30,6 +33,7 @@ export function readBoot(): Boot | null {
           uiState: isRecord(raw.uiState) ? raw.uiState : {},
           newProfile: raw.newProfile === true,
           label: typeof raw.label === "string" ? raw.label : "",
+          windows10: raw.windows10 === true,
         }
       : null;
   return cached;

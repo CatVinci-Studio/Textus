@@ -11,8 +11,9 @@ interface WindowState {
 /**
  * The one watch on the window's state, for everything drawn by it (the
  * caption buttons, a Linux window's edges, the Mac's full-screen mark):
- * asked again where a resize ends - a drag fires one every frame, each
- * asking costs IPC round trips - and on AppKit's full-screen event. Once
+ * asked again where a burst of resizes starts (a maximize is one resize)
+ * and where it ends - a drag fires one every frame, each asking costs IPC
+ * round trips - and on AppKit's full-screen event. Once
  * that event has come, full screen is taken from it alone: asked during the
  * system's animation, the window still answers the old state and would
  * undo the new one.
@@ -47,8 +48,12 @@ function start(): () => void {
   sync();
   let settle: ReturnType<typeof setTimeout> | undefined;
   const resized = win.onResized(() => {
+    if (settle === undefined) sync();
     clearTimeout(settle);
-    settle = setTimeout(sync, 100);
+    settle = setTimeout(() => {
+      settle = undefined;
+      sync();
+    }, 100);
   });
   const fullscreen = win
     .listen<boolean>("window-fullscreen", (event) => {
