@@ -26,6 +26,7 @@ pub(crate) fn error(code: &str) -> String {
 }
 
 /// Whether `err` is the error `code` stands for.
+#[cfg(not(target_os = "ios"))]
 pub(crate) fn is(err: &str, code: &str) -> bool {
     err.ends_with(&format!("[{code}]"))
 }

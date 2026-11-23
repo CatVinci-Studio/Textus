@@ -6,7 +6,9 @@
 //! what arrives here unasked (a frame sending itself away) isn't opened for
 //! it. A page without the app's origin gets no IPC either way.
 
-use tauri::{AppHandle, Url};
+#[cfg(desktop)]
+use tauri::AppHandle;
+use tauri::Url;
 
 /// The app's own hosts, as Windows and Android serve its schemes.
 const OWN_HOSTS: [&str; 4] = [
@@ -27,6 +29,7 @@ pub(crate) fn may_load(url: &Url, dev: bool) -> bool {
 
 /// Opens an address outside the app, in the browser or mail; any other kind
 /// of address goes nowhere.
+#[cfg(desktop)]
 pub(crate) fn open_outside(app: &AppHandle, url: &Url) {
     use tauri_plugin_opener::OpenerExt;
     if matches!(url.scheme(), "http" | "https" | "mailto") {

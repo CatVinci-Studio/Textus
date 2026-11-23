@@ -20,6 +20,7 @@ pub(crate) static UI_READY: AtomicBool = AtomicBool::new(false);
 pub(crate) static LAUNCH_OPENED: Mutex<Option<Vec<String>>> = Mutex::new(Some(Vec::new()));
 
 /// Park paths for the next window to drain as it mounts.
+#[cfg(desktop)]
 pub(crate) fn queue_pending(app: &tauri::AppHandle, paths: Vec<String>) {
     app.state::<PendingOpenPaths>().0.lock().unwrap().extend(
         paths
@@ -133,8 +134,8 @@ pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
 }
 
 /// iOS: one webview. Before it mounts, the paths are parked; after, they are
-/// handed over as tabs.
-#[cfg(mobile)]
+/// handed over as tabs. Android hands no files over this way.
+#[cfg(target_os = "ios")]
 pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
     if paths.is_empty() {
         return;
