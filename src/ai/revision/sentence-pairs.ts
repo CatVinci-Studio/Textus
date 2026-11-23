@@ -6,10 +6,11 @@
 export const SENTENCE_END = /[。！？!?.;；؟।…][”’"')）」』\]]*\s*$/;
 
 /** Where no sentence ends: a link's `](destination)` and a web address,
- *  whose `?` and `!` are the address's (`forum?id=3`). An address ends
- *  before the punctuation that closes its sentence. */
+ *  whose `?` and `!` are the address's (`forum?id=3`). An address is ASCII,
+ *  so it stops at the CJK text written right after it, and it ends before
+ *  the punctuation that closes its sentence. */
 const UNSPLIT =
-  /\]\([^)\n]*\)|(?:https?:\/\/|www\.)[^\s<>()[\]]*[^\s<>()[\].,;:!?。，；：！？]/
+  /\]\([^)\n]*\)|(?:https?:\/\/|www\.)[^\s<>()[\]\u0080-\uffff]*[^\s<>()[\].,;:!?\u0080-\uffff]/
     .source;
 
 const SENTENCE = new RegExp(

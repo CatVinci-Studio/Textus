@@ -6,7 +6,7 @@ import {
   glideAfter,
   startBeat,
 } from "../../engine/controls/moves";
-import { inlineSentence } from "./sentence-diff";
+import { inlineChange } from "./sentence-diff";
 import { type PendingPreview, type PendingSentence } from "./pending-types";
 import {
   type StreamState,
@@ -160,9 +160,9 @@ function outOfHeading(
 function blocksAfter(
   doc: ProseNode | undefined,
   at: number,
-  after: string,
+  c: { before: string; after: string },
 ): number | null {
-  if (!doc || !hasBlocks(inlineSentence(after))) return null;
+  if (!doc || !hasBlocks(inlineChange(c.before, c.after))) return null;
   const $at = doc.resolve(Math.min(at, doc.content.size));
   return $at.depth > 0 ? $at.after(1) : null;
 }
@@ -172,7 +172,7 @@ export function changeDecorations(
   index: number,
   c: Pick<
     PendingSentence,
-    "from" | "to" | "after" | "take" | "parts" | "at" | "block"
+    "from" | "to" | "before" | "after" | "take" | "parts" | "at" | "block"
   >,
   draw: ChangeDraw,
 ): Decoration[] {
@@ -194,9 +194,7 @@ export function changeDecorations(
   // The new text and its ✓ / ✕: after the sentences it replaces.
   const below =
     outOfHeading(draw.doc, c.at ?? c.to, c.after) ??
-    (c.block
-      ? null
-      : blocksAfter(draw.text ?? draw.doc, c.at ?? c.to, c.after));
+    (c.block ? null : blocksAfter(draw.text ?? draw.doc, c.at ?? c.to, c));
   const block = c.block || below !== null;
   const at = below ?? c.at ?? c.to;
   // While streaming, everything is drawn already, the ✓ / ✕ faint and inert,
@@ -220,7 +218,7 @@ export function changeDecorations(
     );
   // The line break a sentence ends with stays the original's, in the text.
   // A whole block (a table, a picture) is drawn as one, between blocks.
-  const after = block ? c.after.trim() : inlineSentence(c.after);
+  const after = block ? c.after.trim() : inlineChange(c.before, c.after);
   if (after) {
     const key = `pending-new-${callId}-${index}-${state}-${textKey(after)}`;
     decos.push(

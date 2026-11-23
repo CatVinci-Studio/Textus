@@ -4,6 +4,7 @@ import type { Editor } from "@milkdown/kit/core";
 import { createTestEditor } from "../../document-view/editor-test-harness";
 import { composeSentences, oneLine, trimBreaks } from "./sentence-diff";
 import { splitSentences } from "./sentence-pairs";
+import { inlineChange } from "./sentence-diff";
 import { diffSentences, splitUnits } from "./unit-diff";
 
 // Blocks are read by the editor's parser, which an editor registers as it
@@ -45,6 +46,11 @@ describe("splitSentences", () => {
     expect(
       splitSentences("See https://x.org/a?b=1! Then https://y.org/c? Done."),
     ).toEqual(["See https://x.org/a?b=1! ", "Then https://y.org/c? ", "Done."]);
+    expect(splitSentences("见https://a.com/x?y=1。第二句。第三句。")).toEqual([
+      "见https://a.com/x?y=1。",
+      "第二句。",
+      "第三句。",
+    ]);
     const long = `${"https://x.org/a?".repeat(200)} ${"字".repeat(2000)}`;
     expect(splitSentences(long).join("")).toBe(long);
   });
@@ -60,6 +66,19 @@ describe("splitSentences", () => {
       "No stop\\\n",
       "Next.",
     ]);
+  });
+});
+
+describe("inlineChange", () => {
+  it("drops the marker of the list item or quote line it rewrites", () => {
+    expect(inlineChange("- 乙。\n", "- 乙改了。\n")).toBe("乙改了。");
+    expect(inlineChange("> 第一句。", "> 第一句改了。")).toBe("第一句改了。");
+    // Several lines are blocks of their own, drawn as such.
+    expect(inlineChange("- 甲。\n- 乙。", "- 甲。\n- 乙改。")).toBe(
+      "- 甲。\n- 乙改。",
+    );
+    // A paragraph's sentence keeps what it says.
+    expect(inlineChange("第一句。", "- 新的一项")).toBe("- 新的一项");
   });
 });
 
@@ -158,6 +177,11 @@ describe("a change over several paragraphs", () => {
   it("is one change for each paragraph, when the paragraphs stay as many", () => {
     // Sentences too unalike to pair: one run across both paragraphs, each
     // long enough to keep its own change.
+    expect(splitSentences("见https://a.com/x?y=1。第二句。第三句。")).toEqual([
+      "见https://a.com/x?y=1。",
+      "第二句。",
+      "第三句。",
+    ]);
     const long = (s: string) => `${s} ${s} ${s}`;
     const a = long("Rain fell on the harbour all night long.");
     const b = long("The wind rose before dawn and shook the masts.");

@@ -4,7 +4,7 @@ import { editorViewCtx } from "@milkdown/kit/core";
 import type { Editor } from "@milkdown/kit/core";
 import { createTestEditor } from "../../document-view/editor-test-harness";
 import { buildDecorations } from "./pending-decorations";
-import { animations } from "./pending-animation";
+import { animations, textKey } from "./pending-animation";
 import type { PendingPreview } from "./pending-types";
 
 let editor: Editor | null = null;
@@ -95,5 +95,45 @@ describe("a rewrite streamed sentence by sentence", () => {
     expect(added).toHaveLength(1);
     // After the list, not inside its last item, where `- ` showed as text.
     expect(added[0].from).toBe(list.nodeSize);
+  });
+
+  it("a list item rewritten alone stays in its line, without its marker", async () => {
+    editor = await createTestEditor("- 甲。\n- 乙。\n- 丙。\n");
+    const doc = editor.action((ctx) => ctx.get(editorViewCtx).state.doc);
+    let from = 0;
+    doc.descendants((node, pos) => {
+      if (node.isText && node.text === "乙。") from = pos;
+    });
+    const preview: PendingPreview = {
+      callId: "c3",
+      proposal: { action: "replace", anchor: "- 乙。", text: "- 乙改了。" },
+      from: 0,
+      to: doc.content.size,
+      expectedText: doc.textBetween(0, doc.content.size, " "),
+      replacement: "- 甲。\n- 乙改了。\n- 丙。",
+      sentences: {
+        hunks: [{ kind: "change", before: "- 乙。\n", after: "- 乙改了。\n" }],
+        changes: [
+          {
+            from,
+            to: from + 2,
+            before: "- 乙。\n",
+            after: "- 乙改了。\n",
+            take: null,
+          },
+        ],
+      },
+    };
+    const added = buildDecorations(doc, [preview], true, hooks)
+      .find()
+      .filter((d) =>
+        (d.spec as { key?: string }).key?.startsWith("pending-new-"),
+      );
+    expect(added).toHaveLength(1);
+    expect(added[0].from).toBe(from + 2);
+    // Drawn as "乙改了。", not "- 乙改了。".
+    expect((added[0].spec as { key: string }).key).toMatch(
+      new RegExp(`-${textKey("乙改了。")}$`),
+    );
   });
 });

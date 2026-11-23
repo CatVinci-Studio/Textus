@@ -107,7 +107,10 @@ function streamFor(p: PendingPreview, animate: boolean): StreamState | null {
   if (anim?.stream && !sameUnits(anim.stream.sentences, originals))
     anim.stream = null;
   if (!p.streaming) {
-    // Its widget types from the text, not from the layout's partial sentence.
+    // Its widget types from the text, not from the layout's partial
+    // sentence. A stopped one's layout holds what Stop kept, which its
+    // re-add reads (stoppedRewrite), and stays as it was.
+    if (anim?.stream?.stopped !== undefined) return anim.stream;
     if (anim) anim.stream = null;
     return null;
   }
