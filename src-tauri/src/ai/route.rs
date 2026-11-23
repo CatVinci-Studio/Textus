@@ -57,21 +57,19 @@ pub async fn resolve_anthropic_auth(app: &AppHandle) -> Result<AnthropicAuth, St
 }
 
 /// Resolves an `openai-chat-completions` provider to (base_url, api_key,
-/// default_model). "custom" is entirely user-supplied.
+/// default_model). A custom endpoint is entirely user-supplied, found by
+/// `provider`, its own id.
 pub async fn resolve_chat_completions(
     app: &AppHandle,
+    provider: &str,
     entry: &ProviderCatalogEntry,
 ) -> Result<(String, Option<String>, Option<String>), String> {
-    if entry.id == "custom" {
-        let config = crate::auth::custom_endpoint::load_custom_endpoint(app)?
+    let Some(base_url) = entry.base_url else {
+        let config = crate::auth::custom_endpoint::load_custom_endpoint(app, provider)?
             .ok_or_else(|| NOT_CONFIGURED.to_string())?;
         return Ok((config.base_url, config.api_key, Some(config.model)));
-    }
-
-    let base_url = entry
-        .base_url
-        .expect("non-custom chat-completions catalog entries carry a base_url")
-        .to_string();
+    };
+    let base_url = base_url.to_string();
     let key = crate::auth::keys::load_provider_key(app, entry.id)?;
     if key.is_none() && !entry.key_optional {
         return Err(NOT_CONFIGURED.to_string());
@@ -83,6 +81,7 @@ pub async fn resolve_chat_completions(
 /// dialect without tool calling. `model` None is the provider's agent default.
 pub async fn agent_provider(
     app: &AppHandle,
+    provider: &str,
     entry: &ProviderCatalogEntry,
     model: Option<String>,
     thinking: ThinkingLevel,
@@ -132,7 +131,8 @@ pub async fn agent_provider(
             )
         }
         "openai-chat-completions" => {
-            let (base_url, api_key, default_model) = resolve_chat_completions(app, entry).await?;
+            let (base_url, api_key, default_model) =
+                resolve_chat_completions(app, provider, entry).await?;
             let model = model
                 .or_else(|| entry.agent_default_model.map(str::to_string))
                 .or(default_model)

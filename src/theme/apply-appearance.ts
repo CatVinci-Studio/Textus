@@ -22,6 +22,7 @@ import { applyThemeChrome, clearThemeChrome } from "../engine/tokens/palette";
 import { isIOSApp } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
 import { tokenPx } from "../engine/tokens/token-px";
+import { useFileIconThemeChoice } from "../plugins/contributions/file-icon-themes";
 import {
   CUSTOM_CSS_STYLE_ID,
   PLUGIN_COLORS_STYLE_ID,
@@ -417,5 +418,6 @@ function useApplyAppearance(
 export function AppearanceSync(): null {
   const { settings, setSettings } = useSettings();
   useApplyAppearance(settings, setSettings);
+  useFileIconThemeChoice(settings.fileIconTheme);
   return null;
 }

@@ -1,9 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ai, type WebSearchStatus } from "../platform/ipc";
-import { useSettings } from "../prefs/SettingsContext";
+import { useSettings, useSettingsIfAny } from "../prefs/SettingsContext";
 import { PROVIDER_CATALOG } from "../platform/bindings/ai";
 import { chosenModel } from "./chosen-model";
 import { createSubscribers } from "../utils/store";
+import {
+  useCustomEndpoints,
+  useFollowEndpointChoices,
+  withCustomEndpoints,
+} from "./custom-endpoints";
 
 /** Structural facts about each AI provider, as the backend's catalog
  *  (ai/catalog.rs) has them, generated with the bindings. */
@@ -33,9 +38,13 @@ export function useActiveProvider(): ProviderCatalogEntry | undefined {
   return catalog.find((entry) => entry.id === settings.aiProvider);
 }
 
-/// The providers, in the catalog's order.
+/// The providers, in the catalog's order, each saved custom endpoint one of
+/// them. The same array while the endpoints are: lists of providers are
+/// effect dependencies.
 export function useProviderCatalog(): readonly ProviderCatalogEntry[] {
-  return CATALOG;
+  const endpoints = useCustomEndpoints();
+  useFollowEndpointChoices(useSettingsIfAny()?.settings.agentModels ?? {});
+  return useMemo(() => withCustomEndpoints(CATALOG, endpoints), [endpoints]);
 }
 
 /** Fired when a search service's key is saved or cleared; a key isn't a

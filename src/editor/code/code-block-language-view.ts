@@ -7,6 +7,7 @@ import { copyButton, widgetButton } from "../widget-button";
 import { LINE_NUMBERS_SPEC } from "./code-line-numbers-plugin";
 import { mountLanguagePicker } from "./code-language-picker";
 import { fitGutter } from "./gutter-fit";
+import { addedLanguageNames } from "./code-languages";
 
 // A common subset, so the menu still fits on screen.
 const LANGUAGES = [
@@ -37,6 +38,11 @@ const LANGUAGES = [
   "markdown",
   "diff",
 ];
+
+/** The menu's languages: the common ones, then those plugins add. */
+export function pickerLanguages(added: readonly string[]): string[] {
+  return [...LANGUAGES, ...added.filter((name) => !LANGUAGES.includes(name))];
+}
 
 /** The line count as the gutter numbers it: a trailing newline starts a
  *  line of its own. */
@@ -96,13 +102,17 @@ export function createCodeBlockView(
       // Mounted on first hover or focus: a long document has many blocks.
       let languagePicker: ReturnType<typeof mountLanguagePicker> | null = null;
       let shownLanguage: string | null = null;
+      let shownAdded: readonly string[] | null = null;
       function syncPicker() {
         const value = (node.attrs.language as string) ?? "";
-        if (!languagePicker || value === shownLanguage) return;
+        const added = addedLanguageNames();
+        if (!languagePicker) return;
+        if (value === shownLanguage && added === shownAdded) return;
         shownLanguage = value;
+        shownAdded = added;
         languagePicker.render({
           value,
-          languages: LANGUAGES,
+          languages: pickerLanguages(added),
           label: labels().language,
           searchLabel: labels().languageSearch,
           onOpenChange: (open) =>

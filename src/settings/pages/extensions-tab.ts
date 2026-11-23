@@ -1,20 +1,23 @@
 // Which tab Settings › Extensions opens on, kept apart from the page so
 // what links there needn't load it.
 
-import { isDesktopApp } from "../../platform/capabilities";
+import { hasTextusAi, isDesktopApp } from "../../platform/capabilities";
 
 export type ExtensionsTab = "plugins" | "themes" | "skills" | "mcp" | "create";
 
 /** The page's tabs, in order; MCP servers only where the app can run their
- *  programs. Create, where Textus AI makes a theme, plugin or skill, comes
- *  last. */
-export function extensionsTabs(mcp = isDesktopApp): ExtensionsTab[] {
+ *  programs. Skills and Create (where Textus AI makes a theme, plugin or
+ *  skill) only where there is Textus AI - not on iOS; Create comes last. */
+export function extensionsTabs(
+  mcp = isDesktopApp,
+  ai = hasTextusAi,
+): ExtensionsTab[] {
   return [
     "themes",
     "plugins",
-    "skills",
+    ...(ai ? (["skills"] as const) : []),
     ...(mcp ? (["mcp"] as const) : []),
-    "create",
+    ...(ai ? (["create"] as const) : []),
   ];
 }
 

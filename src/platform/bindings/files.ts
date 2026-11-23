@@ -63,6 +63,22 @@ export const commands = {
 	 */
 	save_pasted_image: (docPath: string | null, dataBase64: string, ext: string, folder: string) => __TAURI_INVOKE<SavedImage_Serialize>("save_pasted_image", { docPath, dataBase64, ext, folder }),
 	/**
+	 *  Copies `source` into the folder a pasted picture of `doc_path` would go
+	 *  to (a vault's attachment folder, else Settings > Images > Folder), under
+	 *  its own name - numbered when another file has it, the same one if it is
+	 *  there already - and returns the link to write. Its TypeScript side is
+	 *  `copiedFileLink` in src/app/file-drop/dropped-markdown.ts.
+	 */
+	save_dropped_file: (docPath: string, source: string, folder: string) => __TAURI_INVOKE<SavedImage_Serialize>("save_dropped_file", { docPath, source, folder }),
+	/**
+	 *  Copies the file or folder `source` (a folder with all it holds) into the
+	 *  folder `into` under its own name, or numbered as a file manager names a
+	 *  copy (`report 2.pdf`, `photos 2`) when that is taken, and returns the
+	 *  copy's path in `into`'s spelling. A folder is never copied into itself.
+	 *  Its TypeScript side is `fs.copyIntoFolder` in src/platform/ipc-files.ts.
+	 */
+	copy_into_folder: (source: string, into: string) => __TAURI_INVOKE<string>("copy_into_folder", { source, into }),
+	/**
 	 *  Brings a document's images into the image folder of the file it was just
 	 *  saved as, rewriting each `src`: a draft's pasted images are moved, and on Save
 	 *  As images relative to the old document are copied. Anything else is left alone.

@@ -52,6 +52,8 @@ export const commands = {
 	 *  window's documents it opens split there, else in a new window.
 	 */
 	start_floating_tab_drag: (tab: DetachedTab_Deserialize, title: string, dirty: boolean, destroySource: boolean, rowHeight: number | null, look: string) => __TAURI_INVOKE<null>("start_floating_tab_drag", { tab, title, dirty, destroySource, rowHeight, look }),
+	/**  Sync, so it runs on the main thread, where GTK must be asked. */
+	drag_modifiers: () => __TAURI_INVOKE<DragModifiers>("drag_modifiers"),
 	/**
 	 *  Where a floating view can float over the desktop: the platforms whose
 	 *  windows can be transparent without a compositor to ask.
@@ -371,6 +373,11 @@ export type DetachedTab_Serialize = {
 	helpDoc?: string,
 	/**  The Word document an unsaved tab was opened from. */
 	importedFrom?: string,
+};
+
+/**  Read by the file drags in src/app/file-drop/finder-drag.ts. */
+export type DragModifiers = {
+	shift: boolean,
 };
 
 /**

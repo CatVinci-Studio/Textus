@@ -408,6 +408,32 @@
   margin-inline: auto;
 }
 
+/* Why a diagram wasn't drawn, under its source (#775). */
+.diagram-error {
+  margin: calc(var(--doc-gap-box) * -0.5) 0 var(--doc-gap-box);
+  padding: 0.6em 0.9em;
+  border-inline-start: 3px solid var(--ui-danger);
+  border-radius: var(--doc-radius-sm);
+  background: color-mix(in srgb, var(--ui-danger) 7%, var(--doc-bg));
+  color: var(--doc-text);
+  font-size: 0.85em;
+  user-select: text;
+}
+.diagram-error-title {
+  font-weight: 600;
+}
+.diagram-error-detail {
+  margin: 0.4em 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--doc-muted);
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 /* A diagram in proposed text: a green box; its source until drawn. */
 .pending-insert .pending-diagram {
   cursor: default;

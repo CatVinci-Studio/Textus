@@ -7,7 +7,7 @@ Textus has a built-in AI made for writing, Textus AI: completion, grammar checki
 Everything about the AI is in **Settings › Textus AI**, four pages: **Models**, **Chat & writing**, **Memory & skills** and **External tools**.
 
 1. On **Models**, pick the service in the **Providers** list. Sign in to your account (**Account**) or paste a key (**API Key**), whichever that service supports. A dot in the list marks each service you have set up.
-2. For a **Custom Endpoint** (any OpenAI-compatible server: local models, proxies), enter the base URL, a key if it needs one, and the model name, then save.
+2. For a server of your own (any OpenAI-compatible server: local models, relays, proxies), choose **Add custom endpoint** at the end of the list, give it a name, enter the base URL, a key if it needs one, and the model name, then save. Add as many as you need: each is listed under its name, here and wherever you pick a model.
 3. Under **Model choice** at the top of the same page, choose the **Chat provider** and **Chat model**, and for completion and grammar the **Writing provider** (**Same as chat** by default) and **Assist model**.
 
 Signing in happens in your browser. Whether images, web search and document edits are available depends on the service and model you choose.

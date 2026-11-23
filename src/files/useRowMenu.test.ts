@@ -4,6 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import en from "../i18n/locales/en";
 import { TreeSelection } from "./tree-selection";
 import { useRowMenu } from "./useRowMenu";
+import type { ContextMenuItem } from "../engine/controls/ContextMenu";
+import { activateTab, setWindowTabs } from "../engine/layout/store";
 
 const platform = vi.hoisted(() => ({ mobile: false }));
 vi.mock("../platform/capabilities", async (real) => ({
@@ -33,7 +35,12 @@ const labelsFor = (path: string, isDir: boolean) => {
     ),
   );
   act(() => result.current.openRowMenu({ x: 0, y: 0 }, path, isDir));
+  const items = result.current.menu?.items ?? [];
   return {
+    item: (label: string) =>
+      items.find(
+        (i): i is ContextMenuItem => i !== "separator" && i.label === label,
+      ),
     title: result.current.menu?.title,
     labels: (result.current.menu?.items ?? []).map((i) =>
       i === "separator" ? "-" : i.label,
@@ -62,5 +69,19 @@ describe("a tree row's menu", () => {
     expect(folder).toContain(en.treeRenameItem);
     expect(folder).not.toContain(en.docDelete);
     expect(folder).not.toContain(en.treeTrash);
+  });
+
+  it("a file's Insert Link goes into the saved document in use, offered only then", () => {
+    const insertLink = (path: string, isDir = false) =>
+      labelsFor(path, isDir).item(en.treeInsertLink);
+    expect(insertLink("/proj/sub", true)).toBeUndefined();
+    setWindowTabs(() => [{ id: "draft", path: null }]);
+    activateTab("draft");
+    expect(insertLink("/proj/pic.png")?.disabled).toBe(true);
+    setWindowTabs(() => [{ id: "note", path: "/proj/a.md" }]);
+    activateTab("note");
+    expect(insertLink("/proj/pic.png")?.disabled).toBe(false);
+    // Not a link to itself.
+    expect(insertLink("/proj/a.md")?.disabled).toBe(true);
   });
 });

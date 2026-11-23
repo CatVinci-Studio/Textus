@@ -7,15 +7,15 @@ import {
 import { auth } from "../platform/ipc";
 import type { AiProvider } from "../prefs/SettingsContext";
 import { createSubscribers } from "../utils/store";
+import { isCustomEntry } from "./custom-endpoints";
 
 /** Whether each AI provider is connected (by account, key or custom
  *  endpoint), and its name as Settings shows it. */
 
 // The catalog's labels are brand names, the same in every language - except
-// these: "custom" is a description, Doubao is known in Chinese by its
-// Chinese name, and MiniMax's two platforms are told apart in words.
+// these: Doubao is known in Chinese by its Chinese name, and MiniMax's two
+// platforms are told apart in words. A custom endpoint goes by its own name.
 const LOCALIZED_LABELS: Partial<Record<string, TextKey>> = {
-  custom: "providerCustom",
   doubao: "providerDoubao",
   minimax: "providerMiniMax",
   "minimax-intl": "providerMiniMaxIntl",
@@ -25,7 +25,7 @@ export function localizedLabel(
   entry: ProviderCatalogEntry,
   t: Strings,
 ): string {
-  const key = LOCALIZED_LABELS[entry.id];
+  const key = isCustomEntry(entry) ? undefined : LOCALIZED_LABELS[entry.id];
   return key ? t[key] : entry.label;
 }
 
@@ -34,10 +34,8 @@ export function localizedLabel(
 async function fetchConnected(
   entry: ProviderCatalogEntry,
 ): Promise<{ oauth: boolean; apiKey: boolean }> {
-  if (entry.id === "custom") {
-    const config = await auth.customEndpointStatus();
-    return { oauth: false, apiKey: config !== null };
-  }
+  // Listed only once saved, so set up.
+  if (isCustomEntry(entry)) return { oauth: false, apiKey: true };
   // Checked apart, so a sign-in that can't be read doesn't hide a saved key.
   const [oauth, apiKey] = await Promise.all([
     entry.auth.includes("oauth")
@@ -85,7 +83,7 @@ export function isReady(
 ): boolean {
   return (
     !!(state?.oauth || state?.apiKey) ||
-    (!!entry.keyOptional && entry.id !== "custom")
+    (!!entry.keyOptional && !isCustomEntry(entry))
   );
 }
 

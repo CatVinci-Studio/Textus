@@ -34,7 +34,9 @@ interface Request extends AppDialogOptions {
    *  empty. */
   input?: string;
   placeholder?: string;
-  resolve: (ok: boolean, value?: string) => void;
+  /** A box to tick under the text (Don't Ask Again), unticked at first. */
+  checkLabel?: string;
+  resolve: (ok: boolean, value?: string, checked?: boolean) => void;
 }
 
 const queue = createRequestQueue<Request>();
@@ -92,6 +94,28 @@ export function showChoice(
 /** What the second way forward answers with. */
 const ALT = "\u0000alt";
 
+/** A yes/no question with a box to tick under it (Don't Ask Again):
+ *  whether the action button was pressed, and the box ticked then. */
+export function showConfirmCheck(
+  text: string,
+  options: AppDialogOptions & {
+    okLabel: string;
+    cancelLabel: string;
+    checkLabel: string;
+  },
+): Promise<{ ok: boolean; checked: boolean }> {
+  return new Promise((resolve) =>
+    queue.add((id) => ({
+      ...options,
+      text,
+      confirm: true,
+      id,
+      resolve: (ok, _value, checked) =>
+        resolve({ ok, checked: ok && !!checked }),
+    })),
+  );
+}
+
 /** A one-line text question (a new file name). Resolves the text, or null
  *  for cancel, Escape or the backdrop. */
 export function showPrompt(
@@ -115,9 +139,14 @@ export function showPrompt(
   );
 }
 
-function answer(request: Request, ok: boolean, value?: string) {
+function answer(
+  request: Request,
+  ok: boolean,
+  value?: string,
+  checked?: boolean,
+) {
   queue.remove(request.id);
-  request.resolve(ok, value);
+  request.resolve(ok, value, checked);
 }
 
 /** Mounted once per window. */
@@ -130,6 +159,7 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
   if (current) lastShown.current = current;
   const shown = current ?? lastShown.current;
   const inputRef = useRef<HTMLInputElement>(null);
+  const checkRef = useRef<HTMLInputElement>(null);
   const dialog = useModalDialog(
     () => current && answer(current, false),
     !!current,
@@ -141,7 +171,9 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
     true,
     shown?.id,
   );
-  const ok = () => current && answer(current, true, inputRef.current?.value);
+  const ok = () =>
+    current &&
+    answer(current, true, inputRef.current?.value, checkRef.current?.checked);
   if (!presence.mounted || !shown) return null;
   return (
     <div
@@ -177,6 +209,12 @@ export function AppDialogHost({ okLabel }: { okLabel: string }) {
               if (e.key === "Enter" && !isImeKeydown(e)) ok();
             }}
           />
+        )}
+        {shown.checkLabel && (
+          <label className="app-dialog-check">
+            <input ref={checkRef} type="checkbox" className="ui-check" />
+            {shown.checkLabel}
+          </label>
         )}
         <DialogActions>
           {shown.confirm && (

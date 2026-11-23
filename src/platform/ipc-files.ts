@@ -80,6 +80,12 @@ export const fs = {
       ? far.moveEntry(path, from, into)
       : command("tree_move_entry", path, into);
   },
+  /** A file or folder from a file manager copied into the tree's folder
+   *  `into`, numbered when its name is taken; returns the copy's path.
+   *  Rust side: `copy_into_folder` (commands/fs/copy_into.rs). Desktop
+   *  only, and never into a far folder (the tree doesn't offer it). */
+  copyIntoFolder: (source: string, into: string): Promise<string> =>
+    command("copy_into_folder", source, into),
   /** A new name in the same folder; returns the new path. */
   renameEntry: (path: string, name: string): Promise<string> =>
     farEntries(path)?.renameEntry(path, name) ??
@@ -144,6 +150,12 @@ export const fs = {
     docPath && isFarUrl(docPath)
       ? Promise.reject(new Error(ownError("farPictures")))
       : command("save_pasted_image", docPath, dataBase64, ext, folder),
+  /** A file dropped from a file manager, copied where the document's
+   *  pictures go, to link to. */
+  saveDroppedFile: (docPath: string, source: string, folder: string) =>
+    isFarUrl(docPath)
+      ? Promise.reject(new Error(ownError("farPictures")))
+      : command("save_dropped_file", docPath, source, folder),
   /** A replaced picture's file to the Trash, only from the document's folder
    *  or the drafts' images. Desktop only. */
   movePictureToTrash: (docPath: string | null, path: string) =>

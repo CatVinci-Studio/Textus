@@ -58,6 +58,17 @@
   font-size: var(--text-body);
 }
 
+/* showConfirmCheck's box (Don't Ask Again): above the buttons, its words
+   a click target too. */
+.app-dialog-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 16px;
+  font-size: var(--text-body);
+  color: var(--ui-text);
+}
+
 .app-dialog-title {
   margin: 0 0 8px;
   font-size: var(--text-body-large);

@@ -1,16 +1,23 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { EditorView } from "@codemirror/view";
 import { SourceEditor, type SourceEditorProps } from "./SourceEditor";
 import { useSourceImagePaste } from "./useSourceImagePaste";
+import { sourceCompletion } from "./source-completion";
 
 /** A document's source: a pasted picture is stored beside the file
  *  (`docPath`, null while unsaved) and written as Markdown, as a paste in the
- *  rich editor is. */
+ *  rich editor is; a link's path completes from the folder, as there. */
 export function DocSourceEditor({
   docPath,
   ...props
 }: SourceEditorProps & { docPath: string | null }) {
   const viewRef = useRef<EditorView | null>(null);
+  const pathRef = useRef(docPath);
+  pathRef.current = docPath;
+  // Built once: the editor reads its extensions as it mounts.
+  const [extensions] = useState(() => [
+    sourceCompletion(() => pathRef.current),
+  ]);
   const images = useSourceImagePaste(
     docPath,
     (markdown) => {
@@ -28,6 +35,7 @@ export function DocSourceEditor({
     <>
       <SourceEditor
         {...props}
+        extensions={extensions}
         onPaste={(event, view) => {
           viewRef.current = view;
           return images.onPaste(event);

@@ -18,8 +18,8 @@ export const SHOW_SIDEBAR_TAB_EVENT = "textus:show-sidebar-tab";
 /// Closes the find bar: the iPhone's sidebar drawer opens over it.
 export const CLOSE_FIND_REPLACE_EVENT = "textus:close-find-replace";
 
-/// detail: `{ paths, point }`, image files dropped on the window from a file
-/// manager and where they landed; the editor on screen inserts them.
+/// detail: `{ paths, point }`, image files dropped on the window from another
+/// app (iPad) and where they landed; the editor on screen inserts them.
 export const DROP_IMAGE_FILES_EVENT = "textus:drop-image-files";
 
 /// A saved conversation is waiting to be restored by the editor it is for.

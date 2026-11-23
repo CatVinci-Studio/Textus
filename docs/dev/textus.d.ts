@@ -1,5 +1,5 @@
 /**
- * The Textus plugin API, 1.9: the `textus` object a plugin's code is given
+ * The Textus plugin API, 1.10: the `textus` object a plugin's code is given
  * (src/plugins/host/host-runtime.ts), the context its `activate` receives, and
  * `acquireTextusApi()` in its webviews (webview-runtime.ts). The one source
  * of truth: docs/dev/plugins/guide.md explains it, the reference pages are
@@ -183,7 +183,7 @@ declare global {
       /** Textus's UI language ("en", "zh", "zh-Hant", ...). */
       readonly language: string;
       readonly appVersion: string;
-      /** This API's version: "1.9" from Textus 1.4.6 ("1.8": 1.4.4, "1.7": 1.4.3, "1.6": 1.4.2, "1.5": 1.3.13-rc.1,
+      /** This API's version: "1.10" from Textus 1.4.7 ("1.9": 1.4.6, "1.8": 1.4.4, "1.7": 1.4.3, "1.6": 1.4.2, "1.5": 1.3.13-rc.1,
        *  "1.4": 1.3.10, "1.3": 1.3.10-rc.1, "1.2": 1.3.9, "1.1": 1.3.0-beta.8). Prefer engines.textus; compare
        *  it as numbers, not as text ("1.10" > "1.9"). */
       readonly apiVersion: string;
@@ -744,6 +744,34 @@ declare global {
       registerPasteHandler(
         pattern: RegExp | string,
         provide: (text: string) => string | null | Promise<string | null>,
+      ): Disposable;
+      /** From 1.10 (Textus 1.4.7, editor.write): a file dragged into a
+       *  document's body that `match` names - by kind ("image",
+       *  "attachment", "note") or by extension ("csv") - is handed to
+       *  `provide`, and the Markdown it answers goes in where it is let go
+       *  instead of Textus's picture or link. Answering null (or not within
+       *  1.5 s) lets Textus write it as usual. A file from a file manager
+       *  (`fromSystem`) is handed over where it is, not copied; with Shift,
+       *  on a document's edge or on a tab row the file opens and no handler
+       *  is asked. Several match: asked in plugin id order, the first
+       *  answer wins.
+       *
+       *      textus.editor.registerDropHandler({ extensions: ["csv"] },
+       *        async (file) => csvToTable(await readCsv(file.path)));
+       */
+      registerDropHandler(
+        match: {
+          kinds?: ("image" | "attachment" | "note")[];
+          extensions?: string[];
+        },
+        provide: (file: {
+          path: string;
+          name: string;
+          kind: "image" | "attachment" | "note";
+          fromSystem: boolean;
+          /** The document it goes into; null for one never saved. */
+          document: string | null;
+        }) => string | null | Promise<string | null>,
       ): Disposable;
       /** The blocks the `/` menu can offer now: Textus's own (`source`
        *  "textus": its id as `textus.insertBlock` takes it) and plugins'.

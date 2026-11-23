@@ -100,6 +100,24 @@ export function canMoveInto(
   return true;
 }
 
+/** The folder something let go at (x, y) over the tree `tree` goes into:
+ *  a folder's row, a file's row's folder, the tree's own on its blank;
+ *  null off the tree. `box`: the tree's box, if measured already. */
+export function dropDirAt(
+  tree: HTMLElement | null,
+  x: number,
+  y: number,
+  box: DOMRect | null = tree?.getBoundingClientRect() ?? null,
+): string | null {
+  if (!tree || !box) return null;
+  if (x < box.left || x > box.right || y < box.top || y > box.bottom)
+    return null;
+  const el = document
+    .elementFromPoint(x, y)
+    ?.closest<HTMLElement>("[data-drop-dir]");
+  return el && tree.contains(el) ? (el.dataset.dropDir ?? null) : null;
+}
+
 /** The backend's refusal in the user's words. */
 export function failureText(t: Strings, err: unknown, name: string): string {
   const reason = err instanceof Error ? err.message : String(err);

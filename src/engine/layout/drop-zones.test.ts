@@ -28,7 +28,7 @@ const geometry: DropGeometry = {
   bars: [],
 };
 const at = (x: number, y: number, held?: ReturnType<typeof dropTargetAt>) =>
-  dropTargetAt(x, y, geometry, false, held)?.zone;
+  dropTargetAt(x, y, geometry, "tab", held)?.zone;
 
 describe("dropTargetAt", () => {
   it("an island's outer fifth opens beside it, its top or bottom stacks one, the rest joins it", () => {
@@ -58,9 +58,49 @@ describe("dropTargetAt", () => {
     expect(at(400 + 60, 300, middle)).toBe("left");
   });
 
+  it("a file splits only near an island's left or right, in a narrow band", () => {
+    const file = (
+      x: number,
+      y: number,
+      held?: ReturnType<typeof dropTargetAt>,
+    ) => dropTargetAt(x, y, geometry, "file", held)?.zone;
+    // 8% of 400 is 32, kept to at least 40 interface px.
+    expect(file(400 + 35, 300)).toBe("left");
+    expect(file(400 + 45, 300)).toBe("center");
+    expect(at(400 + 45, 300)).toBe("left");
+    expect(file(800 - 35 - 40, 300)).toBe("center");
+    // Never above or below, an island's or the window's.
+    expect(file(400 + 200, 20)).toBe("center");
+    expect(file(400 + 200, 580)).toBe("center");
+    expect(file(400 + 200, 595)).toBe("center");
+    expect(at(400 + 200, 595)).toBe("bottom");
+    // The split's outer left and right still put it beside all of them.
+    expect(dropTargetAt(795, 300, geometry, "file")).toMatchObject({
+      zone: "right",
+      whole: true,
+    });
+    // Held a little past its line, as a tab's.
+    const left = dropTargetAt(400 + 35, 300, geometry, "file")!;
+    expect(file(400 + 48, 300, left)).toBe("left");
+    expect(file(400 + 52, 300, left)).toBe("center");
+  });
+
+  it("a file's band on a wide island stops at 80 interface px", () => {
+    const wide: DropGeometry = {
+      panes: [{ rect: new DOMRect(0, 0, 2000, 800), tabId: "w" }],
+      bars: [],
+    };
+    expect(dropTargetAt(75, 400, wide, "file")?.zone).toBe("left");
+    expect(dropTargetAt(85, 400, wide, "file")?.zone).toBe("center");
+    expect(dropTargetAt(2000 - 75, 400, wide, "file")?.zone).toBe("right");
+    expect(dropTargetAt(85, 400, wide)?.zone).toBe("left");
+  });
+
   it("whole islands go to the half they are over", () => {
-    expect(dropTargetAt(400 + 150, 300, geometry, true)?.zone).toBe("left");
-    expect(dropTargetAt(400 + 250, 300, geometry, true)?.zone).toBe("right");
+    expect(dropTargetAt(400 + 150, 300, geometry, "island")?.zone).toBe("left");
+    expect(dropTargetAt(400 + 250, 300, geometry, "island")?.zone).toBe(
+      "right",
+    );
   });
 
   it("on a phone everything dropped joins the one island, and no split fits", () => {

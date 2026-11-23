@@ -23,7 +23,7 @@ import {
   type TreeSort,
 } from "./tree-shared";
 import { useTreeContexts } from "./useTreeContexts";
-import { useRowDrag } from "./useRowDrag";
+import { useTreeDrops } from "./useTreeDrops";
 import { DirNode } from "./TreeNodes";
 import "./FileTree.css";
 import { isWithin } from "../utils/path";
@@ -95,15 +95,16 @@ export function FileTree({
     folder ? null : onRootChange,
     selection,
   );
-  const { drag, onRowPointerDown } = useRowDrag(
+  const { drag, onRowPointerDown, into } = useTreeDrops({
     treeRef,
+    folder,
+    linkBase: folder ?? root,
     reload,
     onEntryMoved,
-    folder ?? root,
     t,
     selection,
-    openRowMenu,
-  );
+    onHeld: openRowMenu,
+  });
   const { rowActions, shared } = useTreeContexts({
     sort,
     scope,
@@ -111,7 +112,7 @@ export function FileTree({
     versions,
     stale: view.stale,
     refreshed: view.refreshed,
-    dropInto: drag?.into,
+    dropInto: into,
     desktop,
     onRowMenu,
     onRowPointerDown,
@@ -287,7 +288,7 @@ export function FileTree({
                 ref={treeRef}
                 role="tree"
                 aria-label={t.treeTab}
-                className={`tree-body${drag?.into === root ? " tx-drop-into" : ""}`}
+                className={`tree-body${into === root ? " tx-drop-into" : ""}`}
                 data-drop-dir={root}
                 onKeyDown={onTreeKey}
                 onContextMenu={

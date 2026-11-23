@@ -138,3 +138,26 @@ test("a heading folds its section away, keeps the text, and opens for a caret", 
   );
   await expect(doc.getByText("inner body")).toBeVisible();
 });
+
+// #775: a diagram that can't be drawn keeps its source and says why under
+// it; fixed, the drawing replaces the note.
+test("a diagram with a syntax error shows the error under its source", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __devFiles: Record<string, string> }).__devFiles = {
+      "/work/d.md":
+        "before\n\n```mermaid\ngraph LR\n  A --> B\n  linkStyle 5 stroke:#f00\n  A -->\n```\n\nafter\n",
+    };
+  });
+  await openApp(page);
+  await openPath(page, "/work/d.md");
+  const doc = page.locator('[data-active-tab="true"] .ProseMirror');
+  const note = doc.locator(".diagram-error");
+  await expect(note).toBeVisible();
+  await expect(note.locator(".diagram-error-title")).toHaveText("图表无法绘制");
+  await expect(note.locator(".diagram-error-detail")).not.toBeEmpty();
+  await expect(doc.locator(".mermaid-preview svg")).toHaveCount(0);
+  // The note is not part of the document.
+  expect(await sourceOf(page)).not.toContain("图表无法绘制");
+});

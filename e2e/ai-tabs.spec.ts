@@ -545,6 +545,19 @@ test("with no AI signed in, the conversation asks for a sign-in, not a message",
   await expect(view.locator("textarea")).toHaveCount(0);
 });
 
+test("a chosen custom endpoint that isn't saved asks for a sign-in too", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, {
+    settings: { menuBarShown: false, aiProvider: "custom" },
+  });
+  await aiButton(page).click();
+  const view = page.locator(".agent-panel-view");
+  await expect(view.getByRole("button", { name: "登录" })).toBeVisible();
+  await expect(view.locator("textarea")).toHaveCount(0);
+});
+
 test("Memory opens from the tab's right-click and closes with its × or Esc", async ({
   page,
 }) => {

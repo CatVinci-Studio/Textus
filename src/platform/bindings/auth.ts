@@ -18,13 +18,18 @@ export const commands = {
 	provider_api_key_status: (provider: string) => __TAURI_INVOKE<boolean>("provider_api_key_status", { provider }),
 	clear_provider_api_key: (provider: string) => __TAURI_INVOKE<null>("clear_provider_api_key", { provider }),
 	/**
-	 *  Saves the endpoint. A missing key keeps the stored one while the URL stays
-	 *  the same; for another URL the old key is dropped rather than sent to the new host.
+	 *  Saves an endpoint (`id` None: a new one) and returns its id. A missing key
+	 *  keeps the stored one while the URL stays the same; for another URL the old
+	 *  key is dropped rather than sent to the new host.
 	 */
-	set_custom_endpoint: (baseUrl: string, apiKey: string | null, model: string) => __TAURI_INVOKE<null>("set_custom_endpoint", { baseUrl, apiKey, model }),
-	custom_endpoint_status: () => __TAURI_INVOKE<CustomEndpointStatus_Serialize | null>("custom_endpoint_status"),
-	clear_custom_endpoint: () => __TAURI_INVOKE<null>("clear_custom_endpoint"),
-	fetch_custom_models: (baseUrl: string, apiKey: string | null) => __TAURI_INVOKE<string[]>("fetch_custom_models", { baseUrl, apiKey }),
+	set_custom_endpoint: (id: string | null, name: string, baseUrl: string, apiKey: string | null, model: string) => __TAURI_INVOKE<string>("set_custom_endpoint", { id, name, baseUrl, apiKey, model }),
+	custom_endpoints_status: () => __TAURI_INVOKE<CustomEndpointStatus[]>("custom_endpoints_status"),
+	clear_custom_endpoint: (id: string) => __TAURI_INVOKE<null>("clear_custom_endpoint", { id }),
+	/**
+	 *  The models `base_url` lists, asked with the key typed or else the stored
+	 *  key of endpoint `id`, for the URL it was saved with only.
+	 */
+	fetch_custom_models: (id: string | null, baseUrl: string, apiKey: string | null) => __TAURI_INVOKE<string[]>("fetch_custom_models", { id, baseUrl, apiKey }),
 };
 
 /* Types */
@@ -34,29 +39,14 @@ export type AuthStatus = {
 };
 
 /**
- *  What the settings page is told about the saved endpoint. The key never
- *  goes back to the webview; `api_key` is always null and `has_api_key` says whether one is stored.
+ *  What the settings page is told about one saved endpoint. The key never
+ *  goes back to the webview; `has_api_key` says whether one is stored.
+ *  Keep in step with `CustomEndpointConfig` in `src/platform/ipc-auth.ts`.
  */
-export type CustomEndpointStatus = CustomEndpointStatus_Serialize | CustomEndpointStatus_Deserialize;
-
-/**
- *  What the settings page is told about the saved endpoint. The key never
- *  goes back to the webview; `api_key` is always null and `has_api_key` says whether one is stored.
- */
-export type CustomEndpointStatus_Deserialize = {
+export type CustomEndpointStatus = {
+	id: string,
+	name: string,
 	base_url: string,
-	api_key?: string | null,
-	has_api_key: boolean,
-	model: string,
-};
-
-/**
- *  What the settings page is told about the saved endpoint. The key never
- *  goes back to the webview; `api_key` is always null and `has_api_key` says whether one is stored.
- */
-export type CustomEndpointStatus_Serialize = {
-	base_url: string,
-	api_key: string | null,
 	has_api_key: boolean,
 	model: string,
 };

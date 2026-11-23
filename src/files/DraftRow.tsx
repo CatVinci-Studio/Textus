@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { type DirEntryInfo } from "../platform/bindings/files";
 import { useSettings } from "../prefs/SettingsContext";
-import { FolderIcon } from "../engine/controls/icons";
-import { fileIconFor } from "../engine/controls/file-icons";
+import { FileIcon, FolderEntryIcon } from "../engine/controls/file-icons";
 import { useTree } from "./tree-shared";
 
 /** A name nothing in the folder has yet: "Untitled", then "Untitled 2"…
@@ -52,13 +51,16 @@ export function DraftRow({
     input.current?.focus();
     input.current?.select();
   }, []);
-  const Icon = doc ? fileIconFor(".md") : FolderIcon;
   return (
     <div
       className={`tree-row tree-row-draft${doc ? " tree-row-file" : ""}`}
       style={{ "--depth": depth } as CSSProperties}
     >
-      <Icon className="tree-icon" />
+      {doc ? (
+        <FileIcon name=".md" className="tree-icon" />
+      ) : (
+        <FolderEntryIcon name={name} className="tree-icon" />
+      )}
       <input
         ref={input}
         className="tree-draft-input"

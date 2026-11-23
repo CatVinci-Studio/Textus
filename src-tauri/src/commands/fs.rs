@@ -2,6 +2,8 @@ use serde::Serialize;
 use std::path::{Component, Path, PathBuf};
 use tokio::fs;
 
+pub(crate) mod copy_into;
+pub(crate) mod dropped;
 mod pictures;
 mod secrets;
 pub(crate) use pictures::*;

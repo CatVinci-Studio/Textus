@@ -395,15 +395,18 @@ export function useFileOpening(opts: {
         setActiveTabId(spare.id);
         return;
       }
-      if (
-        front &&
-        tabIsUntouchedDraft(front) &&
-        !alreadyOpen &&
-        !open.where &&
-        !open.drop
-      )
-        await replaceTabWithFile(activeTabId, path, open);
-      else await openPathInTab(path, open);
+      // Dropped on a document: that one is what may give way, not the
+      // one in front of another island.
+      const { drop } = open;
+      const into = drop
+        ? drop.zone === "center"
+          ? tabs.find((tab) => tab.id === drop.tabId)
+          : undefined
+        : front;
+      if (into && tabIsUntouchedDraft(into) && !alreadyOpen && !open.where) {
+        await replaceTabWithFile(into.id, path, open);
+        if (into.id !== activeTabId) setActiveTabId(into.id);
+      } else await openPathInTab(path, open);
     },
     [activeTabId, openPathInTab, replaceTabWithFile, liveTabs, setActiveTabId],
   );

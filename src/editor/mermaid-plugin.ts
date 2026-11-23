@@ -24,7 +24,7 @@ import {
   isMermaid,
   type Drawn,
 } from "./mermaid-blocks";
-import { diagramWidget } from "./mermaid-widget";
+import { diagramErrorWidget, diagramWidget } from "./mermaid-widget";
 import {
   redrawPendingDiagrams,
   registerPendingDrawer,
@@ -70,6 +70,8 @@ export function createMermaidPreviewPlugin(options: {
     // Keyed by source text, not position: an edit above shifts every later
     // block's position, which would miss the cache and flash the source.
     let lastRenders = new Map<string, Drawn>();
+    // Why each source that couldn't be drawn wasn't, shown under it (#775).
+    let failures = new Map<string, string>();
     // What Textus AI's proposals drew, by source: an accepted diagram shows at
     // once, and the next pass takes the drawing over.
     const pendingDrawn = new Map<string, Drawn>();
@@ -87,7 +89,7 @@ export function createMermaidPreviewPlugin(options: {
       const code = drawingKey(node.attrs.language, node.textContent);
       const to = from + node.nodeSize;
       const drawn = lastRenders.get(code) ?? pendingDrawn.get(code);
-      if (!drawn) return [];
+      if (!drawn) return failureNote(code, to, failures.get(code));
       const { svg } = drawn;
       if (touches(from, to)) return [];
       return [
@@ -217,8 +219,9 @@ export function createMermaidPreviewPlugin(options: {
         async function renderAll(all = false) {
           if (!options.enabled()) {
             // Nothing drawn before: nothing to take back.
-            if (lastRenders.size === 0) return;
+            if (lastRenders.size === 0 && failures.size === 0) return;
             lastRenders = new Map();
+            failures = new Map();
             editorView.dispatch(
               editorView.state.tr.setMeta(mermaidKey, "rerender"),
             );
@@ -235,8 +238,9 @@ export function createMermaidPreviewPlugin(options: {
           const mySeq = ++renderSeq;
           const blocks = collectMermaidBlocks(editorView.state.doc);
           if (blocks.length === 0) {
-            if (lastRenders.size === 0) return;
+            if (lastRenders.size === 0 && failures.size === 0) return;
             lastRenders = new Map();
+            failures = new Map();
             editorView.dispatch(
               editorView.state.tr.setMeta(mermaidKey, "rerender"),
             );
@@ -246,10 +250,11 @@ export function createMermaidPreviewPlugin(options: {
           const { draw, styleOf } = drawing();
 
           const rendered = new Map<string, Drawn>();
+          const failed = new Map<string, string>();
           let offScreen = false;
           const large = viewsWaitForScreen(editorView.state.doc);
           for (const { from, code, language, key } of blocks) {
-            if (!code.trim() || rendered.has(key)) continue;
+            if (!code.trim() || rendered.has(key) || failed.has(key)) continue;
             // A pass only draws sources it hasn't drawn for the same width, face and
             // engine.
             const cached = lastRenders.get(key) ?? pendingDrawn.get(key);
@@ -270,8 +275,10 @@ export function createMermaidPreviewPlugin(options: {
               );
               if (mySeq !== renderSeq) return;
               rendered.set(key, { svg, engine: by, style: styleOf(by), id });
-            } catch {
-              // Invalid or half-typed diagram syntax: skip this block.
+            } catch (error) {
+              // Invalid or half-typed: its source stays, with why under it.
+              if (mySeq !== renderSeq) return;
+              failed.set(key, whyNotDrawn(error));
             }
           }
 
@@ -282,8 +289,11 @@ export function createMermaidPreviewPlugin(options: {
             rendered.size === lastRenders.size &&
             [...rendered].every(
               ([code, drawn]) => lastRenders.get(code) === drawn,
-            );
+            ) &&
+            failed.size === failures.size &&
+            [...failed].every(([code, why]) => failures.get(code) === why);
           lastRenders = rendered;
+          failures = failed;
           if (unchanged) return;
           editorView.dispatch(
             editorView.state.tr.setMeta(mermaidKey, "rerender"),
@@ -385,4 +395,34 @@ export function createMermaidPreviewPlugin(options: {
       },
     });
   });
+}
+
+/** The note under a diagram that couldn't be drawn (`why`: undefined when
+ *  it didn't fail); a renderer that said nothing still gets its title. */
+export function failureNote(
+  code: string,
+  to: number,
+  why: string | undefined,
+): Decoration[] {
+  if (why === undefined) return [];
+  return [
+    Decoration.widget(to, () => diagramErrorWidget(why), {
+      side: 1,
+      key: `mermaid-error-${fnv1a(code).toString(36)}-${fnv1a(why).toString(36)}`,
+      ignoreSelection: true,
+    }),
+  ];
+}
+
+/** What a renderer threw, as a few lines a person can act on: Mermaid's
+ *  "Parse error on line 3: ... Expecting ..., got ...". */
+export function whyNotDrawn(error: unknown): string {
+  const text =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "";
+  const lines = text.trim().split("\n").slice(0, 6).join("\n");
+  return lines.length > 600 ? `${lines.slice(0, 600)}…` : lines;
 }

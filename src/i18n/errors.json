@@ -47,6 +47,10 @@
     "en": "A folder can't move into itself.",
     "text": "errorMoveIntoItself"
   },
+  "copyIntoItself": {
+    "en": "A folder can't be copied into itself.",
+    "text": "errorCopyIntoItself"
+  },
   "notFolder": {
     "en": "Not a folder.",
     "text": "errorNotFolder"
