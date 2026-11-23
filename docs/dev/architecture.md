@@ -194,7 +194,7 @@ The frontend reaches Rust only through `src/platform/`:
   answers a fallback and `desktopActionCommand` / `desktopAction` reject on
   iOS, where desktop-only commands aren't registered.
 - **`bindings/*.ts`** are generated from the Rust commands by tauri-specta
-  (`src-tauri/src/bindings.rs` lists which command goes into which file).
+  (`src-tauri/src/bindings/<group>.rs` lists the commands of each file).
   Never edit them: `npm run bindings` writes them again, and `cargo test`
   fails while they are out of date. A command whose arguments specta can't
   describe (struct inputs, raw bytes, iOS-only) is called with `call`.
@@ -231,7 +231,7 @@ end to end.
 | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `src/main.rs`, `src/lib.rs`, `src/invoke_handler.rs`     | The entry (`main` asks the CLI first) and app setup: plugins, state, `desktop_builder` and `desktop_setup`; `invoke_handler.rs` holds the one command list (shared commands, then `#[cfg(desktop)]` ones).                                                                                                 |
 | `src/commands/`                                          | Commands the frontend calls, one file per area: files and folders (`fs`, `folder`, `tree_ops`, `documents`), drafts, undo files, session, recents, export, the chat window, attachments, themes, the theme gallery, links, update, …                                                                       |
-| `src/bindings.rs`                                        | Which command goes into which generated `src/platform/bindings/*.ts` file, and the test that keeps them current.                                                                                                                                                                                           |
+| `src/bindings.rs`                                        | The generated `src/platform/bindings/*.ts` files and the test that keeps them current; `src/bindings/<group>.rs` lists which commands go into each.                                                                                                                                                        |
 | `src/settings/`, `settings.rs`, `boot.js`                | The settings, UI state and history files, the chat history folder, the boot script every webview gets ([storage.md](storage.md)).                                                                                                                                                                          |
 | `src/editor_windows.rs`, `window_frame.rs`               | Editor windows: built with each platform's chrome, numbered, opened and reopened (`build_main_window`, `open_new_window`, `reopen_without_windows`), and where a window opens.                                                                                                                             |
 | `src/launch.rs`                                          | Files the app is asked to open, held until a window is ready (`PendingOpenPaths`, `queue_paths_to_open`, `paths_from_argv`).                                                                                                                                                                               |
