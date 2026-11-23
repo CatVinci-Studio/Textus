@@ -396,6 +396,57 @@ test("a plugin's block is on the page as a table is, its edge shown only while p
   await expect(block).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
 });
 
+test("a plugin's block opened again starts at its page's height, not growing to it", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.function-plot"), "no plugins checkout");
+  await openWithPlugins(page, {
+    plugins: {
+      "catvinci.function-plot": permissions("catvinci.function-plot"),
+    },
+    folder: {
+      "/work/notes/plot.md": "# Plot\n\n```function-plot\ny = x^2\n```\n",
+      "/work/notes/other.md": "# Other\n",
+    },
+  });
+  // Another tab, so closing the block's leaves the window open.
+  await openPath(page, "/work/notes/other.md");
+  await openPath(page, "/work/notes/plot.md");
+  await expect(page.locator(".tab-pill")).toHaveCount(2);
+  const frame = page.locator(
+    '[data-active-tab="true"] .plugin-code-block .plugin-webview-frame',
+  );
+  await expect(frame).toBeVisible();
+  // The page has said how tall it is.
+  await expect
+    .poll(() => frame.evaluate((f) => (f as HTMLElement).style.height))
+    .not.toBe("");
+  const height = await frame.evaluate((f) => f.getBoundingClientRect().height);
+  await emit(page, "menu-close-tab");
+  await expect(frame).toHaveCount(0);
+  // Every frame's height of the block from the moment it is there again.
+  const seen = page.evaluate(
+    () =>
+      new Promise<number[]>((done) => {
+        const heights: number[] = [];
+        const until = performance.now() + 4000;
+        const sample = () => {
+          const holder = document.querySelector(
+            '[data-active-tab="true"] .plugin-code-holder',
+          );
+          if (holder) heights.push(holder.getBoundingClientRect().height);
+          if (performance.now() < until) requestAnimationFrame(sample);
+          else done(heights);
+        };
+        requestAnimationFrame(sample);
+      }),
+  );
+  await openPath(page, "/work/notes/plot.md");
+  const heights = await seen;
+  expect(heights.length).toBeGreaterThan(0);
+  expect(heights.filter((h) => Math.abs(h - height) > 1)).toEqual([]);
+});
+
 test("a block whose plugin asks for no frame, a base, shows no edge when pointed at, only its source button", async ({
   page,
 }) => {

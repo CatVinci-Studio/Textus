@@ -179,16 +179,21 @@ function contentHeight() {
   var body = document.body;
   if (!body) return document.documentElement.scrollHeight;
   var bottom = 0;
+  var drawn = false;
   for (var i = 0; i < body.children.length; i++) {
     var child = body.children[i];
     var style = getComputedStyle(child);
     if (style.display === "none" || style.position === "fixed") continue;
+    if (child.getBoundingClientRect().height > 0) drawn = true;
     bottom = Math.max(
       bottom,
       child.getBoundingClientRect().bottom +
         (parseFloat(style.marginBottom) || 0),
     );
   }
+  // Nothing drawn yet: no height, or a frame opened at its last height
+  // shrank to nothing for a moment and grew back.
+  if (!drawn) return -1;
   return (
     bottom +
     (parseFloat(getComputedStyle(body).paddingBottom) || 0) +
@@ -197,7 +202,7 @@ function contentHeight() {
 }
 function tellHeight() {
   var height = Math.ceil(contentHeight());
-  if (height === told) return;
+  if (height < 0 || height === told) return;
   told = height;
   send("height", { height: height });
 }

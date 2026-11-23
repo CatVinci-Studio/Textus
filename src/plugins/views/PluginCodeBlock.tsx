@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { codeBlockChanged, type CodeBlockSeen } from "../manager";
 import {
   codeBlockAtInterfaceSize,
@@ -7,6 +7,8 @@ import {
 } from "../contributions/code-blocks";
 import { PluginProblem } from "./PluginProblem";
 import { PluginWebview } from "./PluginWebview";
+import { FramePlaceholder } from "./frame-heights";
+import { subscribeWebviews, webviewHtml } from "./webviews";
 import { useResolvedWebview } from "./plugin-webview-hosts";
 
 const MAX_CODE_BLOCK_HEIGHT = 1200;
@@ -39,6 +41,10 @@ export function PluginCodeBlock({
   const { record, error } = useResolvedWebview(plugin, "codeBlock", widget, {
     codeBlock: seen,
   });
+  // Its room is kept until there is a page to draw in it.
+  const html = useSyncExternalStore(subscribeWebviews, () =>
+    record ? webviewHtml(record.id) : null,
+  );
   const latest = useRef(setSource);
   latest.current = setSource;
   useEffect(() => {
@@ -65,12 +71,13 @@ export function PluginCodeBlock({
     codeBlockChanged(record, { ...now, meta: JSON.parse(meta) });
   }, [record, seen.source, seen.block, meta]);
   if (error) return <PluginProblem error={error} />;
-  if (!record) return null;
+  if (!record || html === null) return <FramePlaceholder heightKey={widget} />;
   return (
     <PluginWebview
       id={record.id}
       className="plugin-code-block-frame"
       fitHeight={codeBlockMax}
+      heightKey={widget}
       zoom={zoom}
       interfaceSize={codeBlockAtInterfaceSize(seen.language)}
     />
