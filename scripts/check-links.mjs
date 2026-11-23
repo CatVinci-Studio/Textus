@@ -108,15 +108,16 @@ export const namesCode = (file) =>
   /^(AGENTS|CONTRIBUTING)\.md$|^docs\/(dev|design)\/[^/]+\.md$/.test(file);
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const tracked = execFileSync("git", ["ls-files"], {
-    cwd: root,
-    encoding: "utf8",
-  })
-    .split("\n")
-    .filter(Boolean);
-  const files = tracked.filter(
-    (file) => file.endsWith(".md") && !/^(src|e2e|src-tauri)\//.test(file),
+  const listed = (...args) =>
+    execFileSync("git", ["ls-files", ...args], { cwd: root, encoding: "utf8" })
+      .split("\n")
+      .filter(Boolean);
+  const files = listed("*.md").filter(
+    (file) => !/^(src|e2e|src-tauri)\//.test(file),
   );
+  // Files about to be added count as there: the check runs before a commit,
+  // when a new file and the doc naming it are not yet staged.
+  const tracked = listed("--cached", "--others", "--exclude-standard");
   const broken = brokenLinks(files);
   const missing = missingCodePaths(files.filter(namesCode), tracked);
   if (broken.length) console.error(`Broken links:\n  ${broken.join("\n  ")}`);

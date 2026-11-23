@@ -135,7 +135,7 @@ The phone draws in Textus's own design language - the desktop's cards, capsule b
   - `editor.css`: a light theme-colored background for whole-node selection instead of ProseMirror's default #8cf blue outline, the table "+" bars, and the code block language;
   - `quick-ask-dock.css`, `composer.css`, `settings.css`.
 
-  Styles for components that exist only on phones (`ActionSheet`, `DocumentList`, the format bar's `app/format-bar.css`) sit next to the component.
+  Styles for components that exist only on phones (`ActionSheet`, `DocumentList`) sit next to the component.
 
 - **Phone layout switch:** `engine/controls/usePhoneLayout.ts` (iOS and width ≤ 760px). A wide iPad keeps the desktop popup menus and dialogs.
 - **Select boxes:** On iOS, `engine/controls/Select.tsx` is a native `<select>` (laid transparently over a button with the same look). A tap opens the system picker.
