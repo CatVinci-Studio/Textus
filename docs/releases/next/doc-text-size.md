@@ -1,3 +1,3 @@
 ### Fixed
 
-- The document text size chosen in **Settings › Appearance** is kept when Textus starts again, on every platform, iPad and iPhone included, instead of going back to the theme's size.
+- The document text size in **Settings › Appearance** changes the document's text again, on every platform, iPad and iPhone included, and is kept when Textus starts again; picking a size had no effect.
