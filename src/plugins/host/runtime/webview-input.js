@@ -178,32 +178,34 @@ function twoFingers(touches) {
     clientY: (a.clientY + b.clientY) / 2,
   };
 }
-window.addEventListener("touchstart", function (event) {
+// Its touchmove listener is there only while two fingers are: one held
+// for every touch would hold up each scroll's start.
+function pinchMove(event) {
+  if (!spread || event.touches.length !== 2 || spread.page === false) return;
+  var at = twoFingers(event.touches);
+  if (!(at.apart > 0)) return;
+  var ratio = at.apart / spread.last;
+  spread.last = at.apart;
+  spread.page = offerToPage(at, ratio);
+  if (spread.page && event.cancelable) event.preventDefault();
+}
+function pinchEnd() {
   spread = null;
+  window.removeEventListener("touchmove", pinchMove);
+}
+window.addEventListener("touchstart", function (event) {
+  pinchEnd();
   var gestures = "ongesturestart" in window;
   if (gestures || event.touches.length !== 2 || event.defaultPrevented) return;
   var at = twoFingers(event.touches);
-  if (at.apart > 0) spread = { last: at.apart, page: null };
+  if (!(at.apart > 0)) return;
+  spread = { last: at.apart, page: null };
+  window.addEventListener("touchmove", pinchMove, { passive: false });
 });
-window.addEventListener(
-  "touchmove",
-  function (event) {
-    if (!spread || event.touches.length !== 2 || spread.page === false) return;
-    var at = twoFingers(event.touches);
-    if (!(at.apart > 0)) return;
-    var ratio = at.apart / spread.last;
-    spread.last = at.apart;
-    spread.page = offerToPage(at, ratio);
-    if (spread.page && event.cancelable) event.preventDefault();
-  },
-  { passive: false },
-);
 window.addEventListener("touchend", function (event) {
-  if (event.touches.length < 2) spread = null;
+  if (event.touches.length < 2) pinchEnd();
 });
-window.addEventListener("touchcancel", function () {
-  spread = null;
-});
+window.addEventListener("touchcancel", pinchEnd);
 
 // Where a menu opens: under an element, or at a point of the page.
 function anchor(at) {

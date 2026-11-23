@@ -34,7 +34,7 @@
       );
       var item = event.target.closest(options.items);
       var from = items.indexOf(item);
-      if (from < 0) return;
+      if (from < 0) return quiet(false);
       var pos = function (e) {
         return axis === "x" ? e.clientX : e.clientY;
       };
@@ -64,6 +64,7 @@
       function lift() {
         dragging = true;
         item.classList.add("is-drag-lifted");
+        pinned = true;
         quiet(true);
       }
       // Where the pointer is along the list, the scroll since the press
@@ -96,16 +97,12 @@
         place();
         scroll.at(e.clientX, e.clientY);
       }
-      // Once lifted, a finger's move drags; the page doesn't pan.
-      function pin(e) {
-        if (dragging && e.cancelable) e.preventDefault();
-      }
       function end(dropped) {
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", up);
         window.removeEventListener("pointercancel", cancel);
         window.removeEventListener("keydown", key, true);
-        window.removeEventListener("touchmove", pin);
+        pinned = false;
         scroll.stop();
         if (!dragging) return;
         quiet(false);
@@ -149,13 +146,21 @@
       window.addEventListener("pointerup", up);
       window.addEventListener("pointercancel", cancel);
       window.addEventListener("keydown", key, true);
-      window.addEventListener("touchmove", pin, { passive: false });
       if (lifted) lift();
     }
+    // Once lifted, a finger's move drags and the page doesn't pan. Held
+    // on the list from the start: one added mid-touch may come too late
+    // for the web view to wait on it.
+    var pinned = false;
+    function pin(e) {
+      if (pinned && e.cancelable) e.preventDefault();
+    }
     container.addEventListener("pointerdown", down);
+    container.addEventListener("touchmove", pin, { passive: false });
     return {
       dispose: function () {
         container.removeEventListener("pointerdown", down);
+        container.removeEventListener("touchmove", pin);
       },
     };
   }
@@ -226,13 +231,21 @@
       if (at < lo + EDGE_PX) return -ramp(lo + EDGE_PX - at);
       return 0;
     }
-    function run() {
+    // The pace is per 60 Hz frame; it goes by time, so a 120 Hz screen
+    // scrolls no faster.
+    var then = 0;
+    function run(now) {
       frame = 0;
       var step = pace();
+      var gap = then ? Math.min(now - then, 50) : 1000 / 60;
+      then = step ? now : 0;
       if (!step) return;
       var before = scroller[key];
-      scroller[key] = before + step;
-      if (scroller[key] === before) return;
+      scroller[key] = before + Math.round((step * gap * 60) / 1000);
+      if (scroller[key] === before) {
+        then = 0;
+        return;
+      }
       scrolled();
       frame = requestAnimationFrame(run);
     }
@@ -247,6 +260,7 @@
       stop: function () {
         cancelAnimationFrame(frame);
         frame = 0;
+        then = 0;
       },
     };
   }

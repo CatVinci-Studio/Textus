@@ -266,8 +266,8 @@ describe("what every plugin page gets", () => {
       return e;
     };
     const touchmove = () => {
-      const e = new Event("touchmove", { cancelable: true });
-      window.dispatchEvent(e);
+      const e = new Event("touchmove", { bubbles: true, cancelable: true });
+      document.querySelector("li")!.dispatchEvent(e);
       return e.defaultPrevented;
     };
 
@@ -292,6 +292,14 @@ describe("what every plugin page gets", () => {
     finger("pointerup", 155);
     expect(onDrop).toHaveBeenCalledWith(0, 2);
     expect(touchmove()).toBe(false);
+    expect(document.body.style.userSelect).toBe("");
+
+    // Drawn anew while held: nothing lifts, and the page selects again.
+    const [first] = document.querySelectorAll("li");
+    finger("pointerdown", 110, first);
+    first.remove();
+    vi.advanceTimersByTime(600);
+    expect(document.body.style.userSelect).toBe("");
     handle.dispose();
     vi.runOnlyPendingTimers();
     vi.useRealTimers();

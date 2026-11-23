@@ -51,9 +51,12 @@ export function useLongPress(onHold?: (at: { x: number; y: number }) => void) {
           cancel();
       },
       // A lift after the hold sends no tap: its mousedown would close the
-      // menu the hold just opened.
+      // menu the hold just opened. No click comes to consume `fired` then.
       onTouchEnd: (e: React.TouchEvent) => {
-        if (fired.current && e.cancelable) e.preventDefault();
+        if (fired.current && e.cancelable) {
+          e.preventDefault();
+          fired.current = false;
+        }
         cancel();
       },
       onTouchCancel: cancel,
