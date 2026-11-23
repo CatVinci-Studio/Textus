@@ -139,6 +139,28 @@ fn gone(removed: std::io::Result<()>) -> Result<(), String> {
 /// Where taken drafts wait until their window has them again.
 const RESTORING: &str = "restoring";
 
+/// Whether take_draft_snapshots still has drafts to give: read as the main
+/// window is built, before it can ask.
+#[cfg(desktop)]
+pub(crate) fn drafts_waiting(app: &AppHandle) -> bool {
+    if DRAFTS_CLAIMED.load(Ordering::SeqCst) {
+        return false;
+    }
+    let Ok(dir) = drafts_dir(app) else {
+        return true;
+    };
+    [dir.join(RESTORING), dir].iter().any(|dir| has_json(dir))
+}
+
+#[cfg(desktop)]
+fn has_json(dir: &std::path::Path) -> bool {
+    std::fs::read_dir(dir).is_ok_and(|entries| {
+        entries
+            .flatten()
+            .any(|entry| entry.path().extension().is_some_and(|ext| ext == "json"))
+    })
+}
+
 /// The taken drafts are back in their window, each kept again under its
 /// new tab: the copies set aside go.
 #[tauri::command]
@@ -179,4 +201,20 @@ pub fn keep_page_tabs(text: String) {
 #[cfg_attr(test, specta::specta)]
 pub fn kept_page_tabs() -> String {
     PAGE_TABS.lock().unwrap_or_else(|e| e.into_inner()).clone()
+}
+
+#[cfg(all(test, desktop))]
+mod tests {
+    use super::has_json;
+
+    #[test]
+    fn a_folder_with_a_draft_has_one_waiting() {
+        let dir = tempfile::tempdir().unwrap();
+        assert!(!has_json(dir.path()));
+        assert!(!has_json(&dir.path().join("restoring")));
+        std::fs::write(dir.path().join("notes.txt"), "").unwrap();
+        assert!(!has_json(dir.path()));
+        std::fs::write(dir.path().join("tab-1.json"), "{}").unwrap();
+        assert!(has_json(dir.path()));
+    }
 }

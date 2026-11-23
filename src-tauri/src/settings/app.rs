@@ -213,9 +213,10 @@ pub(crate) fn emit_to_all<S: Serialize + Clone>(app: &AppHandle, event: &str, pa
     }
 }
 
-/// The script every app webview runs first: it publishes `window.__BOOT__` and
-/// applies the appearance. Read when the window is built, so the frontend treats
-/// it as a first-paint hint and re-reads live values.
+/// The script every app webview runs first: it publishes `window.__BOOT__` (its
+/// shape is `Boot` in src/storage/boot.ts) and applies the appearance. Read when
+/// the window is built, so the frontend treats it as a first-paint hint and
+/// re-reads live values.
 pub fn boot_script(app: &AppHandle, label: &str) -> String {
     let Some(stores) = app.try_state::<Stores>() else {
         return String::new();
@@ -231,6 +232,11 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
         // seed already put there must not pass for the user's choices.
         "newProfile": stores.settings.missing_at_load(),
         "label": label,
+        // Built without its shadow (editor_windows.rs): the page draws the edge.
+        "windows10": windows_10(),
+        // Something to open as it starts: its first frame is held back (startup-restore.ts).
+        "restoring": crate::launch::window_restores(app, label),
+        "detachedTab": detached_tab(app, label),
         // The settings' values the boot script turns into the page's look:
         // the frontend's own tables, one file.
         "tables": serde_json::from_str::<Value>(include_str!(
@@ -242,6 +248,26 @@ pub fn boot_script(app: &AppHandle, label: &str) -> String {
         "{}\n;window.__textusBoot({boot}, {theme_css});",
         include_str!("../boot.js")
     )
+}
+
+#[cfg(desktop)]
+fn detached_tab(app: &AppHandle, label: &str) -> Value {
+    json!(crate::tab_drag::boot_detached_tab(app, label))
+}
+
+#[cfg(not(desktop))]
+fn detached_tab(_app: &AppHandle, _label: &str) -> Value {
+    Value::Null
+}
+
+#[cfg(windows)]
+fn windows_10() -> bool {
+    crate::commands::system_info::is_windows_10()
+}
+
+#[cfg(not(windows))]
+fn windows_10() -> bool {
+    false
 }
 
 /// Above this an imported theme is left to the frontend's async load rather

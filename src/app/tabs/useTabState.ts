@@ -5,6 +5,7 @@ import {
   type SetStateAction,
 } from "react";
 import { flushEditor } from "../../editor/tab-editor";
+import { firstTab } from "../../document/first-tab";
 import {
   makeBlankTab,
   makeStartTab,
@@ -39,10 +40,10 @@ export interface TabState {
   addStartTab: () => string;
 }
 
-// The window starts with one blank document; a split asked for with no
+// The window starts with one tab (firstTab); a split asked for with no
 // other tab to take, or a change that would leave the window none, gets a
 // blank one in the view last chosen.
-startWindowTabs<DocTab>([makeBlankTab()], () => ({
+startWindowTabs<DocTab>([firstTab()], () => ({
   ...makeBlankTab(),
   ...lastViewMode(),
 }));

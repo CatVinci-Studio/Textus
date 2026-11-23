@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import {
   givingWayNow,
   keptFromFolding,
@@ -37,7 +37,7 @@ export function useNarrowIslands(
   // need counts it again.
   const [hold, setHold] = useState(false);
   const backAt = useRef<number | null>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const was = last.current;
     last.current = { need, windowRoom };
     if (backAt.current !== null && need !== was.need) {

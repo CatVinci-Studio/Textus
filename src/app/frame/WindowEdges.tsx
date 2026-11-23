@@ -4,7 +4,6 @@ import {
   drawsWindowEdges,
   drawsWindowOutline,
 } from "../../platform/window-chrome";
-import { useEffect, useState } from "react";
 import "./window-edges.css";
 import "./window-outline.css";
 
@@ -63,14 +62,6 @@ export function WindowEdges() {
  *  (drawsWindowOutline); none while it fills the screen. */
 export function WindowOutline() {
   const { maximized, fullscreen } = useWindowState();
-  const [drawn, setDrawn] = useState(false);
-  useEffect(() => {
-    let live = true;
-    void drawsWindowOutline().then((yes) => live && setDrawn(yes));
-    return () => {
-      live = false;
-    };
-  }, []);
-  if (!drawn || maximized || fullscreen) return null;
+  if (!drawsWindowOutline() || maximized || fullscreen) return null;
   return <div className="window-outline" aria-hidden="true" />;
 }
