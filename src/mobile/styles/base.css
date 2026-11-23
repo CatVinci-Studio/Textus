@@ -104,8 +104,9 @@
 :root[data-window-chrome="mobile"] .window-bar {
   height: var(--mobile-top);
   padding: var(--safe-top) 4px 0;
-  /* The frame, as the sidebar's: the page is the one sheet on it. */
-  background: var(--ui-frame-fill) fixed;
+  /* See-through: the page under it paints the frame, and its tabs, held
+     under the bar while the page is moved (sidebar.css), still show. */
+  background: transparent;
 }
 
 :root[data-window-chrome="mobile"] .window-menu-button,

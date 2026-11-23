@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { emit, openApp, PHONE } from "./helpers";
 
 // Each tab keeps its own zoom: zooming the document on the right leaves
 // the one on the left as it was - unless documents zoom together; over
@@ -136,4 +136,39 @@ test("zoomed in a narrow window, the text's margin still holds a block's fold ca
       return { pane: el.getBoundingClientRect().left, caret };
     });
   expect(caret).toBeGreaterThanOrEqual(pane);
+});
+
+test.describe("a pinch on a phone", () => {
+  test.use(PHONE);
+
+  test("has the caret placed again where its text went", async ({ page }) => {
+    await openApp(page);
+    const editor = page.locator(".ProseMirror:visible");
+    await editor.tap();
+    await page.keyboard.type("你好 hello");
+    // iOS's WebKit moves its own caret only on a selection change, and
+    // reads where to as the zoom lands; WebKit's pinch events, by hand.
+    const placed = await editor.evaluate(async (pm) => {
+      const box = pm.getBoundingClientRect();
+      const at = { clientX: box.left + box.width / 2, clientY: box.top + 20 };
+      const pinch = (type: string, scale: number) =>
+        window.dispatchEvent(
+          Object.assign(new Event(type, { cancelable: true }), at, { scale }),
+        );
+      const before = getSelection()!.focusOffset;
+      pinch("gesturestart", 1);
+      for (let step = 1; step <= 5; step++)
+        pinch("gesturechange", 1 + step / 5);
+      await new Promise((r) => setTimeout(r, 50));
+      let changed = 0;
+      document.addEventListener("selectionchange", () => changed++);
+      pinch("gestureend", 2);
+      await new Promise((r) => setTimeout(r, 100));
+      return { changed, same: getSelection()!.focusOffset === before };
+    });
+    expect(await zoomOf(page, 0)).toBe(2);
+    expect(placed.changed).toBeGreaterThan(0);
+    expect(placed.same).toBe(true);
+    await expect(editor).toBeFocused();
+  });
 });
