@@ -956,6 +956,9 @@ What differs is room and what the system allows:
   Android it runs without it - nobody is asked to turn it on. Check a
   plugin you offer on iOS in a phone-sized window, or the simulator, before
   you publish.
+- iOS has no Textus AI. A plugin whose contributions are only `aiTools`
+  (with commands that go with them, such as setting the tools' key) has
+  nothing to do there, and Textus on iOS doesn't list it.
 - Files a user opens from the Files app are reached through iOS's own
   grants; a plugin reads them through `files` like any other.
 

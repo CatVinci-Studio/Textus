@@ -10,6 +10,13 @@ const ipc = {
   installFromCatalog: vi.fn(() => Promise.resolve()),
 };
 vi.mock("../../platform/ipc", () => ({ plugins: ipc }));
+let textusAi = true;
+vi.mock("../../platform/capabilities", async (actual) => ({
+  ...(await actual<typeof import("../../platform/capabilities")>()),
+  get hasTextusAi() {
+    return textusAi;
+  },
+}));
 vi.mock("../manager", () => ({
   loadPlugins: vi.fn(() => Promise.resolve()),
 }));
@@ -32,6 +39,7 @@ vi.mock("../plugin-switches", () => ({
 }));
 
 const {
+  catalogSnapshot,
   installFromCatalog,
   loadCatalog,
   neededTextus,
@@ -98,6 +106,43 @@ describe("catalog versions this Textus can run", () => {
         manifest: { engine: `>=${APP_VERSION}` },
       } as Parameters<typeof neededTextus>[0]),
     ).toBeNull();
+  });
+});
+
+describe("the catalog without Textus AI (iOS)", () => {
+  const tools = {
+    aiTools: [
+      {
+        name: "search",
+        description: "Searches",
+        parameters: { type: "object" },
+      },
+    ],
+  };
+  const withContributes = (id: string, contributes: object) => {
+    const e = entry(id, "1.0.0", `>=${APP_VERSION}`);
+    return { ...e, manifest: { ...e.manifest, contributes } };
+  };
+
+  it("leaves out a plugin that only gives Textus AI tools", async () => {
+    ipc.catalog.mockResolvedValue([
+      withContributes("catvinci.keenable", {
+        ...tools,
+        commands: [{ command: "catvinci.keenable.key", title: "Key" }],
+      }),
+      withContributes("catvinci.abc", {
+        ...tools,
+        codeBlocks: [{ language: "abc" }],
+      }),
+    ]);
+    textusAi = false;
+    await loadCatalog(true);
+    const shown = (s = catalogSnapshot()) =>
+      s.status === "ready" ? s.items.map((i) => i.id) : [];
+    expect(shown()).toEqual(["catvinci.abc"]);
+    textusAi = true;
+    await loadCatalog(true);
+    expect(shown()).toEqual(["catvinci.keenable", "catvinci.abc"]);
   });
 });
 
