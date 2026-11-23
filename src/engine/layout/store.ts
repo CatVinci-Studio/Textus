@@ -93,7 +93,10 @@ export function setWindowTabs<T extends TabRecord>(
 ): void {
   const next = update(records as readonly T[]);
   if (next === records) return;
-  records = next;
+  // Never none: what draws the window reads the tab in use, so a change
+  // taking every tab at once (the AI's put away together with no document
+  // left) keeps the window's blank one rather than leaving nothing.
+  records = next.length || !blankTab ? next : [blankTab()];
   change();
 }
 
