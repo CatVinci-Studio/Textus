@@ -21,6 +21,7 @@ import { UI_SIZE_NAMES, UI_TEXT_SCALES } from "../prefs/settings-values";
 import { applyThemeChrome, clearThemeChrome } from "../engine/tokens/palette";
 import { isIOSApp } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
+import { holdTransitionsOnThemeChange } from "./restyle-hold";
 import { tokenPx } from "../engine/tokens/token-px";
 import { useFileIconThemeChoice } from "../plugins/contributions/file-icon-themes";
 import {
@@ -418,6 +419,7 @@ function useApplyAppearance(
 export function AppearanceSync(): null {
   const { settings, setSettings } = useSettings();
   useApplyAppearance(settings, setSettings);
+  useEffect(() => holdTransitionsOnThemeChange(), []);
   useFileIconThemeChoice(settings.fileIconTheme);
   return null;
 }
