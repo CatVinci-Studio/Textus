@@ -235,6 +235,8 @@ function useApplyAppearance(
       clearThemeChrome();
     }
 
+    // The boot script's first-paint colour would outlast a theme change.
+    root.style.removeProperty("--boot-bg");
     // Which theme, for plugins that keep colours per theme.
     root.dataset.themeId = settings.themeId;
     const builtin = BUILTIN_CONTENT_THEMES.find(

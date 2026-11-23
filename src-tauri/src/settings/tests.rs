@@ -261,12 +261,13 @@ fn the_appearance_gives_windows_the_page_background() {
     // index.html paints first and ui/base.css's --doc-bg (--ui-bg follows it) keeps.
     let index = include_str!("../../../index.html");
     let app_css = include_str!("../../../src/engine/tokens/base.css");
+    let none = json!({});
     for (theme, app_css_rule) in [
         ("dark", ":root[data-theme=\"dark\"] {"),
         ("light", ":root {"),
     ] {
         let Some(tauri::window::Color(r, g, b, a)) =
-            window_background(&json!({ "theme": theme }), None)
+            window_background(&json!({ "theme": theme }), &none, None)
         else {
             panic!("no window background for a pinned {theme}");
         };
@@ -275,7 +276,7 @@ fn the_appearance_gives_windows_the_page_background() {
         let index_rule = format!("html[data-theme=\"{theme}\"] {{");
         assert_eq!(
             css_value(index, &index_rule, "background:"),
-            hex,
+            format!("var(--boot-bg, {hex})"),
             "index.html, {theme}"
         );
         assert_eq!(
@@ -286,14 +287,66 @@ fn the_appearance_gives_windows_the_page_background() {
     }
     // "system" or missing with the system's mode unknown, or unreadable:
     // the toolkit's own default.
-    assert_eq!(window_background(&json!({ "theme": "system" }), None), None);
-    assert_eq!(window_background(&json!({}), None), None);
-    assert_eq!(window_background(&json!({ "theme": 1 }), Some(true)), None);
+    assert_eq!(
+        window_background(&json!({ "theme": "system" }), &none, None),
+        None
+    );
+    assert_eq!(window_background(&json!({}), &none, None), None);
+    assert_eq!(
+        window_background(&json!({ "theme": 1 }), &none, Some(true)),
+        None
+    );
     // "system" with the system's mode known (Windows): the page's colour for it.
-    let dark = window_background(&json!({ "theme": "system" }), Some(true));
-    assert_eq!(dark, window_background(&json!({ "theme": "dark" }), None));
-    let light = window_background(&json!({}), Some(false));
-    assert_eq!(light, window_background(&json!({ "theme": "light" }), None));
+    let dark = window_background(&json!({ "theme": "system" }), &none, Some(true));
+    assert_eq!(
+        dark,
+        window_background(&json!({ "theme": "dark" }), &none, None)
+    );
+    let light = window_background(&json!({}), &none, Some(false));
+    assert_eq!(
+        light,
+        window_background(&json!({ "theme": "light" }), &none, None)
+    );
+}
+
+#[test]
+fn a_theme_gives_windows_its_own_page_background() {
+    use tauri::window::Color;
+    let none = json!({});
+    let paper = |theme: &str| {
+        window_background(&json!({ "theme": theme, "themeId": "paper" }), &none, None)
+    };
+    // content-themes.css's --doc-bg for Paper, light and dark.
+    assert_eq!(paper("light"), Some(Color(0xfa, 0xf6, 0xee, 0xff)));
+    assert_eq!(paper("dark"), Some(Color(0x1f, 0x1b, 0x16, 0xff)));
+    // Prism keeps the default page.
+    assert_eq!(
+        window_background(&json!({ "theme": "dark", "themeId": "prism" }), &none, None),
+        window_background(&json!({ "theme": "dark" }), &none, None)
+    );
+    // An imported theme: the chrome the frontend last derived for it in
+    // this appearance, as applyThemeChrome writes it.
+    let settings = json!({ "theme": "dark", "themeId": "mine" });
+    let chrome = |id: &str, dark: bool| {
+        json!({ "themeChrome": {
+            "id": id, "dark": dark, "sourceLength": 10,
+            "css": ":root { --ui-bg: rgb(18, 52, 86) !important;\n--ui-text: rgb(1, 2, 3) !important; }",
+        } })
+    };
+    assert_eq!(
+        window_background(&settings, &chrome("mine", true), None),
+        Some(Color(18, 52, 86, 0xff))
+    );
+    // Derived for another theme or the other appearance: the default.
+    let default = window_background(&json!({ "theme": "dark" }), &none, None);
+    assert_eq!(
+        window_background(&settings, &chrome("other", true), None),
+        default
+    );
+    assert_eq!(
+        window_background(&settings, &chrome("mine", false), None),
+        default
+    );
 }
 
 /// The value `property` has in the first rule that starts with `rule`.
