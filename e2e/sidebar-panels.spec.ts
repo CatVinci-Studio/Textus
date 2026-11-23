@@ -11,6 +11,7 @@ import {
   settled,
   sourceOf,
 } from "./helpers";
+import { hasPlugin } from "./plugin-helpers";
 
 // Sidebar panels: the plugin list opens a plugin's page in a tab of its
 // own; the sidebar steps aside for the islands and widens by its edge.
@@ -37,6 +38,60 @@ test("a plugin in the list opens its page in a tab named for it", async ({
     .locator(".plugins-panel-open")
     .click();
   await expect(page.locator(".tab-pill")).toHaveCount(count);
+});
+
+test("the plugins offered come by category, a computer-only one marked so", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.zotero"), "No textus-plugins checkout");
+  // As the official manifests say it from their next release.
+  await page.addInitScript(() =>
+    Object.assign(window, {
+      __devCatalogManifests: {
+        "catvinci.tags": { category: "notes" },
+        "catvinci.zotero": { category: "sync" },
+      },
+    }),
+  );
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, { settings: { language: "en", menuBarShown: false } });
+  await emit(page, "menu-manage-plugins");
+  const available = page.getByRole("region", { name: "Available" });
+  await expect(available.locator(".plugins-panel-row").first()).toBeVisible();
+  const listed = await available
+    .locator(".plugins-panel-category, .plugins-panel-row")
+    .evaluateAll((els) =>
+      els.map((el) => ({
+        id: el.getAttribute("data-plugin"),
+        text: el.textContent ?? "",
+      })),
+    );
+  // Each plugin under its category's heading, the headings in the store's
+  // order.
+  let heading = "";
+  const under: Record<string, string> = {};
+  const headings: string[] = [];
+  for (const { id, text } of listed)
+    if (id) under[id] = heading;
+    else headings.push((heading = text));
+  expect(under["catvinci.tags"]).toBe("Notes & organizing");
+  expect(under["catvinci.zotero"]).toBe("Sync & services");
+  const order = [
+    "Notes & organizing",
+    "Editing & input",
+    "Charts & diagrams",
+    "Files & viewers",
+    "Import & compatibility",
+    "Sync & services",
+    "AI",
+    "Companions",
+    "Other",
+  ];
+  expect(headings).toEqual(order.filter((h) => headings.includes(h)));
+  const mark = (id: string) =>
+    available.locator(`[data-plugin="${id}"]`).getByText("Computer only");
+  await expect(mark("catvinci.zotero")).toBeVisible();
+  await expect(mark("catvinci.tags")).toHaveCount(0);
 });
 
 test("too narrow for the islands at their least, the sidebar steps aside, then the AI folds; they come back in turn", async ({

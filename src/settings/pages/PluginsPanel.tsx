@@ -1,9 +1,13 @@
+import { byCategory } from "../../plugins/store/plugin-categories";
+import { desktopOnly } from "../../plugins/plugin-platform";
+import { DesktopOnlyMark } from "./CatalogRow";
 import { pluginLead } from "./plugin-lead";
 import { useMutedCards } from "../../plugins/store/usePluginCard";
 import { setAllPlugins } from "../../plugins/plugin-switches";
 import { catalogMessage, catalogStatus } from "./CatalogStatus";
 import { fill } from "../../i18n/fill";
 import {
+  Fragment,
   useEffect,
   useState,
   useSyncExternalStore,
@@ -94,13 +98,15 @@ export function PluginsPanel({
         )
       : [];
   const installed = plugins.records.filter((r) => pluginMatches(r, query));
-  const offered =
+  const { items: offered, headings } = byCategory(
     catalog.status === "ready"
       ? offeredItems(
           sortCatalog(searchCatalog(catalog.items, query), "popular"),
           installedIds,
         )
-      : [];
+      : [],
+    t,
+  );
   return (
     <div className="plugins-panel">
       <div className="tx-pane-row">
@@ -203,32 +209,39 @@ export function PluginsPanel({
               shown: offered.length,
             }) ??
             offered.map((item) => (
-              <PluginRow
-                key={item.id}
-                id={item.id}
-                name={pluginName({ id: item.id, manifest: item.manifest })}
-                line={pluginText(
-                  { manifest: item.manifest },
-                  item.manifest.description,
+              <Fragment key={item.id}>
+                {headings.has(item.id) && (
+                  <h4 className="tx-list-heading plugins-panel-category">
+                    {headings.get(item.id)}
+                  </h4>
                 )}
-                picked={picked === item.id}
-                onOpen={() => onPick(item.id)}
-                end={
-                  <AvailableButton
-                    t={t}
-                    item={item}
-                    installing={installing}
-                    onInstall={() => void install(item)}
-                  />
-                }
-                icon={
-                  <PluginIcon
-                    id={item.id}
-                    manifest={item.manifest}
-                    url={item.icon}
-                  />
-                }
-              />
+                <PluginRow
+                  id={item.id}
+                  name={pluginName({ id: item.id, manifest: item.manifest })}
+                  line={pluginText(
+                    { manifest: item.manifest },
+                    item.manifest.description,
+                  )}
+                  picked={picked === item.id}
+                  onOpen={() => onPick(item.id)}
+                  mark={desktopOnly(item.manifest) && <DesktopOnlyMark t={t} />}
+                  end={
+                    <AvailableButton
+                      t={t}
+                      item={item}
+                      installing={installing}
+                      onInstall={() => void install(item)}
+                    />
+                  }
+                  icon={
+                    <PluginIcon
+                      id={item.id}
+                      manifest={item.manifest}
+                      url={item.icon}
+                    />
+                  }
+                />
+              </Fragment>
             )))}
       </section>
     </div>
@@ -244,10 +257,13 @@ function PluginRow({
   end,
   onOpen,
   picked = false,
+  mark,
 }: {
   id: string;
   name: string;
   line: string;
+  /** Before its line: the computer's only. */
+  mark?: ReactNode;
   off?: boolean;
   icon: ReactNode;
   /** Its button: install, or update. */
@@ -272,10 +288,19 @@ function PluginRow({
         {icon}
         <span className="plugins-panel-text">
           <span className="tx-truncate plugins-panel-name">{name}</span>
-          {line && (
-            <span className="tx-truncate plugins-panel-line">
-              {pluginLead(line)}
+          {mark ? (
+            <span className="plugins-panel-marked">
+              {mark}
+              <span className="tx-truncate plugins-panel-line">
+                {pluginLead(line)}
+              </span>
             </span>
+          ) : (
+            line && (
+              <span className="tx-truncate plugins-panel-line">
+                {pluginLead(line)}
+              </span>
+            )
           )}
         </span>
       </button>

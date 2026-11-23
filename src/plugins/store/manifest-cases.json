@@ -13,7 +13,13 @@
       "permissions": ["files.read", "network:api.example.com", "commands:c.d"]
     },
     { "platforms": ["desktop", "ios"] },
+    {
+      "requires": [{ "setting": "runInBackground" }],
+      "platforms": ["desktop", "ios"]
+    },
     { "main": ["a.js", "b.js"] },
+    { "needsTextusAi": true, "category": "ai" },
+    { "category": "a-newer-one" },
     { "l10n": { "en": { "x": "X" } } },
     {
       "permissions": ["files.read"],
@@ -52,7 +58,9 @@
     { "l10n": { "en": "x" } },
     { "contributes": { "embeds": [{ "id": "a.b.e", "targets": ["note"] }] } },
     { "requires": [{ "setting": "nope" }] },
-    { "requires": [{ "setting": "runInBackground" }], "platforms": ["ios"] }
+    { "background": "jobs.js", "platforms": ["desktop", "ios"] },
+    { "needsTextusAi": "yes" },
+    { "category": 3 }
   ],
   "invalidInWindow": [
     { "contributes": { "snippets": [{ "label": "Box" }] } },

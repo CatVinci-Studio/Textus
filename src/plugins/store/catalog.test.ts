@@ -10,6 +10,13 @@ const ipc = {
   installFromCatalog: vi.fn(() => Promise.resolve()),
 };
 vi.mock("../../platform/ipc", () => ({ plugins: ipc }));
+let textusAi = true;
+vi.mock("../../platform/capabilities", async (actual) => ({
+  ...(await actual<typeof import("../../platform/capabilities")>()),
+  get hasTextusAi() {
+    return textusAi;
+  },
+}));
 vi.mock("../manager", () => ({
   loadPlugins: vi.fn(() => Promise.resolve()),
 }));
@@ -32,6 +39,7 @@ vi.mock("../plugin-switches", () => ({
 }));
 
 const {
+  catalogSnapshot,
   installFromCatalog,
   loadCatalog,
   neededTextus,
@@ -98,6 +106,40 @@ describe("catalog versions this Textus can run", () => {
         manifest: { engine: `>=${APP_VERSION}` },
       } as Parameters<typeof neededTextus>[0]),
     ).toBeNull();
+  });
+});
+
+describe("the catalog without Textus AI (iOS)", () => {
+  const tools = {
+    aiTools: [
+      {
+        name: "search",
+        description: "Searches",
+        parameters: { type: "object" },
+      },
+    ],
+  };
+  const withManifest = (id: string, extra: object) => {
+    const e = entry(id, "1.0.0", `>=${APP_VERSION}`);
+    return { ...e, manifest: { ...e.manifest, ...extra } };
+  };
+
+  it("leaves out a plugin that says it needs Textus AI", async () => {
+    ipc.catalog.mockResolvedValue([
+      withManifest("catvinci.keenable", {
+        needsTextusAi: true,
+        contributes: tools,
+      }),
+      withManifest("catvinci.heading-numbers", { contributes: tools }),
+    ]);
+    textusAi = false;
+    await loadCatalog(true);
+    const shown = (s = catalogSnapshot()) =>
+      s.status === "ready" ? s.items.map((i) => i.id) : [];
+    expect(shown()).toEqual(["catvinci.heading-numbers"]);
+    textusAi = true;
+    await loadCatalog(true);
+    expect(shown()).toEqual(["catvinci.keenable", "catvinci.heading-numbers"]);
   });
 });
 

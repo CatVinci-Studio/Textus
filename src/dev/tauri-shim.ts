@@ -1021,7 +1021,7 @@ export function installDevTauriShim(): void {
   // `__devFiles`); installed plugins are `__devPlugins`, and `__devPluginState`
   // starts some on. The catalog is served at /dev-plugins/; see also
   // `__devCatalogInstalled`, `__devCatalogOlder`, `__devCatalogCache`,
-  // `__devCatalogFails` and `__devCatalogStats`.
+  // `__devCatalogFails`, `__devCatalogStats` and `__devCatalogManifests`.
   type DevPluginEntry = {
     enabled: boolean;
     granted: string[];
@@ -1046,12 +1046,19 @@ export function installDevTauriShim(): void {
       r.ok
         ? (r.json() as Promise<{ plugins: CatalogEntry[] }>).then((c) =>
             // `__devCatalogStats`: installs and dates by id, as the
-            // release's daily count adds them.
+            // release's daily count adds them; `__devCatalogManifests`:
+            // manifest fields by id, as a newer release of it has them.
             c.plugins.map((p) => ({
               ...p,
               ...((w.__devCatalogStats as Record<string, object> | undefined)?.[
                 p.id
               ] ?? {}),
+              manifest: {
+                ...(p.manifest as object),
+                ...((
+                  w.__devCatalogManifests as Record<string, object> | undefined
+                )?.[p.id] ?? {}),
+              },
             })),
           )
         : Promise.reject(new Error("No textus-plugins checkout to list.")),

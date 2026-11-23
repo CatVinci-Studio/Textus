@@ -27,6 +27,11 @@
   min-width: 0;
 }
 
+/* A category in what the market offers: under the group's heading, quieter. */
+.plugins-panel-category {
+  font-weight: 400;
+}
+
 .plugins-panel-count {
   margin-left: 4px;
   font-weight: 400;
@@ -70,6 +75,14 @@
   flex-direction: column;
   min-width: 0;
   gap: 2px;
+}
+
+/* A mark, then its line cut short after it. */
+.plugins-panel-marked {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
 }
 
 .plugins-panel-name {

@@ -90,6 +90,7 @@ again when it changes. Uninstalling it moves the file to the Trash.
   "engines": { "textus": ">=1.3.0-beta.2" }, // the plugin API 1.0
   "main": "host.js", // or ["shared.js", "host.js"], run in order
   "platforms": ["desktop", "ios"], // where it runs; the catalog needs it
+  "category": "editing", // where the store lists it (below)
   "activationEvents": [], // when to start before it is used (below)
   "permissions": ["editor.read"],
   // "background": "jobs.js", // scheduled jobs' code (On a schedule)
@@ -119,6 +120,16 @@ again when it changes. Uninstalling it moves the file to the Trash.
 ...args)`, a webview with `api.t(key, ...args)`; `{0}`, `{1}`… are the
   arguments. Textus speaks `en`, `zh`, `zh-Hant`, `ja`, `ko`, `es`, `fr`,
   `de`, `ru` and `pt`.
+- `category` is where the store lists it: `notes` (notes and organizing),
+  `editing` (editing and input), `diagrams` (charts and diagrams), `files`
+  (files and viewers), `import` (import and compatibility), `sync` (sync
+  and services), `ai` or `companions`. Without one, or with one an older
+  Textus doesn't know, it is under Other. From Textus 1.4.7; older ones
+  ignore it.
+- `"needsTextusAi": true` says the plugin does nothing without Textus AI -
+  it only gives Textus AI tools. Where there is none (iOS), the store
+  doesn't list it. A plugin that does other things too leaves it out. From
+  Textus 1.4.7; older ones ignore it.
 - The manifest has a [JSON Schema](../textus-plugin.schema.json):
   `"$schema": "https://raw.githubusercontent.com/CatVinci-Studio/Textus/main/docs/dev/textus-plugin.schema.json"`.
 
@@ -952,9 +963,17 @@ What differs is room and what the system allows:
   `"platforms": ["desktop"]`, and Textus on iOS neither lists nor loads it.
   A plugin that works in the background, with `background` code or
   `requires` Keep running in the background (`runInBackground`), is
-  desktop-only by default, and naming `ios` beside it is an error. Check a
+  desktop-only by default. `background` code can't name `ios`; a plugin
+  that only `requires` Keep running in the background may, and on iOS and
+  Android it runs without it - nobody is asked to turn it on. Check a
   plugin you offer on iOS in a phone-sized window, or the simulator, before
   you publish.
+- iOS has no Textus AI. A plugin that does nothing without it says
+  `"needsTextusAi": true`, and Textus on iOS doesn't list it. Its README's
+  section on its tools for Textus AI, between `<!-- ai-tools -->` and
+  `<!-- /ai-tools -->`, is left out there.
+- The store marks a plugin whose `platforms` leave out `ios` as the
+  computer's only, so its README needn't say so.
 - Files a user opens from the Files app are reached through iOS's own
   grants; a plugin reads them through `files` like any other.
 - `app.state` is `"active"` while Textus is on screen and `"background"`
