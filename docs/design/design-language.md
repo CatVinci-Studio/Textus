@@ -151,7 +151,7 @@ Themes SHOULD keep: a measure of 60–75 Latin characters (about 35–40 CJK cha
 
 ### 5.1 The 4 px grid
 
-Every radius, padding, margin, gap and component size MUST be a multiple of 4 px. Exceptions: 1–2 px hairlines and insets, and the document's own typography (themes, the editor's content, print). `src/engine/controls/spacing-grid.test.ts` checks every stylesheet.
+Every radius, padding, margin, gap and component size MUST be a multiple of 4 px. Exceptions: 1–2 px hairlines and insets, and the document's own typography (themes, the editor's content, print). `scripts/check-design-values.mjs` checks every stylesheet.
 
 ### 5.2 Spacing scale and use
 

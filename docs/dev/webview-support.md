@@ -88,8 +88,8 @@ blurred text on WebKitGTK.
 Still different in Chromium 107, not fixed yet:
 
 - `Ctrl/⌘ + wheel` zoom in the document doesn't keep the line under the
-  pointer in place (e2e `writing.spec.ts`, "zooming keeps the line being
-  read in place"). Likely the pre-standard `zoom` of Chromium before 128,
+  pointer in place (no e2e flow checks it now: the one that did went in
+  1.4.0). Likely the pre-standard `zoom` of Chromium before 128,
   which places zoomed elements differently; not investigated yet.
 - A few colours are flatter than in a current engine, where a plain colour
   can't stand in for a mix: an `h6` is as dark as an `h5`, and a Pele

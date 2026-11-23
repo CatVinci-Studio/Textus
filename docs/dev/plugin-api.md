@@ -10,8 +10,8 @@ for code in the app itself.
 
 All four are gathered in [`src/plugin-api.ts`](../../src/plugin-api.ts). A
 development build (`npm run dev`) puts the same object on
-`window.__textusPlugins`, so you can try an extension from the console;
-`e2e/plugin-api.spec.ts` does exactly that. Every `register` returns the
+`window.__textusPlugins`, so you can try an extension from the console.
+Every `register` returns the
 function that takes back what it added.
 
 ## Commands

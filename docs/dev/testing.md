@@ -28,7 +28,7 @@ mistake:
 - **Logic in a function of its own** (parsing, diffing, where a card
   stands, what a setting means): a unit test.
 - **A key, a typed character or a paste, and what the document becomes**:
-  an editor integration test. `src/document-view/editor-view-kit.ts` opens
+  an editor integration test. `src/editor/editor-view-kit.ts` opens
   the app's whole editor in jsdom (`openView(markdown)`), presses keys
   through its keymaps (`press("Mod+b")`, `press("Shift+Tab")`), types
   through its input rules (`type("**bold**")`), pastes plain text or HTML
@@ -75,8 +75,8 @@ CI has three layers (`.github/workflows/ci.yml`):
 
 A change to GitHub's settings, the license or the root Markdown alone
 checks only their format (`light` in `scripts/ci-changes.mjs`).
-Documentation alone (`docs`) checks format, links
-(`scripts/check-links.mjs`) and the unit tests that read `docs/`, with no
+Documentation alone (`docs`) checks format, links and the source files
+the developer docs name (`scripts/check-links.mjs`) and the unit tests that read `docs/`, with no
 build or e2e. A run with no test in it
 fails; a test that passes only on its retry is listed as flaky, a warning
 on the pull request, and goes on the watch list.
@@ -92,9 +92,10 @@ near what they changed.
 | Stopwatch flows (`@perf`, `npm run test:perf`)                  | locally                            | when timing is the point; never CI  |
 | Benchmarks (`bench:large-doc`, `bench:plugins`, `bench:motion`) | one machine                        | before a release that touches speed |
 
-The e2e server makes every run read as Linux (`vite.e2e-platform.ts`), so
-Ctrl is the shortcut key on a Mac too; Mac-only keys and window chrome are
-checked in the real app. Screenshot baselines are Linux's alone and are
+The e2e flows run as the machine they are on: on a Mac the browser
+reports a Mac, so ⌘ is the shortcut key and `HOME` and `END` in
+`e2e/helpers.ts` are its keys. Native menus and window chrome are checked
+in the real app. Screenshot baselines are Linux's alone and are
 skipped on a Mac (`ignoreSnapshots` in `playwright.config.ts`); keep them
 few - each one shows a whole screen someone would notice changing.
 
@@ -109,7 +110,7 @@ npm test                                   # every unit and editor integration t
 npx vitest run src/editor/keys/            # some of them
 npx vitest src/editor/keys/markdown-keys.test.ts   # one file, rerun on save
 npm run test:e2e                           # the e2e flows, Chromium (first time: npm run setup:e2e)
-npx playwright test e2e/code-block.spec.ts -g "copy button"   # one flow
+npx playwright test e2e/clipboard.spec.ts -g "Copy as Plain Text"   # one flow
 E2E_WEBKIT=1 npx playwright test --project=webkit             # the WebKit flows (npx playwright install webkit once)
 ```
 
@@ -348,7 +349,7 @@ A flaky test is still a bug - in the test, or in the app. Don't ignore the
 annotation. To find out how flaky a test is, run it many times:
 
 ```sh
-PLAYWRIGHT_PORT=1445 npx playwright test e2e/writing.spec.ts \
+PLAYWRIGHT_PORT=1445 npx playwright test e2e/menu-edit.spec.ts \
   -g "the test's title" --repeat-each=100 --workers=4
 ```
 
