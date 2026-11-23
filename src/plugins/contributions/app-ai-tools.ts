@@ -3,7 +3,7 @@ import { slashed } from "../../utils/path";
 import { getWindowAccess } from "../app-bridge";
 import {
   backlinksIn,
-  folderIndex,
+  refreshMetadataIndex,
   tagsIn,
   tasksIn,
 } from "../workspace/metadata-cache";
@@ -21,7 +21,7 @@ const text = (args: Args, key: string) =>
 async function folder(args: Args) {
   const root = text(args, "__root") || getWindowAccess()?.rootPath();
   if (!root) throw new Error("No folder is open.");
-  const index = await folderIndex(APP_TOOLS_OWNER, root);
+  const index = await refreshMetadataIndex(APP_TOOLS_OWNER, root);
   const rel = (path: string) => index.byPath.get(path)?.rel ?? path;
   return { index, rel };
 }

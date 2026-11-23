@@ -7,6 +7,7 @@ import type { IndexedFile } from "../platform/ipc";
 import { isNoteFile, isWithin, linkPath, relativePath } from "../utils/path";
 import { folderIndex } from "./folder-index";
 import { linkFolderIn, relativeTo } from "./link-resolve";
+import { windowFolder } from "../platform/window-folder";
 
 /**
  * A link's or a picture's target as it is typed - `[text](` and `![alt](` -
@@ -87,19 +88,12 @@ function closed(items: PanelItem[], closing: Closing): PanelItem[] {
   }));
 }
 
-let root: string | null = null;
 /** The lists last built, kept while the index they came from is. */
 let built: {
   index: unknown;
   key: string;
   lists: Map<Closing, PanelItem[]>;
 } | null = null;
-
-/** The window's folder, whose files are listed. */
-export function setPathCompletionRoot(next: string | null): void {
-  if (next !== root) built = null;
-  root = next;
-}
 
 export function registerPathCompletion(
   titles: Record<TargetKind, () => string>,
@@ -114,7 +108,7 @@ export function registerPathCompletion(
       replaceGroup: 1,
       title: titles[kind],
       provide: ({ path, after }) => {
-        const folder = root;
+        const folder = windowFolder();
         if (!folder || !path || !isWithin(path, folder)) return null;
         const closing = closingFor(after);
         return folderIndex(folder).then(

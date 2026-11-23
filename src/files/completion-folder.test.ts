@@ -2,14 +2,8 @@ import { afterEach, expect, it, vi } from "vitest";
 import { completionSources } from "../editor/completion/sources";
 import { fs } from "../platform/ipc";
 import { setWindowFolderSource } from "../platform/window-folder";
-import {
-  registerNoteCompletion,
-  setNoteCompletionRoot,
-} from "./note-completion";
-import {
-  registerPathCompletion,
-  setPathCompletionRoot,
-} from "./path-completion";
+import { registerNoteCompletion } from "./note-completion";
+import { registerPathCompletion } from "./path-completion";
 
 vi.mock("./link-style", async (real) => ({
   ...(await real<typeof import("./link-style")>()),
@@ -20,8 +14,6 @@ let folder: string | null = null;
 function openFolder(next: string | null) {
   folder = next;
   setWindowFolderSource(() => folder);
-  setNoteCompletionRoot(next);
-  setPathCompletionRoot(next);
 }
 
 const stops: (() => void)[] = [];

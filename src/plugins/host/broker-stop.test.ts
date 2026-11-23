@@ -45,8 +45,8 @@ import { exportFormatHandlers } from "./broker-export";
 import { historyHandlers } from "./broker-history";
 import { providerHandlers } from "./broker-providers";
 import type { PluginScope } from "./broker-scope";
-import { forgetPlugin } from "./broker-stop";
-import { uiHandlers } from "./broker-ui";
+import { forgetPlugin, PLUGIN_STOPS } from "./broker-stop";
+import { stopPluginUi, UI_STOPS, uiHandlers } from "./broker-ui";
 
 vi.mock("../../engine/controls/notices", async (real) => {
   const actual = await real<typeof import("../../engine/controls/notices")>();
@@ -232,5 +232,14 @@ describe("a stopped plugin", () => {
     expect(await stillThere()).toEqual(PROBES.map((probe) => probe.name));
     forgetPlugin(P);
     expect(await stillThere()).toEqual([]);
+  });
+
+  it("is checked for each stop there is", () => {
+    const stops = PLUGIN_STOPS.flatMap((stop) =>
+      stop === stopPluginUi ? UI_STOPS : [stop],
+    );
+    expect(stops.map((stop) => stop.name)).toEqual(
+      PROBES.map((probe) => probe.name),
+    );
   });
 });

@@ -2,7 +2,7 @@ import { plugins as pluginsIpc } from "../../platform/ipc";
 import {
   backlinksIn,
   documentOf,
-  folderIndex,
+  refreshMetadataIndex,
   resolveTarget,
   targetLine,
   tagsIn,
@@ -22,7 +22,7 @@ import {
  * index. They need files.read, which `p.root()` checks.
  */
 export function metadataHandlers(p: PluginScope) {
-  const index = () => folderIndex(p.id, p.root());
+  const index = () => refreshMetadataIndex(p.id, p.root());
   return {
     "metadata.get": async ({ path }: Params) => {
       const root = p.root();

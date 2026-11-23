@@ -268,18 +268,30 @@ function progressesOf(plugin: string): Set<number> {
   return set;
 }
 
-/** A plugin stopped: what it left showing goes. */
-export function stopPluginUi(plugin: string): void {
+function endProgressBars(plugin: string): void {
   for (const id of progressBars.get(plugin) ?? []) endProgress(id);
   progressBars.delete(plugin);
-  removeStatusItem(plugin);
-  forgetPluginWhenKeys(plugin);
-  forgetFileBadges(plugin);
-  forgetPasteHandlers(plugin);
-  forgetDropHandlers(plugin);
-  removeOutlineProvider(plugin);
+}
+
+function removeMenuProviders(plugin: string): void {
   for (const remove of menuProviders.get(plugin)?.values() ?? []) remove();
   menuProviders.delete(plugin);
+}
+
+/** What a stopped plugin left showing, taken away in this order. */
+export const UI_STOPS: readonly ((plugin: string) => void)[] = [
+  endProgressBars,
+  removeStatusItem,
+  forgetPluginWhenKeys,
+  forgetFileBadges,
+  forgetPasteHandlers,
+  forgetDropHandlers,
+  removeOutlineProvider,
+  removeMenuProviders,
+];
+
+export function stopPluginUi(plugin: string): void {
+  for (const stop of UI_STOPS) stop(plugin);
 }
 
 /** A provider's answer as menu items: each a label and the command it

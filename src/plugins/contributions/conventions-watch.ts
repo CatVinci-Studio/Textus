@@ -10,6 +10,8 @@ import {
  * conventions change: another folder opened, or the window comes back from
  * the app whose settings they are. Asked only then, never on a timer.
  */
+/** The folder last asked about, not a copy of the window's: an answer
+ *  for one asked before it is dropped. */
 let root: string | null = null;
 let last: string | null = null;
 let listening = false;
