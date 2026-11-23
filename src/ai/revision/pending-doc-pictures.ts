@@ -29,27 +29,50 @@ export function proposalDocPath(view: EditorView | null | undefined) {
   return (view && docPaths.get(view)?.()) ?? null;
 }
 
+/** Each widget's pictures as last shown, by place and src: the typewriter
+ *  renders the text anew each frame, and a new `<img>` would load again -
+ *  a missing one flickering between the broken box and its card, asking
+ *  the disk each time. Only the last frame's, so a file put there since is
+ *  looked for again with the next proposal. */
+const shownBySpan = new WeakMap<HTMLElement, Map<string, HTMLElement>>();
+
 /** Within `root`, each picture of the document's files pointed at its file,
  *  and the missing-picture card in place of one that won't load. */
 export function showProposalPictures(
   root: HTMLElement,
   docPath: string | null,
 ): void {
+  const before = shownBySpan.get(root);
+  const shown = new Map<string, HTMLElement>();
+  shownBySpan.set(root, shown);
+  const seen = new Map<string, number>();
   for (const img of root.querySelectorAll<HTMLImageElement>("img")) {
     const src = img.getAttribute("src") ?? "";
     const kind = imageSource(src, docPath).kind;
     if (kind !== "file" && kind !== "scoped" && kind !== "unsaved") continue;
+    // The same picture twice is two places.
+    const n = seen.get(src) ?? 0;
+    seen.set(src, n + 1);
+    const key = `${n}\n${docPath ?? ""}\n${src}`;
+    const kept = before?.get(key);
+    if (kept) {
+      img.replaceWith(kept);
+      shown.set(key, kept);
+      continue;
+    }
+    shown.set(key, img);
     const alt = img.getAttribute("alt") ?? "";
     const missing = () => {
       const location = imageLocation(src, docPath);
       void probeMissing(location).then((reason) => {
-        if (!img.isConnected) return;
-        img.replaceWith(
-          missingImageCard(
-            { name: imageDisplayName(src), alt, reason, location },
-            currentStrings(),
-          ),
+        const card = missingImageCard(
+          { name: imageDisplayName(src), alt, reason, location },
+          currentStrings(),
         );
+        // Shown since in a later frame, the card is that frame's too.
+        const now = shownBySpan.get(root);
+        if (now?.get(key) === img) now.set(key, card);
+        if (img.isConnected) img.replaceWith(card);
       });
     };
     img.addEventListener("error", missing, { once: true });
