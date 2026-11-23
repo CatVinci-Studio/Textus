@@ -1226,7 +1226,8 @@ declare global {
         to: string,
         options?: { updateLinks?: boolean },
       ): Promise<void>;
-      /** To the system's Trash, never deleted for good. */
+      /** To the system's Trash, never deleted for good: Recently Deleted on
+       *  iOS. Android has none: it fails with a message ending "[noTrash]". */
       trash(path: string): Promise<void>;
       createFolder(path: string): Promise<void>;
       frontmatter: Frontmatter;
@@ -1910,7 +1911,8 @@ declare global {
     interface App {
       /** "active": a Textus window has the focus; "inactive": windows are
        *  open, none focused; "background": no window (background code, or
-       *  every window closed in background mode). */
+       *  every window closed in background mode). On iOS and Android only
+       *  "active" (on screen) and "background" (the user left the app). */
       readonly state: "active" | "inactive" | "background";
       onDidChangeState: Event<"active" | "inactive" | "background">;
       /** The user typed (heard once typing pauses) or saved by hand -
@@ -2168,7 +2170,10 @@ declare global {
       readonly dates: Dates;
       /** From 1.7: a list dragged into a new order, the app's way: the
        *  item lifts, the others make room; `onDrop(from, to)` once let go
-       *  somewhere new. `handle`: only from inside it. Esc puts it back. */
+       *  somewhere new. `handle`: only from inside it. Esc puts it back.
+       *  A finger lifts it once held still a moment; a press in a text
+       *  field is the field's. Near the edge of its scroller the drag
+       *  scrolls it. */
       drag: {
         reorder(
           container: Element,

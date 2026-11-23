@@ -1021,7 +1021,7 @@ export function installDevTauriShim(): void {
   // `__devFiles`); installed plugins are `__devPlugins`, and `__devPluginState`
   // starts some on. The catalog is served at /dev-plugins/; see also
   // `__devCatalogInstalled`, `__devCatalogOlder`, `__devCatalogCache`,
-  // `__devCatalogFails` and `__devCatalogStats`.
+  // `__devCatalogFails`, `__devCatalogStats` and `__devCatalogManifests`.
   type DevPluginEntry = {
     enabled: boolean;
     granted: string[];
@@ -1046,12 +1046,19 @@ export function installDevTauriShim(): void {
       r.ok
         ? (r.json() as Promise<{ plugins: CatalogEntry[] }>).then((c) =>
             // `__devCatalogStats`: installs and dates by id, as the
-            // release's daily count adds them.
+            // release's daily count adds them; `__devCatalogManifests`:
+            // manifest fields by id, as a newer release of it has them.
             c.plugins.map((p) => ({
               ...p,
               ...((w.__devCatalogStats as Record<string, object> | undefined)?.[
                 p.id
               ] ?? {}),
+              manifest: {
+                ...(p.manifest as object),
+                ...((
+                  w.__devCatalogManifests as Record<string, object> | undefined
+                )?.[p.id] ?? {}),
+              },
             })),
           )
         : Promise.reject(new Error("No textus-plugins checkout to list.")),
@@ -1304,6 +1311,9 @@ export function installDevTauriShim(): void {
         for (const p of Object.keys(folder))
           if (p === path || p.startsWith(`${path}/`)) delete folder[p];
         return Promise.resolve(null);
+      // iOS's checks alone; the move is the native trash below.
+      case "plugin_fs_trash_path":
+        return Promise.resolve(path);
       case "plugin_fs_write":
         ((w.__devFs ??= {}) as Record<string, string>)[path] = args.base64
           ? atob(String(args.contents))
@@ -1503,6 +1513,18 @@ export function installDevTauriShim(): void {
       if (cmd === "plugin:window|outer_position")
         return Promise.resolve({ x: window.screenX, y: window.screenY });
       if (cmd === "plugin:window|scale_factor") return Promise.resolve(1);
+      // iOS's Recently Deleted: what went there in `window.__devTrashed`.
+      if (cmd === "plugin:textus-files|trash") {
+        const path = String((args as { args?: { path?: unknown } }).args?.path);
+        for (const disk of [w.__devFs, w.__devFiles] as Record<
+          string,
+          string
+        >[])
+          for (const p of Object.keys(disk ?? {}))
+            if (p === path || p.startsWith(`${path}/`)) delete disk[p];
+        ((w.__devTrashed ??= []) as string[]).push(path);
+        return Promise.resolve(null);
+      }
       // Pages and links opened in the browser: `window.__devLinks`.
       if (cmd.startsWith("open_") && /_(page|link)$/.test(cmd))
         ((w.__devLinks ??= []) as unknown[]).push({ cmd, ...args });

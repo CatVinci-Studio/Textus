@@ -1,3 +1,4 @@
+import { hasTextusAi } from "../../platform/capabilities";
 import { plugins as pluginsIpc } from "../../platform/ipc";
 import { getWindowAccess } from "../app-bridge";
 import { localize } from "./manifest";
@@ -23,6 +24,14 @@ function readmeNames(language: string): string[] {
   ];
 }
 
+const AI_TOOLS = /<!-- ai-tools -->[\s\S]*?<!-- \/ai-tools -->\s*/g;
+
+/** `text` as shown here: without the section listing its tools for Textus
+ *  AI (between the catalog's ai-tools markers) where there is none. */
+export function readmeHere(text: string, textusAi = hasTextusAi): string {
+  return textusAi ? text : text.replace(AI_TOOLS, "").trimEnd() + "\n";
+}
+
 /** An installed plugin's README, or null when it has none. */
 export async function installedReadme(
   id: string,
@@ -30,7 +39,9 @@ export async function installedReadme(
 ): Promise<string | null> {
   for (const name of readmeNames(language)) {
     try {
-      return new TextDecoder().decode(await pluginsIpc.file(id, name));
+      return readmeHere(
+        new TextDecoder().decode(await pluginsIpc.file(id, name)),
+      );
     } catch {
       // Not this one: the next.
     }
@@ -44,7 +55,10 @@ export function catalogReadme(
   id: string,
   language: string = windowInfo().language(),
 ): Promise<string | null> {
-  return pluginsIpc.catalogReadme(id, language).catch(() => null);
+  return pluginsIpc
+    .catalogReadme(id, language)
+    .then((text) => (text === null ? null : readmeHere(text)))
+    .catch(() => null);
 }
 
 /** Opens installed plugin `id`'s README in a tab; false when it has none. */

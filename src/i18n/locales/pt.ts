@@ -677,6 +677,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   errorNotFolder: "Isso não é uma pasta.",
   errorTrashShownFolder:
     "A pasta que a árvore mostra não pode ir para a lixeira.",
+  errorNoTrash: "Aqui não há lixeira para onde mover arquivos.",
   errorOutsideDocuments: "Isso está fora da pasta do Textus.",
   errorPluginBadPackage:
     "Este não é um pacote de plugin que o Textus possa instalar.",
@@ -1900,6 +1901,16 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   pluginsSortPopular: "Mais instalados",
   pluginsSortNewest: "Atualizados recentemente",
   pluginsSortName: "Nome",
+  pluginDesktopOnlyBadge: "Só computador",
+  pluginCategoryNotes: "Notas e organização",
+  pluginCategoryEditing: "Edição e entrada",
+  pluginCategoryDiagrams: "Gráficos e diagramas",
+  pluginCategoryFiles: "Arquivos e visualizadores",
+  pluginCategoryImport: "Importação e compatibilidade",
+  pluginCategorySync: "Sincronização e serviços",
+  pluginCategoryAi: "IA",
+  pluginCategoryCompanions: "Companhia",
+  pluginCategoryOther: "Outros",
   pluginInstalls: {
     one: "{n} instalação",
     many: "{n} instalações",

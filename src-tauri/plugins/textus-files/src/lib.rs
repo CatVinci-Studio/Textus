@@ -62,6 +62,7 @@ mod native {
         rename_entry => "renameEntry",
         move_entry => "moveEntry",
         delete_entry => "deleteEntry",
+        trash => "trash",
         remembered => "remembered",
         begin_access => "beginAccess",
         share => "share",
@@ -90,6 +91,7 @@ mod native {
                 rename_entry,
                 move_entry,
                 delete_entry,
+                trash,
                 remembered,
                 begin_access,
                 share,
@@ -113,3 +115,29 @@ mod native {
 pub use native::export_pdf;
 #[cfg(any(target_os = "ios", target_os = "android"))]
 pub use native::init;
+
+#[cfg(test)]
+mod tests {
+    /// Every command build.rs allows must be forwarded and registered: one
+    /// left out (trash was) reaches Swift with the raw payload and fails
+    /// there, on every call.
+    #[test]
+    fn every_allowed_command_is_forwarded_and_registered() {
+        let build = include_str!("../build.rs");
+        let lib = include_str!("lib.rs");
+        let list = build.split("COMMANDS").nth(1).unwrap();
+        let list = &list[..list.find("];").unwrap()];
+        let handler = lib.split("generate_handler![").nth(1).unwrap();
+        let handler = &handler[..handler.find(']').unwrap()];
+        for name in list.split('"').skip(1).step_by(2) {
+            assert!(
+                lib.contains(&format!("{name} => ")),
+                "{name} isn't forwarded"
+            );
+            assert!(
+                handler.split(',').any(|n| n.trim() == name),
+                "{name} isn't registered"
+            );
+        }
+    }
+}

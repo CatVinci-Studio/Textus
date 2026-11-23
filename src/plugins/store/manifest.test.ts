@@ -427,6 +427,16 @@ describe("where a plugin runs", () => {
       }),
     ).toThrow(/desktop's only/);
   });
+
+  it("takes iOS beside a plugin that only asks to keep Textus running", () => {
+    expect(
+      parseManifest({
+        ...base,
+        requires: [{ setting: "runInBackground" }],
+        platforms: ["desktop", "ios"],
+      }).platforms,
+    ).toEqual(["desktop", "ios"]);
+  });
 });
 
 describe("a plugin's settings", () => {

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { ESLint } from "eslint";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { WEBVIEW_RUNTIME as webview } from "../webview-runtime";
 
 type Handlers = Record<string, (params: unknown) => void>;
@@ -60,6 +60,61 @@ it("keeps what the plugin sent before the page listens, and logs its errors", ()
     "log",
     { level: "error", message: 'bad {"n":1}' },
   ]);
+});
+
+// The runtime as the test above put it in the window.
+it("offers a page two fingers' pinch as the ctrl+wheel it zooms by, where no gesture events come", () => {
+  const canvas = document.createElement("div");
+  document.body.append(canvas);
+  document.elementFromPoint = () => canvas;
+  const steps: number[] = [];
+  const zoomsItself = (e: WheelEvent) => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    steps.push(e.deltaY);
+  };
+  const fingers = (type: string, apart: number) => {
+    const e = new Event(type, { cancelable: true });
+    Object.assign(e, {
+      touches: [
+        { clientX: 100, clientY: 100 },
+        { clientX: 100 + apart, clientY: 100 },
+      ],
+    });
+    window.dispatchEvent(e);
+    return e.defaultPrevented;
+  };
+
+  canvas.addEventListener("wheel", zoomsItself);
+  // Its touchmove listener is there before the touch: Chromium makes the
+  // moves uncancelable when one comes only with the second finger.
+  const added = vi.spyOn(window, "addEventListener");
+  fingers("touchstart", 50);
+  expect(added.mock.calls.map(([type]) => type)).not.toContain("touchmove");
+  added.mockRestore();
+  // Twice as far apart: one step in, and the web view does nothing else.
+  expect(fingers("touchmove", 100)).toBe(true);
+  expect(steps).toHaveLength(1);
+  expect(steps[0]).toBeCloseTo(-100 * Math.log(2));
+
+  // One finger is left to scroll.
+  const one = new Event("touchmove", { cancelable: true });
+  Object.assign(one, { touches: [{ clientX: 100, clientY: 100 }] });
+  window.dispatchEvent(one);
+  expect(one.defaultPrevented).toBe(false);
+
+  // A page that doesn't zoom itself keeps the touch as it was.
+  canvas.removeEventListener("wheel", zoomsItself);
+  fingers("touchstart", 50);
+  expect(fingers("touchmove", 100)).toBe(false);
+
+  // WebKit's own gesture events answer a pinch there: not twice.
+  canvas.addEventListener("wheel", zoomsItself);
+  Object.assign(window, { ongesturestart: null });
+  fingers("touchstart", 50);
+  expect(fingers("touchmove", 100)).toBe(false);
+  expect(steps).toHaveLength(1);
+  delete (window as { ongesturestart?: unknown }).ongesturestart;
 });
 
 const LINT_TIMEOUT = 30_000;

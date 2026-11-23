@@ -18,7 +18,7 @@ interface HoldDragHandlers {
 
 /**
  * A finger's press that becomes a drag once it has held still `HOLD_MS`:
- * before that, a move is a scroll and the press is left alone. Lifted, the
+ * before that, a move or a second finger (a pinch) is the page's. Lifted, the
  * finger carries it; let go without moving, it was a long press.
  */
 export function holdToDrag(
@@ -31,6 +31,10 @@ export function holdToDrag(
     window.removeEventListener("pointermove", moved);
     window.removeEventListener("pointerup", stop);
     window.removeEventListener("pointercancel", stop);
+    window.removeEventListener("pointerdown", other, true);
+  };
+  const other = (e: PointerEvent) => {
+    if (e.pointerId !== down.pointerId) stop();
   };
   const moved = (e: PointerEvent) => {
     if (Math.hypot(e.clientX - from.x, e.clientY - from.y) > TOUCH_SLOP_PX)
@@ -59,4 +63,5 @@ export function holdToDrag(
   window.addEventListener("pointermove", moved);
   window.addEventListener("pointerup", stop);
   window.addEventListener("pointercancel", stop);
+  window.addEventListener("pointerdown", other, true);
 }

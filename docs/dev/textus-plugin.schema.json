@@ -51,7 +51,7 @@
       }
     },
     "platforms": {
-      "description": "Where it runs: desktop (macOS, Windows, Linux) and ios (iPhone, iPad). Left out, everywhere - unless it works in the background (background code, or requiring runInBackground), which only the desktop does. Textus elsewhere doesn't list or load it.",
+      "description": "Where it runs: desktop (macOS, Windows, Linux) and ios (iPhone, iPad). Left out, everywhere - unless it works in the background (background code, or requiring runInBackground), which only the desktop does. Background code can't name ios; a plugin that only requires runInBackground can, and runs there without it. Textus elsewhere doesn't list or load it.",
       "type": "array",
       "items": { "enum": ["desktop", "ios"] },
       "uniqueItems": true
@@ -136,6 +136,23 @@
           }
         }
       }
+    },
+    "needsTextusAi": {
+      "description": "From 1.10 (Textus 1.4.7): it does nothing without Textus AI (it only gives Textus AI tools). Where there is none (iOS), the store doesn't list it.",
+      "type": "boolean"
+    },
+    "category": {
+      "description": "From 1.10 (Textus 1.4.7): where the store lists it. Left out, or one an older Textus doesn't know: under Other.",
+      "enum": [
+        "notes",
+        "editing",
+        "diagrams",
+        "files",
+        "import",
+        "sync",
+        "ai",
+        "companions"
+      ]
     },
     "contributes": {
       "type": "object",

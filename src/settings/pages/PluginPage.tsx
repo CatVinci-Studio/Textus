@@ -25,6 +25,7 @@ import { runsHere } from "../../plugins/plugin-platform";
 import {
   requirementLabel,
   requirementMet,
+  requirementsHere,
   turnOnRequirement,
 } from "../../plugins/store/requirements";
 import {
@@ -187,9 +188,9 @@ export function PluginPage({
         )}
       </SettingsGroup>
       {runs && <PluginWalkthroughs record={record} />}
-      {manifest && manifest.requires.length > 0 && (
+      {manifest && requirementsHere(manifest).length > 0 && (
         <SettingsGroup title={t.pluginRequiresGroup}>
-          {manifest.requires.map((need) => {
+          {requirementsHere(manifest).map((need) => {
             const met = requirementMet(need, settings);
             return (
               <SettingRow

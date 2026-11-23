@@ -394,10 +394,9 @@ pub(crate) fn to_trash(path: &std::path::Path) -> Result<(), String> {
     }
 }
 
-/// A file of the user's to the Trash, never deleted: refused where the
-/// system has no Trash (the iPhone). The folder `shown` (the tree's root,
-/// a plugin's folder) and any folder holding it are refused too.
-pub(crate) fn user_file_to_trash(
+/// Refuses to trash the folder `shown` (the tree's root, a plugin's
+/// folder) or any folder holding it.
+pub(crate) fn may_trash(
     path: &std::path::Path,
     shown: Option<&std::path::Path>,
 ) -> Result<(), String> {
@@ -406,11 +405,19 @@ pub(crate) fn user_file_to_trash(
             return Err(crate::errors::error("trashShownFolder"));
         }
     }
+    Ok(())
+}
+
+/// A file of the user's to the Trash, never deleted, as [`may_trash`]
+/// allows. Where the system has no Trash it is refused with `noTrash`;
+/// iOS's is reached through the native plugin instead.
+pub(crate) fn user_file_to_trash(
+    path: &std::path::Path,
+    shown: Option<&std::path::Path>,
+) -> Result<(), String> {
+    may_trash(path, shown)?;
     #[cfg(desktop)]
     return trash::delete(path).map_err(|e| e.to_string());
     #[cfg(not(desktop))]
-    Err(format!(
-        "{} can't be moved to the Trash here.",
-        path.display()
-    ))
+    Err(crate::errors::error("noTrash"))
 }

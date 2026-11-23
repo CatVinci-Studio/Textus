@@ -20,6 +20,24 @@ describe("useLongPress", () => {
     expect(result.current.at).toBeNull();
     expect(result.current.consumeClick()).toBe(true);
     expect(result.current.consumeClick()).toBe(false);
+
+    // A lift it can cancel sends no tap, whose mousedown would close what
+    // the hold opened; the next click is then a click.
+    act(() => result.current.handlers.onTouchStart(touch(40, 120)));
+    act(() => vi.advanceTimersByTime(500));
+    const lift = { cancelable: true, preventDefault: vi.fn() };
+    act(() =>
+      result.current.handlers.onTouchEnd(lift as unknown as TouchEvent),
+    );
+    expect(lift.preventDefault).toHaveBeenCalled();
+    expect(result.current.consumeClick()).toBe(false);
+
+    // A hold the system takes back sends no click: the next tap, on a row
+    // that has no hold of its own, is still a tap.
+    act(() => result.current.handlers.onTouchStart(touch(40, 120)));
+    act(() => vi.advanceTimersByTime(500));
+    act(() => result.current.handlers.onTouchCancel());
+    expect(result.current.consumeClick()).toBe(false);
   });
 
   it("lets a touch that moves away scroll, not hold", () => {

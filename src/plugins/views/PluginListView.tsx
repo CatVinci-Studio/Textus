@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
   type PointerEvent as ReactPointerEvent,
+  type TouchEvent as ReactTouchEvent,
   type KeyboardEvent,
   type CSSProperties,
 } from "react";
@@ -26,6 +27,7 @@ import { trackDrag } from "../../engine/drag/pointer-drag";
 import { listMove } from "../../engine/controls/list-keys";
 import { keyOf, usePluginListItems } from "./usePluginListItems";
 import { liftedCopy } from "../../engine/drag/ghost";
+import { useLongPress } from "../../utils/hooks/useLongPress";
 
 /** A list item as a plugin gives it. */
 export interface PluginListItem {
@@ -97,6 +99,11 @@ export const PluginListPane = memo(function PluginListPane({
     item: PluginListItem;
   } | null>(null);
   const t = windowInfo().strings();
+  // A finger held on a row opens the menu a right-click does.
+  const pressed = useRef<PluginListItem | null>(null);
+  const press = useLongPress(({ x, y }) => {
+    if (pressed.current) setMenu({ x, y, item: pressed.current });
+  });
 
   const select = (item: PluginListItem) => {
     if (info?.select)
@@ -266,8 +273,21 @@ export const PluginListPane = memo(function PluginListPane({
                 }${item.detail ? " has-detail" : ""}`}
                 style={{ "--depth": depth } as CSSProperties}
                 onMouseEnter={() => setActive(index)}
-                onClick={() => select(item)}
+                onClick={() => {
+                  // Only a row with a hold of its own swallows its click.
+                  if (!(item.actions?.length && press.consumeClick()))
+                    select(item);
+                }}
                 {...(info?.move ? dragHandlers(item, key) : {})}
+                {...(item.actions?.length
+                  ? {
+                      ...press.handlers,
+                      onTouchStart: (e: ReactTouchEvent) => {
+                        pressed.current = item;
+                        press.handlers.onTouchStart(e);
+                      },
+                    }
+                  : {})}
                 onContextMenu={(e) => {
                   if (!item.actions?.length) return;
                   e.preventDefault();

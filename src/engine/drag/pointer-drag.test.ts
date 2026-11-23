@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { expect, it, vi } from "vitest";
+import { holdToDrag } from "./hold-drag";
 import { trackDrag } from "./pointer-drag";
 import { passedCount, shiftAt } from "./row";
 
@@ -153,4 +154,31 @@ it("keeps a long press's menu from taking the touch over while it follows a pres
   expect(menu()).toBe(true);
   pointer("pointerup", 30);
   expect(menu()).toBe(false);
+});
+
+it("lets a second finger landing during a hold take the touch back", () => {
+  vi.useFakeTimers();
+  const lift = vi.fn();
+  const finger = (type: string, id: number) =>
+    window.dispatchEvent(
+      Object.assign(new MouseEvent(type, { buttons: 1 }), {
+        pointerId: id,
+        pointerType: "touch",
+      }),
+    );
+  const down = Object.assign(new MouseEvent("pointerdown", { buttons: 1 }), {
+    pointerId: 1,
+    pointerType: "touch",
+  }) as unknown as PointerEvent;
+  holdToDrag(down, { lift, move() {}, end() {} });
+  finger("pointerdown", 2);
+  vi.advanceTimersByTime(600);
+  expect(lift).not.toHaveBeenCalled();
+
+  // One finger held still lifts.
+  holdToDrag(down, { lift, move() {}, end() {} });
+  vi.advanceTimersByTime(600);
+  expect(lift).toHaveBeenCalledTimes(1);
+  finger("pointerup", 1);
+  vi.useRealTimers();
 });

@@ -690,6 +690,7 @@ export default {
   errorNotFolder: "Это не папка.",
   errorTrashShownFolder:
     "Папку, которую показывает дерево, нельзя переместить в корзину.",
+  errorNoTrash: "Здесь нет корзины, куда можно переместить файлы.",
   errorOutsideDocuments: "Это вне папки Textus.",
   errorPluginBadPackage:
     "Это не пакет плагина, который Textus может установить.",
@@ -1926,6 +1927,16 @@ export default {
   pluginsSortPopular: "Самые популярные",
   pluginsSortNewest: "Недавно обновлённые",
   pluginsSortName: "Название",
+  pluginDesktopOnlyBadge: "Только компьютер",
+  pluginCategoryNotes: "Заметки и порядок",
+  pluginCategoryEditing: "Редактирование и ввод",
+  pluginCategoryDiagrams: "Графики и диаграммы",
+  pluginCategoryFiles: "Файлы и просмотр",
+  pluginCategoryImport: "Импорт и совместимость",
+  pluginCategorySync: "Синхронизация и сервисы",
+  pluginCategoryAi: "ИИ",
+  pluginCategoryCompanions: "Компаньоны",
+  pluginCategoryOther: "Другое",
   pluginInstalls: {
     one: "Установок:\u00a0{n}",
     few: "Установок:\u00a0{n}",

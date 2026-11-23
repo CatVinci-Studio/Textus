@@ -690,6 +690,7 @@ para usar una.
   errorNotFolder: "No es una carpeta.",
   errorTrashShownFolder:
     "La carpeta que muestra el árbol no se puede mover a la papelera.",
+  errorNoTrash: "Aquí no hay papelera a la que mover archivos.",
   errorOutsideDocuments: "Está fuera de la carpeta de Textus.",
   errorPluginBadPackage:
     "No es un paquete de plugin que Textus pueda instalar.",
@@ -1922,6 +1923,16 @@ para usar una.
   pluginsSortPopular: "Más instalados",
   pluginsSortNewest: "Actualizados recientemente",
   pluginsSortName: "Nombre",
+  pluginDesktopOnlyBadge: "Solo ordenador",
+  pluginCategoryNotes: "Notas y organización",
+  pluginCategoryEditing: "Edición y escritura",
+  pluginCategoryDiagrams: "Gráficos y diagramas",
+  pluginCategoryFiles: "Archivos y visores",
+  pluginCategoryImport: "Importación y compatibilidad",
+  pluginCategorySync: "Sincronización y servicios",
+  pluginCategoryAi: "IA",
+  pluginCategoryCompanions: "Compañía",
+  pluginCategoryOther: "Otros",
   pluginInstalls: {
     one: "{n} instalación",
     many: "{n} instalaciones",

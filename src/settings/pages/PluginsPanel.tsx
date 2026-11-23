@@ -1,3 +1,6 @@
+import { byCategory } from "../../plugins/store/plugin-categories";
+import { desktopOnly } from "../../plugins/plugin-platform";
+import { DesktopOnlyMark, headedRows } from "./CatalogRow";
 import { pluginLead } from "./plugin-lead";
 import { useMutedCards } from "../../plugins/store/usePluginCard";
 import { setAllPlugins } from "../../plugins/plugin-switches";
@@ -94,13 +97,15 @@ export function PluginsPanel({
         )
       : [];
   const installed = plugins.records.filter((r) => pluginMatches(r, query));
-  const offered =
+  const offered = byCategory(
     catalog.status === "ready"
       ? offeredItems(
           sortCatalog(searchCatalog(catalog.items, query), "popular"),
           installedIds,
         )
-      : [];
+      : [],
+    t,
+  );
   return (
     <div className="plugins-panel">
       <div className="tx-pane-row">
@@ -202,9 +207,8 @@ export function PluginsPanel({
               query,
               shown: offered.length,
             }) ??
-            offered.map((item) => (
+            headedRows(offered, "plugins-panel-category", (item) => (
               <PluginRow
-                key={item.id}
                 id={item.id}
                 name={pluginName({ id: item.id, manifest: item.manifest })}
                 line={pluginText(
@@ -213,6 +217,7 @@ export function PluginsPanel({
                 )}
                 picked={picked === item.id}
                 onOpen={() => onPick(item.id)}
+                mark={desktopOnly(item.manifest) && <DesktopOnlyMark t={t} />}
                 end={
                   <AvailableButton
                     t={t}
@@ -244,10 +249,13 @@ function PluginRow({
   end,
   onOpen,
   picked = false,
+  mark,
 }: {
   id: string;
   name: string;
   line: string;
+  /** Before its line: the computer's only. */
+  mark?: ReactNode;
   off?: boolean;
   icon: ReactNode;
   /** Its button: install, or update. */
@@ -272,11 +280,16 @@ function PluginRow({
         {icon}
         <span className="plugins-panel-text">
           <span className="tx-truncate plugins-panel-name">{name}</span>
-          {line && (
-            <span className="tx-truncate plugins-panel-line">
-              {pluginLead(line)}
+          {mark || line ? (
+            <span className="plugins-panel-marked">
+              {mark}
+              {line && (
+                <span className="tx-truncate plugins-panel-line">
+                  {pluginLead(line)}
+                </span>
+              )}
             </span>
-          )}
+          ) : null}
         </span>
       </button>
       {/* Who made it is on its page. */}

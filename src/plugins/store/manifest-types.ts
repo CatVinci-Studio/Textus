@@ -1,5 +1,6 @@
 import type { VerbatimRules } from "../../editor/markdown/verbatim-rules";
 import type { Permission, PluginPlatform } from "./manifest";
+import type { PluginCategory } from "./plugin-categories";
 
 // What a plugin's manifest holds once read (manifest.ts reads and checks
 // it): its contributions and the manifest itself.
@@ -319,6 +320,12 @@ export interface PluginManifest {
   activationEvents: string[];
   permissions: Permission[];
   requires: Requirement[];
+  /** Does nothing without Textus AI (its tools only): where there is none
+   *  (iOS), the store doesn't list it. */
+  needsTextusAi: boolean;
+  /** Where the store lists it; none (or one this Textus doesn't know):
+   *  under Other. */
+  category?: PluginCategory;
   contributes: Contributes;
   /** `%key%` strings, by language. */
   l10n: Record<string, Record<string, string>>;
