@@ -84,6 +84,9 @@ describe("inlineChange", () => {
     expect(inlineChange("## 标题", "## 2023. 年份")).toBe("2023. 年份");
     expect(inlineChange("1. 甲", "2. 乙")).toBe("乙");
     expect(inlineChange("> - 甲", "> * 乙")).toBe("乙");
+    // A quote's marks go, what follows them stays.
+    expect(inlineChange("> 甲", "> 1984. 年")).toBe("1984. 年");
+    expect(inlineChange("> 甲", ">> 乙")).toBe(">> 乙");
   });
 });
 

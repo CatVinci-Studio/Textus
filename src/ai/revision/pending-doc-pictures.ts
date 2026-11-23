@@ -6,6 +6,7 @@ import {
   imageLocation,
   missingImageCard,
   probeMissing,
+  type MissingReason,
 } from "../../editor/images/missing-image";
 import { currentStrings } from "../../i18n/current";
 
@@ -36,6 +37,31 @@ export function proposalDocPath(view: EditorView | null | undefined) {
  *  looked for again with the next proposal. */
 const shownBySpan = new WeakMap<HTMLElement, Map<string, HTMLElement>>();
 
+/** Pictures found missing in the last few seconds, by document and src: a
+ *  widget made again mid-stream (a sentence's, keyed by its text) shows
+ *  the card at once rather than load and probe again. Briefly, so a file
+ *  put there since is looked for again. */
+const recentlyMissing = new Map<
+  string,
+  { reason: MissingReason; at: number }
+>();
+const MISSING_FOR_MS = 5000;
+const MISSING_KEPT = 32;
+
+function knownMissing(where: string): MissingReason | null {
+  const known = recentlyMissing.get(where);
+  if (known && Date.now() - known.at < MISSING_FOR_MS) return known.reason;
+  recentlyMissing.delete(where);
+  return null;
+}
+
+function noteMissing(where: string, reason: MissingReason) {
+  recentlyMissing.delete(where);
+  recentlyMissing.set(where, { reason, at: Date.now() });
+  if (recentlyMissing.size > MISSING_KEPT)
+    recentlyMissing.delete(recentlyMissing.keys().next().value!);
+}
+
 /** Within `root`, each picture of the document's files pointed at its file,
  *  and the missing-picture card in place of one that won't load. */
 export function showProposalPictures(
@@ -53,22 +79,33 @@ export function showProposalPictures(
     // The same picture twice is two places.
     const n = seen.get(src) ?? 0;
     seen.set(src, n + 1);
-    const key = `${n}\n${docPath ?? ""}\n${src}`;
+    const where = `${docPath ?? ""}\n${src}`;
+    const key = `${n}\n${where}`;
     const kept = before?.get(key);
     if (kept) {
       img.replaceWith(kept);
       shown.set(key, kept);
       continue;
     }
-    shown.set(key, img);
     const alt = img.getAttribute("alt") ?? "";
+    const location = imageLocation(src, docPath);
+    const cardFor = (reason: MissingReason) =>
+      missingImageCard(
+        { name: imageDisplayName(src), alt, reason, location },
+        currentStrings(),
+      );
+    const known = knownMissing(where);
+    if (known) {
+      const card = cardFor(known);
+      img.replaceWith(card);
+      shown.set(key, card);
+      continue;
+    }
+    shown.set(key, img);
     const missing = () => {
-      const location = imageLocation(src, docPath);
       void probeMissing(location).then((reason) => {
-        const card = missingImageCard(
-          { name: imageDisplayName(src), alt, reason, location },
-          currentStrings(),
-        );
+        noteMissing(where, reason);
+        const card = cardFor(reason);
         // Shown since in a later frame, the card is that frame's too.
         const now = shownBySpan.get(root);
         if (now?.get(key) === img) now.set(key, card);

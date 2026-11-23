@@ -197,4 +197,19 @@ describe("a rewrite streamed sentence by sentence", () => {
     expect(at).toBe(doc.child(0).nodeSize);
     expect(key).toMatch(new RegExp(`-${textKey("2023. 年份变了。")}$`));
   });
+
+  it("a numbered heading or quote line rewritten stays in its line, its number kept", async () => {
+    let drawn = await drawnChange(
+      "## 1. 引言\n",
+      "1. 引言",
+      "## 1. 引言",
+      "## 1. 背景",
+    );
+    expect(drawn.at).toBe(drawn.to);
+    expect(drawn.key).toMatch(new RegExp(`-${textKey("1. 背景")}$`));
+    editor?.destroy();
+    drawn = await drawnChange("> 甲。\n", "甲。", "> 甲。", "> 1984. 年。");
+    expect(drawn.at).toBe(drawn.to);
+    expect(drawn.key).toMatch(new RegExp(`-${textKey("1984. 年。")}$`));
+  });
 });

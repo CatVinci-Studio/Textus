@@ -6,7 +6,7 @@ import {
   glideAfter,
   startBeat,
 } from "../../engine/controls/moves";
-import { hasLineMarks, inlineChange } from "./sentence-diff";
+import { inlineChange, isListItem } from "./sentence-diff";
 import { type PendingPreview, type PendingSentence } from "./pending-types";
 import {
   type StreamState,
@@ -169,12 +169,12 @@ function blocksAfter(
 
 /** Whether a change's new text is blocks of its own. One line a number
  *  starts ("1984. was the year", "2) then") is a sentence, unless the line
- *  it rewrites was a list item or a quote's line. */
+ *  it rewrites was a list item. */
 function changeIsBlocks(c: { before: string; after: string }): boolean {
   const text = inlineChange(c.before, c.after);
   if (!hasBlocks(text)) return false;
   return (
-    text.includes("\n") || !/^\d+[.)][ \t]/.test(text) || hasLineMarks(c.before)
+    text.includes("\n") || !/^\d+[.)][ \t]/.test(text) || isListItem(c.before)
   );
 }
 

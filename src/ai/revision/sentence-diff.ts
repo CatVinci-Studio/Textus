@@ -31,32 +31,36 @@ export function inlineSentence(sentence: string): string {
 const LINE_MARKS =
   /^(?:>[ \t]?)*(?:#{1,6}[ \t]+|[-*+][ \t]+(?:\[[ xX]\][ \t]+)?|\d+[.)][ \t]+)?/;
 
-/** Whether `line` starts with a list item's or a quote's marks. */
-export function hasLineMarks(line: string): boolean {
-  return !!LINE_MARKS.exec(line.trim())?.[0];
+const QUOTE_MARKS = /^(?:>[ \t]?)*/;
+
+/** A line's marks after its quote's: a heading's, a bullet or a number. */
+function markKind(marks: string): string {
+  const rest = marks.slice(QUOTE_MARKS.exec(marks)![0].length);
+  return rest[0] === "#" ? "#" : /^[-*+]/.test(rest) ? "-" : rest && "1";
 }
 
-/** What leading marks are: how deep a quote, then a heading, a bullet or a
- *  number. "- " and "* " are the same kind, "1. " and "2023. " too. */
-function marksKind(marks: string): string {
-  const quotes = (marks.match(/>/g) ?? []).length;
-  const rest = marks.replace(/^(?:>[ \t]?)*/, "");
-  const mark = rest[0] === "#" ? "#" : /^[-*+]/.test(rest) ? "-" : rest && "1";
-  return `${quotes}${mark}`;
+/** Whether `line` is a list item's, in a quote or not. */
+export function isListItem(line: string): boolean {
+  const kind = markKind(LINE_MARKS.exec(line.trim())![0]);
+  return kind === "-" || kind === "1";
 }
 
 /** A change's new text as drawn in the line of its original: one line
  *  rewriting a list item or a quote's line is drawn in that line without
- *  its marker, which would show as text there. Only a marker of the same
- *  kind: "- 甲" rewritten "2023. 年份变了" keeps its year. */
+ *  its marks, which would show as text there. A quote's `>`s go when as
+ *  deep as the original's, a list's marker only when of the same kind
+ *  ("- " and "* ", "1. " and "2023. "): "- 甲" rewritten "2023. 年份变了"
+ *  keeps its year. */
 export function inlineChange(before: string, after: string): string {
   const text = inlineSentence(after);
-  const was = LINE_MARKS.exec(before.trim())?.[0] ?? "";
+  const was = LINE_MARKS.exec(before.trim())![0];
   if (text.includes("\n") || !was) return text;
-  const marks = LINE_MARKS.exec(text)?.[0] ?? "";
-  return marks && marksKind(marks) === marksKind(was)
-    ? text.slice(marks.length)
-    : text;
+  const marks = LINE_MARKS.exec(text)![0];
+  const quote = QUOTE_MARKS.exec(marks)![0];
+  const depth = (m: string) => (m.match(/>/g) ?? []).length;
+  if (depth(quote) !== depth(QUOTE_MARKS.exec(was)![0])) return text;
+  const own = marks.length > quote.length && markKind(marks) === markKind(was);
+  return text.slice(own ? marks.length : quote.length);
 }
 
 /** Several lines or blocks as one line, for a row that shows only its

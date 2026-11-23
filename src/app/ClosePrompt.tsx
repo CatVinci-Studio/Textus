@@ -86,8 +86,9 @@ export function ClosePrompt({
 }
 
 /** The prompt as a phone's action sheet. The sheet closes right after any
- *  choice as well: only a close with nothing chosen is Cancel, which would
- *  also call off a quit the choice is carrying out. */
+ *  choice as well; only a close with nothing chosen is Cancel, so a choice
+ *  never also answers Cancel (whose cancelClose resets the pending close
+ *  and calls off a quit). */
 function CloseSheet({
   message,
   onSave,

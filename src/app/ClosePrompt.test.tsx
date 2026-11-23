@@ -26,7 +26,7 @@ describe("the close prompt on a phone", () => {
     return { answers, t };
   }
 
-  it("is no Cancel once a choice is made: that would call off the quit it carries out", () => {
+  it("is not also Cancel once a choice is made", () => {
     const { answers, t } = prompt();
     fireEvent.click(screen.getByRole("menuitem", { name: t.closePromptSave }));
     expect(answers.onSave).toHaveBeenCalledTimes(1);

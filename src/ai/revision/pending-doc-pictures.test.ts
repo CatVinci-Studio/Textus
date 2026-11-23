@@ -55,6 +55,14 @@ describe("a proposal's own pictures", () => {
     expect(root.querySelector("img")).toBeNull();
     expect(root.querySelector(".missing-image-card")).toBe(card);
     expect(probeMissing).toHaveBeenCalledTimes(1);
+    // A widget made again for it (a sentence's, keyed by its text): the
+    // card at once all the same.
+    const again = document.createElement("div");
+    again.innerHTML = '<img src="images/gone.png" alt="x">';
+    showProposalPictures(again, "/notes/note.md");
+    expect(again.querySelector("img")).toBeNull();
+    expect(again.querySelector(".missing-image-card")).toBeTruthy();
+    expect(probeMissing).toHaveBeenCalledTimes(1);
     // One that loads stays the element that loaded, not loaded again.
     frame('<p><img src="images/here.png"></p>');
     const img = root.querySelector("img");
