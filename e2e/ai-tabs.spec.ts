@@ -184,6 +184,28 @@ test("a message sent now that the reply can't take stops it and goes next", asyn
   expect(cancels).toBe(1);
 });
 
+test("Stop during a reply gives what waited back to the box", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { menuBarShown: false } });
+  await aiButton(page).click();
+  const box = page.locator(".ai-tab textarea").first();
+  const queue = page.locator(".ai-tab .chat-queue");
+  await box.fill(
+    "a long first question for the reply to take a while, and longer still so that it is stopped well before its end",
+  );
+  await box.press("Enter");
+  await box.fill("second");
+  await box.press("Enter");
+  await box.fill("third");
+  await box.press("Enter");
+  await expect(queue.getByRole("listitem")).toHaveCount(2);
+  await page.locator(".ai-tab .inline-chat-send").click();
+  await expect(queue).toHaveCount(0);
+  await expect(box).toHaveValue("second\n\nthird");
+  await expect(page.locator(".ai-tab .agent-streaming")).toHaveCount(0);
+});
+
 test("pressed again in front of its own island, it collapses; again, it comes back", async ({
   page,
 }) => {
