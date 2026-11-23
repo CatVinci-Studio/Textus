@@ -103,11 +103,18 @@ export function applyImportedTheme(
   let cancelled = false;
   let revision = 0;
 
-  async function read(design: Design): Promise<Read> {
-    const [stored, { withWebFonts }] = await Promise.all([
+  /** Reads `design` and its web fonts. `early` shows it as stored before
+   *  they arrive, and answers false when it is no longer wanted. */
+  async function read(
+    design: Design,
+    early?: (stored: string | null) => boolean,
+  ): Promise<Read | null> {
+    const [stored] = await Promise.all([
       themes.loadThemeCss(theme.id, design),
-      webFonts.load(),
+      early ? Promise.all([legacy.load(), typora.load()]) : webFonts.load(),
     ]);
+    if (early && !early(stored)) return null;
+    const { withWebFonts } = await webFonts.load();
     const css = (stored && (await withWebFonts(stored))) || stored;
     designs[design] = { stored, css };
     return { stored, css };
@@ -180,19 +187,15 @@ export function applyImportedTheme(
     try {
       const ready = designs[design];
       if (ready && legacy.peek() && typora.peek()) return show(ready);
-      const [stored] = await Promise.all([
-        themes.loadThemeCss(theme.id, design),
-        legacy.load(),
-        typora.load(),
-      ]);
-      if (!current()) return;
-      show({ stored, css: stored });
       // One imported before web fonts were embedded still has them: the
       // theme shows at once, its fonts once fetched (or not, offline).
-      const { withWebFonts } = await webFonts.load();
-      const css = (stored && (await withWebFonts(stored))) || stored;
-      designs[design] = { stored, css };
-      if (css !== stored && current()) show({ stored, css });
+      const withFonts = await read(design, (stored) => {
+        if (!current()) return false;
+        show({ stored, css: stored });
+        return true;
+      });
+      if (withFonts && withFonts.css !== withFonts.stored && current())
+        show(withFonts);
       // The other design, so a switch to it needs no wait.
       const other: Design = design === "dark" ? "light" : "dark";
       if (theme.hasDark && !designs[other] && !cancelled) await read(other);
