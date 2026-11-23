@@ -1,7 +1,7 @@
 {
   "name": "textus",
   "private": true,
-  "version": "1.4.6",
+  "version": "1.4.7-rc.1",
   "type": "module",
   "engines": {
     "node": ">=26"
