@@ -296,6 +296,28 @@
           ]
         }
       },
+      "gpt-6.2-astra": {
+        "reasoning": {
+          "effort": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      },
+      "gpt-6.2-sol": {
+        "reasoning": {
+          "effort": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        }
+      },
       "gpt-daybreak-blue-latest": {
         "reasoning": {
           "effort": [
@@ -768,6 +790,16 @@
           ]
         }
       },
+      "gemini-4-neon": {
+        "reasoning": {
+          "effort": [
+            "low",
+            "medium",
+            "high",
+            "xhigh"
+          ]
+        }
+      },
       "gemini-embedding-001": {
         "reasoning": false
       },
@@ -918,9 +950,6 @@
             "xhigh"
           ]
         }
-      },
-      "grok-build-0.1": {
-        "reasoning": true
       }
     },
     "mistral": {
