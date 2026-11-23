@@ -159,3 +159,20 @@ describe("noteLinkIn writes links as the folder wants them", () => {
     }
   });
 });
+
+describe("a note at the top of the folder", () => {
+  const files = noteIndex(["Note.md", "x.md", "a/y.md"]);
+
+  it("starts its relative links at the top", () => {
+    expect(resolveNoteIn(files, "./x.md", "Note.md")?.path).toBe("x.md");
+    expect(resolveNoteIn(files, "a/y.md", "Note.md")?.path).toBe("a/y.md");
+  });
+
+  it("leads nowhere above the top", () => {
+    expect(resolveNoteIn(files, "../x.md", "Note.md")).toBeNull();
+  });
+
+  it("is reached from a folder below by going up", () => {
+    expect(resolveNoteIn(files, "../Note.md", "a/y.md")?.path).toBe("Note.md");
+  });
+});
