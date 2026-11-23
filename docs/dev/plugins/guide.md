@@ -530,7 +530,8 @@ await textus.notify.show({ title: "Exported", body: "notes.pdf" }); // now
   pet.
 - `app.state` is `"active"` (a Textus window has the focus), `"inactive"`
   (windows open, none focused) or `"background"` (none open);
-  `app.onDidChangeState` follows it.
+  `app.onDidChangeState` follows it. On a phone or tablet it is
+  `"active"` or `"background"`, as below.
 - Check `textus.env.apiVersion` (`"1.1"`) before using these, or set
   `engines.textus` to `">=1.3.0-beta.8"`: Textus doesn't offer a plugin to
   a version it doesn't fit.
@@ -956,6 +957,20 @@ What differs is room and what the system allows:
   you publish.
 - Files a user opens from the Files app are reached through iOS's own
   grants; a plugin reads them through `files` like any other.
+- `app.state` is `"active"` while Textus is on screen and `"background"`
+  once the user switches to another app or locks the device;
+  `app.onDidChangeState` fires both ways (there is no `"inactive"`). The
+  system may suspend Textus soon after `"background"`, so finish or save
+  quickly then, and don't start long work such as a sync.
+- `files.trash` on iOS moves the file to the Files app's Recently Deleted,
+  where the user can put it back. Android has no system Trash: there the
+  call fails, leaving the file where it is, with a message that ends in
+  `[noTrash]`. A plugin that must move files out of the way checks for
+  that and keeps them itself, for example in a folder of its own.
+- On Android, a folder opened without access to all files is a
+  `content://` folder: `files` can read, list and write text there, but
+  not write binary files or trash anything (`[noTrash]`), and `stat` and
+  listings give no size or modified time.
 
 ## More
 

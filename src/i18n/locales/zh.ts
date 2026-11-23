@@ -594,6 +594,7 @@ export default {
   errorAlreadyThere: "它已经在那个文件夹里了。",
   errorNotFolder: "那不是文件夹。",
   errorTrashShownFolder: "文件树显示的文件夹不能移到废纸篓。",
+  errorNoTrash: "这里没有可以移入文件的废纸篓。",
   errorOutsideDocuments: "那在 Textus 文件夹之外。",
   errorPluginBadPackage: "这不是 Textus 能安装的插件包。",
   errorPictureTooLarge: "图片太大，缩小后仍无法发送。",

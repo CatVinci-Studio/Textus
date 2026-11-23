@@ -595,6 +595,7 @@ export default {
   errorAlreadyThere: "它已經在那個資料夾裡了。",
   errorNotFolder: "那不是資料夾。",
   errorTrashShownFolder: "檔案樹顯示的資料夾無法移到垃圾桶。",
+  errorNoTrash: "這裡沒有可以移入檔案的垃圾桶。",
   errorOutsideDocuments: "那在 Textus 資料夾之外。",
   errorPluginBadPackage: "這不是 Textus 能安裝的外掛套件。",
   errorPictureTooLarge: "圖片太大，縮小後仍無法傳送。",

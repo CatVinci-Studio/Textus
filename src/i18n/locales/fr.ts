@@ -692,6 +692,7 @@ utiliser une.
   errorNotFolder: "Ce n'est pas un dossier.",
   errorTrashShownFolder:
     "Le dossier affiché par l'arborescence ne peut pas aller à la corbeille.",
+  errorNoTrash: "Il n'y a pas de corbeille ici où mettre les fichiers.",
   errorOutsideDocuments: "C'est en dehors du dossier Textus.",
   errorPluginBadPackage:
     "Ce n'est pas un paquet de plugin que Textus peut installer.",

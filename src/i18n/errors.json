@@ -59,6 +59,10 @@
     "en": "The folder the tree shows can't be moved to the Trash.",
     "text": "errorTrashShownFolder"
   },
+  "noTrash": {
+    "en": "There is no Trash here to move files to.",
+    "text": "errorNoTrash"
+  },
   "outsideDocuments": {
     "en": "Outside the Textus folder.",
     "text": "errorOutsideDocuments"

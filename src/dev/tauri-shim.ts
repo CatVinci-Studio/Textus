@@ -1304,6 +1304,9 @@ export function installDevTauriShim(): void {
         for (const p of Object.keys(folder))
           if (p === path || p.startsWith(`${path}/`)) delete folder[p];
         return Promise.resolve(null);
+      // iOS's checks alone; the move is the native trash below.
+      case "plugin_fs_trash_path":
+        return Promise.resolve(path);
       case "plugin_fs_write":
         ((w.__devFs ??= {}) as Record<string, string>)[path] = args.base64
           ? atob(String(args.contents))
@@ -1503,6 +1506,18 @@ export function installDevTauriShim(): void {
       if (cmd === "plugin:window|outer_position")
         return Promise.resolve({ x: window.screenX, y: window.screenY });
       if (cmd === "plugin:window|scale_factor") return Promise.resolve(1);
+      // iOS's Recently Deleted: what went there in `window.__devTrashed`.
+      if (cmd === "plugin:textus-files|trash") {
+        const path = String((args as { args?: { path?: unknown } }).args?.path);
+        for (const disk of [w.__devFs, w.__devFiles] as Record<
+          string,
+          string
+        >[])
+          for (const p of Object.keys(disk ?? {}))
+            if (p === path || p.startsWith(`${path}/`)) delete disk[p];
+        ((w.__devTrashed ??= []) as string[]).push(path);
+        return Promise.resolve(null);
+      }
       // Pages and links opened in the browser: `window.__devLinks`.
       if (cmd.startsWith("open_") && /_(page|link)$/.test(cmd))
         ((w.__devLinks ??= []) as unknown[]).push({ cmd, ...args });

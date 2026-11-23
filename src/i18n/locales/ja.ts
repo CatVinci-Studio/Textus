@@ -641,6 +641,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   errorAlreadyThere: "すでにそのフォルダにあります。",
   errorNotFolder: "フォルダではありません。",
   errorTrashShownFolder: "ツリーに表示中のフォルダはゴミ箱に移せません。",
+  errorNoTrash: "ここにはファイルを移せるゴミ箱がありません。",
   errorOutsideDocuments: "Textus フォルダの外です。",
   errorPluginBadPackage:
     "Textus でインストールできるプラグインパッケージではありません。",

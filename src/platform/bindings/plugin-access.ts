@@ -29,9 +29,14 @@ export const commands = {
 	plugin_fs_rename: (id: string, root: string, from: string, to: string) => __TAURI_INVOKE<null>("plugin_fs_rename", { id, root, from, to }),
 	/**
 	 *  Moves a file or folder in the folder to the system Trash - never a
-	 *  delete the user can't undo.
+	 *  delete the user can't undo. Refused with `noTrash` where there is none.
 	 */
 	plugin_fs_trash: (id: string, root: string, path: string) => __TAURI_INVOKE<null>("plugin_fs_trash", { id, root, path }),
+	/**
+	 *  The checks of [`plugin_fs_trash`] alone, and the file they allow: iOS
+	 *  moves it to Recently Deleted through the native plugin, as the sidebar does.
+	 */
+	plugin_fs_trash_path: (id: string, root: string, path: string) => __TAURI_INVOKE<string>("plugin_fs_trash_path", { id, root, path }),
 	/**  Makes a folder (and the folders it is in) in the folder. */
 	plugin_fs_mkdir: (id: string, root: string, path: string) => __TAURI_INVOKE<null>("plugin_fs_mkdir", { id, root, path }),
 	/**  The file at `path`, or None when nothing is there. */

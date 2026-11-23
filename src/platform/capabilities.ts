@@ -98,6 +98,9 @@ export const canInstallCliCommand = isDesktopApp;
 /** Moving files to the Trash: iOS's is the Files app's Recently Deleted. */
 export const canTrashFiles = isDesktopApp || isIOSApp;
 
+/** The Trash reached through the native plugin, not Rust's. */
+export const trashesNatively = isIOSApp;
+
 /** Settings' "Default Markdown editor". iOS has no default app to set. */
 export const canSetDefaultEditor = isDesktopApp;
 

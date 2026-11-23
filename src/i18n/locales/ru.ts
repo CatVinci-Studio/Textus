@@ -690,6 +690,7 @@ export default {
   errorNotFolder: "Это не папка.",
   errorTrashShownFolder:
     "Папку, которую показывает дерево, нельзя переместить в корзину.",
+  errorNoTrash: "Здесь нет корзины, куда можно переместить файлы.",
   errorOutsideDocuments: "Это вне папки Textus.",
   errorPluginBadPackage:
     "Это не пакет плагина, который Textus может установить.",

@@ -6,7 +6,7 @@ export type PluginFile = Generated.PluginFile;
 import { Channel } from "@tauri-apps/api/core";
 import { call, command, desktopActionCommand } from "./ipc-call";
 import { isFarUrl } from "./far-files";
-import { canPickPluginFolder } from "./capabilities";
+import { canPickPluginFolder, trashesNatively } from "./capabilities";
 import { nativeFiles } from "./native-files";
 import { dirname } from "../utils/path";
 
@@ -189,11 +189,17 @@ export const plugins = {
     inContent(root)
       ? contentFs().then((f) => f.rename(root, from, to))
       : command("plugin_fs_rename", id, root, from, to),
-  /** To the system Trash: nothing a plugin removes is gone for good. */
+  /** To the system Trash: nothing a plugin removes is gone for good. iOS's
+   *  is Recently Deleted, reached as the sidebar reaches it once Rust has
+   *  checked the path; a phone without one refuses with `noTrash`. */
   fsTrash: (id: string, root: string, path: string) =>
     inContent(root)
       ? contentFs().then((f) => f.trash())
-      : command("plugin_fs_trash", id, root, path),
+      : trashesNatively
+        ? command("plugin_fs_trash_path", id, root, path).then(
+            nativeFiles.trash,
+          )
+        : command("plugin_fs_trash", id, root, path),
   fsMkdir: (id: string, root: string, path: string) =>
     inContent(root)
       ? contentFs().then((f) => f.mkdir(root, path))

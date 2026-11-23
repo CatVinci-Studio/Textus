@@ -690,6 +690,7 @@ para usar una.
   errorNotFolder: "No es una carpeta.",
   errorTrashShownFolder:
     "La carpeta que muestra el árbol no se puede mover a la papelera.",
+  errorNoTrash: "Aquí no hay papelera a la que mover archivos.",
   errorOutsideDocuments: "Está fuera de la carpeta de Textus.",
   errorPluginBadPackage:
     "No es un paquete de plugin que Textus pueda instalar.",

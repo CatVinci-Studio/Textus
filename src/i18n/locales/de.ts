@@ -670,6 +670,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   errorNotFolder: "Das ist kein Ordner.",
   errorTrashShownFolder:
     "Der Ordner, den der Baum zeigt, kann nicht in den Papierkorb.",
+  errorNoTrash: "Hier gibt es keinen Papierkorb für Dateien.",
   errorOutsideDocuments: "Das liegt außerhalb des Textus-Ordners.",
   errorPluginBadPackage:
     "Das ist kein Plugin-Paket, das Textus installieren kann.",

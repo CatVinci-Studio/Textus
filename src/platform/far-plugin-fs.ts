@@ -3,6 +3,7 @@ import { command } from "./ipc-call";
 import { scopedFolder } from "./scoped-folder";
 import type { DocumentMeta_Serialize } from "./bindings/plugin-access";
 import { basename, contentJoin, isWithin, parentDir } from "../utils/path";
+import { ownError } from "../utils/error-text";
 
 /**
  * A plugin's file calls in a folder the backend can't walk (far-files.ts):
@@ -256,6 +257,6 @@ export const farPluginFs = {
   /** Such a folder has no Trash, and nothing a plugin removes is gone for
    *  good: it is left to the Files app. */
   trash: async (): Promise<never> => {
-    throw new Error("This folder has no Trash: delete it in the Files app.");
+    throw new Error(ownError("noTrash"));
   },
 };
