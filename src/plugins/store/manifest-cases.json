@@ -58,11 +58,11 @@
     { "l10n": { "en": "x" } },
     { "contributes": { "embeds": [{ "id": "a.b.e", "targets": ["note"] }] } },
     { "requires": [{ "setting": "nope" }] },
-    { "background": "jobs.js", "platforms": ["desktop", "ios"] }
+    { "background": "jobs.js", "platforms": ["desktop", "ios"] },
+    { "needsTextusAi": "yes" },
+    { "category": 3 }
   ],
   "invalidInWindow": [
-    { "needsTextusAi": "yes" },
-    { "category": 3 },
     { "contributes": { "snippets": [{ "label": "Box" }] } },
     {
       "contributes": {

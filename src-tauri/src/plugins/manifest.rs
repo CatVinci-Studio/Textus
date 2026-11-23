@@ -188,6 +188,11 @@ pub fn check(manifest: &str) -> Result<(), String> {
             }
         }
     }
+    // Where the store lists it; one this Textus doesn't know reads as none.
+    optional_text(m.get("category"), "category")?;
+    if m.get("needsTextusAi").is_some_and(|v| !v.is_boolean()) {
+        return Err("needsTextusAi is true or false.".to_string());
+    }
     for (i, e) in list(m.get("activationEvents"), "activationEvents")?
         .iter()
         .enumerate()
