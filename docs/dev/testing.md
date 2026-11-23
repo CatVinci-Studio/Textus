@@ -75,8 +75,8 @@ CI has three layers (`.github/workflows/ci.yml`):
 
 A change to GitHub's settings, the license or the root Markdown alone
 checks only their format (`light` in `scripts/ci-changes.mjs`).
-Documentation alone (`docs`) checks format, links
-(`scripts/check-links.mjs`) and the unit tests that read `docs/`, with no
+Documentation alone (`docs`) checks format, links and the source files
+the developer docs name (`scripts/check-links.mjs`) and the unit tests that read `docs/`, with no
 build or e2e. A run with no test in it
 fails; a test that passes only on its retry is listed as flaky, a warning
 on the pull request, and goes on the watch list.
