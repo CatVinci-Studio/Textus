@@ -150,6 +150,12 @@ export function createCodeBlockView(
         cancelAnimationFrame(fitting);
         fitting = requestAnimationFrame(() => fitGutter(gutter, code));
       };
+      // An observer runs after layout and before paint: fitted there, the
+      // numbers never show a frame beside the old lines.
+      const fitNow = () => {
+        cancelAnimationFrame(fitting);
+        fitGutter(gutter, code);
+      };
       let resized: ResizeObserver | null = null;
       function syncGutter(
         currentNode: ProseNode,
@@ -166,7 +172,7 @@ export function createCodeBlockView(
         }
         if (!gutter.isConnected) {
           pre.insertBefore(gutter, code);
-          resized ??= new ResizeObserver(fitSoon);
+          resized ??= new ResizeObserver(fitNow);
           resized.observe(code);
         }
         fitSoon();
