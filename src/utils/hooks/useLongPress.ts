@@ -50,7 +50,12 @@ export function useLongPress(onHold?: (at: { x: number; y: number }) => void) {
         )
           cancel();
       },
-      onTouchEnd: cancel,
+      // A lift after the hold sends no tap: its mousedown would close the
+      // menu the hold just opened.
+      onTouchEnd: (e: React.TouchEvent) => {
+        if (fired.current && e.cancelable) e.preventDefault();
+        cancel();
+      },
       onTouchCancel: cancel,
     },
   };

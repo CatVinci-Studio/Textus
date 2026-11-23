@@ -18,6 +18,12 @@ describe("useLongPress", () => {
     act(() => vi.advanceTimersByTime(500));
     expect(onHold).toHaveBeenCalledWith({ x: 40, y: 120 });
     expect(result.current.at).toBeNull();
+    // Nor does the lift tap: its mousedown would close what the hold opened.
+    const lift = { cancelable: true, preventDefault: vi.fn() };
+    act(() =>
+      result.current.handlers.onTouchEnd(lift as unknown as TouchEvent),
+    );
+    expect(lift.preventDefault).toHaveBeenCalled();
     expect(result.current.consumeClick()).toBe(true);
     expect(result.current.consumeClick()).toBe(false);
   });

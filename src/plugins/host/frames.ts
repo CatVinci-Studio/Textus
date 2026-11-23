@@ -2,6 +2,7 @@ import { pluginString } from "./plugin-string";
 import { WEBVIEW_RUNTIME as webviewRuntime } from "./webview-runtime";
 import pageKitRuntime from "./runtime/page-kit.js?raw";
 import pageToolsRuntime from "./runtime/page-tools.js?raw";
+import pageDragRuntime from "./runtime/page-drag.js?raw";
 import { TEXT_RUNTIME as textRuntime } from "./text-runtime";
 import tooltipCss from "../../engine/controls/Tooltip.css?inline";
 import componentsCss from "../../engine/controls/components.css?inline";
@@ -107,7 +108,7 @@ export function webviewDocument(
     `<style id="textus-ui">${inElement(pluginUiCss, "style")}</style>`,
     `<style id="textus-shared">${inElement(SHARED_CSS, "style")}</style>`,
     `<script type="application/json" id="textus-locale">${inElement(locale, "script")}</script>`,
-    `<script>${inElement(`${RPC_SOURCE}\n${textRuntime}\n${webviewRuntime}\n${pageKitRuntime}\n${pageToolsRuntime}`, "script")}</script>`,
+    `<script>${inElement(`${RPC_SOURCE}\n${textRuntime}\n${webviewRuntime}\n${pageKitRuntime}\n${pageToolsRuntime}\n${pageDragRuntime}`, "script")}</script>`,
   ].join("\n");
   const theme = options.dark ? "dark" : "light";
   // Into the plugin's own <head> if it has one, so its <meta> and styles

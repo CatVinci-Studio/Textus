@@ -164,6 +164,47 @@ window.addEventListener("gestureend", function (event) {
   pinch = null;
 });
 
+// Android's web view turns two fingers' pinch into neither gesture events
+// nor a ctrl+wheel: their spread is offered to the page as the same steps.
+// A page that doesn't zoom itself is left the touch. WebKit, with gesture
+// events of its own, is answered above.
+var spread = null;
+function twoFingers(touches) {
+  var a = touches[0];
+  var b = touches[1];
+  return {
+    apart: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY),
+    clientX: (a.clientX + b.clientX) / 2,
+    clientY: (a.clientY + b.clientY) / 2,
+  };
+}
+window.addEventListener("touchstart", function (event) {
+  spread = null;
+  var gestures = "ongesturestart" in window;
+  if (gestures || event.touches.length !== 2 || event.defaultPrevented) return;
+  var at = twoFingers(event.touches);
+  if (at.apart > 0) spread = { last: at.apart, page: null };
+});
+window.addEventListener(
+  "touchmove",
+  function (event) {
+    if (!spread || event.touches.length !== 2 || spread.page === false) return;
+    var at = twoFingers(event.touches);
+    if (!(at.apart > 0)) return;
+    var ratio = at.apart / spread.last;
+    spread.last = at.apart;
+    spread.page = offerToPage(at, ratio);
+    if (spread.page && event.cancelable) event.preventDefault();
+  },
+  { passive: false },
+);
+window.addEventListener("touchend", function (event) {
+  if (event.touches.length < 2) spread = null;
+});
+window.addEventListener("touchcancel", function () {
+  spread = null;
+});
+
 // Where a menu opens: under an element, or at a point of the page.
 function anchor(at) {
   if (at && typeof at.getBoundingClientRect === "function") {
