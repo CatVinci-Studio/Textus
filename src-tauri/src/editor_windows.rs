@@ -21,14 +21,10 @@ fn is_editor(label: &str) -> bool {
     crate::windows::is_editor_window(label)
 }
 
-/// The phone and iPad have the one window.
-#[cfg(not(desktop))]
-fn is_editor(_label: &str) -> bool {
-    true
-}
-
+#[cfg(desktop)]
 static RECENT: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
 
+#[cfg(desktop)]
 pub(crate) fn note_focused(label: &str) {
     if is_editor(label) {
         let mut recent = RECENT.lock().unwrap_or_else(|e| e.into_inner());
@@ -38,6 +34,7 @@ pub(crate) fn note_focused(label: &str) {
 }
 
 /// How recently the window was in use: 0 for the latest, MAX for never.
+#[cfg(desktop)]
 pub(crate) fn focus_rank(label: &str) -> usize {
     RECENT
         .lock()
@@ -48,6 +45,7 @@ pub(crate) fn focus_rank(label: &str) -> usize {
 }
 
 /// The editor window last in use while it is still open, else any editor.
+#[cfg(desktop)]
 pub(crate) fn last_editor(app: &tauri::AppHandle) -> Option<tauri::Window> {
     app.windows()
         .into_iter()

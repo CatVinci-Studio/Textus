@@ -7,9 +7,11 @@ use tauri::Manager;
 const MAX_RECENT_FILES: usize = 10;
 /// Fewer folders than files: a writer keeps a handful of projects, and they
 /// sit above the files in the same submenu.
+#[cfg(desktop)]
 const MAX_RECENT_FOLDERS: usize = 5;
 
 const FILES_LIST: &str = "recentFiles";
+#[cfg(desktop)]
 const FOLDERS_LIST: &str = "recentFolders";
 
 fn read_list(app: &tauri::AppHandle, name: &str) -> Vec<String> {
@@ -43,12 +45,14 @@ pub fn read_recent_files(app: &tauri::AppHandle) -> Vec<String> {
     read_list(app, FILES_LIST)
 }
 
+#[cfg(desktop)]
 pub fn read_recent_folders(app: &tauri::AppHandle) -> Vec<String> {
     read_list(app, FOLDERS_LIST)
 }
 
 /// The entries of a recent list that are still there, for showing. The list
 /// keeps the rest: a folder on a drive that isn't plugged in comes back.
+#[cfg(desktop)]
 pub fn still_there(list: Vec<String>) -> Vec<String> {
     list.into_iter()
         .filter(|path| std::path::Path::new(path).exists())

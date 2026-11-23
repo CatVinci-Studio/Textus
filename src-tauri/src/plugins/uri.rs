@@ -4,9 +4,11 @@
 
 use std::sync::Mutex;
 
+#[cfg(desktop)]
 use tauri::{Emitter, Manager};
 
 /// The scheme Textus answers to.
+#[cfg(desktop)]
 pub const SCHEME: &str = "textus";
 
 /// Links not yet taken by a window, oldest first.
@@ -14,12 +16,14 @@ pub const SCHEME: &str = "textus";
 pub struct PendingUris(pub Mutex<Vec<String>>);
 
 /// Whether a launch argument is one of these links, not a file to open.
+#[cfg(desktop)]
 pub fn is_textus_uri(arg: &str) -> bool {
     arg.get(..SCHEME.len() + 3)
         .is_some_and(|start| start.eq_ignore_ascii_case(&format!("{SCHEME}://")))
 }
 
 /// Queues `url` for the windows and tells them one came.
+#[cfg(desktop)]
 pub fn deliver(app: &tauri::AppHandle, url: &str) {
     if !is_textus_uri(url) {
         return;
@@ -37,6 +41,7 @@ pub fn deliver(app: &tauri::AppHandle, url: &str) {
 }
 
 /// `textus://notification/<id>`: a notification's click, not a plugin's link.
+#[cfg(desktop)]
 pub fn notification_id(url: &str) -> Option<&str> {
     let rest = &url[SCHEME.len() + 3..];
     rest.strip_prefix("notification/")

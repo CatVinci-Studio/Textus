@@ -23,6 +23,7 @@ mod conventions;
 mod distribution;
 #[cfg(desktop)]
 mod drag_modifiers;
+#[cfg(desktop)]
 mod export_formats;
 mod ext_stats;
 mod extract;
@@ -47,6 +48,7 @@ mod trackpad;
 mod walk;
 #[cfg(any(windows, test))]
 mod webview_memory;
+#[cfg(desktop)]
 mod window_frame;
 mod window_guard;
 #[cfg(desktop)]
@@ -54,7 +56,10 @@ mod windows;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
-use tauri::{Emitter, Manager, State};
+use tauri::State;
+// Android: no files are handed to its one window (launch.rs).
+#[cfg(any(desktop, target_os = "ios"))]
+use tauri::{Emitter, Manager};
 
 #[cfg(desktop)]
 use commands::chat_window::{OpenChatWindows, PendingChatHandoffs};

@@ -118,6 +118,7 @@ pub fn owned_arg(args: &[String]) -> Option<&str> {
 /// Turns `[x]{.textus-sub}`, `[x]{.textus-sup}` and `` `[@key]`{=textuscite} ``,
 /// which the export writes for the editor's `~x~`, `^x^` and citations, into
 /// Pandoc's own: the reader has no sub/superscript or citations to match it.
+#[cfg(desktop)]
 pub const LUA_FILTER: &str = r#"function Span(s)
   if s.classes:includes("textus-sub") then return pandoc.Subscript(s.content) end
   if s.classes:includes("textus-sup") then return pandoc.Superscript(s.content) end

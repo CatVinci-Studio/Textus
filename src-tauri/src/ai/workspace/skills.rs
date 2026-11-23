@@ -180,6 +180,7 @@ pub(crate) fn push_layer_skill(skills: &mut Vec<AgentSkill>, skill: AgentSkill) 
 
 /// The settings.json field where older profiles listed the built-ins turned off,
 /// read only to know which market skills to install.
+#[cfg(not(target_os = "ios"))]
 pub(crate) const DISABLED_BUILTINS_KEY: &str = "disabledBuiltinSkills";
 
 /// Windows refuses these as file names whatever the extension ("con.md").

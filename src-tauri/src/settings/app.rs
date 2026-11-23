@@ -185,6 +185,7 @@ pub fn read_setting(app: &AppHandle, key: &str) -> Option<Value> {
 
 /// Changes settings fields on Rust's own initiative and tells every window,
 /// as settings_patch does (`from` names no window, so every one applies it).
+#[cfg(not(target_os = "ios"))]
 pub fn patch_from_backend(app: &AppHandle, patch: Map<String, Value>) -> Option<u64> {
     let stores = app.try_state::<Stores>()?;
     let rev = stores.patch_settings(&patch);

@@ -435,7 +435,10 @@ jobs:
       # not in the full suite's mobile jobs, which don't block. iOS-only code
       # (target_os = "ios") still waits for the ios job. A few crates build
       # C, so the runner image's default NDK supplies the compiler (any
-      # recent one does for a check).
+      # recent one does for a check). Clippy rather than check: its
+      # -D warnings reaches only our crates, where RUSTFLAGS would build
+      # every dependency again; a warning here is desktop-only code the
+      # phone compiles too, to gate #[cfg(desktop)].
       - name: Check the Android target
         if: runner.os == 'Linux' && needs.changes.outputs.native == 'true'
         working-directory: src-tauri
@@ -448,7 +451,7 @@ jobs:
           rustup target add aarch64-linux-android
           export CC_aarch64_linux_android="$bin/aarch64-linux-android24-clang"
           export AR_aarch64_linux_android="$bin/llvm-ar"
-          cargo check --target aarch64-linux-android --lib
+          cargo clippy --target aarch64-linux-android --lib -- -D warnings
 
   # One required check for the three platforms: passes only when all of
   # them passed (or were skipped together, when the change can't reach the

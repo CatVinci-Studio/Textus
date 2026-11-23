@@ -262,6 +262,7 @@ pub async fn reveal_in_dir(app: tauri::AppHandle, path: String) -> Result<(), St
 
 /// The sheet a PDF is printed on, in points: the paper, and the band left
 /// at its top and bottom (the sides are the page's own padding).
+#[cfg(any(desktop, target_os = "ios"))]
 #[derive(serde::Deserialize, Clone, Copy, Debug)]
 #[cfg_attr(test, derive(specta::Type))]
 pub struct PdfSheet {
