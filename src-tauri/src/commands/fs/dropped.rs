@@ -110,9 +110,8 @@ pub(super) fn copy_file_new(from: &Path, to: &Path) -> std::io::Result<()> {
             .create_new(true)
             .open(to)?,
     );
-    std::fs::copy(from, to).map(|_| ()).map_err(|e| {
+    std::fs::copy(from, to).map(|_| ()).inspect_err(|_| {
         let _ = std::fs::remove_file(to);
-        e
     })
 }
 
