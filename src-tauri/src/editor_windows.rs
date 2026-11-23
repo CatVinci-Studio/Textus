@@ -167,18 +167,20 @@ pub(crate) fn end_web_process_with_window(window: &tauri::WebviewWindow) {
     });
 }
 
-/// Tells a window's page when macOS enters full screen and when it starts
-/// leaving (`window-fullscreen`), via AppKit notifications, since size checks
-/// lag. Main thread only, once.
+/// Tells a window's page when macOS starts entering full screen and when it
+/// starts leaving (`window-fullscreen`), via AppKit notifications, since size
+/// checks lag. At the start, both ways: AppKit animates between pictures of
+/// the window, so a layout changed only once it has entered pops in after
+/// the animation. Main thread only, once.
 #[cfg(target_os = "macos")]
 pub(crate) fn watch_fullscreen(app: &tauri::AppHandle) {
     use objc2_app_kit::{
-        NSWindowDidEnterFullScreenNotification, NSWindowWillExitFullScreenNotification,
+        NSWindowWillEnterFullScreenNotification, NSWindowWillExitFullScreenNotification,
     };
     // SAFETY: AppKit's notification names, constant for the process.
     let names = unsafe {
         [
-            (NSWindowDidEnterFullScreenNotification, true),
+            (NSWindowWillEnterFullScreenNotification, true),
             (NSWindowWillExitFullScreenNotification, false),
         ]
     };
