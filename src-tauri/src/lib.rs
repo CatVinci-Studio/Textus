@@ -157,7 +157,7 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     #[cfg(target_os = "macos")]
     crate::trackpad::watch_trackpad(app.handle());
     #[cfg(target_os = "macos")]
-    crate::commands::traffic_lights::watch();
+    crate::commands::traffic_lights::watch(app.handle());
     // Plugins' jobs and notifications: before the links, one of which may be
     // a notification's click that started Textus.
     schedule::start(app.handle());
