@@ -530,7 +530,8 @@ file goes once the last of them is decided.
 | `ai/chat/conversation/document-port.ts`                             | The document in front as the conversations reach it                                                  |
 | `engine/motion/stream-reveal.ts`                                    | The pace streamed text is revealed at (the reveal move): the typewriter and chat replies             |
 | `ai/chat/useRevealedText.ts`                                        | A chat reply as drawn while it streams, paced by `StreamReveal`                                      |
-| `ai/chat/ChatBody.tsx`                                              | Shared conversation UI; streamed-turn → proposal, idempotent afterSend                               |
+| `ai/chat/ChatBody.tsx`                                              | Shared conversation UI; streamed-turn → proposal                                                     |
+| `ai/chat/useChatSend.ts`                                            | Sending from it: send now or queue, Stop, Retry, Continue; idempotent afterSend                      |
 | `ai/chat/window/ChatWindowApp.tsx`, `ai/chat/window/chat-bridge.ts` | Detached window and its bridge: context/status pushes, proposal forwarding                           |
 | `ai/margin/margin-room.ts`                                          | Whether there is room for a margin; the per-window store both menus read                             |
 | `ai/revision/revision-display.ts`                                   | The view drawn without a margin; which margin views can't be picked                                  |
