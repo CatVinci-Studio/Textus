@@ -179,10 +179,20 @@ function holdSource(
 /** A phone's WebKit places its own caret only as the selection changes:
  *  the text zoomed and scrolled under it, the caret stayed where the text
  *  was. The same selection set again has it placed anew. */
-function caretAgain(tab: HTMLElement) {
+export function caretAgain(tab: HTMLElement) {
   const selection = document.getSelection();
   const { anchorNode, anchorOffset, focusNode, focusOffset } = selection ?? {};
   if (!selection || !anchorNode || !focusNode || !tab.contains(focusNode))
+    return;
+  // Typing in a field (find, a table cell's input): its caret is its own.
+  const active = document.activeElement;
+  if (
+    active instanceof HTMLInputElement ||
+    active instanceof HTMLTextAreaElement ||
+    (active instanceof HTMLElement &&
+      active.isContentEditable &&
+      !active.contains(focusNode))
+  )
     return;
   selection.removeAllRanges();
   selection.setBaseAndExtent(
