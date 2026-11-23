@@ -84,5 +84,33 @@
     "text": "Uno.\n\n![a](a.png)\n\nDos.\n\n![n](n.png)",
     "complete": true,
     "expected": "Uno.\n\n![a](a.png)\n\nDos.\n\n![n](n.png)"
+  },
+  {
+    "name": "a picture and its caption on one line: the picture stays once, apart, the caption changes",
+    "document": "One.\n\n![a](a.png)\n\n图 1 | 说明。\n\nTwo.",
+    "text": "Uno.\n\n![a](a.png)\n*图 1 | 说明。*\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)\n\n*图 1 | 说明。*\n\nDos."
+  },
+  {
+    "name": "a picture's new description is taken, its address and title stay",
+    "document": "One.\n\n![a](a.png \"T\")\n\nTwo.",
+    "text": "Uno.\n\n![b](a.png)\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n![b](a.png \"T\")\n\nDos."
+  },
+  {
+    "name": "a new description and a caption beside it, an address in brackets",
+    "document": "One.\n\n![a](<my pic.png>)\n\nTwo.",
+    "text": "Uno.\n\n![a new](<my pic.png>)\n*Fig 1*\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n![a new](<my pic.png>)\n\n*Fig 1*\n\nDos."
+  },
+  {
+    "name": "a new picture with its caption stays as the rewrite has it",
+    "document": "One.\n\n![a](a.png)\n\nTwo.",
+    "text": "Uno.\n\n![a](a.png)\n\nDos.\n\n![n](n.png)\n*new*",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)\n\nDos.\n\n![n](n.png)\n*new*"
   }
 ]

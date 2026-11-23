@@ -19,6 +19,7 @@ const DOC = [
   "时间序列分析广泛用于能源、交通等领域。这条路线背后有两个直觉：",
   "- 分类依赖模式识别。\n- 预测需要数值推断。",
   "![八种成像方法](images/fig1.png)",
+  "图 1 | 八种成像方法。",
   "## 03 | 研究设计",
   "本文没有提出新架构。评估它们迁移后的能力。",
 ].join("\n\n");
@@ -29,10 +30,13 @@ const REWRITE = [
   "## 02 | 为什么把时间序列转成图像？",
   "时间序列分析广泛用于能源、交通、医疗等领域。这条路线背后有两个直觉：",
   "- **分类依赖模式识别。** 可区分模式转成图像后可被识别。\n- **预测需要数值推断。** 像素与序列结构相似。",
-  "![八种成像方法](images/fig1.png)",
+  // A new description, and the caption written on the picture's next line.
+  "![八种时间序列成像方法](images/fig1.png)\n*图 1 | 八种成像方法。*",
   "## 03 | 研究设计：不提新模型",
   "本文没有提出新架构，而是评估它们迁移后的能力。![研究流程](images/flow.png)",
 ].join("\n\n");
+
+const SAVED = REWRITE.replace("fig1.png)\n*图 1", "fig1.png)\n\n*图 1");
 
 const changes = (page: Page) => page.getByRole("toolbar", { name: "Revision" });
 
@@ -67,7 +71,7 @@ test("a whole-document rewrite shows its structure and saves as proposed", async
   await expect(page.locator(".agent-panel-view")).toContainText("Tightened.");
   // Found in the text: one change per sentence or block, not the whole
   // document as one.
-  await expect(changes(page)).toContainText("7 changes");
+  await expect(changes(page)).toContainText("10 changes");
   const added = page.locator(`${editor} .pending-insert`);
   // No Markdown shows as text: the link is a link, the list a list.
   await expect(added.filter({ hasText: "](" })).toHaveCount(0);
@@ -77,7 +81,7 @@ test("a whole-document rewrite shows its structure and saves as proposed", async
   // A picture of the proposal that isn't there is the missing-picture card,
   // not the webview's broken image.
   const card = added.locator(".missing-image-card");
-  await expect(card).toContainText("flow.png");
+  await expect(card.filter({ hasText: "flow.png" })).toHaveCount(1);
   await expect(added.locator("img")).toHaveCount(0);
 
   await changes(page)
@@ -92,5 +96,7 @@ test("a whole-document rewrite shows its structure and saves as proposed", async
             .__devFiles["/notes/note.md"],
       ),
     )
-    .toBe(`${REWRITE}\n`);
+    // The writer's picture once, apart from its caption, with its new
+    // description; the caption's change taken.
+    .toBe(`${SAVED}\n`);
 });

@@ -206,7 +206,7 @@ pub(super) fn propose_edit(ctx: &ToolContext, arguments: &str) -> String {
                 .filter_map(|id| id.as_str().map(|id| format!("[#{id}]")))
                 .collect();
             format!(
-                " Its pictures ({}) are kept in it as they were. If the user asked for a picture to change too, it hasn't yet: before you reply, redo it with generate_image, `replace` with its block.",
+                " Its pictures ({}) still show what they showed; only a description you changed is taken. If the user asked for a picture to change too, it hasn't yet: before you reply, redo it with generate_image, `replace` with its block.",
                 ids.join(", ")
             )
         })
