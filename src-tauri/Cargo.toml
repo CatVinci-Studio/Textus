@@ -1,6 +1,6 @@
 [package]
 name = "textus"
-version = "1.4.6"
+version = "1.4.7-rc.1"
 description = "Textus: an Integrated Writing Environment, designed for professional writing"
 authors = ["CatVinci Studio"]
 edition = "2021"
