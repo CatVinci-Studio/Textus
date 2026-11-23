@@ -123,24 +123,37 @@ fn place(window: *mut std::ffi::c_void) {
 }
 
 /// Places the lights again after each resize, where the window's height
-/// moves the title bar, and on leaving full screen. Main thread, once.
+/// moves the title bar, and on leaving full screen. While full screen comes
+/// or goes, AppKit draws the lights in its own spot for the animation: they
+/// are hidden from its start to its end and shown once placed, so they
+/// don't jump. Main thread, once.
 #[cfg(target_os = "macos")]
 pub(crate) fn watch() {
     use crate::editor_windows::on_window_note;
     use objc2_app_kit::{
-        NSWindowDidExitFullScreenNotification, NSWindowDidResizeNotification,
-        NSWindowWillCloseNotification,
+        NSWindowDidEnterFullScreenNotification, NSWindowDidExitFullScreenNotification,
+        NSWindowDidResizeNotification, NSWindowWillCloseNotification,
+        NSWindowWillEnterFullScreenNotification, NSWindowWillExitFullScreenNotification,
     };
     // SAFETY: AppKit's notification names, constant for the process.
-    let (resized, left_full_screen, closing) = unsafe {
+    let (resized, entering, entered, leaving, left, closing) = unsafe {
         (
             NSWindowDidResizeNotification,
+            NSWindowWillEnterFullScreenNotification,
+            NSWindowDidEnterFullScreenNotification,
+            NSWindowWillExitFullScreenNotification,
             NSWindowDidExitFullScreenNotification,
             NSWindowWillCloseNotification,
         )
     };
     on_window_note(resized, place);
-    on_window_note(left_full_screen, place);
+    on_window_note(entering, |window| show(window, false));
+    on_window_note(entered, |window| show(window, true));
+    on_window_note(leaving, |window| show(window, false));
+    on_window_note(left, |window| {
+        place(window);
+        show(window, true);
+    });
     // A window closing takes its bar height along: kept, one more for each
     // window opened, and an address AppKit may give a new window later.
     on_window_note(closing, |window| {
@@ -148,4 +161,32 @@ pub(crate) fn watch() {
             bars.remove(&(window as usize));
         }
     });
+}
+
+/// Shows or hides `window`'s three lights, for one of Textus's windows (one
+/// with a bar height). Main thread.
+#[cfg(target_os = "macos")]
+fn show(window: *mut std::ffi::c_void, visible: bool) {
+    use objc2::msg_send;
+    use objc2::runtime::AnyObject;
+    let ours = BARS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .as_ref()
+        .is_some_and(|bars| bars.contains_key(&(window as usize)));
+    if !ours {
+        return;
+    }
+    // SAFETY: on the main thread, a live window (a notification's), every
+    // object checked before it is messaged.
+    unsafe {
+        let window = &*(window as *const AnyObject);
+        let alpha: f64 = if visible { 1.0 } else { 0.0 };
+        for kind in [0usize, 1, 2] {
+            let button: *mut AnyObject = msg_send![window, standardWindowButton: kind];
+            if !button.is_null() {
+                let _: () = msg_send![&*button, setAlphaValue: alpha];
+            }
+        }
+    }
 }
