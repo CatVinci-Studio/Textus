@@ -31,18 +31,23 @@ interface LinkMove {
   linkRoot?: string | null;
 }
 
+// Not utils' dirname, which reads a content:// URL by its document id and
+// gives a bare name back as is; here a folder is all before the last "/".
 function dirOf(path: string): string {
   const i = path.lastIndexOf("/");
   return i > 0 ? path.slice(0, i) : "/";
 }
 
+// Not basename, which also splits at "\" and reads file:// and content://
+// URLs: a wiki name's "\" is part of its name here.
 function nameOf(path: string): string {
   return path.slice(path.lastIndexOf("/") + 1);
 }
 
 const isRelative = (link: string) => /^\.\.?\//.test(link);
 
-/** `link` from the folder `dir`, `.` and `..` folded. */
+/** `link` from the folder `dir`, `.` and `..` folded (utils' joinPath keeps
+ *  them). */
 function join(dir: string, link: string): string {
   const parts = slashed(dir).split("/");
   for (const part of slashed(link).split("/")) {

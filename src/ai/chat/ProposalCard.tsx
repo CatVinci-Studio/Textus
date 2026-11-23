@@ -3,7 +3,13 @@ import { HeadRow } from "../../engine/controls/HeadRow";
 import { DropIcon, TakeIcon } from "../../engine/controls/icons";
 import { counted } from "../../i18n/current";
 import { fill } from "../../i18n/fill";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { usePicturesState } from "../revision/usePicturesState";
 import type { EditProposal } from "../types";
 import type { PendingStatus } from "../revision/usePendingEdits";
@@ -115,25 +121,14 @@ export function ProposalCard({
       data-status={status}
       style={style}
     >
-      <HeadRow
-        className="agent-proposal-head"
-        mark={
-          <span className="agent-proposal-icon" aria-hidden="true">
-            <TakeIcon />
-          </span>
-        }
-        title={
-          <span className="agent-proposal-title">
-            {labels.proposalTitle}
-            <span className="agent-proposal-kind">
-              {" · "}
-              {proposal.image
-                ? labels.proposalImage
-                : sentences && sentences.length > 1
-                  ? counted(labels.proposalChangeCount, sentences.length)
-                  : labels.actionNames[proposal.action]}
-            </span>
-          </span>
+      <ProposalHead
+        title={labels.proposalTitle}
+        kind={
+          proposal.image
+            ? labels.proposalImage
+            : sentences && sentences.length > 1
+              ? counted(labels.proposalChangeCount, sentences.length)
+              : labels.actionNames[proposal.action]
         }
         tools={
           <>
@@ -319,6 +314,38 @@ export function ProposalCard({
         </div>
       )}
     </div>
+  );
+}
+
+/** A proposal card's head: its title, what it changes, and `tools`. */
+export function ProposalHead({
+  title,
+  kind,
+  tools,
+}: {
+  title: string;
+  kind: string;
+  tools?: ReactNode;
+}) {
+  return (
+    <HeadRow
+      className="agent-proposal-head"
+      mark={
+        <span className="agent-proposal-icon" aria-hidden="true">
+          <TakeIcon />
+        </span>
+      }
+      title={
+        <span className="agent-proposal-title">
+          {title}
+          <span className="agent-proposal-kind">
+            {" · "}
+            {kind}
+          </span>
+        </span>
+      }
+      tools={tools}
+    />
   );
 }
 

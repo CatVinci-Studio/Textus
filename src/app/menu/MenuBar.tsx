@@ -1,7 +1,7 @@
-import { Suspense, useCallback, useRef, useState } from "react";
+import { Suspense, useRef } from "react";
 import { useWindowEvent } from "../../utils/hooks/useWindowEvent";
 import { useSettings } from "../../prefs/SettingsContext";
-import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
+import { useMenuOpen } from "../../engine/controls/useMenuOpen";
 import { usePluginMenuEntries } from "../../plugins/contributions/usePluginMenu";
 import { Presence } from "../../engine/motion/usePresence";
 import { AppMenu } from "./app-menu-lazy";
@@ -23,26 +23,12 @@ export function MenuBar({ checks }: { checks?: MenuChecks }) {
   const titles = menuBarSections(
     buildAppMenu(t, settings.shortcuts, NO_RECENTS, checks, pluginEntries),
   ).map((section) => section.label);
-  const [open, setOpen] = useState<{
+  const { open, show, close, ref } = useMenuOpen<{
     index: number;
     x: number;
     y: number;
-  } | null>(null);
+  }>();
   const buttons = useRef<(HTMLButtonElement | null)[]>([]);
-  const focusOnClose = useRef<HTMLElement | null>(null);
-
-  const close = useCallback(() => {
-    setOpen(null);
-    focusOnClose.current?.focus({ preventScroll: true });
-    focusOnClose.current = null;
-  }, []);
-  // Round the titles and the open list both, so a click on a title isn't
-  // "outside".
-  const ref = useCloseOnOutsideClick<HTMLDivElement>(
-    close,
-    true,
-    open !== null,
-  );
 
   // ← / → walk the bar while a list is open; on the window, since the focus
   // may be on a title.
@@ -58,7 +44,7 @@ export function MenuBar({ checks }: { checks?: MenuChecks }) {
     const button = buttons.current[index];
     if (!button) return;
     const rect = button.getBoundingClientRect();
-    setOpen({ index, x: rect.left, y: rect.bottom + 2 });
+    show({ index, x: rect.left, y: rect.bottom + 2 });
   };
 
   return (
@@ -87,9 +73,6 @@ export function MenuBar({ checks }: { checks?: MenuChecks }) {
           }}
           onClick={() => {
             if (open?.index === index) return close();
-            if (!open)
-              focusOnClose.current =
-                document.activeElement as HTMLElement | null;
             openAt(index);
           }}
         >

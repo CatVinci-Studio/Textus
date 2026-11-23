@@ -9,6 +9,7 @@ import { parseImageTag, splitAltSize } from "../editor/images/image-html";
 import { splitImageTitle } from "../editor/images/image-rotation";
 import { parseEmbed } from "../editor/images/obsidian-embed";
 import { shownWikilink } from "../editor/markdown/wikilink-reveal";
+import { linkDestination } from "../editor/markdown/link-syntax";
 import {
   calloutHeading,
   readCalloutLine,
@@ -99,7 +100,7 @@ function imageTag(tag: string): string {
   const image = parseImageTag(tag);
   if (!image) return tag;
   const alt = image.alt.replace(/([[\]\\])/g, "\\$1");
-  const src = /[\s()<>]/.test(image.src) ? `<${image.src}>` : image.src;
+  const src = linkDestination(image.src);
   const title = image.title
     ? ` "${image.title.replace(/(["\\])/g, "\\$1")}"`
     : "";

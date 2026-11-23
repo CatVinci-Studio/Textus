@@ -1,4 +1,3 @@
-import { HeadRow } from "../../engine/controls/HeadRow";
 import { DropIcon, TakeIcon } from "../../engine/controls/icons";
 import { counted } from "../../i18n/current";
 import { fill } from "../../i18n/fill";
@@ -9,7 +8,7 @@ import type { PendingStatus } from "../revision/usePendingEdits";
 import { isProposalTool } from "./proposal";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import { diffLines, lineCounts, proposalSides } from "./line-diff";
-import { ChangeText } from "./ProposalCard";
+import { ChangeText, ProposalHead } from "./ProposalCard";
 import type { ChatMessagesLabels } from "./chat-messages-types";
 
 /**
@@ -215,22 +214,9 @@ export function ProposalGroup({
       style={style}
     >
       <FlipOnChange watch={shape} targets={() => following(ref.current)} />
-      <HeadRow
-        className="agent-proposal-head"
-        mark={
-          <span className="agent-proposal-icon" aria-hidden="true">
-            <TakeIcon />
-          </span>
-        }
-        title={
-          <span className="agent-proposal-title">
-            {labels.proposalTitle}
-            <span className="agent-proposal-kind">
-              {" · "}
-              {counted(labels.proposalChangeCount, items.length)}
-            </span>
-          </span>
-        }
+      <ProposalHead
+        title={labels.proposalTitle}
+        kind={counted(labels.proposalChangeCount, items.length)}
       />
       {done && !unfolded ? (
         <button
