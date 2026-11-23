@@ -64,7 +64,8 @@
   border: 0;
 }
 
-.plugin-code-block .plugin-webview-frame {
+.plugin-code-block .plugin-webview-frame,
+.plugin-code-block .plugin-frame-room {
   /* Until the page says how tall it is. */
   height: 120px;
   /* Out of the document's zoom: the page is told it and draws at it, sharp

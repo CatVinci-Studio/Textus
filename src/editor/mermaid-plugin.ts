@@ -16,7 +16,14 @@ import { pausesFeatures } from "./large-doc";
 import { viewsWaitForScreen } from "./lazy/lazy-rules";
 import { registerDrawAll, stopDrawing } from "./lazy/draw-when-visible";
 import { appearanceIsDark } from "../engine/tokens/appearance";
-import { diagramRenderer, mermaidTheme } from "./diagram-engine";
+import {
+  diagramColours,
+  diagramRenderer,
+  mermaidTheme,
+} from "./diagram-engine";
+import { drawingFor, keepDrawing, lastDrawing } from "./drawn-diagrams";
+import { holdStill } from "../engine/controls/scroll-hold";
+import { stillPoint } from "./lazy/still-point";
 import {
   collectMermaidBlocks,
   drawingKey,
@@ -47,6 +54,18 @@ const PENDING_KEPT = 30;
 // Render ids are unique across every editor: two tabs sharing an id removed
 // each other's measuring node mid-render.
 let renderIdCounter = 0;
+
+/** A drawing another editor made, under ids of this one's own: two tabs
+ *  showing one SVG shared its marker and style ids. */
+function adopt(drawn: Drawn): Drawn {
+  const id = ++renderIdCounter;
+  const ids = new RegExp(`mermaid-preview-${drawn.id}(?!\\d)`, "g");
+  return {
+    ...drawn,
+    id,
+    svg: drawn.svg.replace(ids, `mermaid-preview-${id}`),
+  };
+}
 
 /**
  * A live diagram preview below every ```mermaid and ```chart block. While
@@ -88,8 +107,13 @@ export function createMermaidPreviewPlugin(options: {
       if (!options.enabled() || !isMermaid(node)) return [];
       const code = drawingKey(node.attrs.language, node.textContent);
       const to = from + node.nodeSize;
-      const drawn = lastRenders.get(code) ?? pendingDrawn.get(code);
-      if (!drawn) return failureNote(code, to, failures.get(code));
+      const failed = failures.get(code);
+      let drawn = lastRenders.get(code) ?? pendingDrawn.get(code);
+      // A tab made again shows the last drawing until its first pass.
+      const last =
+        drawn || failed !== undefined ? undefined : lastDrawing(code);
+      if (last) lastRenders.set(code, (drawn = adopt(last)));
+      if (!drawn) return failureNote(code, to, failed);
       const { svg } = drawn;
       if (touches(from, to)) return [];
       return [
@@ -158,7 +182,8 @@ export function createMermaidPreviewPlugin(options: {
           // The editor's largest optional dependencies, fetched only when a real
           // diagram has to be drawn.
           const draw = diagramRenderer(engine, { width, fontFamily, dark });
-          return { draw, styleOf };
+          const styles = [layout, mermaidStyle];
+          return { draw, styleOf, styles };
         }
 
         // A proposal's diagram, drawn as the document's are.
@@ -216,15 +241,27 @@ export function createMermaidPreviewPlugin(options: {
           scroller = next;
         }
 
+        // The new drawings with what the reader sees held where it is. A
+        // diagram's source that hides has no place after: its drawing,
+        // where the source began, is held instead.
+        function redraw() {
+          const scroller = editorView.dom.closest(".editor-scroll");
+          const still = scroller && stillPoint(editorView.dom, scroller);
+          editorView.dispatch(
+            editorView.state.tr.setMeta(mermaidKey, "rerender"),
+          );
+          let el = still?.el ?? null;
+          while (el && !el.getClientRects().length) el = el.nextElementSibling;
+          if (scroller && still && el) holdStill(scroller, { ...still, el });
+        }
+
         async function renderAll(all = false) {
           if (!options.enabled()) {
             // Nothing drawn before: nothing to take back.
             if (lastRenders.size === 0 && failures.size === 0) return;
             lastRenders = new Map();
             failures = new Map();
-            editorView.dispatch(
-              editorView.state.tr.setMeta(mermaidKey, "rerender"),
-            );
+            redraw();
             return;
           }
 
@@ -241,13 +278,11 @@ export function createMermaidPreviewPlugin(options: {
             if (lastRenders.size === 0 && failures.size === 0) return;
             lastRenders = new Map();
             failures = new Map();
-            editorView.dispatch(
-              editorView.state.tr.setMeta(mermaidKey, "rerender"),
-            );
+            redraw();
             return;
           }
 
-          const { draw, styleOf } = drawing();
+          const { draw, styleOf, styles } = drawing();
 
           const rendered = new Map<string, Drawn>();
           const failed = new Map<string, string>();
@@ -257,8 +292,11 @@ export function createMermaidPreviewPlugin(options: {
             if (!code.trim() || rendered.has(key) || failed.has(key)) continue;
             // A pass only draws sources it hasn't drawn for the same width, face and
             // engine.
-            const cached = lastRenders.get(key) ?? pendingDrawn.get(key);
-            if (cached && cached.style === styleOf(cached.engine)) {
+            const own = lastRenders.get(key) ?? pendingDrawn.get(key);
+            const fresh = own && own.style === styleOf(own.engine);
+            const shared = fresh ? undefined : drawingFor(key, styles);
+            const cached = fresh ? own : shared && adopt(shared);
+            if (cached) {
               rendered.set(key, cached);
               continue;
             }
@@ -273,8 +311,10 @@ export function createMermaidPreviewPlugin(options: {
                 `mermaid-preview-${id}`,
                 language,
               );
+              const drawn = { svg, engine: by, style: styleOf(by), id };
+              keepDrawing(key, drawn);
               if (mySeq !== renderSeq) return;
-              rendered.set(key, { svg, engine: by, style: styleOf(by), id });
+              rendered.set(key, drawn);
             } catch (error) {
               // Invalid or half-typed: its source stays, with why under it.
               if (mySeq !== renderSeq) return;
@@ -295,9 +335,7 @@ export function createMermaidPreviewPlugin(options: {
           lastRenders = rendered;
           failures = failed;
           if (unchanged) return;
-          editorView.dispatch(
-            editorView.state.tr.setMeta(mermaidKey, "rerender"),
-          );
+          redraw();
         }
 
         let waitingToBeShown = false;
@@ -333,14 +371,9 @@ export function createMermaidPreviewPlugin(options: {
             void renderAll();
         };
         // Only a change of colours: every diagram is drawn again.
-        const colours = () => {
-          const root = document.documentElement.dataset;
-          const dark = window.matchMedia?.("(prefers-color-scheme: dark)");
-          return `${root.theme}|${root.contentTheme}|${root.lightPage}|${dark?.matches}`;
-        };
-        let drawnIn = colours();
+        let drawnIn = diagramColours();
         const stopAppearance = onAppearance(() => {
-          const now = colours();
+          const now = diagramColours();
           if (now === drawnIn) return;
           drawnIn = now;
           restyle();

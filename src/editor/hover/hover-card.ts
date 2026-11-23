@@ -16,6 +16,8 @@ import { removeWhenGone } from "../../engine/motion/leave";
  */
 
 const GAP = 6;
+/** The longest a card waits for its preview before it opens (ms). */
+const PREVIEW_WAIT_MS = 150;
 
 const previews = new WeakMap<HTMLElement, PreviewHandle>();
 
@@ -37,13 +39,26 @@ export function floatingCardKey(): string | null {
 /** Shows `card` for `key` by `rect`, in place of any card not pinned. */
 export function showHoverCard(key: string, rect: DOMRect, card: HoverCard) {
   hideHoverCard(true);
-  const el = build(card);
+  const { el, drawn } = build(card);
   document.body.append(el);
-  place(el, rect);
   el.addEventListener("mouseenter", keepHoverCard);
   el.addEventListener("mouseleave", () => scheduleHide());
   floating = { el, key };
-  requestAnimationFrame(() => el.classList.add("hover-card-open"));
+  // Opened once its preview is drawn, placed by its whole height: placed
+  // by its head alone, a card above the link grew down over it.
+  let opened = false;
+  const open = () => {
+    if (opened || floating?.el !== el) return;
+    opened = true;
+    place(el, rect);
+    requestAnimationFrame(() => el.classList.add("hover-card-open"));
+  };
+  const wait = setTimeout(open, PREVIEW_WAIT_MS);
+  void drawn.then(() => {
+    clearTimeout(wait);
+    if (!opened) open();
+    else if (floating?.el === el) place(el, rect);
+  });
 }
 
 export function keepHoverCard() {
@@ -71,7 +86,10 @@ export function hideHoverCard(now = false) {
   removeWhenGone(el, duration("--dur-fast"), () => removeCard(el));
 }
 
-function build(card: HoverCard): HTMLElement {
+function build(card: HoverCard): {
+  el: HTMLElement;
+  drawn: Promise<unknown>;
+} {
   const t = currentStrings();
   const el = document.createElement("div");
   el.className = "hover-card floating-surface";
@@ -117,17 +135,20 @@ function build(card: HoverCard): HTMLElement {
   body.className = "hover-card-body";
   // Drawn by the editor, as the note shows; without pictures, so a card
   // loads nothing.
-  void drawPreview(
+  const drawn = drawPreview(
     body,
     card.markdown.replace(PICTURES_IN_TEXT, ""),
     null,
     () => named ?? t.hoverCard,
-  ).then((preview) => {
-    if (el.isConnected) previews.set(el, preview);
-    else preview.destroy();
-  });
+  ).then(
+    (preview) => {
+      if (el.isConnected) previews.set(el, preview);
+      else preview.destroy();
+    },
+    () => {},
+  );
   el.append(head, body);
-  return el;
+  return { el, drawn };
 }
 
 /** Below the link, or above it when there is no room; inside the window. */

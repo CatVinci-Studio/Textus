@@ -51,6 +51,22 @@ export function mermaidTheme(dark = appearanceIsDark()): MermaidThemeName {
       : "neutral";
 }
 
+/** What a diagram's colours follow: the theme (an imported one by its id),
+ *  the appearance, and the Mermaid palette that resolves to, which an
+ *  imported theme's stylesheet sets only once it has loaded. */
+export function diagramColours(): string {
+  const root = document.documentElement.dataset;
+  const dark = window.matchMedia?.("(prefers-color-scheme: dark)");
+  return [
+    root.theme,
+    root.themeId,
+    root.contentTheme,
+    root.lightPage,
+    dark?.matches,
+    mermaidTheme(),
+  ].join("|");
+}
+
 // Re-applied before every pass because the width follows the text column:
 // Gantt charts laid out offscreen at 1200px and scaled down are unreadable.
 // "strict" is stated because the SVG lands in the editor as innerHTML.

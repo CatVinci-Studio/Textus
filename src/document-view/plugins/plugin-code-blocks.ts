@@ -37,6 +37,8 @@ import {
 } from "../../plugins/contributions/code-blocks";
 import type { CodeBlockSeen } from "../../plugins/manager";
 import { PluginCodeBlock } from "../../plugins/views/plugin-views";
+import { framePlaceholder } from "../../plugins/views/frame-heights";
+import { holdOnResize } from "../../engine/controls/scroll-hold";
 import { setDrawnBlocks } from "../../export/drawn-blocks";
 import "./plugin-code-blocks.css";
 import { markChangeSource } from "../../editor/change-source";
@@ -83,6 +85,9 @@ interface Drawn {
   root: Root;
   render: () => void;
 }
+
+/** Each drawn block's way to stop holding the page as it resizes. */
+const resizeHolds = new WeakMap<Node, () => void>();
 
 const touchesCode = (tr: Transaction) =>
   touchesNode(tr, (node) => node.type.name === "code_block");
@@ -131,6 +136,8 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
               key: widget,
               destroy: (node) => {
                 stopDrawing(node);
+                resizeHolds.get(node)?.();
+                resizeHolds.delete(node);
                 const gone = drawn.get(widget);
                 drawn.delete(widget);
                 // Not while ProseMirror is drawing: React unmounts on its
@@ -187,6 +194,10 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
       });
       const holder = document.createElement("div");
       holder.className = "plugin-code-holder";
+      // At its page's last height from the start, while it waits to come
+      // near, while React draws it and until its page says its height.
+      holder.append(framePlaceholder(widget));
+      let stopHold = () => {};
       el.append(holder);
       // Folded as Textus folds drawn blocks: by the document and its place.
       // In a column too narrow for it, it starts folded to its line.
@@ -202,6 +213,14 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
         el,
         view.dom,
         () => {
+          // Let go and drawn again, its room comes back first.
+          holder.replaceChildren(framePlaceholder(widget));
+          // Watched from this size on: the change from the size it was held
+          // at as it came near is held by the drawing itself.
+          stopHold = holdOnResize(holder, {
+            scroller: () => el.closest(".editor-scroll"),
+            byHand: () => false,
+          });
           const root = createRoot(holder);
           const render = () => {
             const seen = blockAt(ctx, view, getPos, language);
@@ -221,10 +240,12 @@ export function pluginCodeBlocks(docPath: { readonly current: string | null }) {
           render();
         },
         () => {
+          stopHold();
           drawn.get(widget)?.root.unmount();
           drawn.delete(widget);
         },
       );
+      resizeHolds.set(el, () => stopHold());
       return el;
     }
 
