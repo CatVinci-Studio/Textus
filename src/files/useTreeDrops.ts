@@ -1,4 +1,4 @@
-import { useState, type RefObject } from "react";
+import type { RefObject } from "react";
 import type { Strings } from "../i18n/strings";
 import { useRowDrag } from "./useRowDrag";
 import { useTreeFileDrop } from "./useTreeFileDrop";
@@ -8,8 +8,8 @@ import type { TreeSelection } from "./tree-selection";
 /**
  * What is dragged onto the tree: its own rows, moved (useRowDrag), and
  * files from a file manager with a folder open, copied in
- * (useTreeFileDrop). `into`: the folder lit under either; `copied`: the
- * first copy a file manager's drop made, picked and its row shown.
+ * (useTreeFileDrop), the first copy picked and its row shown. `into`: the
+ * folder lit under either.
  */
 export function useTreeDrops(input: {
   treeRef: RefObject<HTMLDivElement | null>;
@@ -33,16 +33,13 @@ export function useTreeDrops(input: {
     selection,
     input.onHeld,
   );
-  const [copied, setCopied] = useState<string | null>(null);
   const fromSystem = useTreeFileDrop(treeRef, folder, reload, (path, isDir) => {
     selection.only({ path, isDir });
-    setCopied(path);
     scrollRowIntoView(treeRef.current, path);
   });
   return {
     drag,
     onRowPointerDown,
     into: drag?.into ?? fromSystem,
-    copied,
   };
 }

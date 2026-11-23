@@ -95,7 +95,7 @@ export function FileTree({
     folder ? null : onRootChange,
     selection,
   );
-  const { drag, onRowPointerDown, into, copied } = useTreeDrops({
+  const { drag, onRowPointerDown, into } = useTreeDrops({
     treeRef,
     folder,
     linkBase: folder ?? root,
@@ -122,7 +122,7 @@ export function FileTree({
     newDocumentLabel: t.treeNewDocument,
     setDraft,
     root,
-    reveal: reveal ?? copied,
+    reveal,
   });
 
   const openSortMenu = (e: ReactMouseEvent<HTMLButtonElement>) => {

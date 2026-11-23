@@ -12,7 +12,12 @@ import {
 import { fill } from "../i18n/fill";
 import { plural } from "../i18n/plural";
 import { basename, folderName } from "../utils/path";
-import { announceFileCreated } from "../utils/events";
+import {
+  announceFileCreated,
+  FILE_WRITTEN_EVENT,
+  sendAppEvent,
+} from "../utils/events";
+import { isFarUrl } from "../platform/far-files";
 import { explainError } from "../utils/error-explain";
 import { useLatest } from "../utils/hooks/useLatest";
 import { dropDirAt } from "./tree-shared";
@@ -40,7 +45,9 @@ export function useTreeFileDrop(
   const latest = useLatest({ settings, setSettings, t, reload, show });
 
   useEffect(() => {
-    if (!folder || !canDropFilesIntoTree) return;
+    // A plugin's folder takes no copies from the disk: what is let go on
+    // the sidebar opens, as with no folder.
+    if (!folder || !canDropFilesIntoTree || isFarUrl(folder)) return;
     const copyAll = async (files: readonly DraggedFile[], dir: string) => {
       const { t, reload, show } = latest.current;
       const where = { folder: folderName(dir) };
@@ -55,7 +62,10 @@ export function useTreeFileDrop(
         try {
           const made = await fs.copyIntoFolder(path, dir);
           reload(dir);
-          announceFileCreated(made);
+          // A folder is no file a plugin made; the tree and search hear of
+          // it as of one moved in.
+          if (isDir) sendAppEvent(FILE_WRITTEN_EVENT, made);
+          else announceFileCreated(made);
           if (copied++ === 0) show(made, isDir);
         } catch (err) {
           failed.push(

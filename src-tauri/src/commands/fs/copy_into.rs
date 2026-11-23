@@ -50,16 +50,22 @@ fn copy_entry(from: &Path, into: &Path, secret: &dyn Fn(&Path) -> bool) -> Resul
         if into.starts_with(&from) {
             return Err(crate::errors::error("copyIntoItself"));
         }
-        into_free_name(
+        // The name claimed first, then filled: what fails inside is no
+        // taken name to number past.
+        let made = into_free_name(
             &into,
             copy_names(&name, crate::ids::Numbered::SpaceWhole),
-            |to| {
-                std::fs::create_dir(to)?;
-                copy_tree(&from, to, secret)
-            },
+            |to| std::fs::create_dir(to),
             |_| false,
         )
-        .map_err(io)
+        .map_err(io)?;
+        let to = into.join(&made);
+        if let Err(e) = copy_tree(&from, &to, secret) {
+            // Half a copy is no copy: the folder made here a moment ago goes.
+            let _ = std::fs::remove_dir_all(&to);
+            return Err(e.to_string());
+        }
+        Ok(made)
     } else {
         into_free_name(
             &into,
@@ -218,6 +224,31 @@ mod tests {
         copy_entry(&source, &into, &secret).unwrap();
         assert!(into.join("source/note.md").is_file());
         assert!(!into.join("source/keys").exists());
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn a_folder_that_fails_halfway_leaves_nothing_behind() {
+        use std::os::unix::fs::PermissionsExt;
+        let root = scratch("half");
+        let source = root.join("source");
+        std::fs::create_dir_all(&source).unwrap();
+        std::fs::write(source.join("a.md"), b"a").unwrap();
+        let locked = source.join("locked.md");
+        std::fs::write(&locked, b"l").unwrap();
+        std::fs::set_permissions(&locked, std::fs::Permissions::from_mode(0o000)).unwrap();
+        let into = root.join("into");
+        std::fs::create_dir_all(&into).unwrap();
+        let unreadable = std::fs::File::open(&locked).is_err();
+        let result = copy_entry(&source, &into, NOTHING_SECRET);
+        std::fs::set_permissions(&locked, std::fs::Permissions::from_mode(0o644)).unwrap();
+        // Running as root reads anything: nothing to fail then.
+        if unreadable {
+            assert!(result.is_err());
+            assert!(!into.join("source").exists());
+            assert!(!into.join("source 2").exists());
+        }
         let _ = std::fs::remove_dir_all(&root);
     }
 }
