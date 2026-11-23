@@ -6,7 +6,7 @@ import {
   glideAfter,
   startBeat,
 } from "../../engine/controls/moves";
-import { inlineChange } from "./sentence-diff";
+import { hasLineMarks, inlineChange } from "./sentence-diff";
 import { type PendingPreview, type PendingSentence } from "./pending-types";
 import {
   type StreamState,
@@ -162,9 +162,20 @@ function blocksAfter(
   at: number,
   c: { before: string; after: string },
 ): number | null {
-  if (!doc || !hasBlocks(inlineChange(c.before, c.after))) return null;
+  if (!doc || !changeIsBlocks(c)) return null;
   const $at = doc.resolve(Math.min(at, doc.content.size));
   return $at.depth > 0 ? $at.after(1) : null;
+}
+
+/** Whether a change's new text is blocks of its own. One line a number
+ *  starts ("1984. was the year", "2) then") is a sentence, unless the line
+ *  it rewrites was a list item or a quote's line. */
+function changeIsBlocks(c: { before: string; after: string }): boolean {
+  const text = inlineChange(c.before, c.after);
+  if (!hasBlocks(text)) return false;
+  return (
+    text.includes("\n") || !/^\d+[.)][ \t]/.test(text) || hasLineMarks(c.before)
+  );
 }
 
 export function changeDecorations(

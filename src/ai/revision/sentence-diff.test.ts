@@ -79,6 +79,11 @@ describe("inlineChange", () => {
     );
     // A paragraph's sentence keeps what it says.
     expect(inlineChange("第一句。", "- 新的一项")).toBe("- 新的一项");
+    // A marker of another kind is what the new text says, not a marker.
+    expect(inlineChange("- 甲", "2023. 年份变了")).toBe("2023. 年份变了");
+    expect(inlineChange("## 标题", "## 2023. 年份")).toBe("2023. 年份");
+    expect(inlineChange("1. 甲", "2. 乙")).toBe("乙");
+    expect(inlineChange("> - 甲", "> * 乙")).toBe("乙");
   });
 });
 

@@ -136,4 +136,65 @@ describe("a rewrite streamed sentence by sentence", () => {
       new RegExp(`-${textKey("乙改了。")}$`),
     );
   });
+
+  /** One change of `old` in `markdown`, `before` -> `after`: where its new
+   *  text is drawn, and what it draws. */
+  async function drawnChange(
+    markdown: string,
+    old: string,
+    before: string,
+    after: string,
+  ) {
+    editor = await createTestEditor(markdown);
+    const doc = editor.action((ctx) => ctx.get(editorViewCtx).state.doc);
+    let from = 0;
+    doc.descendants((node, pos) => {
+      const at = node.isText ? (node.text ?? "").indexOf(old) : -1;
+      if (at >= 0) from = pos + at;
+    });
+    const to = from + old.length;
+    const preview: PendingPreview = {
+      callId: "c4",
+      proposal: { action: "replace", anchor: before.trim(), text: after },
+      from: 0,
+      to: doc.content.size,
+      expectedText: doc.textBetween(0, doc.content.size, " "),
+      replacement: after,
+      sentences: {
+        hunks: [{ kind: "change", before, after }],
+        changes: [{ from, to, before, after, take: null }],
+      },
+    };
+    const added = buildDecorations(doc, [preview], true, hooks)
+      .find()
+      .filter((d) =>
+        (d.spec as { key?: string }).key?.startsWith("pending-new-"),
+      );
+    expect(added).toHaveLength(1);
+    const key = (added[0].spec as { key: string }).key;
+    return { doc, to, at: added[0].from, key };
+  }
+
+  it("a sentence a number starts stays a sentence in its paragraph", async () => {
+    const { to, at, key } = await drawnChange(
+      "第一句。第二句。\n",
+      "第二句。",
+      "第二句。",
+      "1984. 那年。",
+    );
+    // In its line, not a list of its own after the paragraph.
+    expect(at).toBe(to);
+    expect(key).toMatch(new RegExp(`-${textKey("1984. 那年。")}$`));
+  });
+
+  it("a list item rewritten as a numbered one keeps its number, after the list", async () => {
+    const { doc, at, key } = await drawnChange(
+      "- 甲。\n- 乙。\n",
+      "乙。",
+      "- 乙。\n",
+      "2023. 年份变了。\n",
+    );
+    expect(at).toBe(doc.child(0).nodeSize);
+    expect(key).toMatch(new RegExp(`-${textKey("2023. 年份变了。")}$`));
+  });
 });
