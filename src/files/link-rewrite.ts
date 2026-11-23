@@ -38,12 +38,10 @@ function dirOf(path: string): string {
   return i > 0 ? path.slice(0, i) : "/";
 }
 
-// "\" too, as the resolver reads a wiki name; not basename, which also reads
-// file:// and content:// URLs.
+// Not basename, which also splits at "\" and reads file:// and content://
+// URLs: on macOS and Linux a file's "\" is part of its name.
 function nameOf(path: string): string {
-  return path.slice(
-    Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\")) + 1,
-  );
+  return path.slice(path.lastIndexOf("/") + 1);
 }
 
 const isRelative = (link: string) => /^\.\.?\//.test(link);
@@ -145,9 +143,10 @@ function rewriteWith(
     if (next !== null && next !== written)
       edits.push({ start, end: start + written.length, text: next });
   };
-  // `.md` stays only where it was written: "[[Note v1.2]]" has none.
+  // `.md` stays only where it was written: "[[Note v1.2]]" has none. The
+  // name as written splits at "\" too, as the resolver reads it.
   const spelling = (target: string, found: string, written: string) =>
-    nameOf(found).toLowerCase() === nameOf(written).toLowerCase() ||
+    nameOf(found).toLowerCase() === nameOf(slashed(written)).toLowerCase() ||
     !isNoteFile(target)
       ? (path: string) => path
       : noteStem;
