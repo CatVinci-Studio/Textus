@@ -240,7 +240,13 @@ mod tests {
         );
         assert_eq!(tidy_changes(&merge, &memories).len(), 2);
         let input = tidy_input(&memories);
-        assert!(input.contains("Use short sentences."), "{input}");
+        assert!(
+            input.contains(&format!(
+                "- [{}] (personal, preference) Use short sentences.",
+                ids[0]
+            )),
+            "{input}"
+        );
     }
 
     #[test]

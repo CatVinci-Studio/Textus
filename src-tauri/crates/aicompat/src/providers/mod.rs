@@ -6,3 +6,6 @@ pub mod openai_codex;
 pub mod openai_responses_compatible;
 
 pub use agent_provider::{AgentProvider, Endpoint};
+
+#[cfg(test)]
+mod error_text_tests;
