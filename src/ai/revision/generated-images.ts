@@ -1,5 +1,6 @@
 import { PICTURES_IN_TEXT } from "../../editor/markdown/doc-blocks";
 import { fnv1a } from "../../utils/hash";
+import { linkDestination } from "../../editor/markdown/link-syntax";
 import { ai, type GeneratedImageData } from "../../platform/ipc";
 import type { EditProposal } from "../types";
 import {
@@ -345,9 +346,7 @@ export function hasGeneratedImage(markdown: string): boolean {
 
 /** The proposal's text with the picture's placeholder as its saved src. */
 export function withSavedSrc(text: string, id: string, src: string): string {
-  // The src may need <...> around it: a path with spaces or parentheses.
-  const safe = /[\s()<>]/.test(src) ? `<${src}>` : src;
-  return text.split(generatedImageSrc(id)).join(safe);
+  return text.split(generatedImageSrc(id)).join(linkDestination(src));
 }
 
 /** Where each accepted picture was saved, so accepting again after an undo

@@ -1,7 +1,7 @@
 // A simple HTML table as a Markdown table: no merged cells and only inline
 // content, which a Markdown table can hold. Anything else stays HTML.
 
-import { inlineLink, linkDestination } from "../markdown/link-syntax";
+import { inlineLink, linkSource } from "../markdown/link-syntax";
 import { escapeCellPipes } from "./cell-pipes";
 
 /** Why a table can't become Markdown, for the menu item's reason. */
@@ -45,12 +45,9 @@ function inline(node: Node): string {
     return inlineLink(inner(), href.replace(/[<>]/g, encodeURIComponent));
   }
   if (tag === "img") {
-    const alt = (el.getAttribute("alt") ?? "").replace(/([\\[\]])/g, "\\$1");
-    const src = (el.getAttribute("src") ?? "").replace(
-      /[<>]/g,
-      encodeURIComponent,
-    );
-    return `![${alt}](${linkDestination(src)})`;
+    const alt = el.getAttribute("alt") ?? "";
+    const src = el.getAttribute("src") ?? "";
+    return "!" + linkSource(alt, src.replace(/[<>]/g, encodeURIComponent));
   }
   const wrap = WRAP[tag];
   if (!wrap) throw new Blocks();
