@@ -1,3 +1,4 @@
+import { keepFresh } from "../../utils/keep-fresh";
 // How tall each plugin block's page last said it was, by the block's widget
 // key: the block made again (its tab reopened, scrolled back to) starts at
 // that height instead of growing from nothing, then 120px, to it.
@@ -8,10 +9,7 @@ const HEIGHTS_KEPT = 500;
 const heights = new Map<string, number>();
 
 export function rememberFrameHeight(key: string, height: number): void {
-  heights.delete(key);
-  heights.set(key, height);
-  if (heights.size > HEIGHTS_KEPT)
-    heights.delete(heights.keys().next().value as string);
+  keepFresh(heights, key, height, HEIGHTS_KEPT);
 }
 
 /** The height `key`'s page last reported, if it has. */

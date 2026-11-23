@@ -5,6 +5,7 @@ import {
   keepDrawing,
   lastDrawing,
 } from "./drawn-diagrams";
+import { releaseIdleMemory } from "../utils/memory-idle";
 import type { Drawn } from "./mermaid-blocks";
 
 const drawn = (style: string, id: number): Drawn => ({
@@ -33,5 +34,12 @@ describe("drawings shared by every editor", () => {
     expect(lastDrawing("first")).toBeUndefined();
     expect(drawingFor("first", ["s"])).toBeUndefined();
     expect(lastDrawing(`g${DRAWINGS_KEPT}`)?.id).toBe(DRAWINGS_KEPT);
+  });
+
+  it("are let go when the window gives memory back", () => {
+    keepDrawing("graph B", drawn("s", 1));
+    releaseIdleMemory();
+    expect(lastDrawing("graph B")).toBeUndefined();
+    expect(drawingFor("graph B", ["s"])).toBeUndefined();
   });
 });

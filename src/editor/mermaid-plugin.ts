@@ -22,6 +22,7 @@ import {
   mermaidTheme,
 } from "./diagram-engine";
 import { drawingFor, keepDrawing, lastDrawing } from "./drawn-diagrams";
+import { keepFresh } from "../utils/keep-fresh";
 import { holdStill } from "../engine/controls/scroll-hold";
 import { stillPoint } from "./lazy/still-point";
 import {
@@ -202,10 +203,7 @@ export function createMermaidPreviewPlugin(options: {
             );
             drawn = { svg, engine: by, style: styleOf(by), id };
           }
-          pendingDrawn.delete(key);
-          pendingDrawn.set(key, drawn);
-          if (pendingDrawn.size > PENDING_KEPT)
-            pendingDrawn.delete(pendingDrawn.keys().next().value as string);
+          keepFresh(pendingDrawn, key, drawn, PENDING_KEPT);
           return { svg: drawn.svg, idPrefix: `mermaid-preview-${drawn.id}` };
         });
 

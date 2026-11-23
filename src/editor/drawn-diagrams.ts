@@ -1,4 +1,6 @@
 import type { Drawn } from "./mermaid-blocks";
+import { keepFresh } from "../utils/keep-fresh";
+import { onMemoryIdle } from "../utils/memory-idle";
 
 // Drawings shared by every editor: a tab made again (moved, or opened once
 // more) shows its diagrams at once instead of their source, then a drawing.
@@ -11,17 +13,15 @@ const byStyle = new Map<string, Drawn>();
 /** The last drawn of each source, whatever for. */
 const latest = new Map<string, Drawn>();
 
-/** Puts `value` at the fresh end of `map`, the stalest let go past the bound. */
-function keep(map: Map<string, Drawn>, key: string, value: Drawn) {
-  map.delete(key);
-  map.set(key, value);
-  if (map.size > DRAWINGS_KEPT) map.delete(map.keys().next().value as string);
-}
+onMemoryIdle(() => {
+  byStyle.clear();
+  latest.clear();
+});
 
 /** Keeps `drawn`, the drawing of the source kept under `key`. */
 export function keepDrawing(key: string, drawn: Drawn): void {
-  keep(byStyle, `${drawn.style}\n${key}`, drawn);
-  keep(latest, key, drawn);
+  keepFresh(byStyle, `${drawn.style}\n${key}`, drawn, DRAWINGS_KEPT);
+  keepFresh(latest, key, drawn, DRAWINGS_KEPT);
 }
 
 /** A drawing of `key` made for one of `styles`, if one is kept. */
