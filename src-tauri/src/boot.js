@@ -38,6 +38,10 @@ window.__textusBoot = function (boot, themeCss) {
       );
     if (settings.theme === "light" || settings.theme === "dark")
       root.setAttribute("data-theme", settings.theme);
+    // The theme's page colour for index.html's first paint; the app's own
+    // stylesheets take over (apply-appearance.ts removes it).
+    if (typeof boot.background === "string")
+      root.style.setProperty("--boot-bg", boot.background);
     // The frame's edges and gaps hang on it (layout-tokens.css); the first
     // of the table is the default.
     var layouts = tables.layouts || [];

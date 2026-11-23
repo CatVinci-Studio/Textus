@@ -2,45 +2,36 @@ import { androidBridge } from "../platform/android-bridge";
 import { nativeFiles } from "../platform/native-files";
 import { useEffect, useLayoutEffect } from "react";
 import { useLatest } from "../utils/hooks/useLatest";
-import { themes, windowBarIpc } from "../platform/ipc";
-import { readBoot } from "../storage/boot";
-import {
-  getUiState,
-  setUiState,
-  type ThemeChromeCache,
-} from "../storage/ui-state";
+import { windowBarIpc } from "../platform/ipc";
 import {
   useSettings,
   type Settings,
-  type ThemeMode,
   DOC_LINE_HEIGHTS,
   type DocLetterSpacing,
 } from "../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "../prefs/builtin-themes";
 import { UI_SIZE_NAMES, UI_TEXT_SCALES } from "../prefs/settings-values";
-import { applyThemeChrome, clearThemeChrome } from "../engine/tokens/palette";
+import { clearThemeChrome } from "../engine/tokens/palette";
 import { isIOSApp } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
+import { holdTransitionsOnThemeChange } from "./restyle-hold";
 import { tokenPx } from "../engine/tokens/token-px";
 import { useFileIconThemeChoice } from "../plugins/contributions/file-icon-themes";
 import {
   CUSTOM_CSS_STYLE_ID,
-  PLUGIN_COLORS_STYLE_ID,
   USER_THEME_STYLE_ID as STYLE_ID,
 } from "./style-ids";
+import {
+  applyImportedTheme,
+  legacy,
+  promoteCustomProperties,
+  webFonts,
+} from "./imported-theme";
 
-// What an imported theme or the user's own CSS is read through: loaded
-// when there is one, not with every window.
-const typora = lazyModule("typora-compat", () => import("./typora-compat"));
 const suppliedFont = lazyModule(
   "supplied-font",
   () => import("./supplied-font"),
 );
-const legacy = lazyModule(
-  "legacy-variables",
-  () => import("./legacy-variables"),
-);
-const webFonts = lazyModule("web-fonts", () => import("./web-fonts"));
 
 /** The CSS letter-spacing for Word's character spacing; null keeps the
  *  theme's. */
@@ -59,59 +50,12 @@ export function letterSpacing(
 /** Custom CSS has had its web fonts asked for once (the start). */
 let customFontsAsked = false;
 
-/** Keeps an imported theme's chrome colours for the boot script, which
- *  paints the next window's first frame with them. Written only on change. */
-function rememberThemeChrome(chrome: ThemeChromeCache) {
-  if (!readBoot()) return;
-  const cached = getUiState("themeChrome") as
-    Partial<ThemeChromeCache> | undefined;
-  if (
-    cached?.id === chrome.id &&
-    cached.dark === chrome.dark &&
-    cached.sourceLength === chrome.sourceLength &&
-    cached.css === chrome.css
-  )
-    return;
-  setUiState("themeChrome", chrome);
-}
-
-/**
- * Marks every custom property the user's CSS sets `!important`, since an
- * imported theme's chrome pins `--doc-*` with !important. Custom CSS comes
- * later, so at equal weight it wins. Other properties keep their cascade.
- */
-function promoteCustomProperties(rules: CSSRuleList) {
-  for (const rule of Array.from(rules)) {
-    if (rule instanceof CSSStyleRule) {
-      const { style } = rule;
-      for (const name of Array.from(style)) {
-        if (name.startsWith("--") && !style.getPropertyPriority(name))
-          style.setProperty(name, style.getPropertyValue(name), "important");
-      }
-    }
-    if ("cssRules" in rule && rule.cssRules)
-      promoteCustomProperties(rule.cssRules as CSSRuleList);
-  }
-}
-
-/// Optional-called: without matchMedia (jsdom, an odd webview) a throw inside
-/// `loadSettings` would discard the entire settings blob.
-function systemPrefersDark(): boolean {
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
-}
-
 /** Tells macOS the size's bar height, which its traffic lights centre on.
  *  The token is a calc(), so it is read resolved; nothing is sent before
  *  the page has laid it out. */
 export function followWindowBar(): void {
   const height = tokenPx("--window-bar-height", { fresh: true });
   if (height > 0) void windowBarIpc.follow(height);
-}
-
-export function isEffectiveDark(themeMode: ThemeMode): boolean {
-  if (themeMode === "dark") return true;
-  if (themeMode === "light") return false;
-  return systemPrefersDark();
 }
 
 /** The page's layout, width, picture alignment and the reader's type,
@@ -291,6 +235,8 @@ function useApplyAppearance(
       clearThemeChrome();
     }
 
+    // The boot script's first-paint colour would outlast a theme change.
+    root.style.removeProperty("--boot-bg");
     // Which theme, for plugins that keep colours per theme.
     root.dataset.themeId = settings.themeId;
     const builtin = BUILTIN_CONTENT_THEMES.find(
@@ -316,100 +262,7 @@ function useApplyAppearance(
       return;
     }
 
-    root.removeAttribute("data-content-theme");
-    // Turns Textus's own content ornaments off: an imported theme should look
-    // the way it does in Typora.
-    root.setAttribute("data-user-theme", "");
-    let cancelled = false;
-    let revision = 0;
-    const theme = userTheme;
-
-    async function applyUserTheme() {
-      // A single-design import has no dark stylesheet, so it keeps its one
-      // look in either appearance rather than being half-applied.
-      const request = ++revision;
-      const variant =
-        isEffectiveDark(settings.theme) && theme.hasDark ? "dark" : "light";
-      try {
-        const [stored, { withWebFonts }, { withCurrentVariables }, compat] =
-          await Promise.all([
-            themes.loadThemeCss(theme.id, variant),
-            webFonts.load(),
-            legacy.load(),
-            typora.load(),
-          ]);
-        const current = () => !cancelled && request === revision;
-        const show = (loaded: string | null) => {
-          const css = loaded && withCurrentVariables(loaded);
-          let styleEl = document.getElementById(
-            STYLE_ID,
-          ) as HTMLStyleElement | null;
-          if (!styleEl) {
-            styleEl = document.createElement("style");
-            styleEl.id = STYLE_ID;
-          }
-          const adapted = compat.adaptTyporaCss(css ?? "");
-          styleEl.textContent = isIOSApp
-            ? compat.namedSystemFonts(adapted)
-            : adapted;
-          document.head.appendChild(styleEl);
-          const dark = isEffectiveDark(settings.theme);
-          let chrome: string | null;
-          try {
-            // A one-design theme is that design's page in both appearances, its chrome
-            // derived as light: derived as dark, themes that pin dark text became unreadable.
-            chrome = applyThemeChrome(css ?? "", dark && theme.hasDark);
-            // ...and the document's own dark-only colours (syntax tokens,
-            // alert accents, mermaid) stand down on that light page.
-            if (dark && !theme.hasDark)
-              root.setAttribute("data-light-page", "");
-            else root.removeAttribute("data-light-page");
-          } finally {
-            // Plugins' colours after the theme and its chrome...
-            const plugin = document.getElementById(PLUGIN_COLORS_STYLE_ID);
-            if (plugin) document.head.appendChild(plugin);
-            // The user's own CSS stays after the theme and its chrome, whenever they
-            // load - the order the boot script gives the first frame.
-            const custom = document.getElementById(
-              CUSTOM_CSS_STYLE_ID,
-            ) as HTMLStyleElement | null;
-            if (custom) {
-              // Moved, a <style> is parsed again from its text: the
-              // promotion has to be redone on the new sheet.
-              document.head.appendChild(custom);
-              if (custom.sheet) promoteCustomProperties(custom.sheet.cssRules);
-            }
-          }
-          if (typeof chrome === "string")
-            rememberThemeChrome({
-              id: theme.id,
-              dark,
-              // The file as stored: what the boot script measures.
-              sourceLength: (stored ?? "").length,
-              css: chrome,
-            });
-        };
-        if (!current()) return;
-        show(stored);
-        // One imported before web fonts were embedded still has them: the
-        // theme shows at once, its fonts once fetched (or not, offline).
-        const fonted = stored && (await withWebFonts(stored));
-        if (fonted && fonted !== stored && current()) show(fonted);
-      } catch {
-        // Theme file missing/unreadable - leave whatever was there before.
-      }
-    }
-
-    void applyUserTheme();
-
-    // Injected CSS can't be swapped by a media query - in "system" mode this
-    // is what re-picks the variant when the OS flips.
-    const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
-    mq?.addEventListener("change", applyUserTheme);
-    return () => {
-      cancelled = true;
-      mq?.removeEventListener("change", applyUserTheme);
-    };
+    return applyImportedTheme(userTheme, settings.theme, settings.userThemes);
   }, [settings.themeId, settings.theme, settings.userThemes, setSettingsRef]);
 }
 
@@ -418,6 +271,7 @@ function useApplyAppearance(
 export function AppearanceSync(): null {
   const { settings, setSettings } = useSettings();
   useApplyAppearance(settings, setSettings);
+  useEffect(() => holdTransitionsOnThemeChange(), []);
   useFileIconThemeChoice(settings.fileIconTheme);
   return null;
 }

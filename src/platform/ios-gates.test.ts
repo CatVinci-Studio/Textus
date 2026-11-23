@@ -26,7 +26,8 @@ const ALLOWED: Record<string, string> = {
   "platform/ipc-ai-workspace.ts": "the project folder is picked in Files",
   "platform/mobile-viewport.ts":
     "the safe area from WebKit's env(), Android's from its bridge",
-  "theme/apply-appearance.ts":
+  "theme/apply-appearance.ts": "its keyboard takes the window's dark or light",
+  "theme/imported-theme.ts":
     "its WebKit draws CJK as boxes under generic system fonts",
   "engine/controls/elastic-overscroll.ts": "the system's own overscroll",
 };
