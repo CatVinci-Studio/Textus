@@ -22,8 +22,9 @@ import { byCategory } from "../../plugins/store/plugin-categories";
 
 const SORTS: CatalogSort[] = ["popular", "newest", "name"];
 
-/** The catalog's plugins not installed yet, by category, the most installed
- *  first in each (or as sorted), each opening its page. */
+/** The catalog's plugins not installed yet, by category with the most
+ *  installed first in each, or in one list by date or name (a search keeps
+ *  the categories); each opens its page. */
 export function AvailablePlugins({
   t,
   catalog,
@@ -47,15 +48,16 @@ export function AvailablePlugins({
     name: t.pluginsSortName,
   };
   const ready = catalog.status === "ready";
-  const { items: shown, headings } = byCategory(
-    ready
-      ? offeredItems(
-          sortCatalog(searchCatalog(catalog.items, query), sort),
-          installed,
-        )
-      : [],
-    t,
-  );
+  const offered = ready
+    ? offeredItems(
+        sortCatalog(searchCatalog(catalog.items, query), sort),
+        installed,
+      )
+    : [];
+  const { items: shown, headings } =
+    sort === "popular" || query.trim()
+      ? byCategory(offered, t)
+      : { items: offered, headings: new Map<string, string>() };
   const message = catalogMessage({
     t,
     status: catalogStatus(catalog),

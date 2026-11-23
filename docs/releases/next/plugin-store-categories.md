@@ -1,6 +1,6 @@
 ### Improved
 
-- The plugin store lists plugins by category, such as Notes & organizing, Charts & diagrams or Sync & services, and marks the ones that work on the computer only.
+- The plugin store groups plugins by the category each one names, such as Notes & organizing, Charts & diagrams or Sync & services, and marks the ones that work on the computer only. Sorted by date or name, it is one list.
 
 ### Platform notes
 
