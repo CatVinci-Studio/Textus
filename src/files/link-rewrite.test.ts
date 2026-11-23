@@ -356,16 +356,16 @@ describe("links at the top of the folder and names without a folder", () => {
     ).toBe("[n](../Renamed.md) [[Renamed]] [[Renamed.md]]");
   });
 
-  it("read a wiki name's backslash as part of its name when keeping .md", () => {
+  it("read a wiki name's backslash as a folder, keeping its path and its .md", () => {
     const files = ["/v/a/Note.md", "/v/i.md"];
     const moved = movedBy("/v/a/Note.md", "/v/a/New.md");
     const plan = { root: "/v", from: "/v/a/Note.md", to: "/v/a/New.md" };
-    const text = "[[a\\Note.md]] [n](a\\Note.md)";
+    const text = "[[a\\Note.md]] [[a\\Note]] [n](a\\Note.md)";
     expect(
       linkPlanner(
         files.map((f) => moved(f) ?? f),
         plan,
       )({ path: "/v/i.md", text })?.text,
-    ).toBe("[[New]] [n](a/New.md)");
+    ).toBe("[[a/New.md]] [[a/New]] [n](a/New.md)");
   });
 });

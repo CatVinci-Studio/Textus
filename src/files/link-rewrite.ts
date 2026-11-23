@@ -38,10 +38,12 @@ function dirOf(path: string): string {
   return i > 0 ? path.slice(0, i) : "/";
 }
 
-// Not basename, which also splits at "\" and reads file:// and content://
-// URLs: a wiki name's "\" is part of its name here.
+// "\" too, as the resolver reads a wiki name; not basename, which also reads
+// file:// and content:// URLs.
 function nameOf(path: string): string {
-  return path.slice(path.lastIndexOf("/") + 1);
+  return path.slice(
+    Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\")) + 1,
+  );
 }
 
 const isRelative = (link: string) => /^\.\.?\//.test(link);
@@ -226,7 +228,7 @@ function rewriteWith(
     const ext = spelling(target, found, name);
     const form: Form = isRelative(name)
       ? "relative"
-      : name.includes("/")
+      : /[\\/]/.test(name)
         ? "path"
         : "name";
     let next: string;
