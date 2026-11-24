@@ -56,8 +56,8 @@ export function DraftRow({
         isDir
         fresh
         label={doc ? t.treeNewDocumentPrompt : t.treeNewFolderPrompt}
-        commit={(typed) => tree.finishDraft(typed)}
-        cancel={() => void tree.finishDraft(null)}
+        commit={(typed, byKey) => tree.finishDraft(typed, byKey)}
+        cancel={(byKey) => void tree.finishDraft(null, byKey)}
       />
     </div>
   );

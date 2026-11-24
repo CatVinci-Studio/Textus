@@ -17,10 +17,10 @@ export function useNewEntry(
 ) {
   const [draft, setDraft] = useState<TreeDraft | null>(null);
   const finishDraft = useCallback(
-    async (name: string | null): Promise<string | null> => {
+    async (name: string | null, byKey: boolean): Promise<string | null> => {
       if (!draft || !name) {
         setDraft(null);
-        fileUndo.show(null);
+        if (byKey) fileUndo.show(null);
         return null;
       }
       try {
@@ -37,8 +37,9 @@ export function useNewEntry(
             kind: "made",
             made: [{ path: made, isDir, stamp }],
           });
-        if (isDir) fileUndo.show(made);
-        else {
+        if (isDir) {
+          if (byKey) fileUndo.show(made);
+        } else {
           announceFileCreated(made);
           onFileSelect(made);
         }

@@ -28,9 +28,11 @@ export function NameField({
   /** A new entry's name: given as it is, too. */
   fresh?: boolean;
   label: string;
-  /** Null once done, else what is wrong with the name. */
-  commit: (name: string) => Promise<string | null>;
-  cancel: () => void;
+  /** Null once done, else what is wrong with the name. `byKey`: ended
+   *  with Enter or Escape, the keyboard staying in the tree; else the
+   *  user went elsewhere, which keeps it. */
+  commit: (name: string, byKey: boolean) => Promise<string | null>;
+  cancel: (byKey: boolean) => void;
 }) {
   const [name, setName] = useState(initial);
   const [problem, setProblem] = useState<string | null>(null);
@@ -45,12 +47,13 @@ export function NameField({
   const finish = async (how: "enter" | "leave") => {
     if (busy.current) return;
     const typed = name.trim();
-    if (!typed || (typed === initial && !fresh)) return cancel();
+    const byKey = how === "enter";
+    if (!typed || (typed === initial && !fresh)) return cancel(byKey);
     busy.current = true;
-    const wrong = await commit(typed);
+    const wrong = await commit(typed, byKey);
     if (wrong === null) return;
     if (how === "leave") {
-      cancel();
+      cancel(false);
       await showMessage(wrong);
       return;
     }
@@ -83,7 +86,7 @@ export function NameField({
           if (e.key === "Enter") void finish("enter");
           else if (!busy.current) {
             busy.current = true;
-            cancel();
+            cancel(true);
           }
         }}
         onBlur={() => void finish("leave")}

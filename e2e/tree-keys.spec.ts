@@ -59,6 +59,19 @@ test("F2 renames in the row: a taken name is said there, Escape gives up, Enter 
   await expect.poll(() => files(page)).toContain("/proj/alpha.md");
 });
 
+test("a rename left by clicking into the document is made, and the document keeps the keyboard", async ({
+  page,
+}) => {
+  await openFolder(page);
+  await row(page, "alpha.md").click();
+  await page.keyboard.press("F2");
+  await page.keyboard.type("delta");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await editor.click();
+  await expect.poll(() => files(page)).toContain("/proj/delta.md");
+  await expect(editor).toBeFocused();
+});
+
 test("Delete asks, can be told not to ask again, and is undone; Enter opens; typing finds a row", async ({
   page,
 }) => {

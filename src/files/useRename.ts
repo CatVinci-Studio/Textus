@@ -25,10 +25,15 @@ class Renaming {
   }
 }
 
-/** A row's rename in place: its name given, or given up. */
+/** A row's rename in place: its name given, or given up; `byKey`: ended
+ *  with a key, the keyboard back on the row (NameField). */
 export interface RowRename {
-  commit: (path: string, name: string) => Promise<string | null>;
-  cancel: (path: string) => void;
+  commit: (
+    path: string,
+    name: string,
+    byKey: boolean,
+  ) => Promise<string | null>;
+  cancel: (path: string, byKey: boolean) => void;
 }
 
 const RenameContext = createContext<{
@@ -67,7 +72,7 @@ export function useRename(input: {
   const renaming = useMemo(() => new Renaming(), []);
   const rename = useMemo<RowRename>(
     () => ({
-      async commit(path, name) {
+      async commit(path, name, byKey) {
         const { linkBase, t, reload, onEntryMoved, fileUndo } = latest.current;
         let to: string;
         try {
@@ -78,7 +83,7 @@ export function useRename(input: {
         renaming.set(null);
         reload(parentDir(path) ?? linkBase);
         onEntryMoved(path, to);
-        fileUndo.show(to);
+        if (byKey) fileUndo.show(to);
         if (to !== path)
           fileUndo.record({
             kind: "moved",
@@ -87,9 +92,9 @@ export function useRename(input: {
           });
         return null;
       },
-      cancel(path) {
+      cancel(path, byKey) {
         renaming.set(null);
-        latest.current.fileUndo.show(path);
+        if (byKey) latest.current.fileUndo.show(path);
       },
     }),
     [latest, renaming],

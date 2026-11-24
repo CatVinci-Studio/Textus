@@ -152,14 +152,18 @@ export function useTreeTransfer(input: {
           break;
         }
       }
+      // What was done is kept to undo, even an old one trashed to make way
+      // for what then failed.
+      const undo = steps.length
+        ? fileUndo.record(
+            steps.length === 1 ? steps[0]! : { kind: "steps", steps },
+          )
+        : undefined;
       const [first] = made;
       if (!first) return false;
       if (made.length === 1) selection.only(first);
       else selection.clear();
       fileUndo.show(first.path);
-      const undo = fileUndo.record(
-        steps.length === 1 ? steps[0]! : { kind: "steps", steps },
-      );
       const where = {
         folder: folderName(to ?? parentDir(first.path) ?? first.path),
       };

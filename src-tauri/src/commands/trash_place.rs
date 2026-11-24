@@ -52,24 +52,26 @@ mod platform {
     use std::path::Path;
     use trash::os_limited::{list, restore_all};
 
-    /// The ids of what the Trash holds from `path`.
-    fn held_from(path: &Path) -> Result<Vec<trash::TrashItem>, String> {
+    /// What the Trash holds under `path`'s name. Told apart by id, not by
+    /// the folder it came from, which the system spells its own way
+    /// (Windows' `\\?\C:\…`).
+    fn held_named(path: &Path) -> Result<Vec<trash::TrashItem>, String> {
+        let name = path.file_name().ok_or("No file name")?;
         Ok(list()
             .map_err(|e| e.to_string())?
             .into_iter()
-            .filter(|item| item.original_path() == path)
+            .filter(|item| item.name == name)
             .collect())
     }
 
     pub(super) fn trash(path: &Path) -> Result<Option<String>, String> {
-        // What was there from the same path before is told apart by its id.
-        let before: HashSet<_> = held_from(path)
+        let before: HashSet<_> = held_named(path)
             .unwrap_or_default()
             .into_iter()
             .map(|item| item.id)
             .collect();
         trash::delete(path).map_err(|e| e.to_string())?;
-        Ok(held_from(path)
+        Ok(held_named(path)
             .unwrap_or_default()
             .into_iter()
             .filter(|item| !before.contains(&item.id))
@@ -77,11 +79,12 @@ mod platform {
             .map(|item| item.id.to_string_lossy().to_string()))
     }
 
-    pub(super) fn put_back(place: &str, path: &Path) -> Result<(), String> {
+    /// Back where the Trash says it came from, which is `_path`.
+    pub(super) fn put_back(place: &str, _path: &Path) -> Result<(), String> {
         let item = list()
             .map_err(|e| e.to_string())?
             .into_iter()
-            .find(|item| item.id.to_string_lossy() == place && item.original_path() == path)
+            .find(|item| item.id.to_string_lossy() == place)
             .ok_or_else(|| crate::errors::error("goneFromTrash"))?;
         restore_all([item]).map_err(|e| match e {
             trash::Error::RestoreCollision { .. } => crate::errors::error("exists"),
@@ -116,6 +119,26 @@ fn rename_back(place: &Path, path: &Path) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The system's own Trash, once by hand (`--ignored`): a file there and
+    /// back, from the boot disk's temp folder and from `TRASH_TEST_DIR`.
+    #[test]
+    #[ignore]
+    fn the_system_trash_keeps_where_it_put_a_file_and_gives_it_back() {
+        let dirs = [
+            Some(std::env::temp_dir()),
+            std::env::var_os("TRASH_TEST_DIR").map(Into::into),
+        ];
+        for dir in dirs.into_iter().flatten() {
+            let file = dir.join(format!("textus-trash-test-{}.md", std::process::id()));
+            std::fs::write(&file, "back").unwrap();
+            let place = trash_keeping_place(&file).unwrap().expect("where it went");
+            assert!(!file.exists());
+            put_back(&place, &file).unwrap();
+            assert_eq!(std::fs::read_to_string(&file).unwrap(), "back");
+            std::fs::remove_file(&file).unwrap();
+        }
+    }
 
     /// A folder standing in for the Trash: the user's own is never touched.
     #[test]

@@ -38,10 +38,13 @@ export function scrollRowIntoView(
 /** The keyboard kept in the tree `tree` after its rows changed under it
  *  (a move, an undo): on the row of `path` once drawn, and meanwhile on the
  *  row in the tab order, so the next key still reaches the tree, not the
- *  document. */
+ *  document. Not taken from somewhere else the user went meanwhile (a
+ *  rename ended by clicking into the document). */
 export function keepKeyboardOn(tree: HTMLElement | null, path: string | null) {
   if (!tree) return;
-  if (!tree.contains(document.activeElement))
+  const now = document.activeElement;
+  if (now && now !== document.body && !tree.contains(now)) return;
+  if (!tree.contains(now))
     (
       tree.querySelector<HTMLElement>('[role="treeitem"][tabindex="0"]') ??
       tree.querySelector<HTMLElement>('[role="treeitem"]')

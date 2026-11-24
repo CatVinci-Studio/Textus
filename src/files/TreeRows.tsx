@@ -84,8 +84,8 @@ export const FileNode = memo(function FileNode({
             initial={entry.name}
             isDir={false}
             label={t.treeRenamePrompt}
-            commit={(name) => rename.commit(entry.path, name)}
-            cancel={() => rename.cancel(entry.path)}
+            commit={(name, byKey) => rename.commit(entry.path, name, byKey)}
+            cancel={(byKey) => rename.cancel(entry.path, byKey)}
           />
         ) : (
           <Tooltip text={entry.name} description={null} whenCut>
@@ -164,8 +164,8 @@ export function FolderRow({
           initial={basename(path)}
           isDir
           label={t.treeRenamePrompt}
-          commit={(name) => rename.commit(path, name)}
-          cancel={() => rename.cancel(path)}
+          commit={(name, byKey) => rename.commit(path, name, byKey)}
+          cancel={(byKey) => rename.cancel(path, byKey)}
         />
       ) : (
         <Tooltip text={basename(path)} description={null} whenCut>

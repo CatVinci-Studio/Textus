@@ -55,7 +55,7 @@ it("says a taken name under the field after Enter and stays; Escape gives up", a
   await act(async () => {
     fireEvent.keyDown(input, { key: "Enter" });
   });
-  expect(commit).toHaveBeenLastCalledWith("free.md");
+  expect(commit).toHaveBeenLastCalledWith("free.md", true);
   expect(cancel).not.toHaveBeenCalled();
 });
 
@@ -83,7 +83,7 @@ it("gives up on Escape, or on the name unchanged, but a new entry's default is g
   await act(async () => {
     fireEvent.keyDown(two.getByRole("textbox"), { key: "Enter" });
   });
-  expect(commit).toHaveBeenCalledWith("Untitled");
+  expect(commit).toHaveBeenCalledWith("Untitled", true);
   two.unmount();
   const three = field(false);
   fireEvent.change(three.getByRole("textbox"), { target: { value: "Other" } });
