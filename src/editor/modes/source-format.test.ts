@@ -93,6 +93,12 @@ describe("toggleSourceMark", () => {
     );
   });
 
+  it("counts a line's emoji as two units, and leaves a thematic break", () => {
+    const view = viewOf("[😀 **a** **b** tail\n***]");
+    toggleSourceMark(view, "clear");
+    expect(view.state.doc.toString()).toBe("😀 a b tail\n***");
+  });
+
   it("clears nested runs, and nothing with nothing to clear", () => {
     const view = viewOf("[***x***]");
     toggleSourceMark(view, "clear");

@@ -94,43 +94,14 @@ function clearSourceMarks(view: EditorView): boolean {
   let cleared = false;
   const result = state.changeByRange((range) => {
     if (range.empty) return { range };
-    const first = state.doc.lineAt(range.from);
-    const last = state.doc.lineAt(range.to);
-    const start = first.from;
-    const fenced = fencedLines(state.doc, first.number, last.number);
-    // Code masked; `at` holds each remaining character's offset.
-    let text = state
-      .sliceDoc(start, last.to)
-      .split("\n")
-      .map((line, i) =>
-        fenced(first.number + i) ? "\u0001".repeat(line.length) : line,
-      )
-      .join("\n")
-      .replace(/`+[^`\n]*`+/g, (code) => "\u0001".repeat(code.length));
-    let at = [...text].map((_, i) => start + i);
+    const first = state.doc.lineAt(range.from).number;
+    const last = state.doc.lineAt(range.to).number;
+    const fenced = fencedLines(state.doc, first, last);
     const gone: { from: number; to: number }[] = [];
-    const next = () =>
-      [...text.matchAll(SPAN)].find((m) => {
-        const end = m.index + m[0].length;
-        // An underscore inside a word (snake_case) marks nothing.
-        if (
-          m[1][0] === "_" &&
-          (WORD.test(text[m.index - 1] ?? "") || WORD.test(text[end] ?? ""))
-        )
-          return false;
-        return at[m.index] < range.to && at[end - 1] >= range.from;
-      });
-    for (let m = next(); m; m = next()) {
-      const n = m[1].length;
-      const end = m.index + m[0].length;
-      gone.push(
-        { from: at[m.index], to: at[m.index] + n },
-        { from: at[end - n], to: at[end - n] + n },
-      );
-      const keep = (_: unknown, i: number) =>
-        i < m.index || (i >= m.index + n && i < end - n) || i >= end;
-      text = [...text].filter(keep).join("");
-      at = at.filter(keep);
+    for (let n = first; n <= last; n++) {
+      if (fenced(n)) continue;
+      const line = state.doc.line(n);
+      gone.push(...lineMarks(line.text, line.from, range.from, range.to));
     }
     if (!gone.length) return { range };
     cleared = true;
@@ -145,6 +116,49 @@ function clearSourceMarks(view: EditorView): boolean {
   });
   if (cleared) view.dispatch(result);
   return cleared;
+}
+
+/** The markers of the runs in line `source` (at `start`) that touch `from`
+ *  to `to`, the runs nested in them too. */
+function lineMarks(
+  source: string,
+  start: number,
+  from: number,
+  to: number,
+): { from: number; to: number }[] {
+  // A thematic break (***, ___) marks nothing.
+  if (/^\s*([*_])(\s*\1){2,}\s*$/.test(source)) return [];
+  // Code masked; `at` holds each remaining UTF-16 unit's offset.
+  let text = source.replace(/`+[^`]*`+/g, (code) =>
+    "\u0001".repeat(code.length),
+  );
+  let at = Array.from({ length: text.length }, (_, i) => start + i);
+  const gone: { from: number; to: number }[] = [];
+  const next = () =>
+    [...text.matchAll(SPAN)].find((m) => {
+      const end = m.index + m[0].length;
+      // An underscore inside a word (snake_case) marks nothing.
+      if (
+        m[1][0] === "_" &&
+        (WORD.test(text[m.index - 1] ?? "") || WORD.test(text[end] ?? ""))
+      )
+        return false;
+      return at[m.index] < to && at[end - 1] >= from;
+    });
+  for (let m = next(); m; m = next()) {
+    const n = m[1].length;
+    const a = m.index;
+    const end = a + m[0].length;
+    gone.push(
+      { from: at[a], to: at[a] + n },
+      { from: at[end - n], to: at[end - n] + n },
+    );
+    const cut = <T extends string | number[]>(xs: T) =>
+      [xs.slice(0, a), xs.slice(a + n, end - n), xs.slice(end)] as T[];
+    text = cut(text).join("");
+    at = cut(at).flat();
+  }
+  return gone;
 }
 
 /** A line's block prefix: its quote, heading, list or task marker. */
