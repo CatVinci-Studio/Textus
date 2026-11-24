@@ -130,6 +130,17 @@
   background-clip: content-box;
 }
 
+/* A touch leaves :hover on the last thing tapped, also on a phone that says
+   it can hover (a stylus, a paired mouse). */
+:root[data-window-chrome="mobile"]
+  :is(
+    .window-menu-button,
+    .window-bar-sidebar-toggle,
+    .window-bar-toggle:not(.window-bar-toggle-on)
+  ):hover {
+  background: none;
+}
+
 /* On, it takes the tint as an iOS bar button does, rather than a filled
    box flush against the screen's edge. */
 :root[data-window-chrome="mobile"] .window-bar-toggle-on {

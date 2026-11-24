@@ -29,11 +29,11 @@ Além do editor WYSIWYG e do modo código-fonte (`Cmd+/`), o Textus tem três ma
 - **Modo Máquina de Escrever**: a linha que você está digitando fica no meio da janela, no editor, no modo código-fonte e em Código e pré-visualização.
 - **Modo Zen** (`Cmd+Shift+J`): esconde tudo menos o documento em que você está e esmaece todos os parágrafos, menos o que você está escrevendo. O × no canto superior direito, ou o mesmo atalho, sai dele.
 
-Todos estão no menu **Visualizar** (**Visualizar › Modo** para os dois primeiros) e no grupo **Visualização** de **Ajustes › Edição › Documento**. Cada um é um único ajuste para todo o Textus: mude em qualquer janela e todas as abas de todas as janelas mudam junto, os documentos que você abrir em seguida aparecem nele, e o Textus volta a abrir nele da próxima vez.
+Todos estão no menu **Visualizar** (**Visualizar › Vista de edição** para os dois primeiros) e no grupo **Visualização** de **Ajustes › Edição › Documento**. Cada um é um único ajuste para todo o Textus: mude em qualquer janela e todas as abas de todas as janelas mudam junto, os documentos que você abrir em seguida aparecem nele, e o Textus volta a abrir nele da próxima vez.
 
-**Visualizar › Modo › Modo leitura** (também no menu de contexto de uma aba) impede que um documento seja alterado, seja digitando, colando, soltando, desfazendo, pela Textus AI ou por plugins. Um cadeado ao lado do título indica isso; clique nele para permitir alterações de novo.
+**Visualizar › Vista de edição › Modo leitura** (também no menu de contexto de uma aba) impede que um documento seja alterado, seja digitando, colando, soltando, desfazendo, pela Textus AI ou por plugins. Um cadeado ao lado do título indica isso; clique nele para permitir alterações de novo.
 
-**Visualizar › Paleta de comandos…** (`Cmd+Shift+P`) encontra tudo o que os menus fazem, e cada comando que um plugin adiciona, digitando algumas letras do nome. Ela também muda a aparência (clara, escura ou a do sistema) e o tema do editor, e liga ou desliga a Textus AI. **Editar › Buscar e Substituir…** (`Cmd+F`) procura no documento, **Editar › Substituir…** (`Cmd+Option+F`) abre a barra com a linha de substituição e `Cmd+G` vai para a próxima ocorrência.
+**Visualizar › Paleta de comandos…** (`Cmd+Shift+P`) encontra tudo o que os menus fazem, e cada comando que um plugin adiciona, digitando algumas letras do nome. Ela também muda a aparência (clara, escura ou a do sistema) e o tema do editor, e liga ou desliga a Textus AI. **Editar › Buscar…** (`Cmd+F`) procura no documento, **Editar › Substituir…** (`Cmd+Option+F`) abre a barra com a linha de substituição e `Cmd+G` vai para a próxima ocorrência.
 
 O painel **Estrutura** da barra lateral lista os títulos do documento; clique em um para ir até ele. Clique com o botão direito na estrutura para **Expandir tudo** e **Recolher tudo**, ou clique com `Option` (`Alt`) na seta de um título para recolher ou expandir todos de uma vez.
 
@@ -159,7 +159,7 @@ Para ver uma imagem de perto, clique duas vezes nela ou clique em **Ampliar imag
 
 **Arquivo › Abrir Pasta…** abre uma pasta inteira na barra lateral: a árvore de arquivos fica nela enquanto você abre documentos lá dentro, a pasta volta com a sua sessão e **Arquivo › Fechar Pasta** faz a árvore voltar a acompanhar o documento. O painel **Pesquisar** (a lupa na barra de atividades, ou `Cmd+Shift+O`) encontra arquivos pelo nome e linhas pelas palavras em toda a pasta; clique numa linha para abrir o documento ali. Os dois recursos são só do desktop.
 
-A árvore também é um pequeno gerenciador de arquivos. O nome da pasta superior, acima dela, leva você um nível acima. O menu dela a organiza por nome ou por data de modificação e mostra **Todos os arquivos** ou **Só documentos**. Clique com o botão direito em uma pasta, um arquivo ou no espaço vazio abaixo para criar ali um **Novo documento** ou uma **Nova pasta**, e arraste um arquivo ou uma pasta sobre outra pasta para movê-lo; um documento aberto vai junto para o novo lugar. Nada é substituído: um nome já usado é recusado.
+A árvore também é um pequeno gerenciador de arquivos. O nome da pasta superior, acima dela, leva você um nível acima. O menu dela a organiza por nome ou por data de modificação e mostra **Todos os arquivos** ou **Só documentos**. Clique com o botão direito em uma pasta, um arquivo ou no espaço vazio abaixo para criar ali um **Novo Arquivo** ou uma **Nova pasta**, e arraste um arquivo ou uma pasta sobre outra pasta para movê-lo; um documento aberto vai junto para o novo lugar. Nada é substituído: um nome já usado é recusado.
 
 Arraste arquivos do Finder ou do Explorador de Arquivos para a janela para abri-los: documentos abrem em abas, imagens entram no documento onde você as solta e uma pasta abre na barra lateral. **Arquivo › Copiar caminho** copia o caminho completo do documento em primeiro plano.
 
@@ -200,7 +200,7 @@ Cada grupo de abas com a página embaixo é uma **ilha**. Uma ilha mostra um doc
 - **Segure `Cmd`** (`Ctrl`) por um instante com duas ou mais ilhas abertas: cada uma mostra um número, e `Cmd+1`… `Cmd+6` vai para aquela ilha.
 - Feche a última aba de uma ilha e a ilha some. O layout inteiro volta quando você reabre o Textus.
 
-`Cmd+N` (ou `Cmd+T`) abre uma nova aba, `Cmd+Shift+N` uma nova janela, e **Arquivo › Reabrir Aba Fechada** (`Cmd+Shift+T`) traz de volta os documentos que você fechou, do mais recente para o mais antigo. O **+** no fim de uma fileira abre uma nova aba naquela ilha. Um clique com o botão do meio fecha uma aba; o menu de contexto de uma aba tem **Fechar as outras**, **Fechar abas à esquerda**, **Fechar abas à direita** e **Fechar as salvas** (abas com alterações não salvas continuam abertas), **Copiar caminho** e **Mostrar na árvore de arquivos**. Quando o Textus reabre, cada janela volta com as suas próprias abas.
+`Cmd+N` (ou `Cmd+T`) abre uma nova aba, `Cmd+Shift+N` uma nova janela, e **Arquivo › Reabrir Aba Fechada** (`Cmd+Shift+T`) traz de volta os documentos que você fechou, do mais recente para o mais antigo. O **+** no fim de uma fileira abre uma nova aba naquela ilha. Um clique com o botão do meio fecha uma aba; o menu de contexto de uma aba tem **Fechar as outras**, **Fechar abas à esquerda**, **Fechar abas à direita** e **Fechar as salvas** (abas com alterações não salvas continuam abertas), **Copiar caminho** e **Mostrar em Arquivos**. Quando o Textus reabre, cada janela volta com as suas próprias abas.
 
 ## Plugins, temas e habilidades
 

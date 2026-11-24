@@ -24,7 +24,7 @@ The five ways you'll use most, starting with talking to it.
 
 ### Conversations
 
-Conversations open as **tabs**. Click the **Textus AI** button (the sparkles) at the right end of the window bar, press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>, or choose **View › AI Panel**: the AI opens in an island of its own on the right. Its tabs are tabs like any other: drag one beside a document, into another island, or out into a window of its own.
+Conversations open as **tabs**. Click the **Textus AI** button (the sparkles) at the right end of the window bar, press <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>, or choose **View › Textus AI**: the AI opens in an island of its own on the right. Its tabs are tabs like any other: drag one beside a document, into another island, or out into a window of its own.
 
 - **Per folder**: conversations belong to the folder you work in, not to one document. Each open conversation is a tab; the one in front is the one you are talking to, about the document in front. A closed conversation stays in History.
 - **New conversation**: right-click the empty paper of an AI tab and choose **New conversation** (with edits still undecided, it asks first). **Memory** is in the same menu.

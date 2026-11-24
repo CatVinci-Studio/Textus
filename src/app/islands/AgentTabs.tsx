@@ -132,7 +132,7 @@ function agentIslandMenu(
   ];
 }
 
-/** Inside the island: New conversation and History at the top right, and its menu on a
+/** Inside the island: History at the top right (a new conversation is the tab row's +), and its menu on a
  *  right-click on its paper (not on a message, a control or a selection,
  *  which keep their own). */
 export function AgentIslandTools({

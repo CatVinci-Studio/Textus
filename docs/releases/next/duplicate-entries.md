@@ -13,4 +13,3 @@
 
 - An iPad's menu no longer lists what can't work there: the AI panel and AI guide where Textus AI isn't offered, Welcome and Tutorial, Report a Problem, and the Pandoc export formats.
 - A tapped button at the top of a phone or tablet no longer keeps a grey box after the tap.
-- On a phone turned on its side, Settings stays clear of the camera cutout.

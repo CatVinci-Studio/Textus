@@ -189,3 +189,21 @@ describe.each([
     expect(textsOf(lang).filter((text) => variant.test(text))).toEqual([]);
   });
 });
+
+// A thing named in another string is named as its own label says.
+describe.each(LANGS)("%s's names for its own places", (lang) => {
+  const s = LOCALES[lang].default as Record<string, string>;
+  it("calls the activity bar one name", () => {
+    for (const key of [
+      "activityRailHide",
+      "activityRailShow",
+      "activityRailLabel",
+    ])
+      expect(s[key].toLowerCase(), key).toContain(s.activityRail.toLowerCase());
+  });
+  // Russian declines the tab's name after a preposition.
+  if (lang !== "ru")
+    it("shows a file in the Files tab by that tab's name", () => {
+      expect(s.menuRevealInTree).toContain(s.treeTab);
+    });
+});

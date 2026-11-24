@@ -24,7 +24,7 @@ As cinco maneiras que você mais vai usar, a começar por conversar com ela.
 
 ### Conversas
 
-As conversas abrem como **abas**. Clique no botão **Textus AI** (as faíscas) na ponta direita da barra da janela, pressione <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> ou escolha **Visualizar › Painel de IA**: a IA abre numa ilha própria à direita. As abas dela são abas como as outras: arraste uma para o lado de um documento, para outra ilha ou para fora, numa janela própria.
+As conversas abrem como **abas**. Clique no botão **Textus AI** (as faíscas) na ponta direita da barra da janela, pressione <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> ou escolha **Visualizar › Textus AI**: a IA abre numa ilha própria à direita. As abas dela são abas como as outras: arraste uma para o lado de um documento, para outra ilha ou para fora, numa janela própria.
 
 - **Por pasta**: as conversas pertencem à pasta em que você trabalha, não a um documento. Cada conversa aberta é uma aba; a que está na frente é aquela com que você está falando, sobre o documento que está na frente. Uma conversa fechada continua no histórico.
 - **Nova conversa**: clique com o botão direito no papel vazio de uma aba de IA e escolha **Nova conversa** (se ainda houver edições sem decisão, o app pergunta antes). **Memória** fica no mesmo menu.

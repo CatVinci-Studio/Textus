@@ -89,7 +89,8 @@ for (const device of DEVICES)
         await page.getByRole("button", { name: "Menu", exact: true }).tap();
         await page.getByRole("menuitem", { name: /Settings/ }).tap();
         await page.getByRole("button", { name: "Extensions" }).tap();
-        await page.getByRole("tab", { name: "Plugins" }).tap();
+        // Plugins is an iPhone's one Extensions tab: no row of tabs.
+        await expect(page.getByRole("tab", { name: "Plugins" })).toHaveCount(0);
         await store.getByRole("button", { name: "Search" }).first().tap();
       } else {
         await page
