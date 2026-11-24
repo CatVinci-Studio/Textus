@@ -6,7 +6,7 @@
 // the merge, and tags it. Where it is comes from git and GitHub, so
 // --resume carries on from any step; --dry-run prints what it would change.
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -94,7 +94,7 @@ function findPr(c) {
       "--limit",
       "1",
       "--json",
-      "number,state,headRefOid,mergeCommit,url",
+      "number,state,headRefOid,mergeCommit,url,isCrossRepository",
     ) || "[]",
   );
   return pr;
@@ -104,6 +104,8 @@ function detect(c) {
   c.sh.read("git", "fetch", "--quiet", "origin", "main");
   const tagged = remoteTag(c, c.tag);
   const pr = findPr(c);
+  // The script merges what it finds: never a fork's branch of the same name.
+  if (pr?.isCrossRepository) refuse(`${pr.url} comes from a fork.`);
   const local = c.sh.tryRead(
     "git",
     "rev-parse",
@@ -206,6 +208,8 @@ function commitBump(c) {
     refuse(`Changes beyond the version and the notes: ${stray.join(", ")}`);
   if (!simulated) writeBump(c);
   if (c.stable) {
+    if (!simulated && !existsSync(join(c.root, c.notes)))
+      refuse(`${c.notes} is missing: a release needs its notes.`);
     const problems = simulated ? [] : unreleasedProblems(c.root, c.version);
     if (problems.length > 0)
       refuse(`The notes aren't ready:\n  ${problems.join("\n  ")}`);

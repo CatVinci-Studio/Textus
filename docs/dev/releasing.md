@@ -117,9 +117,12 @@ takes each step in turn, printing every command that changes something:
    needs no notes: its fragments wait for the release.
 3. **Pull request.** It commits `Textus X.Y.Z`, pushes the branch and opens
    the pull request `Textus X.Y.Z`.
-4. **CI.** It waits for the pull request's CI run and stops unless every
-   job passed. Fix a real failure on the branch; rerun a flaky job alone
-   (`gh run rerun <run> --failed`); then `--resume`.
+4. **CI.** It waits for the pull request's CI run and stops unless the run
+   passed. Fix a real failure on the branch; rerun a flaky job alone
+   (`gh run rerun <run> --failed`); then `--resume`. `ios` and `android`
+   can fail without failing the run, so look at the run whole while it
+   waits, `e2e-webkit` and `ios` included: this run is the one the tag
+   relies on.
 5. **Merge.** It squash-merges the pull request (only if its head is still
    the commit CI passed), and waits for `main`'s own CI run on the merged
    commit.

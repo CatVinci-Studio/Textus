@@ -117,3 +117,78 @@ describe("release dry run", () => {
     await expect(release(c)).rejects.toThrow("Nothing to resume");
   });
 });
+
+/** A release whose pull request is open: `runs` are the successive answers
+ *  about its CI run; after `gh pr merge` the pull request reads as merged. */
+function openPr(calls, runs) {
+  let merged = false;
+  return (args) => {
+    calls.push(args);
+    const line = args.join(" ");
+    if (line.startsWith("gh pr list")) {
+      const state = merged ? "MERGED" : "OPEN";
+      return JSON.stringify([
+        {
+          number: 7,
+          state,
+          headRefOid: "head",
+          mergeCommit: merged ? { oid: "merge" } : null,
+          url: "pr/7",
+        },
+      ]);
+    }
+    if (line.startsWith("gh pr merge")) merged = true;
+    if (line.startsWith("gh run list --workflow ci.yml --commit head"))
+      return JSON.stringify([runs.shift()]);
+    if (line.startsWith("gh run list"))
+      return JSON.stringify([
+        { status: "completed", conclusion: "success", url: "main-run" },
+      ]);
+    if (line.startsWith("git rev-parse --verify")) throw new Error("no ref");
+    return "";
+  };
+}
+
+describe("release from an open pull request", () => {
+  const resume = { version: "99.0.0", ios: false, resume: true, dryRun: false };
+
+  it("waits for CI, merges that head and tags the merge", async () => {
+    const calls = [];
+    const c = context(resume, {
+      exec: openPr(calls, [
+        { status: "in_progress", url: "run" },
+        { status: "completed", conclusion: "success", url: "run" },
+      ]),
+      say: () => {},
+      sleep: async () => {},
+    });
+    await release(c);
+    const lines = calls.map((args) => args.join(" "));
+    const merge = lines.findIndex((line) =>
+      line.startsWith("gh pr merge 7 --squash --match-head-commit head "),
+    );
+    const tag = lines.indexOf("git tag -a v99.0.0 merge -m Textus 99.0.0");
+    expect(merge).toBeGreaterThan(0);
+    expect(tag).toBeGreaterThan(merge);
+    expect(lines).toContain("git push --quiet origin v99.0.0");
+  });
+
+  it.each(["failure", "cancelled"])(
+    "stops without merging when CI ends %s",
+    async (conclusion) => {
+      const calls = [];
+      const c = context(resume, {
+        exec: openPr(calls, [
+          { status: "completed", conclusion, url: "run", databaseId: 3 },
+        ]),
+        say: () => {},
+        sleep: async () => {},
+      });
+      await expect(release(c)).rejects.toThrow(`CI ${conclusion}`);
+      expect(
+        calls.some((args) => args[0] === "gh" && args[2] === "merge"),
+      ).toBe(false);
+      expect(calls.some((args) => args[1] === "tag")).toBe(false);
+    },
+  );
+});
