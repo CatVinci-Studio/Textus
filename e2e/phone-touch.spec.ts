@@ -46,6 +46,12 @@ test.describe("a phone on its side", () => {
     await page.locator(".window-bar-sidebar-toggle").tap();
     const rail = (await page.locator(".activity-rail").boundingBox())!;
     expect(rail.x).toBeGreaterThanOrEqual(47);
+    await page.locator(".window-bar-sidebar-toggle").tap();
+    await page.locator(".window-menu-button").tap();
+    await page.getByRole("menuitem", { name: /设置/ }).tap();
+    const settings = (await page.locator(".settings-panel").boundingBox())!;
+    expect(settings.x).toBeGreaterThanOrEqual(47);
+    expect(settings.x + settings.width).toBeLessThanOrEqual(844 - 47);
   });
 });
 
@@ -185,6 +191,21 @@ for (const { name, device } of TOUCH_DEVICES)
       await big([".context-menu-item"]);
     });
   });
+
+test.describe("a phone's bar buttons", () => {
+  test.use(PHONE);
+
+  test("keep no grey fill once a tap is over", async ({ page }) => {
+    await openApp(page, { settings: { language: "en" } });
+    const toggle = page.locator(".window-bar-sidebar-toggle:visible");
+    await toggle.tap();
+    await expect(page.locator(".activity-rail")).toBeVisible();
+    // Closed again by the toggle, the last thing tapped.
+    await toggle.tap();
+    await expect(toggle).toHaveAttribute("aria-pressed", "false");
+    await expect(toggle).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  });
+});
 
 test.describe("a phone's document menu", () => {
   test.use(PHONE);

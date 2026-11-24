@@ -2,12 +2,13 @@
    inside the safe area, so there is no second settings page to keep in step.
    Only its frame and sizes change; it opens as the desktop's dialog does. */
 
-/* Over the whole screen, the card kept clear of the status bar and the
-   home indicator. */
+/* Over the whole screen, the card kept clear of the status bar, the home
+   indicator and, on its side, the camera's cutout. */
 :root[data-window-chrome="mobile"] .settings-backdrop {
   top: 0;
   z-index: var(--z-phone-page);
-  padding: calc(var(--safe-top) + 8px) 8px calc(var(--safe-bottom) + 8px);
+  padding: calc(var(--safe-top) + 8px) calc(var(--safe-right) + 8px)
+    calc(var(--safe-bottom) + 8px) calc(var(--safe-left) + 8px);
 }
 
 :root[data-window-chrome="mobile"] .settings-panel {

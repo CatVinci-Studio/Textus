@@ -130,16 +130,6 @@
   background-clip: content-box;
 }
 
-/* A touch leaves :hover stuck on the last thing tapped. */
-:root[data-window-chrome="mobile"] .window-menu-button:hover {
-  background: none;
-}
-
-:root[data-window-chrome="mobile"]
-  .window-bar-toggle:hover:not(.window-bar-toggle-on) {
-  background: none;
-}
-
 /* On, it takes the tint as an iOS bar button does, rather than a filled
    box flush against the screen's edge. */
 :root[data-window-chrome="mobile"] .window-bar-toggle-on {
