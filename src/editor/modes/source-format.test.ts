@@ -77,6 +77,19 @@ describe("toggleSourceMark", () => {
     expect(view.state.doc.toString()).toBe("****a** and **b****");
   });
 
+  it("clears every run the selection touches, leaving code and snake_case", () => {
+    const view = viewOf("a **b [c** ~~d~~ ==e==] *f* `**g**` snake_case_name");
+    expect(toggleSourceMark(view, "clear")).toBe(true);
+    expect(shown(view)).toBe("a b [c d e] *f* `**g**` snake_case_name");
+  });
+
+  it("clears nested runs, and nothing with nothing to clear", () => {
+    const view = viewOf("[***x***]");
+    toggleSourceMark(view, "clear");
+    expect(view.state.doc.toString()).toBe("x");
+    expect(toggleSourceMark(viewOf("[2 * 3 * 4]"), "clear")).toBe(false);
+  });
+
   it("refuses a mark it doesn't write", () => {
     expect(toggleSourceMark(viewOf("|"), "underline")).toBe(false);
   });

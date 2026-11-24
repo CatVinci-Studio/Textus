@@ -20,6 +20,7 @@ const MARKERS: Record<string, string> = {
  *  already wrapped (inside or just outside the selection). False for a mark
  *  source mode doesn't write. */
 export function toggleSourceMark(view: EditorView, mark: string): boolean {
+  if (mark === "clear") return clearSourceMarks(view);
   const marker = MARKERS[mark];
   if (!marker) return false;
   const n = marker.length;
@@ -79,6 +80,63 @@ export function toggleSourceMark(view: EditorView, mark: string): boolean {
     }),
   );
   return true;
+}
+
+/** A bold, italic, strikethrough or highlight run on one line. */
+const SPAN = /(\*\*|__|~~|==|\*|_)(?=\S)([^\n]*?\S)\1/g;
+const WORD = /[\p{L}\p{N}]/u;
+
+/** Clear Formatting: the markers of every run the selection touches taken
+ *  off, as the rendered editor does; code spans stay. False with nothing
+ *  to clear. */
+function clearSourceMarks(view: EditorView): boolean {
+  const { state } = view;
+  let cleared = false;
+  const result = state.changeByRange((range) => {
+    if (range.empty) return { range };
+    const start = state.doc.lineAt(range.from).from;
+    // Code spans masked; `at` holds each remaining character's offset.
+    let text = state
+      .sliceDoc(start, state.doc.lineAt(range.to).to)
+      .replace(/`+[^`\n]*`+/g, (code) => "\u0001".repeat(code.length));
+    let at = [...text].map((_, i) => start + i);
+    const gone: { from: number; to: number }[] = [];
+    const next = () =>
+      [...text.matchAll(SPAN)].find((m) => {
+        const end = m.index + m[0].length;
+        // An underscore inside a word (snake_case) marks nothing.
+        if (
+          m[1][0] === "_" &&
+          (WORD.test(text[m.index - 1] ?? "") || WORD.test(text[end] ?? ""))
+        )
+          return false;
+        return at[m.index] < range.to && at[end - 1] >= range.from;
+      });
+    for (let m = next(); m; m = next()) {
+      const n = m[1].length;
+      const end = m.index + m[0].length;
+      gone.push(
+        { from: at[m.index], to: at[m.index] + n },
+        { from: at[end - n], to: at[end - n] + n },
+      );
+      const keep = (_: unknown, i: number) =>
+        i < m.index || (i >= m.index + n && i < end - n) || i >= end;
+      text = [...text].filter(keep).join("");
+      at = at.filter(keep);
+    }
+    if (!gone.length) return { range };
+    cleared = true;
+    const changes = state.changes(gone);
+    return {
+      changes,
+      range: EditorSelection.range(
+        changes.mapPos(range.from, 1),
+        changes.mapPos(range.to, -1),
+      ),
+    };
+  });
+  if (cleared) view.dispatch(result);
+  return cleared;
 }
 
 /** A line's block prefix: its quote, heading, list or task marker. */
