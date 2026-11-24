@@ -12,6 +12,9 @@ import {
  * is: its text and path, and its changes once typing pauses (the source
  * editor reports on the same pause). Returns what the source editor reports
  * its text to. Blocks, selection and edits are the rich editor's alone.
+ * Text from outside (a reload, the AI's or a plugin's edit) comes in through
+ * `replace`, which tells plugins as the rich editor's does; a new `content`
+ * prop is then that text coming back, not a change to tell.
  */
 export function useSourceDocumentAccess({
   tabId,
