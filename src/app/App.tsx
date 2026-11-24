@@ -266,6 +266,7 @@ function App() {
 
           <ClosePrompt
             open={!!pendingClose}
+            phone={phone}
             dialogProps={closePrompt}
             onSave={() => void closeSaving()}
             onDiscard={() => void closeDiscarding()}

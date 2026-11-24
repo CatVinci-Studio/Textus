@@ -4,9 +4,11 @@ import type { useModalDialog } from "../engine/controls/useModalDialog";
 import type { Strings } from "../i18n/strings";
 import { DialogActions } from "../engine/controls/DialogActions";
 
-/** The save/discard/cancel prompt: the desktop's dialog, a phone's too. */
+/** The save/discard/cancel prompt: the app's dialog, on a phone in the
+ *  form its other alerts take (mobile/styles/chrome.css). */
 export function ClosePrompt({
   open,
+  phone,
   dialogProps,
   onSave,
   onDiscard,
@@ -15,6 +17,7 @@ export function ClosePrompt({
   t,
 }: {
   open: boolean;
+  phone: boolean;
   /** The document closing, named in the question; none for a window. */
   name?: string | null;
   /** useModalDialog's wiring for the dialog. */
@@ -33,7 +36,7 @@ export function ClosePrompt({
         {open && (
           <PresenceDiv className="tx-backdrop">
             <div
-              className="close-prompt"
+              className={`close-prompt${phone ? " app-dialog" : ""}`}
               {...dialogProps}
               role="dialog"
               aria-modal="true"
@@ -43,7 +46,7 @@ export function ClosePrompt({
               <DialogActions
                 start={
                   <button
-                    className="tx-button close-prompt-discard"
+                    className="tx-button close-prompt-discard app-dialog-danger"
                     onClick={onDiscard}
                   >
                     {t.closePromptDiscard}

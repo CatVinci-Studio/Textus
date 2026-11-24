@@ -108,10 +108,10 @@ for (const { name, device } of TOUCH_DEVICES)
           const size = await reach(page, selector);
           expect
             .soft(size.width, `${selector} wide`)
-            .toBeGreaterThanOrEqual(43);
+            .toBeGreaterThanOrEqual(44);
           expect
             .soft(size.height, `${selector} tall`)
-            .toBeGreaterThanOrEqual(43);
+            .toBeGreaterThanOrEqual(44);
         }
       };
       await big([
@@ -167,10 +167,46 @@ test.describe("a phone's document menu", () => {
       Math.abs(box.x + box.width - (button.x + button.width)),
     ).toBeLessThan(12);
     for (const row of await menu.locator(".context-menu-item").all())
-      expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(43);
+      expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     await page.getByRole("menuitem", { name: "Outline" }).tap();
     await expect(page.getByRole("menu", { name: "Outline" })).toHaveClass(
       /context-menu/,
     );
+  });
+});
+
+test.describe("a phone's menu from a page over the window", () => {
+  test.use(PHONE);
+
+  test("shows over Settings, taking the tap", async ({ page }) => {
+    await openApp(page, { settings: { language: "en" } });
+    await page.getByRole("button", { name: "Menu", exact: true }).tap();
+    await page.getByRole("menuitem", { name: /Settings/ }).tap();
+    await page.getByRole("button", { name: "General" }).tap();
+    await page.locator(".ui-select:visible").first().tap();
+    const menu = page.locator(".context-menu");
+    await expect(menu).toBeVisible();
+    const box = (await menu.boundingBox())!;
+    const onTop = await page.evaluate(
+      ([x, y]) => !!document.elementFromPoint(x, y)?.closest(".context-menu"),
+      [box.x + box.width / 2, box.y + box.height / 2],
+    );
+    expect(onTop).toBe(true);
+  });
+});
+
+test.describe("a phone's unsaved-changes prompt", () => {
+  test.use(PHONE);
+
+  test("is the app's alert, its answers a fingertip tall", async ({ page }) => {
+    await openApp(page, { settings: { language: "en" } });
+    await page.locator(".ProseMirror:visible").tap();
+    await page.keyboard.type("Hello");
+    await page.locator(".tab-pill-close").first().tap();
+    const prompt = page.locator(".close-prompt.app-dialog");
+    await expect(prompt).toBeVisible();
+    await expect(page.locator(".sheet-scrim")).toHaveCount(0);
+    for (const answer of await prompt.locator("button").all())
+      expect((await answer.boundingBox())!.height).toBeGreaterThanOrEqual(43);
   });
 });

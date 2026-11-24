@@ -117,10 +117,17 @@
 
 :root[data-window-chrome="mobile"]
   :is(.window-menu-button, .window-bar-sidebar-toggle, .window-bar-toggle) {
-  width: 48px;
-  height: 48px;
+  width: var(--touch-target);
+  height: var(--touch-target);
   border-radius: var(--shape-pill);
   corner-shape: round;
+}
+
+/* The sidebar's fill, when on, keeps the desktop's small rounded box inside
+   its fingertip-wide button. */
+:root[data-window-chrome="mobile"] .window-bar-sidebar-toggle {
+  padding: 12px;
+  background-clip: content-box;
 }
 
 /* A touch leaves :hover stuck on the last thing tapped. */

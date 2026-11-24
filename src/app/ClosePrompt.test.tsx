@@ -16,6 +16,7 @@ describe("the close prompt", () => {
       <SettingsProvider>
         <ClosePrompt
           open
+          phone
           dialogProps={{} as ReturnType<typeof useModalDialog>}
           t={t}
           {...answers}

@@ -195,6 +195,7 @@ export function MenuPanel({
             key={i}
             item={item}
             checks={checks}
+            reveal={inline}
             onClose={onClose}
             onMouseEnter={() => aim.hover(null)}
           />
@@ -223,11 +224,14 @@ export function MenuPanel({
 function MenuRow({
   item,
   checks,
+  reveal,
   onClose,
   onMouseEnter,
 }: {
   item: ContextMenuItem;
   checks: boolean;
+  /** A phone's: the checked row scrolled into view in a long list. */
+  reveal: boolean;
   onClose: () => void;
   onMouseEnter: () => void;
 }) {
@@ -246,9 +250,8 @@ function MenuRow({
       aria-checked={item.checked}
       aria-current={item.current ? "location" : undefined}
       data-depth={item.depth}
-      // The one in force in view, however long the list.
       ref={
-        item.checked && !item.toggle
+        reveal && item.checked && !item.toggle
           ? (el) => el?.scrollIntoView?.({ block: "nearest" })
           : undefined
       }

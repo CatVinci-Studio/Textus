@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSettings } from "../prefs/SettingsContext";
 import { useMenuButton } from "../engine/controls/useMenuButton";
 import { Presence } from "../engine/motion/usePresence";
@@ -31,15 +31,16 @@ export function DocumentMenu({
     y: number;
     anchor: HTMLElement | null;
   } | null>(null);
-  const [button, setButton] = useState<HTMLElement | null>(null);
+  const button = useRef<HTMLElement | null>(null);
   const more = useMenuButton(
     () => [
       {
         label: t.outlineTab,
         onSelect: () => {
-          const box = button?.getBoundingClientRect();
+          const el = button.current;
+          const box = el?.getBoundingClientRect();
           if (box)
-            setOutlineAt({ x: box.right, y: box.bottom + 4, anchor: button });
+            setOutlineAt({ x: box.right, y: box.bottom + 4, anchor: el });
         },
       },
       {
@@ -64,7 +65,7 @@ export function DocumentMenu({
           {...more.button}
           ref={(el) => {
             more.button.ref(el);
-            setButton(el);
+            button.current = el;
           }}
         >
           <MoreIcon />

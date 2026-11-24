@@ -1,9 +1,5 @@
 /* The phone's forms of the app's dialogs, menus and bars. */
 
-:root[data-window-chrome="mobile"] .context-menu-item {
-  min-height: 48px;
-}
-
 /* With 44pt rows and the recent documents, the phone menu is taller than
    the desktop's 560px cap; it may use the screen below the title row. */
 :root[data-window-chrome="mobile"] .context-menu {
@@ -140,7 +136,7 @@
   .app-dialog.close-prompt
   .close-prompt-buttons:has(> button:nth-of-type(3))
   button
-  + button {
+  ~ button {
   border-top: 1px solid var(--ui-border);
   border-left: none;
 }
@@ -171,7 +167,6 @@
 }
 
 :root[data-window-chrome="mobile"] .context-menu-item {
-  min-height: 48px;
   padding: 0 12px;
   font-size: var(--text-body);
 }
@@ -350,9 +345,9 @@
 :root[data-window-chrome="mobile"] .tab-pill-close {
   flex-shrink: 0;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  margin: -4px 0;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  margin: -2px 0;
   padding: 0;
   opacity: 0.7;
 }
@@ -368,8 +363,7 @@
 }
 
 :root[data-window-chrome="mobile"] .tab-bar-add {
-  min-width: 48px;
-  min-height: 48px;
+  min-height: var(--touch-target);
 }
 :root[data-window-chrome="mobile"] .tab-bar-add > svg {
   width: 20px;
