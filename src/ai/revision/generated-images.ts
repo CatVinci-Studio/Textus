@@ -131,7 +131,15 @@ export function draftPictureProposal(
   };
 }
 
-const loaded = new Map<string, GeneratedImageData & { url: string }>();
+/** Each picture here, by id: its bytes until it is saved, and its blob:
+ *  URL, which the card and an undone proposal still show after. */
+const loaded = new Map<
+  string,
+  Omit<GeneratedImageData, "dataBase64"> & {
+    dataBase64: string | null;
+    url: string;
+  }
+>();
 const loading = new Map<string, Promise<boolean>>();
 /** Why a picture wasn't made, in the service's words. */
 const failed = new Map<string, string>();
@@ -192,7 +200,7 @@ export function loadGeneratedImage(id: string): Promise<boolean> {
   // A streaming call's stand-in: nothing to fetch, it paints until the
   // call's own picture takes its place.
   if (isDraftPicture(id)) return new Promise<boolean>(() => {});
-  if (loaded.has(id)) return Promise.resolve(true);
+  if (loaded.has(id) || saved.has(id)) return Promise.resolve(true);
   if (failed.has(id)) return Promise.resolve(false);
   let pending = loading.get(id);
   if (!pending) {
@@ -308,9 +316,12 @@ export function generatedImageId(src: string): string | null {
   return STUB_ID.exec(src)?.[1] ?? null;
 }
 
-/** A loaded picture's bytes, for saving it. */
+/** A loaded picture's bytes, for saving it; null once it is saved. */
 export function generatedImageData(id: string): GeneratedImageData | null {
-  return loaded.get(id) ?? null;
+  const data = loaded.get(id);
+  if (!data?.dataBase64) return null;
+  const { mime, ext, width, height, dataBase64 } = data;
+  return { mime, ext, width, height, dataBase64 };
 }
 
 /** A loaded picture as a data: URL, or null until it has loaded. */
@@ -357,20 +368,22 @@ export function savedSrc(id: string): string | undefined {
   return saved.get(id);
 }
 
-/** A picture is saved: the backend lets its copy go. The preview's copy
- *  stays, for an undo to show the proposal again. */
+/** A picture is saved: the backend lets its copy go, and so do its bytes
+ *  here. Its blob: URL stays, for its card and an undo to show it. */
 export function rememberSaved(id: string, src: string): void {
   saved.set(id, src);
+  const data = loaded.get(id);
+  if (data) data.dataBase64 = null;
   void ai.discardGeneratedImage(id).catch(() => {});
 }
 
-/** Lets a picture go everywhere: its proposal was rejected. */
+/** Lets a picture go everywhere: its proposal was rejected. One saved
+ *  keeps its file, for accepting again after an undo. */
 export function discardGeneratedImage(id: string): void {
-  if (saved.has(id)) return;
   const url = loaded.get(id)?.url;
   if (url?.startsWith("blob:")) URL.revokeObjectURL(url);
   loaded.delete(id);
-  void ai.discardGeneratedImage(id).catch(() => {});
+  if (!saved.has(id)) void ai.discardGeneratedImage(id).catch(() => {});
 }
 
 /** `text` with `picture` on a line of its own beside the paragraph quoting
