@@ -102,6 +102,20 @@ test("files from a file manager let go on a folder of the tree are copied in, af
   await expect(
     page.locator(".tree-row-picked", { hasText: "tickets.pdf" }),
   ).toBeVisible();
+  // The question gone, the first copy has the keyboard: the key takes the
+  // drop back, and nothing in the document.
+  await expect(
+    page.locator(".tree-row", { hasText: "tickets.pdf" }),
+  ).toBeFocused();
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (window as unknown as { __devTrashed?: string[] }).__devTrashed,
+      ),
+    )
+    .toEqual(["/trip/assets/tickets.pdf", "/trip/assets/notes.md"]);
+  expect(await devFiles(page)).toContain("/trip/assets/boat.png");
   // Opened nothing, put nothing into the document.
   await expect(page.locator('[role="tab"]', { hasText: "notes" })).toHaveCount(
     0,

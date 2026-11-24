@@ -23,8 +23,7 @@ import { useLatest } from "../utils/hooks/useLatest";
 import { dropDirAt } from "./tree-shared";
 import type { DraggedFile } from "../engine/controls/document-drop";
 import { copyQuestion, setTreeFileDrop } from "./tree-file-drop";
-import { stampOf, type CopiedEntry } from "./tree-copy-undo";
-import { useTreeCopyUndo } from "./useTreeCopyUndo";
+import { stampOf, type FileStep, type MadeEntry } from "./file-undo";
 
 /**
  * Files and folders from a file manager let go on the tree, with a folder
@@ -33,7 +32,7 @@ import { useTreeCopyUndo } from "./useTreeCopyUndo";
  * Again), copied into it one after another - never moved, never over a
  * name there. What fails is said by name once the rest are in. The first
  * copy is then picked and shown (`show`), and the drop can be undone
- * (useTreeCopyUndo). Returns the folder lit.
+ * (`record`, useFileUndo). Returns the folder lit.
  */
 export function useTreeFileDrop(
   treeRef: RefObject<HTMLDivElement | null>,
@@ -42,11 +41,12 @@ export function useTreeFileDrop(
   folder: string | null,
   reload: (...dirs: string[]) => void,
   show: (path: string, isDir: boolean) => void,
+  /** Keeps the drop to undo; returns its notice's Undo. */
+  record: (step: FileStep) => { label: string; run: () => void } | undefined,
 ): string | null {
   const { settings, setSettings, t } = useSettings();
   const [into, setInto] = useState<string | null>(null);
-  const copies = useTreeCopyUndo(treeRef, folder, reload);
-  const latest = useLatest({ settings, setSettings, t, reload, show, copies });
+  const latest = useLatest({ settings, setSettings, t, reload, show, record });
 
   useEffect(() => {
     // A plugin's folder takes no copies from the disk: what is let go on
@@ -57,7 +57,7 @@ export function useTreeFileDrop(
       const where = { folder: folderName(dir) };
       const progress = startProgress(fill(t.treeCopying, where));
       const failed: string[] = [];
-      const made: CopiedEntry[] = [];
+      const made: MadeEntry[] = [];
       let copied = 0;
       for (const [i, { path, isDir }] of files.entries()) {
         reportProgress(progress, {
@@ -82,7 +82,7 @@ export function useTreeFileDrop(
       }
       endProgress(progress);
       const lang = latest.current.settings.language;
-      const undo = latest.current.copies.remember(made);
+      const undo = latest.current.record({ kind: "copy", made });
       if (copied)
         showNotice(fill(plural(t.treeCopied, copied, lang), where), {
           action: undo,

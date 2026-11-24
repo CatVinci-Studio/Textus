@@ -6,34 +6,34 @@ import { FOCUSED_EDIT_EVENT } from "../utils/events";
 import { useLatest } from "../utils/hooks/useLatest";
 import { basename } from "../utils/path";
 import { comboFromEvent } from "../utils/shortcuts";
-import { lastDrop, undoCopies, type CopiedEntry } from "./tree-copy-undo";
-import { failureText, trashable, trashFromTree } from "./tree-shared";
+import { canUndo, fileUndoStack, undoStep, type FileStep } from "./file-undo";
+import { failureText, trashFromTree } from "./tree-shared";
 
 /**
- * The last drop of files from a file manager, undone with Edit › Undo while
- * the tree has the keyboard, or the Undo on its notice: its copies to the
- * Trash, never what was there before, and none when one changed since.
- * `remember` keeps a drop and returns its notice's Undo, if it has one.
+ * The tree's file operations, taken back newest first with Edit › Undo
+ * while the tree has the keyboard, or the Undo on the operation's notice;
+ * a step whose entries changed since is refused, and nothing is undone.
+ * `record` keeps a step and returns its notice's Undo, if it has one.
  */
-export function useTreeCopyUndo(
+export function useFileUndo(
   treeRef: RefObject<HTMLDivElement | null>,
-  /** The folder open in the window, the copies' root. */
+  /** The folder open in the window: what is trashed stays inside it. */
   folder: string | null,
   reload: (...dirs: string[]) => void,
 ) {
   const { t } = useSettings();
-  const drop = useMemo(() => lastDrop(), []);
+  const stack = useMemo(() => fileUndoStack(), []);
   const latest = useLatest({ t, folder, reload });
 
   const undo = useMemo(
     () =>
-      (which?: readonly CopiedEntry[]): boolean => {
-        const copies = drop.take(which);
+      (which?: FileStep): boolean => {
+        const step = stack.take(which);
         const { t, folder, reload } = latest.current;
-        if (!copies || !folder) return false;
-        void undoCopies(copies, (path) =>
-          trashFromTree(path, folder, reload),
-        ).then(
+        if (!step || !folder) return false;
+        void undoStep(step, {
+          trash: (path) => trashFromTree(path, folder, reload),
+        }).then(
           async (result) => {
             if (result.done) return;
             const names = result.changed.map(basename).join("\n");
@@ -43,11 +43,11 @@ export function useTreeCopyUndo(
         );
         return true;
       },
-    [drop, latest],
+    [stack, latest],
   );
 
-  // Another folder: the last drop was into the one before.
-  useEffect(() => () => drop.keep(null), [folder, drop]);
+  // Another folder: its steps were in the one before.
+  useEffect(() => () => stack.clear(), [folder, stack]);
 
   useEffect(() => {
     const tree = treeRef.current;
@@ -72,17 +72,12 @@ export function useTreeCopyUndo(
 
   return useMemo(
     () => ({
-      remember(copies: readonly CopiedEntry[]) {
-        // Without a Trash an undo would delete for good: none offered.
-        const kept = copies.every((c) => trashable(c.path)) ? copies : null;
-        drop.keep(kept);
-        if (!kept?.length) return undefined;
-        return {
-          label: latest.current.t.menuUndo,
-          run: () => void undo(kept),
-        };
+      record(step: FileStep) {
+        if (!canUndo(step)) return undefined;
+        stack.push(step);
+        return { label: latest.current.t.menuUndo, run: () => void undo(step) };
       },
     }),
-    [drop, latest, undo],
+    [stack, latest, undo],
   );
 }
