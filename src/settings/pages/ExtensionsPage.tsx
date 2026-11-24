@@ -53,13 +53,16 @@ export function ExtensionsPage(props: SettingsPageProps) {
   };
   return (
     <>
-      <Segmented
-        className="extensions-tabs"
-        label={t.navExtensions}
-        options={TABS.map((id) => ({ id, label: label[id] }))}
-        value={tab}
-        onChange={setTab}
-      />
+      {/* One tab alone (an iPhone's Plugins) needs no row to pick it. */}
+      {TABS.length > 1 && (
+        <Segmented
+          className="extensions-tabs"
+          label={t.navExtensions}
+          options={TABS.map((id) => ({ id, label: label[id] }))}
+          value={tab}
+          onChange={setTab}
+        />
+      )}
       {!props.indexing && (
         <div
           role="tabpanel"

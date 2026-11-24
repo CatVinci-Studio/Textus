@@ -7,19 +7,17 @@ import "./sheet.css";
 /**
  * A phone's sheet from the bottom edge: the dimming behind it, its spring in
  * and out, and the ways out - a tap outside or Escape (not while an input
- * method is composing). The menu (ActionSheet) and the card (BottomCard)
- * are its two bodies.
+ * method is composing). The card (BottomCard) and the table's size are its
+ * bodies.
  */
 export function Sheet({
   label,
-  role,
   className,
   onClose,
   children,
 }: {
   /** What the sheet is, for assistive technology. */
   label?: string;
-  role: "menu" | "dialog";
   className: string;
   onClose: () => void;
   children: ReactNode;
@@ -35,12 +33,6 @@ export function Sheet({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose, open]);
-  // A menu takes the focus: the keyboard goes down, and nothing typed lands
-  // in the document behind it.
-  const sheet = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    if (role === "menu") sheet.current?.focus({ preventScroll: true });
-  }, [role]);
   // The click a tap makes after the finger lifts can reach a sheet that the
   // same tap opened: only a press made on it counts (a key's click too).
   const pressed = useRef(false);
@@ -59,10 +51,9 @@ export function Sheet({
       }}
     >
       <div
-        ref={sheet}
         tabIndex={-1}
         className={`sheet ${className}`}
-        role={role}
+        role="dialog"
         aria-label={label}
       >
         {children}

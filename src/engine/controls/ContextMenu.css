@@ -20,6 +20,23 @@
   flex: 1;
 }
 
+/* An outline's headings, set in a step a level. */
+.context-menu-item[data-depth="2"] > .context-menu-label {
+  margin-left: 16px;
+}
+.context-menu-item[data-depth="3"] > .context-menu-label {
+  margin-left: 32px;
+}
+.context-menu-item[data-depth="4"] > .context-menu-label {
+  margin-left: 48px;
+}
+.context-menu-item[data-depth="5"] > .context-menu-label {
+  margin-left: 64px;
+}
+.context-menu-item[data-depth="6"] > .context-menu-label {
+  margin-left: 80px;
+}
+
 .context-menu-item:disabled {
   color: var(--ui-muted);
 }

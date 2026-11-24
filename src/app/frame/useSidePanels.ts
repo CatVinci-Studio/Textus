@@ -20,6 +20,7 @@ import { useNarrowSidebar } from "./useNarrowSidebar";
 import { useNarrowIslands } from "./useNarrowIslands";
 import { useSidebarWidth } from "./sidebar-width";
 import { RAIL_WIDTH } from "./ActivityRail";
+import { phoneWayIn } from "./sidebar-tabs";
 import { chromeScale } from "../../engine/tokens/chrome-scale";
 import { useSettings, type Settings } from "../../prefs/SettingsContext";
 
@@ -112,6 +113,8 @@ function useSidebarTabs(open: boolean, setOpen: SetOpen) {
   const [panelMode, setPanelMode] = useSidebarTab();
   const showSidebarTab = useCallback(
     (id: SidebarTabId) => {
+      const elsewhere = isPhoneLayout() ? phoneWayIn(id) : undefined;
+      if (elsewhere) return elsewhere();
       const shown = open && panelMode === id;
       setOpen(!shown);
       if (!shown) setPanelMode(id);

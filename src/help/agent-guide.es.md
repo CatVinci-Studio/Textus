@@ -24,7 +24,7 @@ Las cinco formas que más vas a usar, empezando por hablar con ella.
 
 ### Conversaciones
 
-Las conversaciones se abren como **pestañas**. Haz clic en el botón **Textus AI** (los destellos) del extremo derecho de la barra de la ventana, pulsa <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> o elige **Visualización › Panel de IA**: la IA se abre en una isla propia a la derecha. Sus pestañas son pestañas como las demás: arrastra una junto a un documento, a otra isla o fuera, a una ventana propia.
+Las conversaciones se abren como **pestañas**. Haz clic en el botón **Textus AI** (los destellos) del extremo derecho de la barra de la ventana, pulsa <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> o elige **Visualización › Textus AI**: la IA se abre en una isla propia a la derecha. Sus pestañas son pestañas como las demás: arrastra una junto a un documento, a otra isla o fuera, a una ventana propia.
 
 - **Por carpeta**: las conversaciones pertenecen a la carpeta en la que trabajas, no a un documento. Cada conversación abierta es una pestaña; la que está delante es con la que hablas, sobre el documento que está delante. Una conversación cerrada se queda en el historial.
 - **Nueva conversación**: haz clic derecho en el papel vacío de una pestaña de IA y elige **Nueva conversación** (si quedan cambios por decidir, pregunta antes). **Memoria** está en el mismo menú.

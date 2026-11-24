@@ -266,6 +266,38 @@ test("in source mode the format keys and the Format menu write Markdown", async 
   await expect(source).toHaveText("==## **word**==");
 });
 
+test("Format's items and keys leave the document alone while a field of its own has the keyboard", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page);
+  await pasteMarkdown(page, "plain words");
+  const doc = docs(page).first();
+  await doc.click();
+  await page.keyboard.press("ControlOrMeta+a");
+  // The find bar's field: the document's tab stays the one in use.
+  await emit(page, "menu-find-replace");
+  const box = page.locator(".find-replace-bar input").first();
+  await expect(box).toBeFocused();
+  // A Mac's menu takes ⌘B, ⌘I, ⇧⌘H, ⌘K and ⌘1 from the field.
+  for (const [name, payload] of [
+    ["menu-toggle-mark", "bold"],
+    ["menu-toggle-mark", "italic"],
+    ["menu-toggle-mark", "highlight"],
+    ["menu-insert-link", undefined],
+    ["menu-insert-block", "h1"],
+  ] as const)
+    await emit(page, name, payload);
+  await settled(page);
+  await expect(box).toBeFocused();
+  await expect(doc.locator("strong, em, mark, a, h1")).toHaveCount(0);
+  // From the document they format it.
+  await doc.click();
+  await page.keyboard.press("ControlOrMeta+a");
+  await emit(page, "menu-toggle-mark", "bold");
+  await expect(doc.locator("strong")).toHaveCount(1);
+});
+
 test("a ⌘ or Ctrl click in the text places the caret, never selects the block", async ({
   page,
 }) => {
@@ -370,7 +402,7 @@ test.describe("the app-drawn menu (Windows, Linux)", () => {
     await page.getByRole("button", { name: "Menu" }).click();
     await row(page, "View").hover();
     await expect(row(page, "Zen Mode")).toBeVisible();
-    await row(page, "Mode").hover();
+    await row(page, "Editing view").hover();
     await expect(menus(page)).toHaveCount(3);
     const [first, second, third] = await Promise.all(
       [0, 1, 2].map((i) => menus(page).nth(i).boundingBox()),

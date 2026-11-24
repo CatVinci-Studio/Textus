@@ -119,8 +119,8 @@ const KEYS: Record<string, Key> = {
   f6: { does: "Next region", ...everywhere("window") },
   "shift+f6": { does: "Previous region", ...everywhere("window") },
   // The editor's.
-  "mod+b": { does: "Bold", ...everywhere("editor") },
-  "mod+i": { does: "Italic", ...everywhere("editor") },
+  "mod+b": { does: "Bold", ...menuThenEditor("toggle-mark:bold") },
+  "mod+i": { does: "Italic", ...menuThenEditor("toggle-mark:italic") },
   "mod+shift+h": {
     does: "Highlight",
     ...menuThenEditor("toggle-mark:highlight"),

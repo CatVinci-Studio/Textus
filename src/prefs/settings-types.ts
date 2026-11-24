@@ -205,8 +205,9 @@ export interface Settings {
   /// Floating islands (the page and panels as rounded sheets on the frame)
   /// or classic (flush, square, hairlines).
   layout: "islands" | "classic";
-  /// The layout, rail and title row as they were when "Use the classic
-  /// look" turned on, put back when it turns off; null while it is off.
+  /// The layout, rail and title row as they were when "Use the look of
+  /// earlier versions" turned on, put back when it turns off; null while
+  /// it is off.
   lookBeforeClassic: {
     layout: "islands" | "classic";
     activityRail: boolean;

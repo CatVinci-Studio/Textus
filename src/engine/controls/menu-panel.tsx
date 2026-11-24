@@ -28,9 +28,7 @@ const SWAP_MS = 400;
 
 type Open = { index: number; focus: boolean } | null;
 
-export function isMenuGroup(
-  entry: ContextMenuEntry,
-): entry is ContextMenuGroup {
+function isMenuGroup(entry: ContextMenuEntry): entry is ContextMenuGroup {
   return typeof entry === "object" && "items" in entry;
 }
 
@@ -120,7 +118,9 @@ export function MenuPanel({
   // row, so the labels and shortcuts stay in line.
   const checks = items.some(
     (item) =>
-      item !== "separator" && !isMenuGroup(item) && item.checked !== undefined,
+      item !== "separator" &&
+      !isMenuGroup(item) &&
+      (item.checked !== undefined || item.current !== undefined),
   );
   const group = open && !inline ? items[open.index] : undefined;
   return (
@@ -195,6 +195,7 @@ export function MenuPanel({
             key={i}
             item={item}
             checks={checks}
+            reveal={inline}
             onClose={onClose}
             onMouseEnter={() => aim.hover(null)}
           />
@@ -223,11 +224,14 @@ export function MenuPanel({
 function MenuRow({
   item,
   checks,
+  reveal,
   onClose,
   onMouseEnter,
 }: {
   item: ContextMenuItem;
   checks: boolean;
+  /** A phone's: the checked row scrolled into view in a long list. */
+  reveal: boolean;
   onClose: () => void;
   onMouseEnter: () => void;
 }) {
@@ -244,6 +248,13 @@ function MenuRow({
             : "menuitemradio"
       }
       aria-checked={item.checked}
+      aria-current={item.current ? "location" : undefined}
+      data-depth={item.depth}
+      ref={
+        reveal && item.checked && !item.toggle
+          ? (el) => el?.scrollIntoView?.({ block: "nearest" })
+          : undefined
+      }
       tabIndex={-1}
       disabled={item.disabled}
       className={`context-menu-item${item.danger ? " context-menu-item-danger" : ""}`}
@@ -264,7 +275,7 @@ function MenuRow({
       {item.accel && <span className="context-menu-accel">{item.accel}</span>}
       {checks && (
         <span className="context-menu-check" aria-hidden="true">
-          {item.checked && <CheckIcon />}
+          {(item.checked || item.current) && <CheckIcon />}
         </span>
       )}
     </button>

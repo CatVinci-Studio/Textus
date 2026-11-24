@@ -4,14 +4,13 @@ import { Presence } from "../motion/usePresence";
 
 /**
  * A button that opens a menu below it - the one way to: the context menu's
- * look, keys (arrows, Home/End, Escape), submenus and closing, and on a
- * phone an action sheet. Spread `button` on the button and render `menu`
- * beside it.
+ * look, keys (arrows, Home/End, Escape), submenus and closing, a phone's
+ * too. Spread `button` on the button and render `menu` beside it.
  */
 export function useMenuButton(
   items: () => ContextMenuEntry[],
   options: {
-    /** Names the menu: a heading row, and the phone sheet's title. */
+    /** Names the menu: a heading row. */
     title?: string;
     /** The button sits at the end of its bar: the menu lines up with its
      *  right edge. */
@@ -82,7 +81,6 @@ export function useMenuButton(
               options.beside ? options.beside === "left" : options.alignEnd
             }
             heading={options.title}
-            title={options.title}
             items={items()}
             onClose={close}
           />

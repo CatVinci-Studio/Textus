@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { Tooltip } from "./Tooltip";
 import type { BubbleSide } from "./Bubble";
 import type { useMenuButton } from "./useMenuButton";
@@ -25,7 +25,7 @@ export function IconButton({
   hint?: string;
   /** Where the tooltip prefers to sit (below by default). */
   hintSide?: BubbleSide;
-  onClick?: () => void;
+  onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   opens?: ReturnType<typeof useMenuButton>["button"];
   /** For a toggle: whether it is on. */
   pressed?: boolean;

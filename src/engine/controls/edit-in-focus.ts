@@ -55,3 +55,19 @@ function editNatively(action: FocusedEdit): void {
       if (!done && action !== "select-all") document.execCommand(action);
     });
 }
+
+/** The document's own editors: rich text and source mode. */
+const DOCUMENT_EDITOR = ".milkdown, .source-view";
+
+/** Whether the keyboard is in a field of its own outside the document (the
+ *  AI's box, a search, a rename): a format key the menu took then belongs
+ *  to that field, not to the document's selection. */
+export function typingOutsideDocument(): boolean {
+  const focused = document.activeElement;
+  if (!(focused instanceof HTMLElement)) return false;
+  const field =
+    focused instanceof HTMLInputElement ||
+    focused instanceof HTMLTextAreaElement ||
+    focused.isContentEditable;
+  return field && !focused.closest(DOCUMENT_EDITOR);
+}

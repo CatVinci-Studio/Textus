@@ -26,6 +26,9 @@
   /* The macOS traffic lights' corner: AppKit draws them at one size,
      whatever the interface's, so their room never grows or shrinks. */
   --lights-room: 78px;
+  /* The least a finger hits on a touch screen (44pt), at any interface
+     size. */
+  --touch-target: 44px;
   /* Text by role: small for what is said about something (a count, a hint,
      a group's title), list for a long list read at a glance (the file
      tree), body for everything read or used, title for a dialog's, large

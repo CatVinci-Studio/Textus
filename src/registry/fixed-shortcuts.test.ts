@@ -75,8 +75,6 @@ describe("the fixed shortcuts in Settings", () => {
       "mod+x",
       "mod+c",
       "mod+v",
-      "mod+b",
-      "mod+i",
       "mod+enter",
       "alt+arrowup",
       "alt+arrowdown",

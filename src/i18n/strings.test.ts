@@ -173,3 +173,47 @@ describe.each(LANGS.filter((lang) => lang !== "en"))("%s", (lang) => {
       expect(missing).toEqual([]);
     });
 });
+
+/** Every string of a language, plurals' forms included. */
+const textsOf = (lang: Lang): string[] =>
+  Object.values(LOCALES[lang].default).flatMap((value) =>
+    typeof value === "string" ? [value] : Object.values(value ?? {}),
+  );
+
+// One word for one thing within a language: the variants that had crept in.
+describe.each([
+  ["zh-Hant", /檔案夾/],
+  ["ja", /フォルダ(?!ー)|ドキュメント|エクスポート/],
+] as const)("%s's words", (lang, variant) => {
+  it("use one word for each thing", () => {
+    expect(textsOf(lang).filter((text) => variant.test(text))).toEqual([]);
+  });
+});
+
+// A thing named in another string is named as its own label says.
+describe.each(LANGS)("%s's names for its own places", (lang) => {
+  const s = LOCALES[lang].default as Record<string, string>;
+  it("calls the activity bar one name", () => {
+    for (const key of [
+      "activityRailHide",
+      "activityRailShow",
+      "activityRailLabel",
+    ])
+      expect(s[key].toLowerCase(), key).toContain(s.activityRail.toLowerCase());
+  });
+  // Russian declines the tab's name after a preposition.
+  if (lang !== "ru")
+    it("shows a file in the Files tab by that tab's name", () => {
+      expect(s.menuRevealInTree).toContain(s.treeTab);
+    });
+});
+
+// Layout's Classic and the switch for the earlier look are two things.
+describe.each(LANGS)("%s's window layout", (lang) => {
+  it("names the earlier look's switch apart from the Classic layout", () => {
+    const s = LOCALES[lang].default as Record<string, string>;
+    expect(s.classicLookLabel.toLowerCase()).not.toContain(
+      s.layoutClassic.toLowerCase().slice(0, 5),
+    );
+  });
+});

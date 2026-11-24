@@ -2,23 +2,38 @@
 // what links there needn't load it.
 
 import { hasTextusAi, isDesktopApp } from "../../platform/capabilities";
+import { isPhoneLayout } from "../../platform/phone-layout";
 
 export type ExtensionsTab = "plugins" | "themes" | "skills" | "mcp" | "create";
 
-/** The page's tabs, in order; MCP servers only where the app can run their
- *  programs. Skills and Create (where Textus AI makes a theme, plugin or
- *  skill) only where there is Textus AI - not on iOS; Create comes last. */
+/** What decides which tabs show. */
+interface ExtensionsPlace {
+  /** The app can run an MCP server's program. */
+  mcp: boolean;
+  /** Textus AI is offered (not on iOS). */
+  ai: boolean;
+  phone: boolean;
+}
+
+/** The page's tabs, in order, each where it shows. A phone's themes are
+ *  Appearance's store and its skills Memory & Skills': one way in each.
+ *  Create (where Textus AI makes a theme, plugin or skill) comes last. */
+const TABS: [ExtensionsTab, (p: ExtensionsPlace) => boolean][] = [
+  ["themes", (p) => !p.phone],
+  ["plugins", () => true],
+  ["skills", (p) => p.ai && !p.phone],
+  ["mcp", (p) => p.mcp],
+  ["create", (p) => p.ai],
+];
+
 export function extensionsTabs(
-  mcp = isDesktopApp,
-  ai = hasTextusAi,
+  place: ExtensionsPlace = {
+    mcp: isDesktopApp,
+    ai: hasTextusAi,
+    phone: isPhoneLayout(),
+  },
 ): ExtensionsTab[] {
-  return [
-    "themes",
-    "plugins",
-    ...(ai ? (["skills"] as const) : []),
-    ...(mcp ? (["mcp"] as const) : []),
-    ...(ai ? (["create"] as const) : []),
-  ];
+  return TABS.filter(([, shows]) => shows(place)).map(([id]) => id);
 }
 
 /** The tab Extensions opens on: the last one shown, or the one another page
