@@ -8,6 +8,7 @@ import { folderIndex } from "./folder-index";
 import type { IndexedFile } from "../platform/ipc";
 import { linkToTarget, pathIndex, type LinkStyle } from "./link-resolve";
 import { linkStyleAt } from "./link-style";
+import { windowFolder } from "../platform/window-folder";
 
 /**
  * `[[` lists the folder's notes - the core's fallback, gone as soon as a
@@ -25,15 +26,8 @@ interface Notes {
   lists: Promise<[PanelItem[], PanelItem[]]>;
 }
 
-let root: string | null = null;
 let notes: Notes | null = null;
 onMemoryIdle(() => (notes = null));
-
-/** The window's folder, where `[[` looks. */
-export function setNoteCompletionRoot(next: string | null): void {
-  if (next !== root) notes = null;
-  root = next;
-}
 
 /** Each note, linked from `from` (an unsaved document: the folder's top)
  *  as `metadata.linkTo` writes a wiki link there. */
@@ -82,6 +76,8 @@ export function registerNoteCompletion(title: () => string): () => void {
     pattern: /\[\[([^[\]|#^\n]*)$/,
     title,
     provide: ({ after, path }) => {
+      // The window's folder, where `[[` looks.
+      const root = windowFolder();
       if (!root) return null;
       const from = path ?? `${root.replace(/[\\/]+$/, "")}/Untitled.md`;
       const key = `${root}\n${from}`;

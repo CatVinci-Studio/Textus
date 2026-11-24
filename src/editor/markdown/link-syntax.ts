@@ -305,10 +305,14 @@ export function splitAroundLink(
 /** An inline link's source: `markdown` as its label, then `url` and
  *  `title`. */
 export function inlineLink(markdown: string, url: string, title = ""): string {
-  const dest = /[\s()<>]/.test(url) ? `<${url}>` : url;
   const titled = title ? ` "${title.replace(/"/g, '\\"')}"` : "";
-  return `[${markdown}](${dest}${titled})`;
+  return `[${markdown}](${linkDestination(url)}${titled})`;
 }
+
+/** A link's or picture's target as written: in <…> when a space, a
+ *  parenthesis or an angle bracket would end it bare. */
+export const linkDestination = (url: string): string =>
+  /[\s()<>]/.test(url) ? `<${url}>` : url;
 
 /** A link's source for the text `label` pointing at `url`, the label's
  *  brackets escaped. */

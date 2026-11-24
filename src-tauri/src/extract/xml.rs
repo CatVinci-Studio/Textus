@@ -126,6 +126,27 @@ impl<'a> Pull<'a> {
         }
     }
 
+    /// Walks the element just opened through its Close. `open` is offered
+    /// each element inside and returns whether it read that one through
+    /// itself; the ones it didn't are walked into, their children offered
+    /// in turn.
+    pub fn walk(&mut self, mut open: impl FnMut(&mut Self, Tag) -> bool) {
+        let mut depth = 0usize;
+        loop {
+            match self.next() {
+                Node::Open(tag) => {
+                    if !open(self, tag) {
+                        depth += 1;
+                    }
+                }
+                Node::Close if depth == 0 => return,
+                Node::Close => depth -= 1,
+                Node::Text(_) => {}
+                Node::End => return,
+            }
+        }
+    }
+
     /// All the text inside the element just opened, through its Close.
     pub fn text(&mut self) -> String {
         let mut out = String::new();

@@ -311,3 +311,61 @@ describe("a moved document's own links", () => {
     );
   });
 });
+
+describe("links at the top of the folder and names without a folder", () => {
+  const top = ["/index.md", "/Note.md", "/b/x.md"];
+  /** `text` in `doc` once `from` became `to`, in a folder that is the
+   *  disk's root. */
+  const atTop = (doc: string, from: string, to: string, text: string) => {
+    const moved = movedBy(from, to);
+    const after = top.map((f) => moved(f) ?? f);
+    const plan = { root: "/", from, to };
+    return linkPlanner(after, plan)({ path: moved(doc) ?? doc, text })?.text;
+  };
+
+  it("follow a note moved out of the root", () => {
+    expect(
+      atTop(
+        "/index.md",
+        "/Note.md",
+        "/b/Note.md",
+        "[n](Note.md) [m](./Note.md) [[Note]] [[Note.md]]",
+      ),
+    ).toBe("[n](b/Note.md) [m](./b/Note.md) [[Note]] [[Note.md]]");
+  });
+
+  it("lead where they led from a document moved out of the root", () => {
+    expect(
+      atTop(
+        "/index.md",
+        "/index.md",
+        "/b/index.md",
+        "[n](Note.md) [[Note]] [x](b/x.md)",
+      ),
+    ).toBe("[n](../Note.md) [[Note]] [x](x.md)");
+  });
+
+  it("keep a written .md and drop an unwritten one", () => {
+    expect(
+      atTop(
+        "/b/x.md",
+        "/Note.md",
+        "/Renamed.md",
+        "[n](../Note.md) [[Note]] [[Note.md]]",
+      ),
+    ).toBe("[n](../Renamed.md) [[Renamed]] [[Renamed.md]]");
+  });
+
+  it("read a wiki name's backslash as a folder, keeping its path and its .md", () => {
+    const files = ["/v/a/Note.md", "/v/i.md"];
+    const moved = movedBy("/v/a/Note.md", "/v/a/New.md");
+    const plan = { root: "/v", from: "/v/a/Note.md", to: "/v/a/New.md" };
+    const text = "[[a\\Note.md]] [[a\\Note]] [n](a\\Note.md)";
+    expect(
+      linkPlanner(
+        files.map((f) => moved(f) ?? f),
+        plan,
+      )({ path: "/v/i.md", text })?.text,
+    ).toBe("[[a/New.md]] [[a/New]] [n](a/New.md)");
+  });
+});

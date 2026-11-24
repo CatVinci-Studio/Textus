@@ -15,21 +15,25 @@ import { unwatchMetadata } from "../workspace/metadata-cache";
 import { forgetPluginColors } from "../../theme/plugin-colors";
 
 /** Everything a stopped plugin left in the window - its UI, editor hooks,
- *  views, providers, links - taken away. */
+ *  views, providers, links - taken away, in this order. */
+export const PLUGIN_STOPS: readonly ((plugin: string) => void)[] = [
+  stopPluginUi,
+  stopPluginEditor,
+  stopPluginHistory,
+  stopPluginAi,
+  stopPluginExport,
+  stopPluginDatabaseViews,
+  stopPluginConventionReaders,
+  stopPluginProviders,
+  stopPluginSsh,
+  forgetListViews,
+  forgetEmbeds,
+  forgetWillSave,
+  forgetWillExport,
+  unwatchMetadata,
+  forgetPluginColors,
+];
+
 export function forgetPlugin(id: string): void {
-  stopPluginUi(id);
-  stopPluginEditor(id);
-  stopPluginHistory(id);
-  stopPluginAi(id);
-  stopPluginExport(id);
-  stopPluginDatabaseViews(id);
-  stopPluginConventionReaders(id);
-  stopPluginProviders(id);
-  stopPluginSsh(id);
-  forgetListViews(id);
-  forgetEmbeds(id);
-  forgetWillSave(id);
-  forgetWillExport(id);
-  unwatchMetadata(id);
-  forgetPluginColors(id);
+  for (const stop of PLUGIN_STOPS) stop(id);
 }

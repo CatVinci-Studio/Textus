@@ -167,45 +167,62 @@ pub(crate) fn end_web_process_with_window(window: &tauri::WebviewWindow) {
     });
 }
 
-/// Tells a window's page when macOS enters full screen and when it starts
-/// leaving (`window-fullscreen`), via AppKit notifications, since size checks
-/// lag. Main thread only, once.
+/// Tells a window's page when macOS starts entering full screen and when it
+/// starts leaving (`window-fullscreen`), via AppKit notifications, since size
+/// checks lag. At the start, both ways: AppKit animates between pictures of
+/// the window, so a layout changed only once it has entered pops in after
+/// the animation. Main thread only, once.
 #[cfg(target_os = "macos")]
 pub(crate) fn watch_fullscreen(app: &tauri::AppHandle) {
     use objc2_app_kit::{
-        NSWindowDidEnterFullScreenNotification, NSWindowWillExitFullScreenNotification,
+        NSWindowWillEnterFullScreenNotification, NSWindowWillExitFullScreenNotification,
     };
-    use objc2_foundation::{NSNotification, NSNotificationCenter};
-    use std::ptr::NonNull;
-    let center = NSNotificationCenter::defaultCenter();
     // SAFETY: AppKit's notification names, constant for the process.
     let names = unsafe {
         [
-            (NSWindowDidEnterFullScreenNotification, true),
+            (NSWindowWillEnterFullScreenNotification, true),
             (NSWindowWillExitFullScreenNotification, false),
         ]
     };
     for (name, fullscreen) in names {
         let app = app.clone();
-        let block = block2::RcBlock::new(move |note: NonNull<NSNotification>| {
-            // SAFETY: AppKit hands the block a live notification.
-            let Some(window) = (unsafe { note.as_ref() }).object() else {
-                return;
-            };
-            let window = objc2::rc::Retained::as_ptr(&window) as *mut std::ffi::c_void;
+        on_window_note(name, move |window| {
             for (label, webview) in app.windows() {
                 if webview.ns_window().ok() == Some(window) {
                     let _ = app.emit_to(label.as_str(), "window-fullscreen", fullscreen);
                 }
             }
         });
-        // SAFETY: any window's notification (no object), delivered on the
-        // thread that posts it - AppKit's main thread.
-        let observer = unsafe {
-            center.addObserverForName_object_queue_usingBlock(Some(name), None, None, &block)
-        };
-        std::mem::forget(observer);
     }
+}
+
+/// Calls `act` with the NSWindow each time any window posts `name`, for the
+/// life of the process. Main thread.
+#[cfg(target_os = "macos")]
+pub(crate) fn on_window_note(
+    name: &objc2_foundation::NSNotificationName,
+    act: impl Fn(*mut std::ffi::c_void) + 'static,
+) {
+    use objc2_foundation::{NSNotification, NSNotificationCenter};
+    use std::ptr::NonNull;
+    let block = block2::RcBlock::new(move |note: NonNull<NSNotification>| {
+        // SAFETY: AppKit hands the block a live notification.
+        let Some(window) = (unsafe { note.as_ref() }).object() else {
+            return;
+        };
+        act(objc2::rc::Retained::as_ptr(&window) as *mut std::ffi::c_void);
+    });
+    // SAFETY: any window's notification (no object), delivered on the
+    // thread that posts it - AppKit's main thread.
+    let observer = unsafe {
+        NSNotificationCenter::defaultCenter().addObserverForName_object_queue_usingBlock(
+            Some(name),
+            None,
+            None,
+            &block,
+        )
+    };
+    std::mem::forget(observer);
 }
 
 /// Whether this process talks to a Wayland compositor (no window positions, no

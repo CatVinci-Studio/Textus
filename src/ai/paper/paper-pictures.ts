@@ -1,6 +1,7 @@
 import type { Ctx } from "@milkdown/kit/ctx";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { replaceWithMarkdown } from "../../editor/markdown/parse-markdown-source";
+import { linkDestination } from "../../editor/markdown/link-syntax";
 
 /** One of a finished paper's pictures: its id in the picture store, its alt
  *  text, and the caption under it, which says where it goes. */
@@ -30,10 +31,9 @@ export function paperPictures(markdown: string): PaperPicture[] {
   return out;
 }
 
-/** The markdown of a saved picture: its src in <…> when it would break the
- *  link otherwise. */
+/** The markdown of a saved picture. */
 function pictureLine(alt: string, src: string): string {
-  return `![${alt}](${/[\s()<>]/.test(src) ? `<${src}>` : src})`;
+  return `![${alt}](${linkDestination(src)})`;
 }
 
 /**

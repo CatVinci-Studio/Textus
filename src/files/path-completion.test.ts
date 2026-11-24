@@ -4,11 +4,8 @@ import { closeViews, openView } from "../editor/editor-view-kit";
 import { createTestEditor } from "../editor/editor-test-kit";
 import { fs } from "../platform/ipc";
 import { undoFiles } from "../platform/ipc-files";
-import {
-  registerPathCompletion,
-  setPathCompletionRoot,
-  targetItems,
-} from "./path-completion";
+import { setWindowFolderSource } from "../platform/window-folder";
+import { registerPathCompletion, targetItems } from "./path-completion";
 
 // A saved document's pictures load through Tauri, which jsdom hasn't.
 vi.mock("../platform/file-src", () => ({ fileSrc: () => "about:blank" }));
@@ -60,7 +57,7 @@ let stop: (() => void) | null = null;
 afterEach(async () => {
   stop?.();
   stop = null;
-  setPathCompletionRoot(null);
+  setWindowFolderSource(null);
   await closeViews();
   vi.restoreAllMocks();
 });
@@ -78,7 +75,7 @@ async function editorAt(docPath: string | null, markdown = "") {
   // A saved document keeps its undo history in a file: none here.
   vi.spyOn(undoFiles, "load").mockResolvedValue(null as never);
   vi.spyOn(undoFiles, "save").mockResolvedValue(undefined as never);
-  setPathCompletionRoot("/v");
+  setWindowFolderSource(() => "/v");
   stop = registerPathCompletion({ image: () => "Images", link: () => "Files" });
   return openView(markdown, {}, (text, settings) =>
     createTestEditor(text, settings, docPath),

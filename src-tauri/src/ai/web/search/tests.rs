@@ -278,6 +278,38 @@ async fn a_refused_key_says_where_to_fix_it() {
     assert!(err.contains("Search service"), "{err}");
 }
 
+#[tokio::test]
+async fn searching_and_reading_a_page_fail_in_the_same_words() {
+    let (err, _) = run(Backend::Deepseek, "503 Service Unavailable", "busy").await;
+    assert_eq!(
+        err.unwrap_err(),
+        "DeepSeek search failed (503 Service Unavailable): busy"
+    );
+    let (err, _) = run(Backend::Deepseek, "200 OK", "<html>").await;
+    assert_eq!(err.unwrap_err(), "DeepSeek sent an answer that isn't JSON.");
+    for (status, body, said) in [
+        (
+            "503 Service Unavailable",
+            "busy",
+            "DeepSeek search failed (503 Service Unavailable): busy",
+        ),
+        (
+            "200 OK",
+            "<html>",
+            "DeepSeek sent an answer that isn't JSON.",
+        ),
+    ] {
+        let (url, _requests) = serve(status, body);
+        let service = Service {
+            backend: Backend::Deepseek,
+            credential: "test-key".into(),
+            endpoint: Some(url),
+        };
+        let page = service.fetch_page("https://example.com/").await.unwrap();
+        assert_eq!(page.unwrap_err(), said);
+    }
+}
+
 #[test]
 fn ids_round_trip_and_keys_are_shared_where_the_provider_is_the_same() {
     for backend in [

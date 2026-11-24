@@ -131,13 +131,7 @@ pub async fn extract_response_text(
     res: reqwest::Response,
     provider_label: &str,
 ) -> Result<String, String> {
-    if !res.status().is_success() {
-        let status = res.status();
-        let text = res.text().await.unwrap_or_default();
-        return Err(format!(
-            "{provider_label} request failed ({status}): {text}"
-        ));
-    }
+    let res = crate::http::succeeded(res, &format!("{provider_label} request failed")).await?;
     let parsed: ResponsesResult = res.json().await.map_err(|e| e.to_string())?;
     Ok(parsed.into_text())
 }

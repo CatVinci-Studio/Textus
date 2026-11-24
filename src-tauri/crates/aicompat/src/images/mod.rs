@@ -356,4 +356,4 @@ pub fn decode_base64(encoded: &str) -> Result<Vec<u8>, ImageError> {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

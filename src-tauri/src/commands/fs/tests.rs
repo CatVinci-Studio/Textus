@@ -140,6 +140,10 @@ async fn a_taken_name_is_numbered_unless_it_holds_the_same_picture() {
     let name = write_new_file(dir.path(), "a.png", b"one", true).await;
     assert_eq!(name.unwrap(), "a.png");
     assert_eq!(std::fs::read(dir.path().join("a.png")).unwrap(), b"one");
+    // Without reuse, the same picture is numbered too.
+    let name = write_new_file(dir.path(), "a.png", b"one", false).await;
+    assert_eq!(name.unwrap(), "a-2.png");
+    assert_eq!(std::fs::read(dir.path().join("a-1.png")).unwrap(), b"two");
 }
 
 /// Two folders under one root, a document "A/a.md" and its picture.

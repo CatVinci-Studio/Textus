@@ -6,16 +6,14 @@
  */
 
 import { firstAnswer } from "./first-answer";
+import { pluginHandlers } from "./plugin-handlers";
 
 type Provide = (text: string) => Promise<string | null>;
 
 /** More than this is no "snippet" to look at. */
 const MAX_TEXT = 20_000;
 
-const handlers = new Map<
-  string,
-  { plugin: string; pattern: RegExp; provide: Provide }
->();
+const handlers = pluginHandlers<{ pattern: RegExp; provide: Provide }>();
 
 /** A pattern as a plugin gives it: a regular expression, unicode. */
 export function pastePattern(source: string): RegExp {
@@ -32,22 +30,22 @@ export function addPasteHandler(
   pattern: RegExp,
   provide: Provide,
 ): void {
-  handlers.set(`${plugin}#${id}`, { plugin, pattern, provide });
+  handlers.add(plugin, id, { pattern, provide });
 }
 
 export function removePasteHandler(plugin: string, id: string): void {
-  handlers.delete(`${plugin}#${id}`);
+  handlers.remove(plugin, id);
 }
 
 export function forgetPasteHandlers(plugin: string): void {
-  for (const [key, handler] of handlers)
-    if (handler.plugin === plugin) handlers.delete(key);
+  handlers.forget(plugin);
 }
 
 const takers = (text: string) =>
   text.length > MAX_TEXT
     ? []
-    : [...handlers.values()]
+    : handlers
+        .all()
         .filter((h) => h.pattern.test(text))
         .sort((a, b) => a.plugin.localeCompare(b.plugin));
 
