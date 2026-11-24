@@ -136,14 +136,37 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
                     commands::update::exit_app(app);
                 }
             }
-            // Remember a window's size and place on Close, since after Destroyed they can
-            // no longer be read.
-            if matches!(event, tauri::WindowEvent::CloseRequested { .. })
-                && crate::windows::is_editor_window(window.label())
-            {
-                commands::prefs::remember_editor_window(app, window);
+            #[cfg(desktop)]
+            if crate::windows::is_editor_window(window.label()) {
+                remember_editor_frame(app, window, event);
             }
         })
+}
+
+/// An editor window's normal bounds as they change, and on Close, while they can
+/// still be read, its frame for the next launch: in the UI state, and in the
+/// session for the window that comes back with these documents. Quit keeps
+/// both before it closes the windows.
+#[cfg(desktop)]
+fn remember_editor_frame(
+    app: &tauri::AppHandle,
+    window: &tauri::Window,
+    event: &tauri::WindowEvent,
+) {
+    match event {
+        tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_) => {
+            commands::prefs::note_bounds(window);
+        }
+        tauri::WindowEvent::CloseRequested { .. } if !commands::session::app_quitting() => {
+            commands::prefs::remember_editor_window(app, window);
+            if let Some(state) = app.try_state::<SessionTabsState>() {
+                let frame = commands::prefs::closing_frame(window);
+                commands::session::keep_frame(app, window.label(), frame, &state);
+            }
+        }
+        tauri::WindowEvent::Destroyed => commands::prefs::forget_bounds(window.label()),
+        _ => {}
+    }
 }
 
 /// The desktop half of startup, run from the shared setup in `run` once the
@@ -266,6 +289,9 @@ pub fn run() {
             // window, whose boot snapshot says whether it has any coming.
             #[cfg(desktop)]
             let opens = launch::launch_opens(app.handle());
+            #[cfg(desktop)]
+            crate::editor_windows::build_main_window(app, opens.as_ref())?;
+            #[cfg(not(desktop))]
             crate::editor_windows::build_main_window(app)?;
             #[cfg(desktop)]
             desktop_setup(app, opens)?;
