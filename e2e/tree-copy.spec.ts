@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { devPaths, openTreeFolder, treeRowAt } from "./helpers";
+import { devPaths, MAC, openTreeFolder, treeRowAt } from "./helpers";
 
 const openFolder = (page: Page) =>
   openTreeFolder(page, "/proj", {
@@ -73,10 +73,12 @@ test("a row dragged with Ctrl held is copied; the menu has Duplicate", async ({
   await page.mouse.move(from.x + 20, from.y + from.height / 2);
   await page.mouse.down();
   await page.mouse.move(to.x + 20, to.y + 4, { steps: 4 });
-  await page.keyboard.down("Control");
+  // A Mac copies with ⌥, as its Finder does.
+  const copyKey = MAC ? "Alt" : "Control";
+  await page.keyboard.down(copyKey);
   await page.mouse.move(to.x + 20, to.y + to.height / 2, { steps: 4 });
   await page.mouse.up();
-  await page.keyboard.up("Control");
+  await page.keyboard.up(copyKey);
   await expect.poll(() => files(page)).toContain("/proj/notes/plan.md");
   expect(await files(page)).toContain("/proj/plan.md");
 

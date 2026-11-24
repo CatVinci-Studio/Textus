@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { devPaths, openTreeFolder, treeRow, treeRowAt } from "./helpers";
+import { devPaths, MAC, openTreeFolder, treeRow, treeRowAt } from "./helpers";
 
 const openFolder = (page: Page, more: Record<string, string> = {}) =>
   openTreeFolder(page, "/proj", {
@@ -104,7 +104,8 @@ test("Delete asks, can be told not to ask again, and is undone; Enter opens; typ
   await row(page, "notes").focus();
   await page.keyboard.press("a");
   await expect(row(page, "alpha.md")).toBeFocused();
-  await page.keyboard.press("Enter");
+  // A Mac's Finder opens with ⌘↓; its Return renames.
+  await page.keyboard.press(MAC ? "Meta+ArrowDown" : "Enter");
   await expect(
     page.locator('[data-active-tab="true"] .ProseMirror'),
   ).toContainText("Alpha");

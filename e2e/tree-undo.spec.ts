@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { devDisk, openTreeFolder, treeRow } from "./helpers";
+import { devDisk, emit, openTreeFolder, treeRow } from "./helpers";
 
 const openFolder = (page: Page, fs: Record<string, string>) =>
   openTreeFolder(page, "/proj", fs);
@@ -80,4 +80,49 @@ test("a delete is put back from the Trash with Undo, or its notice's Undo", asyn
   await expect(row(page, "a.md")).toBeFocused();
   await page.keyboard.press("ControlOrMeta+z");
   await expect(row(page, "b.md")).toBeVisible();
+});
+
+test("the tree's undo outlives switching to another panel and back", async ({
+  page,
+}) => {
+  await openFolder(page, {
+    "/proj/plan.md": "# Plan\n",
+    "/proj/notes/n.md": "",
+  });
+  await drag(page, "plan.md", "notes");
+  await expect
+    .poll(async () => Object.keys(await disk(page)))
+    .toContain("/proj/notes/plan.md");
+  await page.locator('[data-rail-id="outline"]').click();
+  await expect(page.locator(".tree-row")).toHaveCount(0);
+  await page.locator('[data-rail-id="tree"]').click();
+  await row(page, "notes").first().focus();
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect
+    .poll(async () => Object.keys(await disk(page)))
+    .toContain("/proj/plan.md");
+});
+
+test("rows picked or being renamed let go once another app removes them", async ({
+  page,
+}) => {
+  await openFolder(page, {
+    "/proj/a.md": "# A\n",
+    "/proj/b.md": "# B\n",
+    "/proj/c.md": "# C\n",
+  });
+  await row(page, "a.md").click();
+  await row(page, "b.md").click({ modifiers: ["Shift"] });
+  await expect(page.locator(".file-tree-picking")).toHaveCount(1);
+  await row(page, "c.md").focus();
+  await page.keyboard.press("F2");
+  await expect(page.getByRole("textbox", { name: "New name" })).toBeVisible();
+  await page.evaluate(() => {
+    const fs = (window as unknown as { __devFs: Record<string, string> })
+      .__devFs;
+    for (const f of ["/proj/a.md", "/proj/b.md", "/proj/c.md"]) delete fs[f];
+  });
+  await emit(page, "tree-dirs-changed", { dirs: ["/proj"], all: false });
+  await expect(page.locator(".file-tree-picking")).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "New name" })).toHaveCount(0);
 });
