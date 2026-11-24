@@ -184,6 +184,12 @@
   font-size: var(--text-footnote);
 }
 
+/* A title level with its buttons, as tall as a finger's: on their foot
+   the title sat lower than their middle. */
+:root[data-window-chrome="mobile"] .settings-group-head {
+  align-items: center;
+}
+
 :root[data-window-chrome="mobile"] .settings-row {
   min-height: 58px;
   gap: 12px;

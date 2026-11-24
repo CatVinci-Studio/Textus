@@ -1,5 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { emit, openApp, pasteMarkdown, PHONE, TABLET } from "./helpers";
+import { hasPlugin } from "./plugin-helpers";
 
 // A phone turned on its side, and what a finger reaches on a phone and a
 // touch tablet.
@@ -241,6 +242,40 @@ test.describe("a phone's bar buttons", () => {
     await toggle.tap();
     await expect(toggle).toHaveAttribute("aria-pressed", "false");
     await expect(toggle).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  });
+});
+
+test.describe("a phone's Extensions page", () => {
+  test.use(PHONE);
+
+  test("sets each section's title level with its buttons", async ({ page }) => {
+    await openApp(page, { settings: { language: "en" } });
+    await page.getByRole("button", { name: "Menu", exact: true }).tap();
+    await page.getByRole("menuitem", { name: /Settings/ }).tap();
+    await page.getByRole("button", { name: "Extensions" }).tap();
+    await expect(page.locator(".settings-group-actions").first()).toBeVisible();
+    // With a catalog, Available's sort and its Hide.
+    if (hasPlugin("catvinci.abc"))
+      await expect(page.getByRole("button", { name: "Hide" })).toBeVisible();
+    // Each title's and control's centre, from the title's.
+    const off = await page.evaluate(() =>
+      [...document.querySelectorAll(".settings-group-head")].flatMap((head) => {
+        const middle = (el: Element) => {
+          const box = el.getBoundingClientRect();
+          return box.top + box.height / 2;
+        };
+        const title = middle(head.querySelector(".settings-group-title")!);
+        return [
+          ...head.querySelectorAll(
+            ".settings-group-actions :is(button, .ui-select)",
+          ),
+        ]
+          .filter((el) => el.checkVisibility())
+          .map((el) => Math.round(Math.abs(middle(el) - title)));
+      }),
+    );
+    expect(off.length).toBeGreaterThan(0);
+    expect(off.filter((d) => d > 1)).toEqual([]);
   });
 });
 
