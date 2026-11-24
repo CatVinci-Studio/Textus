@@ -85,51 +85,39 @@
    so the marker and the first block align by baseline; a zero-width space
    gives a drawn marker a baseline, and its drop below the line's top moves
    to a transform. Grid margins don't collapse: only the bottom one keeps
-   the gap between blocks. */
-.milkdown li:has(> p:first-child :is(.math-inline, .image-view)) {
+   the gap between blocks. Marked by list-tall-line-plugin.ts; `:is(ol, ul)`
+   so these outrank the plain markers' rules. */
+.milkdown :is(ol, ul) > li[data-tall-line] {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: baseline;
 }
 
-.milkdown li:has(> p:first-child :is(.math-inline, .image-view)) > * + * {
+.milkdown :is(ol, ul) > li[data-tall-line] > * + * {
   margin-top: 0;
 }
 
-.milkdown li:has(> p:first-child :is(.math-inline, .image-view)) > :first-child,
-.milkdown li:has(> p:first-child :is(.math-inline, .image-view))::before {
+.milkdown :is(ol, ul) > li[data-tall-line] > :first-child,
+.milkdown :is(ol, ul) > li[data-tall-line]::before {
   grid-area: 1 / 1;
 }
 
-.milkdown li:has(> p:first-child :is(.math-inline, .image-view))::before {
+.milkdown :is(ol, ul) > li[data-tall-line]::before {
   position: static;
   justify-self: start;
 }
 
-.milkdown
-  ul
-  > li:not([data-item-type="task"]):has(
-    > p:first-child :is(.math-inline, .image-view)
-  )::before {
+.milkdown ul > li:not([data-item-type="task"])[data-tall-line]::before {
   content: "\200b";
   margin-top: 0;
   transform: translate(calc(-100% - 0.4em), 0.73em);
 }
 
-.milkdown
-  ul
-  ul
-  ul
-  > li:not([data-item-type="task"]):has(
-    > p:first-child :is(.math-inline, .image-view)
-  )::before {
+.milkdown ul ul ul > li:not([data-item-type="task"])[data-tall-line]::before {
   transform: translate(calc(-100% - 0.4em), 0.75em);
 }
 
-.milkdown
-  li[data-item-type="task"]:has(
-    > p:first-child :is(.math-inline, .image-view)
-  )::before {
+.milkdown li[data-item-type="task"][data-tall-line]::before {
   content: "\200b";
   margin-top: 0;
   transform: translateY(0.4em);
