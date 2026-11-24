@@ -187,6 +187,21 @@ for (const { name, device } of TOUCH_DEVICES)
         ".tree-tool",
         ".tree-row",
       ]);
+      // A phone's tools keep to their glyphs, their targets overlapping:
+      // the folder's name has more of the row than they do.
+      if (phone) {
+        const row = await page.evaluate(() => {
+          const width = (el: Element) => el.getBoundingClientRect().width;
+          const tools = [
+            ...document.querySelectorAll(".tree-toolbar .tree-tool"),
+          ].map((el) => el.getBoundingClientRect());
+          return {
+            name: width(document.querySelector(".tree-root-label")!),
+            tools: tools.at(-1)!.right - tools[0].left,
+          };
+        });
+        expect.soft(row.name).toBeGreaterThan(row.tools);
+      }
       // A tablet's Settings list, in the sidebar.
       if (!phone) {
         await page.locator(".activity-rail-settings").tap();
