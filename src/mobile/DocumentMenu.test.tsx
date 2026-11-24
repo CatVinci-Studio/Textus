@@ -17,7 +17,7 @@ vi.mock("../prefs/SettingsContext", () => ({
       docMore: "More",
       outlineTab: "Outline",
       outlineEmpty: "No headings yet",
-      menuFindReplace: "Find & Replace…",
+      menuFindReplace: "Find…",
       menuToggleSourceMode: "Source Mode",
       menuShare: "Share…",
     },
@@ -66,9 +66,7 @@ describe("a document's menu on a phone", () => {
     open();
     expect(screen.getByRole("menu", { name: "notes.md" })).toBeTruthy();
     expect(screen.getByRole("menuitem", { name: "Outline" })).toBeTruthy();
-    expect(
-      screen.getByRole("menuitem", { name: "Find & Replace…" }),
-    ).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "Find…" })).toBeTruthy();
     expect(screen.getByRole("menuitem", { name: "Source Mode" })).toBeTruthy();
     expect(screen.getByRole("menuitem", { name: "Share…" })).toBeTruthy();
   });
@@ -88,7 +86,7 @@ describe("a document's menu on a phone", () => {
 
   it("runs the same commands the menus do", () => {
     open();
-    fireEvent.click(screen.getByRole("menuitem", { name: "Find & Replace…" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Find…" }));
     expect(sendAppEvent).toHaveBeenCalledWith(TOGGLE_FIND_REPLACE_EVENT);
     cleanup();
 

@@ -72,9 +72,9 @@ const menuThenEditor = (id: string) => ({
 /** Every fixed combo. The configurable ones are the settings' defaults. */
 const KEYS: Record<string, Key> = {
   // File
-  "mod+n": { does: "New Tab", ...menuThenWindow("new-file") },
-  // No menu item carries it: the window runs New Tab.
-  "mod+t": { does: "New Tab", ...everywhere("window") },
+  "mod+n": { does: "New File", ...menuThenWindow("new-file") },
+  // No menu item carries it: the window runs New File.
+  "mod+t": { does: "New File", ...everywhere("window") },
   "mod+shift+n": { does: "New Window", ...menuThenWindow("new-window") },
   "mod+o": { does: "Open…", ...menuThenWindow("open-file") },
   "mod+s": { does: "Save", ...menuThenWindow("save-file") },

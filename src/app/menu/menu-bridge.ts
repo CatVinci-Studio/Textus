@@ -151,7 +151,7 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
             )
           : runCommand(event.payload),
       ),
-      // File > New Tab (menu.rs).
+      // File › New File (menu.rs).
       listenToThisWindow("menu-new-file", () => h().addBlankTab()),
       listenToThisWindow("menu-open-file", () => void h().openFileDialog()),
       listenToThisWindow<string>(

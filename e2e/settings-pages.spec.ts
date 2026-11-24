@@ -253,7 +253,7 @@ test("Layout switched in Settings lays the islands out again at once", async ({
   await expect.poll(gap).toBeLessThanOrEqual(1);
 });
 
-test("the classic look turns on in one switch, and off gives back the look before it", async ({
+test("the look of earlier versions turns on in one switch, and off gives back the look before it", async ({
   page,
 }) => {
   await open(page);
