@@ -114,7 +114,8 @@ export function blockAt(blocks: Element, line: number): Element | null {
 }
 
 /// Runs `change`, anything that reflows the document, with the line at
-/// viewport y `line` held still: `block` keeps the same share of its height there.
+/// viewport y `line` held still: `block` keeps the same share of its height
+/// there, as `holdStill` holds - whole pixels, not while pulled past an end.
 export function holdBlock(
   scroller: HTMLElement,
   block: Element,
@@ -125,7 +126,7 @@ export function holdBlock(
   const share = was.height > 0 ? (line - was.top) / was.height : 0;
   change();
   const now = block.getBoundingClientRect();
-  scroller.scrollTop += now.top + share * now.height - line;
+  scrollByHeld(scroller, now.top + share * now.height - line);
 }
 
 /** A character on screen, and its top there before a change. */

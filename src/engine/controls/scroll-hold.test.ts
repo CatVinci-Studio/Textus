@@ -118,20 +118,21 @@ describe("holding a scroll position", () => {
     expect(el.scrollTop).toBe(313);
   });
 
-  it("keeps a block's share of its height at the line, unrounded", () => {
-    const el = scroller(100);
+  it("keeps a block's share of its height at the line, as a block held still", () => {
     const block = document.createElement("p");
     let rect = { top: 50, height: 100, bottom: 150 };
     block.getBoundingClientRect = () => rect as DOMRect;
+    const grow = () => (rect = { top: 60, height: 200, bottom: 260 });
     // The line a quarter down the block; the block grows to 200 and moves
-    // to 60: that share of it is now at 109, 34.5 past the line.
-    holdBlock(
-      el,
-      block,
-      74.5,
-      () => (rect = { top: 60, height: 200, bottom: 260 }),
-    );
-    expect(el.scrollTop).toBeCloseTo(100 + 60 + 0.245 * 200 - 74.5);
+    // to 60: that share of it is now at 109, 34.5 past the line - 35 in
+    // whole pixels.
+    const el = scroller(100);
+    holdBlock(el, block, 74.5, grow);
+    expect(el.scrollTop).toBe(135);
+    rect = { top: 50, height: 100, bottom: 150 };
+    const pulled = scroller(-30);
+    holdBlock(pulled, block, 74.5, grow);
+    expect(pulled.scrollTop).toBe(-30);
   });
 
   it("holds the character at a point, at the end of its text too, and none off text", () => {
