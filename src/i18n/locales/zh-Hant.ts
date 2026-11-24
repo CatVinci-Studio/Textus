@@ -1327,6 +1327,7 @@ export default {
   startPageRecentFiles: "最近的檔案",
   autoSuggestFilenameLabel: "儲存新檔案時建議檔名",
   confirmTreeCopyLabel: "拖進檔案樹的檔案，複製前先詢問",
+  confirmTreeTrashLabel: "檔案樹裡的檔案移到垃圾桶前先詢問",
   autosaveLabel: "自動儲存",
   settingsFileLabel: "設定檔",
   settingsFileSummary: "匯入/匯出軟體的設定以及 AI 歷史紀錄",

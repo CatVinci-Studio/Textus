@@ -1325,6 +1325,7 @@ export default {
   startPageRecentFiles: "最近的文件",
   autoSuggestFilenameLabel: "新文件保存时自动建议文件名",
   confirmTreeCopyLabel: "拖到文件树的文件复制前先询问",
+  confirmTreeTrashLabel: "文件树里的文件移到废纸篓前先询问",
   autosaveLabel: "自动保存",
   settingsFileLabel: "设置文件",
   settingsFileSummary: "导入/导出软件的设置以及 AI 历史记录",

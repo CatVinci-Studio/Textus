@@ -1523,6 +1523,8 @@ utiliser une.
     "Suggérer un nom de fichier au premier enregistrement",
   confirmTreeCopyLabel:
     "Demander avant de copier les fichiers déposés dans l'arborescence",
+  confirmTreeTrashLabel:
+    "Demander avant de mettre à la corbeille des fichiers de l'arborescence",
   autosaveLabel: "Enregistrer automatiquement",
   settingsFileLabel: "Fichier de réglages",
   settingsFileSummary:

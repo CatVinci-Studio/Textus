@@ -1470,6 +1470,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Dateinamen beim Speichern neuer Dateien vorschlagen",
   confirmTreeCopyLabel:
     "Vor dem Kopieren von Dateien fragen, die auf den Dateibaum gezogen werden",
+  confirmTreeTrashLabel:
+    "Vor dem Verschieben von Dateien aus dem Dateibaum in den Papierkorb fragen",
   autosaveLabel: "Automatisch speichern",
   settingsFileLabel: "Einstellungsdatei",
   settingsFileSummary:

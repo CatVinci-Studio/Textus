@@ -1396,6 +1396,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   autoSuggestFilenameLabel: "新規ファイルの保存時にファイル名を提案",
   confirmTreeCopyLabel:
     "ファイルツリーにドロップしたファイルをコピーする前に確認する",
+  confirmTreeTrashLabel: "ファイルツリーのファイルをゴミ箱に入れる前に確認する",
   autosaveLabel: "自動保存",
   settingsFileLabel: "設定ファイル",
   settingsFileSummary: "アプリの設定と AI の履歴を読み込み／書き出します",

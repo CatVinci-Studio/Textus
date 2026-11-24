@@ -19,21 +19,24 @@ vi.mock("../platform/capabilities", async (real) => ({
   },
 }));
 
+const renamed: string[] = [];
+
 const labelsFor = (path: string, isDir: boolean) => {
   const noop = () => {};
   const { result } = renderHook(() =>
-    useRowMenu(
-      "/proj",
-      "/proj",
-      en,
-      noop,
-      noop,
-      noop,
-      noop,
-      null,
-      new TreeSelection(),
-      { record: () => undefined, show: noop, rowBeside: () => null },
-    ),
+    useRowMenu({
+      root: "/proj",
+      linkBase: "/proj",
+      t: en,
+      reload: noop,
+      onFileSelect: noop,
+      setDraft: noop,
+      onEnter: null,
+      selection: new TreeSelection(),
+      fileUndo: { record: () => undefined, show: noop, rowBeside: () => null },
+      rename: (p: string) => void renamed.push(p),
+      treeRef: { current: null },
+    }),
   );
   act(() => result.current.openRowMenu({ x: 0, y: 0 }, path, isDir));
   const items = result.current.menu?.items ?? [];
@@ -85,4 +88,10 @@ describe("a tree row's menu", () => {
     // Not a link to itself.
     expect(insertLink("/proj/a.md")?.disabled).toBe(true);
   });
+});
+
+it("Rename makes the row's name a field, not a dialog", () => {
+  renamed.length = 0;
+  labelsFor("/proj/a.md", false).item(en.treeRenameItem)!.onSelect();
+  expect(renamed).toEqual(["/proj/a.md"]);
 });

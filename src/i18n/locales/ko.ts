@@ -1383,6 +1383,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   startPageRecentFiles: "최근 파일",
   autoSuggestFilenameLabel: "새 파일을 저장할 때 파일 이름 제안",
   confirmTreeCopyLabel: "파일 트리에 놓은 파일을 복사하기 전에 묻기",
+  confirmTreeTrashLabel: "파일 트리의 파일을 휴지통으로 옮기기 전에 묻기",
   autosaveLabel: "자동 저장",
   settingsFileLabel: "설정 파일",
   settingsFileSummary: "앱 설정과 AI 기록을 가져오거나 내보냅니다",

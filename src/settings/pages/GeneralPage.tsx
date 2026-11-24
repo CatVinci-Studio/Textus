@@ -8,6 +8,7 @@ import { ProxySection } from "../sections/proxy";
 import { Select } from "../../engine/controls/Select";
 import {
   canDropFilesIntoTree,
+  canTrashFiles,
   canInstallCliCommand,
   canSetDefaultEditor,
   canUseWindows,
@@ -115,6 +116,13 @@ export function GeneralPage({ t, settings, setSettings }: SettingsPageProps) {
             label={t.confirmTreeCopyLabel}
             checked={settings.confirmTreeCopy}
             onChange={(v) => setSettings({ confirmTreeCopy: v })}
+          />
+        )}
+        {canTrashFiles && (
+          <ToggleRow
+            label={t.confirmTreeTrashLabel}
+            checked={settings.confirmTreeTrash}
+            onChange={(v) => setSettings({ confirmTreeTrash: v })}
           />
         )}
       </SettingsGroup>

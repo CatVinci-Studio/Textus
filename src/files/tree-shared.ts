@@ -56,8 +56,9 @@ export interface TreeShared {
   onRowPick: ((e: ReactMouseEvent, path: string) => boolean) | null;
   /** A new document or folder being named in place, in `dir`. */
   draft: TreeDraft | null;
-  /** Its name, or null when it was given up. */
-  finishDraft: (name: string | null) => void;
+  /** Its name, or null when it was given up; answers why the name can't
+   *  be (a taken one), else null. */
+  finishDraft: (name: string | null) => Promise<string | null>;
   /** An empty folder's one button: a new document named in place there,
    *  with its label. Null where documents aren't made here. */
   newDocument: { label: string; start: () => void } | null;

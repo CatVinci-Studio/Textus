@@ -274,6 +274,30 @@
   outline: none;
 }
 
+/* The field holds the name; why a name can't be is said just below it,
+   over the rows after, until the name changes. */
+.tree-name-field {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.tree-name-problem {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  z-index: 1;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--ui-danger);
+  border-radius: var(--shape-xs);
+  background: var(--ui-bg);
+  color: var(--ui-danger);
+  font-size: var(--text-caption);
+  white-space: normal;
+}
+
 .tree-empty {
   padding-block: var(--space-4);
 }

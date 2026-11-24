@@ -1495,6 +1495,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   autoSuggestFilenameLabel: "Sugerir um nome ao salvar um arquivo novo",
   confirmTreeCopyLabel:
     "Perguntar antes de copiar arquivos soltos na árvore de arquivos",
+  confirmTreeTrashLabel:
+    "Perguntar antes de mover arquivos da árvore de arquivos para a lixeira",
   autosaveLabel: "Salvar automaticamente",
   settingsFileLabel: "Arquivo de ajustes",
   settingsFileSummary:

@@ -1525,6 +1525,8 @@ export default {
   autoSuggestFilenameLabel: "Предлагать имя при сохранении нового файла",
   confirmTreeCopyLabel:
     "Спрашивать перед копированием файлов, перетащенных в дерево файлов",
+  confirmTreeTrashLabel:
+    "Спрашивать перед перемещением файлов из дерева файлов в корзину",
   autosaveLabel: "Сохранять автоматически",
   settingsFileLabel: "Файл настроек",
   settingsFileSummary: "Импорт и экспорт настроек приложения и истории ИИ",

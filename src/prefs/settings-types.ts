@@ -279,6 +279,9 @@ export interface Settings {
    *  are copied into its folder (the dialog's Don't Ask Again turns it
    *  off). */
   confirmTreeCopy: boolean;
+  /** The tree asks before moving rows to the Trash (the question's Don't
+   *  Ask Again turns it off). */
+  confirmTreeTrash: boolean;
   /** Export as PDF numbers each page in its bottom margin. */
   pdfPageNumbers: boolean;
   /** The paper, margins and text size a PDF export prints with. */
@@ -417,6 +420,7 @@ export const DEFAULT_SETTINGS: Settings = {
   autoSuggestFilename: true,
   autosave: false,
   confirmTreeCopy: true,
+  confirmTreeTrash: true,
   pdfPageNumbers: false,
   pdfPaper: "a4",
   pdfMargin: "normal",

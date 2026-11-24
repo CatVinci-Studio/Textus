@@ -1513,6 +1513,8 @@ para usar una.
   autoSuggestFilenameLabel: "Sugerir un nombre al guardar un archivo nuevo",
   confirmTreeCopyLabel:
     "Preguntar antes de copiar archivos soltados en el árbol de archivos",
+  confirmTreeTrashLabel:
+    "Preguntar antes de mover archivos del árbol de archivos a la papelera",
   autosaveLabel: "Guardar automáticamente",
   settingsFileLabel: "Archivo de ajustes",
   settingsFileSummary:

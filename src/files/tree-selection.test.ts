@@ -45,3 +45,27 @@ describe("the file tree's picked rows", () => {
     ).toEqual(["/p/notes", "/p/a.md"]);
   });
 });
+
+describe("picking with the keyboard", () => {
+  it("Shift with an arrow picks from the row it started on, either way", () => {
+    const s = new TreeSelection();
+    s.extend("/p/b", "/p/c", rows);
+    expect(picked(s)).toEqual(["/p/b", "/p/c"]);
+    s.extend("/p/c", "/p/d", rows);
+    expect(picked(s)).toEqual(["/p/b", "/p/c", "/p/d"]);
+    s.extend("/p/d", "/p/c", rows);
+    expect(picked(s)).toEqual(["/p/b", "/p/c"]);
+    s.extend("/p/b", "/p/a", rows);
+    expect(picked(s)).toEqual(["/p/a", "/p/b"]);
+    // From a row not picked, a new range starts there.
+    s.clear();
+    s.extend("/p/d", "/p/c", rows);
+    expect(picked(s)).toEqual(["/p/c", "/p/d"]);
+  });
+
+  it("Select All picks every row shown", () => {
+    const s = new TreeSelection();
+    s.selectAll(rows);
+    expect(picked(s)).toEqual(rows.map((row) => row.path));
+  });
+});

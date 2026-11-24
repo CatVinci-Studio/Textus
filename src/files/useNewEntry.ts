@@ -2,7 +2,6 @@ import { useCallback, useState } from "react";
 import { fs } from "../platform/ipc";
 import { announceFileCreated } from "../utils/events";
 
-import { showMessage } from "../engine/controls/app-dialog";
 import type { Strings } from "../i18n/strings";
 import { failureText, type TreeDraft } from "./tree-shared";
 import { stampOf } from "./file-undo";
@@ -18,14 +17,18 @@ export function useNewEntry(
 ) {
   const [draft, setDraft] = useState<TreeDraft | null>(null);
   const finishDraft = useCallback(
-    async (name: string | null) => {
-      setDraft(null);
-      if (!draft || !name) return;
+    async (name: string | null): Promise<string | null> => {
+      if (!draft || !name) {
+        setDraft(null);
+        fileUndo.show(null);
+        return null;
+      }
       try {
         const made =
           draft.kind === "document"
             ? await fs.createDocument(draft.dir, name)
             : await fs.createFolder(draft.dir, name);
+        setDraft(null);
         reload(draft.dir);
         const isDir = draft.kind === "folder";
         const stamp = await stampOf(made, isDir).catch(() => null);
@@ -39,8 +42,9 @@ export function useNewEntry(
           announceFileCreated(made);
           onFileSelect(made);
         }
+        return null;
       } catch (err) {
-        await showMessage(failureText(t, err, name));
+        return failureText(t, err, name);
       }
     },
     [draft, t, reload, onFileSelect, fileUndo],

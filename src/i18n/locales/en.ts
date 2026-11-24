@@ -1436,6 +1436,8 @@ type /name in a conversation to use one.
   startPageRecentFiles: "Recent Files",
   autoSuggestFilenameLabel: "Suggest a filename when saving a new file",
   confirmTreeCopyLabel: "Ask before copying files dropped onto the file tree",
+  confirmTreeTrashLabel:
+    "Ask before moving files in the file tree to the Trash",
   autosaveLabel: "Save automatically",
   settingsFileLabel: "Settings file",
   settingsFileSummary: "Import or export the app’s settings and AI history",

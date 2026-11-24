@@ -9,7 +9,7 @@ import {
 } from "react";
 import { useLatestCallback } from "../utils/hooks/useLatest";
 import { createSubscribers } from "../utils/store";
-import { useTreeKeys } from "../engine/controls/useTreeKeys";
+import { drawHeldRows, useTreeKeys } from "../engine/controls/useTreeKeys";
 import { isMacPlatform } from "../platform/os";
 import { isInside } from "../utils/path";
 
@@ -42,6 +42,10 @@ export class TreeSelection {
   private rows: readonly TreeRow[] = [];
   /** Where a Shift-click's range starts: the row last clicked. */
   private anchor: string | null = null;
+
+  get anchorPath(): string | null {
+    return this.anchor;
+  }
   private readonly listeners = createSubscribers();
 
   subscribe = this.listeners.subscribe;
@@ -96,6 +100,27 @@ export class TreeSelection {
     this.set([]);
   }
 
+  /** Shift with an arrow, from the row `from` to the next one `to`: the
+   *  range from where it started, which is `from` unless it is already
+   *  picked. */
+  extend(from: string, to: string, shown: readonly TreeRow[]): void {
+    if (!this.has(from)) this.anchor = from;
+    const at = (p: string | null) => shown.findIndex((row) => row.path === p);
+    const [a, b] = [at(this.anchor), at(to)];
+    if (a === -1 || b === -1) return;
+    this.set(shown.slice(Math.min(a, b), Math.max(a, b) + 1));
+  }
+
+  /** Every row shown picked. */
+  selectAll(shown: readonly TreeRow[]): void {
+    this.set(shown);
+  }
+
+  /** The picked rows. */
+  get picked(): readonly TreeRow[] {
+    return this.rows;
+  }
+
   /** `row` alone picked, and where the next range starts: what was just
    *  made (copied in), shown as the one row in hand. */
   only(row: TreeRow): void {
@@ -137,7 +162,15 @@ export function useTreeSelection(root: string, activePath: string | null) {
       selection.clickedPlain(path);
       return false;
     }
-    selection.pick(how, path, shownRows(treeRef.current), activePath);
+    const tree = treeRef.current;
+    // A range reads its rows on the page: a big folder's held back first.
+    if (how === "range" && tree)
+      drawHeldRows(
+        tree,
+        rowOf(tree, selection.anchorPath ?? activePath),
+        rowOf(tree, path),
+      );
+    selection.pick(how, path, shownRows(tree), activePath);
     return true;
   });
   const onTreeKey = (e: ReactKeyboardEvent<HTMLDivElement>) => {
@@ -163,9 +196,19 @@ export function useRowPicked(path: string): boolean {
 
 const noSubscribe = () => () => {};
 
+/** The row of `path` in the tree `tree`, if drawn. */
+function rowOf(tree: HTMLElement, path: string | null): HTMLElement | null {
+  if (path === null) return null;
+  return (
+    [...tree.querySelectorAll<HTMLElement>("[role=treeitem][data-path]")].find(
+      (el) => el.dataset.path === path,
+    ) ?? null
+  );
+}
+
 /** The tree's rows in the order shown: its folders' rows are drawn as they
  *  are opened and come near, so the page holds that order. */
-function shownRows(tree: HTMLElement | null): TreeRow[] {
+export function shownRows(tree: HTMLElement | null): TreeRow[] {
   return [
     ...(tree?.querySelectorAll<HTMLElement>("[role=treeitem][data-path]") ??
       []),

@@ -2,9 +2,10 @@ import type { RefObject } from "react";
 import type { Strings } from "../i18n/strings";
 import { useFileUndo } from "./useFileUndo";
 import { useNewEntry } from "./useNewEntry";
+import { useRename } from "./useRename";
 
-/** The tree's own changes to its folder: entries named in place, and the
- *  undo stack every operation records in (its one owner). */
+/** The tree's own changes to its folder: entries named and renamed in
+ *  place, and the undo stack every operation records in (its one owner). */
 export function useTreeEdits(input: {
   treeRef: RefObject<HTMLDivElement | null>;
   /** The folder the tree shows. */
@@ -17,5 +18,12 @@ export function useTreeEdits(input: {
   const { treeRef, folder, t, reload } = input;
   const fileUndo = useFileUndo(treeRef, folder, reload, input.onEntryMoved);
   const naming = useNewEntry(t, reload, input.onFileSelect, fileUndo);
-  return { fileUndo, ...naming };
+  const renaming = useRename({
+    linkBase: folder,
+    t,
+    reload,
+    onEntryMoved: input.onEntryMoved,
+    fileUndo,
+  });
+  return { fileUndo, ...naming, ...renaming };
 }
