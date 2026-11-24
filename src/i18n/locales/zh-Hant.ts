@@ -642,6 +642,12 @@ export default {
   treeUndoTaken: "沒有復原：以下項目原來的位置現在有別的東西。",
   treeMoved: { other: "已將 {n} 個項目移到「{folder}」" },
   treeTrashed: { other: "已將 {n} 個項目移到垃圾桶" },
+  treeCopyName: "{name} 拷貝",
+  treeDuplicate: "製作副本",
+  treeNameClash:
+    "「{folder}」裡已有「{name}」。要取代它（原有的會移到垃圾桶），還是兩個都保留？",
+  treeReplace: "取代",
+  treeKeepBoth: "兩個都保留",
   outlineCollapse: "收合",
   outlineExpand: "展開",
   outlineExpandAll: "全部展開",

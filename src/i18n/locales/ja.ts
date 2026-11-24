@@ -691,6 +691,12 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
     "何も取り消していません。次の項目が元あった場所に、今は別のものがあります。",
   treeMoved: { other: "{n} 個の項目を「{folder}」に移動しました" },
   treeTrashed: { other: "{n} 個の項目をゴミ箱に入れました" },
+  treeCopyName: "{name} のコピー",
+  treeDuplicate: "複製",
+  treeNameClash:
+    "「{name}」はすでに「{folder}」にあります。置き換えますか（今あるものはゴミ箱に入ります）、それとも両方残しますか？",
+  treeReplace: "置き換える",
+  treeKeepBoth: "両方残す",
   outlineCollapse: "折りたたむ",
   outlineExpand: "展開",
   outlineExpandAll: "すべて展開",

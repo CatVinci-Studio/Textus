@@ -4,6 +4,7 @@
  * payload)` fires tracked listeners.
  */
 import { agentShim } from "./agent-shim";
+import { fill } from "../i18n/fill";
 import type {
   DirEntryInfo_Serialize,
   FolderIndex,
@@ -799,17 +800,53 @@ export function installDevTauriShim(): void {
           return Promise.reject(ownError("alreadyThere"));
         if (into === path || into.startsWith(`${path}/`))
           return Promise.reject("A folder can't move into itself");
-        if (
-          Object.keys(files).some(
-            (f) => f === target || f.startsWith(`${target}/`),
-          )
-        )
+        const taken = (p: string) =>
+          Object.keys(files).some((f) => f === p || f.startsWith(`${p}/`));
+        if (taken(target) && !args.keepBoth)
           return Promise.reject(ownError("exists"));
+        const isDir = Object.keys(files).some((f) => f.startsWith(`${path}/`));
+        const dot = isDir ? -1 : target.lastIndexOf(".");
+        const [stem, ext] =
+          dot > target.lastIndexOf("/") + 1
+            ? [target.slice(0, dot), target.slice(dot)]
+            : [target, ""];
+        let free = target;
+        for (let n = 2; taken(free); n++) free = `${stem} ${n}${ext}`;
         for (const file of Object.keys(files)) {
           if (file !== path && !file.startsWith(`${path}/`)) continue;
-          files[target + file.slice(path.length)] = files[file];
+          files[free + file.slice(path.length)] = files[file];
           delete files[file];
         }
+        return Promise.resolve(free);
+      }
+      // The tree's own copy: its own name, numbered, or "name copy".
+      case "tree_copy_entry": {
+        const into = String(args.into);
+        const naming = args.naming as "own" | "numbered" | { beside: string };
+        const name = path.slice(path.lastIndexOf("/") + 1);
+        const isDir = Object.keys(files).some((f) => f.startsWith(`${path}/`));
+        if (isDir && (into === path || into.startsWith(`${path}/`)))
+          return Promise.reject(ownError("copyIntoItself"));
+        const dot = isDir ? -1 : name.lastIndexOf(".");
+        const [stem, ext] =
+          dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ""];
+        const taken = (p: string) =>
+          Object.keys(files).some((f) => f === p || f.startsWith(`${p}/`));
+        const names = (n: number) =>
+          typeof naming === "object"
+            ? `${fill(naming.beside, { name: stem })}${n > 1 ? ` ${n}` : ""}${ext}`
+            : n > 1
+              ? `${stem} ${n}${ext}`
+              : name;
+        let n = 1;
+        while (taken(`${into}/${names(n)}`)) {
+          if (naming === "own") return Promise.reject(ownError("exists"));
+          n++;
+        }
+        const target = `${into}/${names(n)}`;
+        for (const file of Object.keys(files))
+          if (file === path || file.startsWith(`${path}/`))
+            files[target + file.slice(path.length)] = files[file];
         return Promise.resolve(target);
       }
       // From a file manager onto the tree: copied, its name numbered as

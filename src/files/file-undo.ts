@@ -20,7 +20,7 @@ export interface TrashedEntry {
 }
 
 /** An entry moved or renamed. */
-export interface MovedEntry {
+interface MovedEntry {
   from: string;
   to: string;
 }

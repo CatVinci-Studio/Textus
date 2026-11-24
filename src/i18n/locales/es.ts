@@ -765,6 +765,12 @@ para usar una.
     many: "{n} elementos movidos a la papelera",
     other: "{n} elementos movidos a la papelera",
   },
+  treeCopyName: "{name} copia",
+  treeDuplicate: "Duplicar",
+  treeNameClash:
+    "«{name}» ya está en «{folder}». ¿Reemplazarlo (el que hay va a la papelera) o conservar ambos?",
+  treeReplace: "Reemplazar",
+  treeKeepBoth: "Conservar ambos",
   outlineCollapse: "Contraer",
   outlineExpand: "Expandir",
   outlineExpandAll: "Expandir todo",

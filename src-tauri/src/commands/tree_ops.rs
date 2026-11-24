@@ -114,8 +114,8 @@ struct EntriesChanged {
     from: String,
     moved: Option<(String, String)>,
     trashed: Option<String>,
-    /// Put back from the Trash.
-    restored: Option<String>,
+    /// Put back from the Trash, or copied.
+    made: Option<String>,
 }
 
 fn tell_windows(window: &tauri::WebviewWindow, change: EntriesChanged) {
@@ -130,8 +130,9 @@ fn tell_windows(window: &tauri::WebviewWindow, change: EntriesChanged) {
 }
 
 /// Moves a file or folder into the folder `into`, under its own name or
-/// `name` exactly as given (an undo putting it back as it was). Returns its
-/// new path.
+/// `name` exactly as given (an undo putting it back as it was). With
+/// `keep_both`, a name taken there is numbered (`plan 2.md`), as a file
+/// manager keeps both; else it is refused. Returns its new path.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn tree_move_entry(
@@ -139,8 +140,9 @@ pub async fn tree_move_entry(
     path: String,
     into: String,
     name: Option<String>,
+    keep_both: bool,
 ) -> Result<String, String> {
-    let to = move_entry(path.clone(), into, name).await?;
+    let to = move_entry(path.clone(), into, name, keep_both).await?;
     tell_windows(
         &window,
         EntriesChanged {
@@ -151,18 +153,32 @@ pub async fn tree_move_entry(
     Ok(to)
 }
 
-async fn move_entry(path: String, into: String, name: Option<String>) -> Result<String, String> {
+async fn move_entry(
+    path: String,
+    into: String,
+    name: Option<String>,
+    keep_both: bool,
+) -> Result<String, String> {
     let from = itself(&path)?;
     let given = into;
     let into = existing_dir(&given)
         .await?
         .canonicalize()
         .map_err(|e| e.to_string())?;
-    let to = move_target(&from, &into, name.as_deref())?;
+    let mut to = move_target(&from, &into, name.as_deref())?;
     let case_only = to.to_string_lossy().to_lowercase() == from.to_string_lossy().to_lowercase()
         && crate::atomic::same_file(&from, &to);
     if !case_only && fs::try_exists(&to).await.unwrap_or(true) {
-        return Err(crate::errors::error("exists"));
+        if !keep_both {
+            return Err(crate::errors::error("exists"));
+        }
+        let style = if from.is_dir() {
+            crate::ids::Numbered::SpaceWhole
+        } else {
+            crate::ids::Numbered::Space
+        };
+        let taken = to.file_name().ok_or("No file name")?.to_string_lossy();
+        to = into.join(crate::ids::free_name(&into, &taken, style));
     }
     let (a, b) = (from.clone(), to.clone());
     tokio::task::spawn_blocking(move || crate::atomic::move_entry(&a, &b))
@@ -289,7 +305,7 @@ pub async fn tree_put_back(
     tell_windows(
         &window,
         EntriesChanged {
-            restored: Some(path),
+            made: Some(path),
             ..Default::default()
         },
     );
@@ -379,15 +395,22 @@ mod tests {
         assert!(tree_create_folder(root.clone(), "Sub".into())
             .await
             .is_err());
-        let moved = move_entry(doc.clone(), sub.clone(), None).await.unwrap();
+        let moved = move_entry(doc.clone(), sub.clone(), None, false)
+            .await
+            .unwrap();
         // In the folder's spelling as given (a temp dir is a symlink on macOS).
         assert_eq!(Path::new(&moved), Path::new(&sub).join("Notes.md"));
         // A second Notes.md at the top can't be moved onto the first.
         let again = tree_create_document(root.clone(), "Notes".into())
             .await
             .unwrap();
-        assert!(move_entry(again, sub.clone(), None).await.is_err());
-        assert!(move_entry(sub.clone(), sub, None).await.is_err());
+        assert!(move_entry(again.clone(), sub.clone(), None, false)
+            .await
+            .is_err());
+        // Kept both: numbered beside it.
+        let both = move_entry(again, sub.clone(), None, true).await.unwrap();
+        assert_eq!(Path::new(&both), Path::new(&sub).join("Notes 2.md"));
+        assert!(move_entry(sub.clone(), sub, None, false).await.is_err());
     }
 
     #[tokio::test]

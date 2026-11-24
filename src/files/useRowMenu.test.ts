@@ -36,6 +36,7 @@ const labelsFor = (path: string, isDir: boolean) => {
       fileUndo: { record: () => undefined, show: noop, rowBeside: () => null },
       rename: (p: string) => void renamed.push(p),
       treeRef: { current: null },
+      transfer: async () => false,
     }),
   );
   act(() => result.current.openRowMenu({ x: 0, y: 0 }, path, isDir));

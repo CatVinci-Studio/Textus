@@ -22,6 +22,7 @@ pub(super) fn group() -> Group {
                 crate::commands::fs::save_pasted_image,
                 crate::commands::fs::dropped::save_dropped_file,
                 crate::commands::fs::copy_into::copy_into_folder,
+                crate::commands::fs::copy_into::tree_copy_entry,
                 crate::commands::fs::migrate_draft_images,
                 crate::commands::fs::move_picture_to_trash,
                 crate::commands::folder::index_folder,

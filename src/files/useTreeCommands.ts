@@ -9,20 +9,32 @@ import { FOCUSED_EDIT_EVENT } from "../utils/events";
 import { useLatest } from "../utils/hooks/useLatest";
 import { comboFromEvent } from "../utils/shortcuts";
 import { shownRows, type TreeRow, type TreeSelection } from "./tree-selection";
+import type { TreeClipboard } from "./useTreeClipboard";
 
 /** What a key does to the tree's rows. */
 type TreeCommand =
-  "rename" | "open" | "trash" | "selectAll" | "extendUp" | "extendDown";
+  | "rename"
+  | "open"
+  | "trash"
+  | "selectAll"
+  | "extendUp"
+  | "extendDown"
+  | "cut"
+  | "copy"
+  | "paste"
+  | "duplicate";
 
 const EVERYWHERE: Record<string, TreeCommand> = {
   f2: "rename",
   "mod+a": "selectAll",
   "shift+arrowup": "extendUp",
   "shift+arrowdown": "extendDown",
+  "mod+d": "duplicate",
 };
 
 /** As each system's file manager has them: a Mac's Finder renames with
- *  Return and opens with ⌘↓; Explorer and Linux's open with Enter. */
+ *  Return and opens with ⌘↓; Explorer and Linux's open with Enter. A Mac's
+ *  Cut, Copy and Paste come through its Edit menu (useTreeClipboard.ts). */
 const KEYS: Record<"mac" | "other", Record<string, TreeCommand>> = {
   mac: {
     ...EVERYWHERE,
@@ -31,7 +43,14 @@ const KEYS: Record<"mac" | "other", Record<string, TreeCommand>> = {
     "mod+backspace": "trash",
     delete: "trash",
   },
-  other: { ...EVERYWHERE, enter: "open", delete: "trash" },
+  other: {
+    ...EVERYWHERE,
+    enter: "open",
+    delete: "trash",
+    "mod+x": "cut",
+    "mod+c": "copy",
+    "mod+v": "paste",
+  },
 };
 
 /** The rows on screen, top to bottom. */
@@ -50,8 +69,8 @@ const rowOfEvent = (e: { target: EventTarget | null }) => {
 
 /**
  * The tree's keys for its rows, from one table: rename, open, move to the
- * Trash (the picked rows, if the row is one of them), select all, and
- * Shift with an arrow to pick a range. Select All on a Mac comes from its
+ * Trash, cut, copy, paste and duplicate (the picked rows, if the row is one
+ * of them), select all, and Shift with an arrow to pick a range. Select All on a Mac comes from its
  * menu through FOCUSED_EDIT_EVENT. Returns the tree's keydown, true when
  * a key was one of them.
  */
@@ -63,11 +82,12 @@ export function useTreeCommands(input: {
   open: (path: string) => void;
   /** Asks, then moves the rows to the Trash. */
   trash: (rows: readonly TreeRow[]) => void;
+  clip: TreeClipboard;
 }) {
   const latest = useLatest(input);
 
   const run = (command: TreeCommand, row: HTMLElement): void => {
-    const { treeRef, selection, rename, open, trash } = latest.current;
+    const { treeRef, selection, rename, open, trash, clip } = latest.current;
     const tree = treeRef.current;
     if (!tree) return;
     const path = row.dataset.path!;
@@ -80,6 +100,16 @@ export function useTreeCommands(input: {
         return isDir ? row.click() : open(path);
       case "trash":
         return trash(selection.groupOf(path) ?? [{ path, isDir }]);
+      case "cut":
+      case "copy":
+        return clip.cutOrCopy(
+          selection.groupOf(path) ?? [{ path, isDir }],
+          command === "cut",
+        );
+      case "paste":
+        return void clip.paste(clip.pasteInto(row));
+      case "duplicate":
+        return clip.duplicate(selection.groupOf(path) ?? [{ path, isDir }]);
       case "selectAll":
         // Rows a big folder held back are rows too.
         drawHeldRows(tree);

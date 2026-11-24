@@ -4,24 +4,17 @@ import {
   type PointerEvent as ReactPointerEvent,
   type RefObject,
 } from "react";
-import { fs } from "../platform/ipc";
-import type { Strings } from "../i18n/strings";
-import { showMessage } from "../engine/controls/app-dialog";
 import { documentDrop, setDragging } from "../engine/controls/document-drop";
-import { basename, folderName, parentDir } from "../utils/path";
-import { updateLinksAfterMove } from "./move-links";
-import { showNotice } from "../engine/controls/notices";
-import { counted } from "../i18n/current";
-import { fill } from "../i18n/fill";
-import type { FileStep, MovedEntry } from "./file-undo";
-import { keepKeyboardOn } from "./tree-reveal";
-import { canMoveInto, dropDirAt, failureText } from "./tree-shared";
+import { isMacPlatform } from "../platform/os";
+import { isWithin } from "../utils/path";
+import { canMoveInto, dropDirAt } from "./tree-shared";
 import { dragGhost } from "../engine/drag/ghost";
 import { trackDrag } from "../engine/drag/pointer-drag";
 import { holdToDrag } from "../engine/drag/hold-drag";
 import { useLatest } from "../utils/hooks/useLatest";
 import { edgeScroll } from "../engine/drag/edge-scroll";
 import { outermost, type TreeRow, type TreeSelection } from "./tree-selection";
+import type { TreeTransfer } from "./useTreeTransfer";
 
 /** A row being dragged (or the first of several picked), and the folder
  *  under the pointer. */
@@ -46,53 +39,52 @@ function holdSelection(): void {
   window.addEventListener("pointercancel", done);
 }
 
-/** Whether Shift is held while a row is dragged: pressed or let go with
+const HELD: Record<"Shift" | "Alt" | "Control", (e: KeyboardEvent) => boolean> =
+  {
+    Shift: (e) => e.shiftKey,
+    Alt: (e) => e.altKey,
+    Control: (e) => e.ctrlKey,
+  };
+
+/** Whether `key` is held while a row is dragged: pressed or let go with
  *  the pointer still, `changed` shows what the drop would do now. */
-function heldShift(changed: (held: boolean) => void) {
+function heldKey(key: keyof typeof HELD, changed: (held: boolean) => void) {
   const state = {
     held: false,
     stop: () => {
-      window.removeEventListener("keydown", key, true);
-      window.removeEventListener("keyup", key, true);
+      window.removeEventListener("keydown", on, true);
+      window.removeEventListener("keyup", on, true);
     },
   };
-  const key = (e: KeyboardEvent) => {
-    if (e.key !== "Shift" || e.shiftKey === state.held) return;
-    state.held = e.shiftKey;
+  const on = (e: KeyboardEvent) => {
+    if (e.key !== key || HELD[key](e) === state.held) return;
+    state.held = HELD[key](e);
     changed(state.held);
   };
-  window.addEventListener("keydown", key, true);
-  window.addEventListener("keyup", key, true);
+  window.addEventListener("keydown", on, true);
+  window.addEventListener("keyup", on, true);
   return state;
 }
 
-/** A row dragged onto a folder moves into it; files dragged over the
+/** The key that makes a drag a copy, as each system's file manager has it. */
+const copyKey = () => (isMacPlatform() ? "Alt" : "Control");
+
+/** A row dragged onto a folder moves into it, or with ⌥ (Ctrl elsewhere)
+ *  held is copied there; files dragged over the
  *  documents go into one or open there (file-drop-session.ts); Esc or a cancelled pointer drops nothing.
  *  Pointer events, not HTML drag and drop, which the OS file drop takes
  *  over on Windows. */
 export function useRowDrag(
   treeRef: RefObject<HTMLDivElement | null>,
-  reload: (...dirs: string[]) => void,
-  onEntryMoved: (from: string, to: string) => void,
-  /** The folder whose documents' links follow a move. */
-  linkBase: string,
-  t: Strings,
   /** Rows picked together: a press on one of them drags them all. */
   selection: TreeSelection,
   /** A finger's hold let go where it was: the row's menu. */
   onHeld: (at: { x: number; y: number }, path: string, isDir: boolean) => void,
-  /** Keeps a move to take back; returns its notice's Undo. */
-  record: (step: FileStep) => { label: string; run: () => void } | undefined,
+  /** Moves or copies rows into a folder (useTreeTransfer). */
+  transfer: TreeTransfer["transfer"],
 ) {
   const [drag, setDrag] = useState<Drag | null>(null);
-  const latest = useLatest({
-    reload,
-    onEntryMoved,
-    linkBase,
-    t,
-    onHeld,
-    record,
-  });
+  const latest = useLatest({ onHeld, transfer });
 
   const onRowPointerDown = useCallback(
     (e: ReactPointerEvent, path: string, name: string, isDir: boolean) => {
@@ -102,13 +94,19 @@ export function useRowDrag(
       holdSelection();
       const group = selection.groupOf(path);
       const moving: TreeRow[] = group ? outermost(group) : [{ path, isDir }];
+      // A copy may go beside itself; neither goes into itself.
       const fits = (dir: string) =>
-        moving.every((row) => canMoveInto(row.path, row.isDir, dir));
+        moving.every((row) =>
+          copy?.held
+            ? !(row.isDir && isWithin(dir, row.path))
+            : canMoveInto(row.path, row.isDir, dir),
+        );
       // Files, not folders, go into the documents or open there.
       const files = moving.every((row) => !row.isDir)
         ? moving.map((row) => ({ path: row.path, isDir: false }))
         : null;
-      let shift: ReturnType<typeof heldShift> | null = null;
+      let shift: ReturnType<typeof heldKey> | null = null;
+      let copy: ReturnType<typeof heldKey> | null = null;
       // No Shift under a finger, and no other way yet to choose: a file
       // a finger drags onto the documents opens there, as it always has.
       const opens = e.pointerType === "touch";
@@ -134,9 +132,15 @@ export function useRowDrag(
       );
       const handlers = {
         start: () => {
-          shift = heldShift((held) => {
+          shift = heldKey("Shift", (held) => {
             if (files && !into)
               documentDrop()?.over(files, last.x, last.y, held || opens);
+          });
+          copy = heldKey(copyKey(), (held) => {
+            document.body.classList.toggle("tree-drag-copy", held);
+            const next = targetAt(last.x, last.y);
+            if (next !== into) setDrag({ path, isDir, into: next });
+            into = next;
           });
           setDragging(true);
           // The copy under the pointer, as every drag elsewhere has it.
@@ -152,6 +156,13 @@ export function useRowDrag(
           const box = treeRef.current?.getBoundingClientRect();
           if (box && x >= box.left && x <= box.right) edge.at(y);
           else edge.stop();
+          if (
+            copy &&
+            copy.held !== (copyKey() === "Alt" ? m.altKey : m.ctrlKey)
+          ) {
+            copy.held = !copy.held;
+            document.body.classList.toggle("tree-drag-copy", copy.held);
+          }
           const next = targetAt(x, y);
           // The tree redraws only when where it would land changes.
           if (next !== into) setDrag({ path, isDir, into: next });
@@ -164,6 +175,8 @@ export function useRowDrag(
         end: (x, y, dropped, up) => {
           edge.stop();
           shift?.stop();
+          copy?.stop();
+          document.body.classList.remove("tree-drag-copy");
           ghost.current?.remove();
           setDragging(false);
           setDrag(null);
@@ -180,7 +193,11 @@ export function useRowDrag(
             );
           if (!into) return;
           if (group) selection.clear();
-          void moveAll(moving, into);
+          void latest.current.transfer(
+            moving,
+            into,
+            copy?.held ? "copy" : "move",
+          );
         },
       } satisfies Parameters<typeof trackDrag>[1];
       // A finger lifts the row by holding still; a move before that scrolls.
@@ -190,44 +207,14 @@ export function useRowDrag(
           lift: handlers.start,
           held: (x, y) => {
             shift?.stop();
+            copy?.stop();
             latest.current.onHeld({ x, y }, path, isDir);
           },
         });
       else trackDrag(e.nativeEvent, handlers);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- moveAll reads latest
-    [treeRef, selection],
+    [treeRef, selection, latest],
   );
 
-  /** The rows moved into `into` one after another, up to one that can't
-   *  be; what moved is one step to take back, with the links it updated. */
-  const moveAll = async (rows: readonly TreeRow[], into: string) => {
-    const { reload, onEntryMoved, linkBase, t, record } = latest.current;
-    const moved: MovedEntry[] = [];
-    const edits: ReturnType<typeof updateLinksAfterMove>[] = [];
-    for (const { path: from } of rows) {
-      try {
-        const to = await fs.moveEntry(from, into);
-        reload(parentDir(from) ?? into, into);
-        onEntryMoved(from, to);
-        moved.push({ from, to });
-        edits.push(updateLinksAfterMove(from, to, linkBase, t).catch(() => []));
-      } catch (err) {
-        await showMessage(failureText(t, err, basename(from)));
-        break;
-      }
-    }
-    if (!moved.length) return;
-    keepKeyboardOn(treeRef.current, moved[0]!.to);
-    const undo = record({
-      kind: "moved",
-      moved,
-      edits: Promise.all(edits).then((all) => all.flat()),
-    });
-    showNotice(
-      fill(counted(t.treeMoved, moved.length), { folder: folderName(into) }),
-      { action: undo },
-    );
-  };
   return { drag, onRowPointerDown };
 }

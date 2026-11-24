@@ -770,6 +770,12 @@ utiliser une.
     many: "{n} éléments mis à la corbeille",
     other: "{n} éléments mis à la corbeille",
   },
+  treeCopyName: "{name} copie",
+  treeDuplicate: "Dupliquer",
+  treeNameClash:
+    "«\u00a0{name}\u00a0» est déjà dans «\u00a0{folder}\u00a0». Le remplacer (celui qui s’y trouve va à la corbeille) ou garder les deux\u00a0?",
+  treeReplace: "Remplacer",
+  treeKeepBoth: "Garder les deux",
   outlineCollapse: "Replier",
   outlineExpand: "Déplier",
   outlineExpandAll: "Tout déplier",

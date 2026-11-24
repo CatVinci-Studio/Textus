@@ -771,6 +771,12 @@ export default {
     many: "{n} элементов перемещены в корзину",
     other: "{n} элемента перемещены в корзину",
   },
+  treeCopyName: "{name} копия",
+  treeDuplicate: "Дублировать",
+  treeNameClash:
+    "«{name}» уже есть в «{folder}». Заменить (прежний попадёт в корзину) или оставить оба?",
+  treeReplace: "Заменить",
+  treeKeepBoth: "Оставить оба",
   outlineCollapse: "Свернуть",
   outlineExpand: "Развернуть",
   outlineExpandAll: "Развернуть все",

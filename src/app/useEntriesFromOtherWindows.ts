@@ -14,8 +14,8 @@ interface EntriesChanged {
   from: string;
   moved: [string, string] | null;
   trashed: string | null;
-  /** Put back from the Trash. */
-  restored: string | null;
+  /** Put back from the Trash, or copied. */
+  made: string | null;
 }
 
 /**
@@ -30,7 +30,7 @@ export function useEntriesFromOtherWindows(
   useEffect(() => {
     return unlistenAll(
       listenToThisWindow<EntriesChanged>("entries-changed", (event) => {
-        const { from, moved, trashed, restored } = event.payload;
+        const { from, moved, trashed, made } = event.payload;
         if (from === readBoot()?.label) return;
         if (moved) {
           latest.current(moved[0], moved[1]);
@@ -40,7 +40,7 @@ export function useEntriesFromOtherWindows(
           sendAppEvent(ENTRY_TRASHED_EVENT, trashed);
           sendAppEvent(FILE_WRITTEN_EVENT, trashed);
         }
-        if (restored) sendAppEvent(FILE_WRITTEN_EVENT, restored);
+        if (made) sendAppEvent(FILE_WRITTEN_EVENT, made);
       }),
     );
   }, [latest]);

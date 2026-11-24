@@ -735,6 +735,12 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     one: "{n} Element in den Papierkorb gelegt",
     other: "{n} Elemente in den Papierkorb gelegt",
   },
+  treeCopyName: "{name} Kopie",
+  treeDuplicate: "Duplizieren",
+  treeNameClash:
+    "„{name}“ liegt schon in „{folder}“. Ersetzen (das vorhandene kommt in den Papierkorb) oder beide behalten?",
+  treeReplace: "Ersetzen",
+  treeKeepBoth: "Beide behalten",
   outlineCollapse: "Einklappen",
   outlineExpand: "Ausklappen",
   outlineExpandAll: "Alle aufklappen",

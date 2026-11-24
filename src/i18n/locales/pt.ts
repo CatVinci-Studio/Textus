@@ -750,6 +750,12 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     many: "{n} itens movidos para a lixeira",
     other: "{n} itens movidos para a lixeira",
   },
+  treeCopyName: "{name} cópia",
+  treeDuplicate: "Duplicar",
+  treeNameClash:
+    "“{name}” já está em “{folder}”. Substituir (o que está lá vai para a lixeira) ou manter os dois?",
+  treeReplace: "Substituir",
+  treeKeepBoth: "Manter os dois",
   outlineCollapse: "Recolher",
   outlineExpand: "Expandir",
   outlineExpandAll: "Expandir tudo",

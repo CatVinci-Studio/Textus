@@ -45,6 +45,17 @@ function setup() {
       open: (p) => did.push(`open ${p}`),
       trash: (rows: readonly TreeRow[]) =>
         did.push(`trash ${rows.map((r) => r.path).join(" ")}`),
+      clip: {
+        take: () => {},
+        cutOrCopy: (rows, cut) =>
+          did.push(
+            `${cut ? "cut" : "copy"} ${rows.map((r) => r.path).join(" ")}`,
+          ),
+        paste: async (into) => void did.push(`paste ${into}`),
+        duplicate: (rows) =>
+          did.push(`duplicate ${rows.map((r) => r.path).join(" ")}`),
+        pasteInto: (el) => `into ${el.dataset.path}`,
+      },
     });
     const row = (e: DirEntryInfo) => (
       <div key={e.path} role="treeitem" tabIndex={-1} data-path={e.path}>
@@ -140,4 +151,24 @@ it("a Shift-click's range takes a big folder's rows that were not drawn yet", as
   fireEvent.click(at("/a/f100.md"));
   fireEvent.click(at("/b/f1.md"), { shiftKey: true });
   expect(picked!.picked).toHaveLength(150 + 2);
+});
+
+it("Ctrl+X, C and V cut, copy and paste elsewhere; ⌘D (Ctrl+D) duplicates", () => {
+  const { did, at } = setup();
+  const row = at("/b/f2.md");
+  fireEvent.keyDown(row, { key: "x", ctrlKey: true });
+  fireEvent.keyDown(row, { key: "c", ctrlKey: true });
+  fireEvent.keyDown(row, { key: "v", ctrlKey: true });
+  fireEvent.keyDown(row, { key: "d", ctrlKey: true });
+  // A Mac's come through its Edit menu, but ⌘D is the tree's own.
+  os.mac = true;
+  fireEvent.keyDown(row, { key: "c", metaKey: true });
+  fireEvent.keyDown(row, { key: "d", metaKey: true });
+  expect(did).toEqual([
+    "cut /b/f2.md",
+    "copy /b/f2.md",
+    "paste into /b/f2.md",
+    "duplicate /b/f2.md",
+    "duplicate /b/f2.md",
+  ]);
 });

@@ -74,14 +74,28 @@ export const fs = {
     farEntries(dir)?.createEntry(dir, name, true) ??
     command("tree_create_folder", dir, name),
   /** Into the folder `into`, under its own name or exactly `name` (an
-   *  undo putting it back); a far folder keeps the name. */
-  moveEntry: (path: string, into: string, name?: string): Promise<string> => {
+   *  undo putting it back); `keepBoth` numbers a name taken there, else it
+   *  is refused. A far folder keeps the name. */
+  moveEntry: (
+    path: string,
+    into: string,
+    name?: string,
+    keepBoth = false,
+  ): Promise<string> => {
     const far = farEntries(path);
     const from = far && parentDir(path);
     return far && from
       ? far.moveEntry(path, from, into)
-      : command("tree_move_entry", path, into, name ?? null);
+      : command("tree_move_entry", path, into, name ?? null, keepBoth);
   },
+  /** The tree's copy of `path` into the folder `into`, named as `naming`
+   *  says; returns its path. Rust side: `tree_copy_entry`
+   *  (commands/fs/copy_into.rs). Not in a far folder. */
+  copyEntry: (
+    path: string,
+    into: string,
+    naming: Generated.CopyNaming,
+  ): Promise<string> => command("tree_copy_entry", path, into, naming),
   /** A file or folder from a file manager copied into the tree's folder
    *  `into`, numbered when its name is taken; returns the copy's path.
    *  Rust side: `copy_into_folder` (commands/fs/copy_into.rs). Desktop

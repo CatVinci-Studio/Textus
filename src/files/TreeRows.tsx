@@ -14,6 +14,7 @@ import type { FileOpenHow } from "./tree-shared";
 import { FileIcon, FolderEntryIcon } from "../engine/controls/file-icons";
 import { NameField } from "./NameField";
 import { useRowRename } from "./useRename";
+import { useRowCut } from "./file-clipboard";
 
 // The file tree's own rows: a file's, and a folder's above its entries.
 
@@ -34,6 +35,7 @@ export const FileNode = memo(function FileNode({
   const tree = useTreeRowActions();
   const picked = useRowPicked(entry.path);
   const rename = useRowRename(entry.path);
+  const cut = useRowCut(entry.path);
   const mark = useFileMark(entry.path);
   const badge = useFileBadge(entry.path);
   const changed = !!mark?.changed;
@@ -46,7 +48,7 @@ export const FileNode = memo(function FileNode({
   return (
     <>
       <div
-        className={`tree-row tree-row-file${active ? " tree-row-active" : ""}${picked ? " tree-row-picked" : ""}${entry.ignored ? " tree-row-ignored" : ""}`}
+        className={`tree-row tree-row-file${active ? " tree-row-active" : ""}${picked ? " tree-row-picked" : ""}${entry.ignored ? " tree-row-ignored" : ""}${cut ? " tree-row-cut" : ""}`}
         role="treeitem"
         aria-level={depth}
         aria-selected={active || picked}
@@ -124,9 +126,10 @@ export function FolderRow({
   const tree = useTreeRowActions();
   const picked = useRowPicked(path);
   const rename = useRowRename(path);
+  const cut = useRowCut(path);
   return (
     <div
-      className={`tree-row${picked ? " tree-row-picked" : ""}${ignored ? " tree-row-ignored" : ""}`}
+      className={`tree-row${picked ? " tree-row-picked" : ""}${ignored ? " tree-row-ignored" : ""}${cut ? " tree-row-cut" : ""}`}
       role="treeitem"
       aria-level={depth}
       aria-expanded={open}

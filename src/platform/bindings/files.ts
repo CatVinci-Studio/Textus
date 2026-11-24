@@ -79,6 +79,13 @@ export const commands = {
 	 */
 	copy_into_folder: (source: string, into: string) => __TAURI_INVOKE<string>("copy_into_folder", { source, into }),
 	/**
+	 *  The file tree's copy (a paste, Duplicate, a drag with ⌥ or Ctrl): the
+	 *  file or folder `path` copied into the folder `into`, named as `naming`
+	 *  says. Returns the copy's path in `into`'s spelling. Its TypeScript side
+	 *  is `fs.copyEntry` in src/platform/ipc-files.ts.
+	 */
+	tree_copy_entry: (path: string, into: string, naming: CopyNaming) => __TAURI_INVOKE<string>("tree_copy_entry", { path, into, naming }),
+	/**
 	 *  Brings a document's images into the image folder of the file it was just
 	 *  saved as, rewriting each `src`: a draft's pasted images are moved, and on Save
 	 *  As images relative to the old document are copied. Anything else is left alone.
@@ -115,10 +122,11 @@ export const commands = {
 	tree_create_folder: (dir: string, name: string) => __TAURI_INVOKE<string>("tree_create_folder", { dir, name }),
 	/**
 	 *  Moves a file or folder into the folder `into`, under its own name or
-	 *  `name` exactly as given (an undo putting it back as it was). Returns its
-	 *  new path.
+	 *  `name` exactly as given (an undo putting it back as it was). With
+	 *  `keep_both`, a name taken there is numbered (`plan 2.md`), as a file
+	 *  manager keeps both; else it is refused. Returns its new path.
 	 */
-	tree_move_entry: (path: string, into: string, name: string | null) => __TAURI_INVOKE<string>("tree_move_entry", { path, into, name }),
+	tree_move_entry: (path: string, into: string, name: string | null, keepBoth: boolean) => __TAURI_INVOKE<string>("tree_move_entry", { path, into, name, keepBoth }),
 	/**
 	 *  Gives a file or folder a new name in its folder. A document renamed without
 	 *  an extension gets `.md`; a folder takes the name as typed. Returns its new path.
@@ -365,6 +373,15 @@ export type Conventions_Serialize = {
 	 */
 	detected: Conventions_Serialize | null,
 };
+
+/**
+ *  How a copy is named: as itself, refused when that is taken; numbered
+ *  when taken (`report 2.pdf`), as a file manager keeps both; or as a copy
+ *  beside the original in the words of the pattern, as Finder names one
+ *  ("{name} copy": `report copy.pdf`, then `report copy 2.pdf`).
+ *  Its TypeScript side is `CopyNaming` in src/platform/bindings/files.ts.
+ */
+export type CopyNaming = "own" | "numbered" | { beside: string };
 
 export type Daily = Daily_Serialize | Daily_Deserialize;
 

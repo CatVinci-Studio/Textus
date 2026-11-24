@@ -641,6 +641,12 @@ export default {
   treeUndoTaken: "没有撤销：以下项目原来的位置现在有别的东西。",
   treeMoved: { other: "已将 {n} 个项目移到“{folder}”" },
   treeTrashed: { other: "已将 {n} 个项目移到废纸篓" },
+  treeCopyName: "{name} 副本",
+  treeDuplicate: "创建副本",
+  treeNameClash:
+    "“{folder}”里已有“{name}”。要替换它（原有的会移到废纸篓），还是两个都保留？",
+  treeReplace: "替换",
+  treeKeepBoth: "两个都保留",
   outlineCollapse: "折叠",
   outlineExpand: "展开",
   outlineExpandAll: "全部展开",

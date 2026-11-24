@@ -90,6 +90,7 @@ export function FileTree({
     reload,
     onFileSelect: select,
     onEntryMoved,
+    selection,
   });
   const { fileUndo, draft, setDraft, finishDraft } = edits;
 
@@ -105,17 +106,16 @@ export function FileTree({
     fileUndo,
     rename: edits.startRename,
     treeRef,
+    transfer: edits.transfer,
   });
   const { drag, onRowPointerDown, into } = useTreeDrops({
     treeRef,
     folder,
-    linkBase: folder ?? root,
     reload,
-    onEntryMoved,
-    t,
     selection,
     onHeld: openRowMenu,
     fileUndo,
+    transfer: edits.transfer,
   });
   const { rowActions, shared } = useTreeContexts({
     sort,

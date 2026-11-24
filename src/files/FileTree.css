@@ -247,10 +247,24 @@
   background: none;
 }
 
-/* Left out by a .gitignore or as build output, as the search leaves it. */
+/* Left out by a .gitignore or as build output, as the search leaves it;
+   or cut, until it is pasted somewhere. */
 .tree-row-ignored .tree-label,
-.tree-row-ignored .tree-icon {
+.tree-row-ignored .tree-icon,
+.tree-row-cut .tree-label,
+.tree-row-cut .tree-icon {
   opacity: 0.5;
+}
+
+/* A row dragged with ⌥ (Ctrl elsewhere) held is copied: the cursor and
+   the copy under the pointer say so. */
+body.document-dragging.tree-drag-copy,
+body.document-dragging.tree-drag-copy * {
+  cursor: copy !important;
+}
+
+body.tree-drag-copy .tree-drag-ghost::before {
+  content: "+ ";
 }
 
 /* A new entry's name, typed in place: the row stays a row, the field

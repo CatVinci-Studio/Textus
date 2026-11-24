@@ -716,6 +716,12 @@ type /name in a conversation to use one.
     one: "Moved {n} item to the Trash",
     other: "Moved {n} items to the Trash",
   },
+  treeCopyName: "{name} copy",
+  treeDuplicate: "Duplicate",
+  treeNameClash:
+    "“{name}” is already in “{folder}”. Replace it (the one there goes to the Trash), or keep both?",
+  treeReplace: "Replace",
+  treeKeepBoth: "Keep Both",
   outlineCollapse: "Collapse",
   outlineExpand: "Expand",
   outlineExpandAll: "Expand All",

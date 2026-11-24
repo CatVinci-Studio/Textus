@@ -23,6 +23,9 @@ import { type TreeRow, type TreeSelection } from "./tree-selection";
 import type { FileUndo } from "./useFileUndo";
 import { useTreeTrash } from "./useTreeTrash";
 import { useTreeCommands } from "./useTreeCommands";
+import { useTreeClipboard } from "./useTreeClipboard";
+import { clipboardItems, groupMenuItems } from "./tree-menu-items";
+import type { TreeTransfer } from "./useTreeTransfer";
 
 /** A row's right-click menu, while it is open. */
 type TreeMenu = {
@@ -34,7 +37,8 @@ type TreeMenu = {
 } | null;
 
 /** The tree's menus: the one open, and a row's context menu - open, new
- *  document or folder, rename, move to Trash. */
+ *  document or folder, cut, copy, paste, duplicate, rename, move to Trash -
+ *  or that of several rows picked together; and the tree's keys for them. */
 export function useRowMenu(input: {
   root: string;
   linkBase: string;
@@ -51,41 +55,42 @@ export function useRowMenu(input: {
   /** The row's name made a field to type a new one in. */
   rename: (path: string) => void;
   treeRef: RefObject<HTMLDivElement | null>;
+  /** Moves or copies rows into a folder (useTreeTransfer). */
+  transfer: TreeTransfer["transfer"];
 }) {
   const { root, linkBase, t, onFileSelect, setDraft, onEnter } = input;
   const { selection, rename } = input;
   const [menu, setMenu] = useState<TreeMenu>(null);
   const { askTrash } = useTreeTrash(input);
+  const clip = useTreeClipboard({
+    treeRef: input.treeRef,
+    transfer: input.transfer,
+    rowsAt: (el) =>
+      selection.groupOf(el.dataset.path!) ?? [
+        { path: el.dataset.path!, isDir: el.hasAttribute("aria-expanded") },
+      ],
+  });
   const onCommandKey = useTreeCommands({
     treeRef: input.treeRef,
     selection,
     rename,
     open: (path) => onFileSelect(path),
     trash: (rows) => void askTrash(rows),
+    clip,
   });
 
-  /** The menu of several rows picked together: open its documents, or
-   *  move them all to the Trash. */
   const openGroupMenu = useCallback(
     (at: { x: number; y: number }, rows: readonly TreeRow[]) => {
-      const files = rows.filter((row) => !row.isDir).map((row) => row.path);
-      const items: (ContextMenuItem | "separator")[] = [];
-      if (files.length)
-        items.push(
-          {
-            label: t.treeOpen,
-            onSelect: () => files.forEach((path) => onFileSelect(path)),
-          },
-          "separator",
-        );
-      items.push({
-        label: t.treeTrash,
-        onSelect: () => void askTrash(rows),
-        danger: true,
+      const items = groupMenuItems({
+        t,
+        rows,
+        open: (path) => onFileSelect(path),
+        clip,
+        trash: (rows) => void askTrash(rows),
       });
       setMenu({ ...at, items });
     },
-    [t, onFileSelect, askTrash],
+    [t, onFileSelect, askTrash, clip],
   );
 
   const openRowMenu = useCallback(
@@ -131,6 +136,9 @@ export function useRowMenu(input: {
           onSelect: () => setDraft({ dir, kind: "folder" }),
         },
       );
+      const self = path === root ? [] : [{ path, isDir }];
+      const clipboard = clipboardItems(t, clip, self, dir);
+      if (clipboard.length) items.push("separator", ...clipboard);
       items.push("separator", ...pathItems(t, path, root));
       if (path !== root)
         items.push({
@@ -170,7 +178,17 @@ export function useRowMenu(input: {
         },
       );
     },
-    [root, linkBase, t, setDraft, rename, askTrash, onFileSelect, onEnter],
+    [
+      root,
+      linkBase,
+      t,
+      setDraft,
+      rename,
+      askTrash,
+      onFileSelect,
+      onEnter,
+      clip,
+    ],
   );
   const onRowMenu = useCallback(
     (e: ReactMouseEvent, path: string, isDir: boolean) => {

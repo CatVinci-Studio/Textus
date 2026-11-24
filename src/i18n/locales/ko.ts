@@ -681,6 +681,12 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
     "아무것도 실행 취소하지 않았습니다. 다음 항목이 있던 자리에 지금 다른 것이 있습니다.",
   treeMoved: { other: "항목 {n}개를 ‘{folder}’(으)로 옮겼습니다" },
   treeTrashed: { other: "항목 {n}개를 휴지통으로 옮겼습니다" },
+  treeCopyName: "{name} 복사본",
+  treeDuplicate: "복제",
+  treeNameClash:
+    "‘{name}’이(가) 이미 ‘{folder}’에 있습니다. 대치할까요(있던 항목은 휴지통으로 갑니다), 아니면 둘 다 유지할까요?",
+  treeReplace: "대치",
+  treeKeepBoth: "둘 다 유지",
   outlineCollapse: "접기",
   outlineExpand: "펼치기",
   outlineExpandAll: "모두 펼치기",
