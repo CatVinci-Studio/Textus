@@ -28,8 +28,8 @@ it("reads two fingers' spread as a pinch's scale about their middle", () => {
     clientY: 200,
     scale: 2,
   });
-  // Taken: the web view neither scrolls nor zooms the page meanwhile.
-  expect(move.defaultPrevented).toBe(true);
+  // Passive: touch-action keeps the page from panning and zooming.
+  expect(move.defaultPrevented).toBe(false);
   fingers("touchend", 0, 1);
   expect(end).toHaveBeenCalledWith(expect.objectContaining({ scale: 2 }));
   stop();
@@ -50,7 +50,7 @@ it("leaves a pinch the zoom doesn't take, and one finger, to the page", () => {
   stop();
 });
 
-it("holds its touchmove listener from the start, not from the second finger", () => {
+it("listens to touchmove passively, so a one-finger scroll never waits on it", () => {
   const added = vi.spyOn(window, "addEventListener");
   const stop = listenToTouchPinch(window, {
     start: () => true,
@@ -58,7 +58,7 @@ it("holds its touchmove listener from the start, not from the second finger", ()
     end: vi.fn(),
   });
   expect(added).toHaveBeenCalledWith("touchmove", expect.any(Function), {
-    passive: false,
+    passive: true,
   });
   added.mockRestore();
   stop();
