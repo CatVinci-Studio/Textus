@@ -1,5 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { extensionsTabs } from "./extensions-tab";
+
+const layout = vi.hoisted(() => ({ phone: false }));
+vi.mock("../../platform/phone-layout", () => ({
+  isPhoneLayout: () => layout.phone,
+}));
 
 describe("extensionsTabs", () => {
   it("lists every tab where the app runs programs and has Textus AI", () => {
@@ -27,5 +32,16 @@ describe("extensionsTabs", () => {
     expect(extensionsTabs({ mcp: false, ai: false, phone: true })).toEqual([
       "plugins",
     ]);
+  });
+});
+
+describe("extensionsStartTab", () => {
+  it("opens on the first tab of the layout in use now, not at load", async () => {
+    vi.resetModules();
+    layout.phone = true;
+    const { extensionsStartTab } = await import("./extensions-tab");
+    expect(extensionsStartTab()).toBe("plugins");
+    layout.phone = false;
+    expect(extensionsStartTab()).toBe("themes");
   });
 });

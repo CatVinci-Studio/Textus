@@ -37,8 +37,8 @@ export function extensionsTabs(
 }
 
 /** The tab Extensions opens on: the last one shown, or the one another page
- *  sent the user to. */
-let lastTab: ExtensionsTab = extensionsTabs()[0];
+ *  sent the user to; else the first the layout shows when it opens. */
+let lastTab: ExtensionsTab | null = null;
 
 /** Makes the next Extensions page open on `tab` (Textus AI's Skills row
  *  goes to Skills). */
@@ -64,5 +64,5 @@ export function takeStartPlugin(): string | null {
 
 export function extensionsStartTab(): ExtensionsTab {
   const tabs = extensionsTabs();
-  return tabs.includes(lastTab) ? lastTab : tabs[0];
+  return lastTab && tabs.includes(lastTab) ? lastTab : tabs[0];
 }
