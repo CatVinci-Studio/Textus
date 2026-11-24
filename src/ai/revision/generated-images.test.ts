@@ -194,15 +194,18 @@ describe("an accepted picture", () => {
     expect(generatedImageUrl("s1")).toMatch(/^blob:/);
   });
 
-  it("rejected after an undo, lets its copy go and keeps its file", async () => {
+  it("rejected after an undo, keeps its file and its card's picture", async () => {
     backend.generatedImage.mockResolvedValueOnce({
       mime: "image/png",
       dataBase64: "iVBORw0KGgo=",
     });
     await loadGeneratedImage("s2");
     rememberSaved("s2", "images/s2.png");
+    backend.discardGeneratedImage.mockClear();
     discardGeneratedImage("s2");
-    expect(generatedImageUrl("s2")).toBeNull();
+    // Its card still shows it; the backend's copy went when it was saved.
+    expect(generatedImageUrl("s2")).toMatch(/^blob:/);
+    expect(backend.discardGeneratedImage).not.toHaveBeenCalled();
     expect(savedSrc("s2")).toBe("images/s2.png");
     // Accepted again, it is the saved file: nothing asked of the backend.
     backend.generatedImage.mockClear();

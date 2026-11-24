@@ -380,12 +380,14 @@ export function rememberSaved(id: string, src: string): void {
 }
 
 /** Lets a picture go everywhere: its proposal was rejected. One saved
- *  keeps its file, for accepting again after an undo. */
+ *  keeps its file, for accepting again after an undo, and its blob: URL,
+ *  for its card - its bytes went when it was saved. */
 export function discardGeneratedImage(id: string): void {
+  if (saved.has(id)) return;
   const url = loaded.get(id)?.url;
   if (url?.startsWith("blob:")) URL.revokeObjectURL(url);
   loaded.delete(id);
-  if (!saved.has(id)) void ai.discardGeneratedImage(id).catch(() => {});
+  void ai.discardGeneratedImage(id).catch(() => {});
 }
 
 /** `text` with `picture` on a line of its own beside the paragraph quoting
