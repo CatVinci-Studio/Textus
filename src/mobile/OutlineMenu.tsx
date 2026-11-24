@@ -5,10 +5,8 @@ import {
   type ContextMenuItem,
 } from "../engine/controls/ContextMenu";
 import { parseHeadings } from "../files/outline-parse";
-import { currentHeading } from "../files/outline-current";
+import { currentHeading, goToHeading } from "../files/outline-current";
 import { plainInline } from "../utils/markdown-plain";
-import { noteJump } from "../editor/nav-history";
-import { setTabJump } from "../editor/tab-jump";
 
 /**
  * The document's outline on a phone, a menu where ⋯'s was: its headings,
@@ -39,11 +37,7 @@ export function OutlineMenu({
         label: plainInline(heading.text),
         depth: heading.level,
         current: index === current,
-        onSelect: () => {
-          // The editor scrolls there as every jump does (revealPosition).
-          noteJump();
-          setTabJump(tabId, { kind: "outline", index }, true);
-        },
+        onSelect: () => goToHeading(tabId, index),
       });
     });
     return rows;
