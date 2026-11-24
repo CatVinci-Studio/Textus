@@ -7,10 +7,11 @@ import { plainTextRun } from "./link-input-rule";
  * saving would escape it (`<br>` as `\<br>`, `[^1]` as `\[^1]`).
  */
 
-/** An HTML tag just closed, not a link's `](<destination>`. The object
- *  replacement character is another inline node in the rule's view of the text. */
+/** An HTML tag just closed; group 1 marks a link's `](<destination>`, left
+ *  alone. The object replacement character is another inline node in the
+ *  rule's view of the text. */
 export const TYPED_TAG =
-  /(?<!\]\()<\/?[A-Za-z][A-Za-z0-9-]*(?:\s[^<>\n￼]*)?\/?>$/;
+  /(\]\()?(<\/?[A-Za-z][A-Za-z0-9-]*(?:\s[^<>\n￼]*)?\/?>)$/;
 
 /** A footnote reference just closed: `[^1]`, `[^note]`. Not a link's
  *  `[^x](url)`, which the link rule takes once its `)` goes in. */
@@ -24,6 +25,7 @@ export const htmlTagInputRule = $inputRule(
       const $start = state.doc.resolve(start);
       if (
         !html ||
+        match[1] ||
         !plainTextRun(state, start, end) ||
         $start.parent.type.spec.code
       )
