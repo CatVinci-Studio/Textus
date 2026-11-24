@@ -27,10 +27,10 @@ const { Select } = await import("../engine/controls/Select");
 const { ColorField } = await import("../engine/controls/ColorField");
 
 describe("on a phone", () => {
-  it("a menu is an action sheet with Cancel set apart", () => {
+  it("a menu is the desktop's, and takes the focus from a field", () => {
     const share = vi.fn();
     const onClose = vi.fn();
-    // Typing in a document: the sheet takes the focus from it.
+    // Typing in a document: the menu takes the focus from it.
     const doc = document.createElement("textarea");
     document.body.append(doc);
     doc.focus();
@@ -47,15 +47,18 @@ describe("on a phone", () => {
         onClose={onClose}
       />,
     );
-    expect(screen.getByRole("menu", { name: "notes.md" })).toHaveFocus();
+    expect(screen.getByRole("menu", { name: "notes.md" })).toHaveClass(
+      "context-menu",
+    );
+    expect(document.querySelector(".sheet-scrim")).toBeNull();
+    expect(doc).not.toHaveFocus();
     doc.remove();
     fireEvent.click(screen.getByRole("menuitem", { name: "Share" }));
     expect(share).toHaveBeenCalled();
     expect(onClose).toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
   });
 
-  it("a menu's sheet keeps its check and its rows not offered now", () => {
+  it("a menu keeps its check and its rows not offered now", () => {
     const copy = vi.fn();
     render(
       <ContextMenu
@@ -78,7 +81,7 @@ describe("on a phone", () => {
     expect(screen.getByRole("menuitem", { name: "Copy" })).toBeDisabled();
   });
 
-  it("a menu's sheet brings the checked row into view", () => {
+  it("a menu brings the checked row into view", () => {
     const seen = vi.fn();
     Element.prototype.scrollIntoView = function (this: Element) {
       seen(this.textContent);
@@ -97,7 +100,7 @@ describe("on a phone", () => {
     expect(seen).toHaveBeenCalledWith("z.md");
   });
 
-  it("a select opens the app's own sheet, not the system's picker", () => {
+  it("a select opens the app's own menu, not the system's picker", () => {
     const onChange = vi.fn();
     render(
       <Select value="b" onChange={onChange} aria-label="Mode">

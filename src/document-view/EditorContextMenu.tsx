@@ -32,8 +32,8 @@ export type EditorMenuState = {
   link?: MenuLink | null;
   /** An embed's picture right-clicked. */
   picture?: HTMLImageElement | null;
-  /** Opened by the iPhone keyboard toolbar's "More", as an action sheet. */
-  phone?: boolean;
+  /** Opened by the phone's format bar's "More", hung from it. */
+  phone?: HTMLElement;
   /** Opened from the keyboard, at the caret. */
   keyboard?: boolean;
   /** Opened by a block handle: that block's menu. */
@@ -92,6 +92,7 @@ export function EditorContextMenu({
           x={menu.x}
           y={menu.y}
           keyboard={menu.keyboard}
+          anchor={menu.phone}
           items={
             menu.block
               ? blockMenuItems(run, t, menu.block, {

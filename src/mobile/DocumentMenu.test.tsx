@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.mock("../prefs/SettingsContext", () => ({
@@ -67,7 +73,7 @@ describe("a document's menu on a phone", () => {
     expect(screen.getByRole("menuitem", { name: "Share…" })).toBeTruthy();
   });
 
-  it("opens the outline sheet, and a row goes to its heading", () => {
+  it("opens the outline, and a row goes to its heading", () => {
     open();
     fireEvent.click(screen.getByRole("menuitem", { name: "Outline" }));
     expect(screen.getByRole("menu", { name: "Outline" })).toBeTruthy();
@@ -94,5 +100,21 @@ describe("a document's menu on a phone", () => {
     open();
     fireEvent.click(screen.getByRole("menuitem", { name: "Share…" }));
     expect(emitMenuEvent).toHaveBeenCalledWith("share");
+  });
+
+  it("is the desktop's menu, and Android's Back closes it", async () => {
+    const { back } = await import("./back");
+    open();
+    const menu = screen.getByRole("menu", { name: "notes.md" });
+    expect(menu).toHaveClass("context-menu");
+    expect(document.querySelector(".sheet-scrim")).toBeNull();
+    menu.getClientRects = () => [{}] as unknown as DOMRectList;
+    act(() => {
+      expect(back()).toBe(true);
+    });
+    expect(screen.getByRole("button", { name: "More" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
   });
 });

@@ -87,7 +87,6 @@ export function AppMenu({
       anchor={anchor}
       // On a phone a focused first row would only look selected.
       keyboard={!phone}
-      inline
     />
   );
 }

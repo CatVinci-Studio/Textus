@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useSettings } from "../prefs/SettingsContext";
-import { ActionSheet } from "../engine/controls/ActionSheet";
+import { useMenuButton } from "../engine/controls/useMenuButton";
 import { Presence } from "../engine/motion/usePresence";
 import { MoreIcon } from "../engine/controls/icons";
 import { Tooltip } from "../engine/controls/Tooltip";
 import { emitMenuEvent } from "../platform/menu-events";
 import { sendAppEvent, TOGGLE_FIND_REPLACE_EVENT } from "../utils/events";
-import { OutlineSheet } from "./OutlineSheet";
+import { OutlineMenu } from "./OutlineMenu";
 
 /**
  * The document's own actions, behind a phone's ⋯: its outline, find and
@@ -26,8 +26,34 @@ export function DocumentMenu({
   tabId: string;
 }) {
   const { t } = useSettings();
-  const [open, setOpen] = useState(false);
-  const [outlineOpen, setOutlineOpen] = useState(false);
+  const [outlineAt, setOutlineAt] = useState<{
+    x: number;
+    y: number;
+    anchor: HTMLElement | null;
+  } | null>(null);
+  const [button, setButton] = useState<HTMLElement | null>(null);
+  const more = useMenuButton(
+    () => [
+      {
+        label: t.outlineTab,
+        onSelect: () => {
+          const box = button?.getBoundingClientRect();
+          if (box)
+            setOutlineAt({ x: box.right, y: box.bottom + 4, anchor: button });
+        },
+      },
+      {
+        label: t.menuFindReplace,
+        onSelect: () => sendAppEvent(TOGGLE_FIND_REPLACE_EVENT),
+      },
+      {
+        label: t.menuToggleSourceMode,
+        onSelect: () => emitMenuEvent("toggle-source-mode"),
+      },
+      { label: t.menuShare, onSelect: () => emitMenuEvent("share") },
+    ],
+    { title, alignEnd: true },
+  );
   return (
     <>
       <Tooltip text={t.docMore} description={null}>
@@ -35,39 +61,23 @@ export function DocumentMenu({
           type="button"
           className="window-bar-toggle document-menu-button"
           aria-label={t.docMore}
-          aria-haspopup="menu"
-          aria-expanded={open}
-          onClick={() => setOpen(true)}
+          {...more.button}
+          ref={(el) => {
+            more.button.ref(el);
+            setButton(el);
+          }}
         >
           <MoreIcon />
         </button>
       </Tooltip>
-      <Presence show={open}>
-        {open && (
-          <ActionSheet
-            title={title}
-            items={[
-              { label: t.outlineTab, onSelect: () => setOutlineOpen(true) },
-              {
-                label: t.menuFindReplace,
-                onSelect: () => sendAppEvent(TOGGLE_FIND_REPLACE_EVENT),
-              },
-              {
-                label: t.menuToggleSourceMode,
-                onSelect: () => emitMenuEvent("toggle-source-mode"),
-              },
-              { label: t.menuShare, onSelect: () => emitMenuEvent("share") },
-            ]}
-            onClose={() => setOpen(false)}
-          />
-        )}
-      </Presence>
-      <Presence show={outlineOpen}>
-        {outlineOpen && (
-          <OutlineSheet
+      {more.menu}
+      <Presence show={outlineAt !== null}>
+        {outlineAt && (
+          <OutlineMenu
             content={content}
             tabId={tabId}
-            onClose={() => setOutlineOpen(false)}
+            at={outlineAt}
+            onClose={() => setOutlineAt(null)}
           />
         )}
       </Presence>

@@ -26,11 +26,18 @@ beforeAll(() => {
 });
 afterEach(cleanup);
 
-const { OutlineSheet } = await import("./OutlineSheet");
+const { OutlineMenu } = await import("./OutlineMenu");
 const { setTabJump } = await import("../editor/tab-jump");
 
 function renderSheet(content: string) {
-  render(<OutlineSheet content={content} tabId="tab-1" onClose={() => {}} />);
+  render(
+    <OutlineMenu
+      content={content}
+      tabId="tab-1"
+      at={{ x: 300, y: 40, anchor: null }}
+      onClose={() => {}}
+    />,
+  );
 }
 
 describe("a document's outline on a phone", () => {

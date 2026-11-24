@@ -251,16 +251,18 @@ function useToolbarEvents(events: Events) {
     setMenu({ x, y, imagePos: null, block: { pos } });
   });
 
-  // The iPhone keyboard toolbar's "More": the editor's menu for where the
-  // caret is, as an action sheet.
-  useWindowEvent(EDITOR_MORE_EVENT, () => {
+  // The phone's format bar's "More": the editor's menu for where the caret
+  // is, hung from the button.
+  useWindowEvent(EDITOR_MORE_EVENT, (e) => {
     if (!isOnScreen()) return;
+    const button = (e as CustomEvent<HTMLElement>).detail;
+    const box = button.getBoundingClientRect();
     setMenu({
-      x: 0,
-      y: 0,
+      x: box.left,
+      y: box.bottom + 4,
       imagePos: selectedImagePos(run),
       link: caretLink(run, docPath),
-      phone: true,
+      phone: button,
     });
   });
 

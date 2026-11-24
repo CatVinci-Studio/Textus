@@ -80,8 +80,8 @@
   /* No grey flash over whatever a finger lands on. */
   -webkit-tap-highlight-color: transparent;
   /* Phone-only layers. A full-screen page covers the find bar (300) and the
-     app menu (310) but stays under its own alerts (400-450); an action sheet
-     is over everything. */
+     app menu (310) but stays under its own alerts (400-450); a sheet from
+     the bottom is over everything. */
   --z-phone-page: 350;
   --z-sheet-menu: 500;
 }
@@ -169,23 +169,22 @@
     :is(.inline-chat-header-actions, .agent-island-tools) {
     gap: 16px;
   }
+  :root[data-window-chrome="mobile"] .inline-chat-header-button,
   :root:is([data-platform="ios"], [data-platform="android"])
-    :is(.inline-chat-header-button, .window-menu-button, .tab-pill-close) {
+    .window-menu-button {
     position: relative;
   }
   /* The + is sticky at the row's end (TabBar.css), its own containing
-     block; a finger wide, as the scroller clips what reaches past it. */
+     block; a finger wide, as the scroller clips what reaches past it. A
+     tab's x keeps its size on a tablet: in a 32px tab a fingertip's target
+     would take the taps meant for the tab. */
   :root:is([data-platform="ios"], [data-platform="android"]) .tab-bar-add {
     min-width: var(--touch-target);
   }
+  :root[data-window-chrome="mobile"]
+    :is(.inline-chat-header-button, .tab-bar-list)::after,
   :root:is([data-platform="ios"], [data-platform="android"])
-    :is(
-      .inline-chat-header-button,
-      .tab-bar-list,
-      .window-menu-button,
-      .tab-bar-add,
-      .tab-pill-close
-    )::after {
+    :is(.window-menu-button, .tab-bar-add)::after {
     content: "";
     position: absolute;
     top: 50%;

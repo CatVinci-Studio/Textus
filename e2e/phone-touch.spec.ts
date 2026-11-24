@@ -96,9 +96,14 @@ for (const { name, device } of TOUCH_DEVICES)
       await big([
         ".window-menu-button",
         ".tab-bar-add",
-        ".tab-pill-close",
+        // A tablet's x keeps its size: in its 32px tab a fingertip's target
+        // would take the taps meant for the tab.
         ...(phone
-          ? [".window-bar-sidebar-toggle", ".document-menu-button"]
+          ? [
+              ".tab-pill-close",
+              ".window-bar-sidebar-toggle",
+              ".document-menu-button",
+            ]
           : []),
       ]);
       await emit(page, "menu-open-folder");
@@ -114,3 +119,31 @@ for (const { name, device } of TOUCH_DEVICES)
       await big([".context-menu-item"]);
     });
   });
+
+test.describe("a phone's document menu", () => {
+  test.use(PHONE);
+
+  test("is the desktop's menu under ⋯, its rows a fingertip tall, the outline too", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { language: "en" } });
+    const more = page.locator(".document-menu-button");
+    await more.tap();
+    const menu = page.locator(".context-menu");
+    await expect(menu).toBeVisible();
+    await expect(page.locator(".sheet-scrim")).toHaveCount(0);
+    const button = (await more.boundingBox())!;
+    const box = (await menu.boundingBox())!;
+    // Hung from ⋯: under it, its right edge at the button's.
+    expect(box.y).toBeGreaterThanOrEqual(button.y + button.height);
+    expect(
+      Math.abs(box.x + box.width - (button.x + button.width)),
+    ).toBeLessThan(12);
+    for (const row of await menu.locator(".context-menu-item").all())
+      expect((await row.boundingBox())!.height).toBeGreaterThanOrEqual(43);
+    await page.getByRole("menuitem", { name: "Outline" }).tap();
+    await expect(page.getByRole("menu", { name: "Outline" })).toHaveClass(
+      /context-menu/,
+    );
+  });
+});

@@ -28,9 +28,7 @@ const SWAP_MS = 400;
 
 type Open = { index: number; focus: boolean } | null;
 
-export function isMenuGroup(
-  entry: ContextMenuEntry,
-): entry is ContextMenuGroup {
+function isMenuGroup(entry: ContextMenuEntry): entry is ContextMenuGroup {
   return typeof entry === "object" && "items" in entry;
 }
 
@@ -120,7 +118,9 @@ export function MenuPanel({
   // row, so the labels and shortcuts stay in line.
   const checks = items.some(
     (item) =>
-      item !== "separator" && !isMenuGroup(item) && item.checked !== undefined,
+      item !== "separator" &&
+      !isMenuGroup(item) &&
+      (item.checked !== undefined || item.current !== undefined),
   );
   const group = open && !inline ? items[open.index] : undefined;
   return (
@@ -244,6 +244,14 @@ function MenuRow({
             : "menuitemradio"
       }
       aria-checked={item.checked}
+      aria-current={item.current ? "location" : undefined}
+      data-depth={item.depth}
+      // The one in force in view, however long the list.
+      ref={
+        item.checked && !item.toggle
+          ? (el) => el?.scrollIntoView?.({ block: "nearest" })
+          : undefined
+      }
       tabIndex={-1}
       disabled={item.disabled}
       className={`context-menu-item${item.danger ? " context-menu-item-danger" : ""}`}
@@ -264,7 +272,7 @@ function MenuRow({
       {item.accel && <span className="context-menu-accel">{item.accel}</span>}
       {checks && (
         <span className="context-menu-check" aria-hidden="true">
-          {item.checked && <CheckIcon />}
+          {(item.checked || item.current) && <CheckIcon />}
         </span>
       )}
     </button>

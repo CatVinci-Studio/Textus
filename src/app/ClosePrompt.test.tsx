@@ -6,7 +6,7 @@ import { SettingsProvider } from "../prefs/SettingsContext";
 import { currentStrings } from "../i18n/current";
 import type { useModalDialog } from "../engine/controls/useModalDialog";
 
-describe("the close prompt on a phone", () => {
+describe("the close prompt", () => {
   afterEach(cleanup);
 
   function prompt() {
@@ -16,7 +16,6 @@ describe("the close prompt on a phone", () => {
       <SettingsProvider>
         <ClosePrompt
           open
-          phone
           dialogProps={{} as ReturnType<typeof useModalDialog>}
           t={t}
           {...answers}
@@ -28,17 +27,15 @@ describe("the close prompt on a phone", () => {
 
   it("is not also Cancel once a choice is made", () => {
     const { answers, t } = prompt();
-    fireEvent.click(screen.getByRole("menuitem", { name: t.closePromptSave }));
+    fireEvent.click(screen.getByRole("button", { name: t.closePromptSave }));
     expect(answers.onSave).toHaveBeenCalledTimes(1);
     expect(answers.onCancel).not.toHaveBeenCalled();
-    fireEvent.click(
-      screen.getByRole("menuitem", { name: t.closePromptDiscard }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: t.closePromptDiscard }));
     expect(answers.onDiscard).toHaveBeenCalledTimes(1);
     expect(answers.onCancel).not.toHaveBeenCalled();
   });
 
-  it("is Cancel when closed with nothing chosen", () => {
+  it("is Cancel when Cancel is chosen", () => {
     const { answers, t } = prompt();
     fireEvent.click(screen.getByRole("button", { name: t.cancel }));
     expect(answers.onCancel).toHaveBeenCalledTimes(1);
