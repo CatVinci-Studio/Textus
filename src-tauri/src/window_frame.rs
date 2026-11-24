@@ -172,6 +172,23 @@ mod tests {
     }
 
     #[test]
+    fn the_first_run_size_fits_a_smaller_screen_centred() {
+        let small = Screen {
+            x: 0.0,
+            y: 0.0,
+            width: 1280.0,
+            height: 680.0,
+        };
+        let (pos, size) = place(None, (1200.0, 800.0), &[small], MIN);
+        assert_eq!(size, (1200.0, 680.0));
+        assert_eq!(pos, Some((40.0, 0.0)));
+        // On a roomy screen it keeps its size, centred.
+        let (pos, size) = place(None, (1200.0, 800.0), &[MONITOR], MIN);
+        assert_eq!(size, (1200.0, 800.0));
+        assert_eq!(pos, Some((2120.0, 308.0)));
+    }
+
+    #[test]
     fn half_off_the_edge_is_moved_back_in() {
         let (pos, size) = place(Some((1200.0, 600.0)), (1000.0, 700.0), &[LAPTOP], MIN);
         assert_eq!(size, (1000.0, 700.0));

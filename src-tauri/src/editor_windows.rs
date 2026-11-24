@@ -329,7 +329,7 @@ fn build_editor_window(
             let wanted = if small {
                 SMALL_WINDOW_SIZE
             } else {
-                commands::prefs::read_editor_window_size(app).unwrap_or((800.0, 600.0))
+                commands::prefs::read_editor_window_size(app).unwrap_or(FIRST_RUN_SIZE)
             };
             let (_, (width, height)) =
                 window_frame::place(None, wanted, &screens(app), EDITOR_MIN_SIZE);
@@ -368,6 +368,11 @@ fn as_left<'a>(
         None => builder,
     }
 }
+
+/// A window's size before any has closed, fitted to the screen as it opens.
+/// The first window's (tauri.conf.json) is held to it by a test.
+#[cfg(desktop)]
+const FIRST_RUN_SIZE: (f64, f64) = (1200.0, 800.0);
 
 /// Below this the window bar's controls run into each other. The first
 /// window's (tauri.conf.json) is held to it by a test.
@@ -480,11 +485,13 @@ pub(crate) fn build_main_window(
 #[cfg(all(test, desktop))]
 mod min_size_tests {
     #[test]
-    fn the_first_window_has_every_window_s_least_size() {
+    fn the_first_window_has_every_window_s_first_and_least_size() {
         let conf: serde_json::Value =
             serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
         let window = &conf["app"]["windows"][0];
         assert_eq!(window["minWidth"].as_f64(), Some(super::EDITOR_MIN_SIZE.0));
         assert_eq!(window["minHeight"].as_f64(), Some(super::EDITOR_MIN_SIZE.1));
+        assert_eq!(window["width"].as_f64(), Some(super::FIRST_RUN_SIZE.0));
+        assert_eq!(window["height"].as_f64(), Some(super::FIRST_RUN_SIZE.1));
     }
 }
