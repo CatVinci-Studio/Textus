@@ -227,7 +227,8 @@ export const commands = {
 	ui_state_get: () => __TAURI_INVOKE<Value>("ui_state_get"),
 	/**
 	 *  Same top-level merge as settings. Not broadcast: remembered for the next
-	 *  window or launch only.
+	 *  window or launch only. An imported theme's chrome lands after the
+	 *  settings that picked it: the windows' backgrounds follow it then.
 	 */
 	ui_state_patch: (patch: { [key in string]: Value }) => __TAURI_INVOKE<void>("ui_state_patch", { patch }),
 	/**
