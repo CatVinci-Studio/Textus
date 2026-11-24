@@ -5,8 +5,11 @@ import type { DirEntryInfo } from "../platform/bindings/files";
 import { TreeRowsInSight } from "./TreeRowsInSight";
 import { TreeSelection, type TreeRow } from "./tree-selection";
 import { useTreeCommands } from "./useTreeCommands";
+import { FOCUSED_EDIT_EVENT } from "../utils/events";
 
 const os = vi.hoisted(() => ({ mac: false }));
+/** Whether the tree has a file operation to take back or do again. */
+const steps = { left: true };
 vi.mock("../platform/os", async (real) => ({
   ...(await real<typeof import("../platform/os")>()),
   isMacPlatform: () => os.mac,
@@ -23,6 +26,7 @@ afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
   os.mac = false;
+  steps.left = true;
 });
 
 const files = (dir: string, n: number) =>
@@ -57,8 +61,8 @@ function setup() {
         pasteInto: (el) => `into ${el.dataset.path}`,
       },
       undo: {
-        undo: () => did.push("undo") > 0,
-        redo: () => did.push("redo") > 0,
+        undo: () => steps.left && did.push("undo") > 0,
+        redo: () => steps.left && did.push("redo") > 0,
       },
     });
     const row = (e: DirEntryInfo) => (
@@ -175,4 +179,27 @@ it("Ctrl+X, C and V cut, copy and paste elsewhere; ⌘D (Ctrl+D) duplicates", ()
     "duplicate /b/f2.md",
     "duplicate /b/f2.md",
   ]);
+});
+
+it("Edit › Undo and Redo take back the tree's file operations once; with none, the menu's own goes on", () => {
+  const { did, at } = setup();
+  const row = at("/b/f0.md");
+  /** The Edit menu's item, as a Mac's menu bar sends it: true when
+   *  nothing in the tree took it. */
+  const menu = (item: string) =>
+    row.dispatchEvent(
+      new CustomEvent(FOCUSED_EDIT_EVENT, {
+        detail: item,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+  expect(menu("undo")).toBe(false);
+  expect(menu("redo")).toBe(false);
+  fireEvent.keyDown(row, { key: "z", ctrlKey: true });
+  fireEvent.keyDown(row, { key: "z", ctrlKey: true, shiftKey: true });
+  expect(did).toEqual(["undo", "redo", "undo", "redo"]);
+  steps.left = false;
+  expect(menu("undo")).toBe(true);
+  expect(did).toHaveLength(4);
 });

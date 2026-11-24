@@ -68,7 +68,7 @@ export const fs = {
   /** The sidebar tree's New Document and New Folder, slashes in the name
    *  making the folders on the way. Each returns the new path and the
    *  topmost entry made for it (`made`, what an undo takes away), and
-   *  refuses a taken name. */
+   *  refuses a taken name. Rust side: `Created` (commands/tree_create.rs). */
   createDocument: (dir: string, name: string): Promise<Generated.Created> =>
     farCreated(dir, name, false) ?? command("tree_create_document", dir, name),
   createFolder: (dir: string, name: string): Promise<Generated.Created> =>
@@ -109,7 +109,7 @@ export const fs = {
    *  refuses the tree's own root. A phone has none: there a document is
    *  deleted (the tree asks first), a folder never. Returns where the
    *  Trash keeps each that went, for `putBack`, when that is known, and
-   *  why the next didn't go. */
+   *  why the next didn't go. Rust side: `Trashing` (commands/tree_ops.rs). */
   trashEntries: (
     paths: readonly string[],
     root: string,

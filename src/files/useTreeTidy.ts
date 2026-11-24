@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { useLatestCallback } from "../utils/hooks/useLatest";
 import { isWithin } from "../utils/path";
-import { exists } from "./file-undo";
+import { fs } from "../platform/ipc";
+import { isFarUrl } from "../platform/far-files";
 import { fileClipboard } from "./file-clipboard";
 import type { TreeSelection } from "./tree-selection";
 
@@ -34,8 +35,14 @@ export function useTreeTidy(
     if (!paths.size) return;
     let stale = false;
     void (async () => {
-      const gone = new Set<string>();
-      for (const path of paths) if (!(await exists(path))) gone.add(path);
+      // Only what the disk says is gone: a plugin's folder can't say.
+      const near = [...paths].filter(
+        (path) => !isFarUrl(path) && !path.startsWith("content://"),
+      );
+      const times = await Promise.all(
+        near.map((path) => fs.fileMtimeMs(path).catch(() => undefined)),
+      );
+      const gone = new Set(near.filter((_, i) => times[i] === null));
       if (stale || !gone.size) return;
       const kept = (path: string) => !gone.has(path);
       selection.keepOnly(kept);
