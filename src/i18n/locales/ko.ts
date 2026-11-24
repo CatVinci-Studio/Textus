@@ -575,6 +575,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeSort: "정렬",
   treeSortName: "이름순",
   treeShowHidden: "숨김 파일 표시",
+  treeCollapseAll: "모두 접기",
   treeSortModified: "수정한 날짜순",
   treeRenameItem: "이름 바꾸기…",
   treeRename: "이름 바꾸기",

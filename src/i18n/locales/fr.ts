@@ -630,6 +630,7 @@ utiliser une.
   treeSort: "Trier",
   treeSortName: "Par nom",
   treeShowHidden: "Afficher les fichiers masqués",
+  treeCollapseAll: "Tout réduire",
   treeSortModified: "Par date de modification",
   treeRenameItem: "Renommer…",
   treeRename: "Renommer",

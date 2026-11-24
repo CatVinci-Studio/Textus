@@ -630,6 +630,7 @@ export default {
   treeSort: "Сортировка",
   treeSortName: "По имени",
   treeShowHidden: "Показывать скрытые файлы",
+  treeCollapseAll: "Свернуть все",
   treeSortModified: "По дате изменения",
   treeRenameItem: "Переименовать…",
   treeRename: "Переименовать",

@@ -547,6 +547,7 @@ export default {
   treeSort: "排序",
   treeSortName: "依名稱",
   treeShowHidden: "顯示隱藏檔案",
+  treeCollapseAll: "全部收合",
   treeSortModified: "依修改時間",
   treeRenameItem: "重新命名…",
   treeRename: "重新命名",

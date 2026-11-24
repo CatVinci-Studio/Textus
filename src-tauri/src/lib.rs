@@ -96,6 +96,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(mcp::McpHub::default())
         .manage(agents::Agents::default())
         .manage(cli::app::CliBridge::default())
+        .manage(commands::fs::watch::TreeWatches::default())
         .plugin(tauri_plugin_deep_link::init())
         .on_window_event(|window, event| {
             let app = window.app_handle();
@@ -130,6 +131,8 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
                 agents::stop_for_window(app, window.label());
                 #[cfg(desktop)]
                 cli::app::window_gone(app, window.label());
+                #[cfg(desktop)]
+                commands::fs::watch::window_gone(app, window.label());
                 // File > Quit closes every window so dirty editors can cancel; macOS would
                 // otherwise stay alive windowless, so exit once the final window is gone.
                 if no_other_windows && commands::session::app_quitting() {

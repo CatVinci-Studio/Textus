@@ -94,6 +94,7 @@ export function FileTree({
     setDraft,
     folder ? null : onRootChange,
     selection,
+    view.collapseAll,
   );
   const { drag, onRowPointerDown, into } = useTreeDrops({
     treeRef,
@@ -112,6 +113,8 @@ export function FileTree({
     versions,
     stale: view.stale,
     refreshed: view.refreshed,
+    openFolders: view.openFolders,
+    collapsed: view.collapsed,
     dropInto: into,
     desktop,
     onRowMenu,
@@ -124,6 +127,10 @@ export function FileTree({
     root,
     reveal,
   });
+
+  // The toolbar's New: in the folder last clicked, as the row's menu does.
+  const newEntry = (kind: "document" | "folder") =>
+    setDraft({ dir: selection.newEntryDir(root, activePath), kind });
 
   const openSortMenu = (e: ReactMouseEvent<HTMLButtonElement>) => {
     const box = e.currentTarget.getBoundingClientRect();
@@ -165,6 +172,8 @@ export function FileTree({
             setUiState("fileTreeHidden", showHidden ? "0" : "1");
           },
         },
+        "separator",
+        { label: t.treeCollapseAll, onSelect: view.collapseAll },
       ],
     });
   };
@@ -210,9 +219,7 @@ export function FileTree({
                         type="button"
                         className="tx-icon-button tree-tool"
                         aria-label={t.menuNewFile}
-                        onClick={() =>
-                          setDraft({ dir: root, kind: "document" })
-                        }
+                        onClick={() => newEntry("document")}
                       >
                         <NewDocumentIcon />
                       </button>
@@ -222,7 +229,7 @@ export function FileTree({
                         type="button"
                         className="tx-icon-button tree-tool"
                         aria-label={t.treeNewFolder}
-                        onClick={() => setDraft({ dir: root, kind: "folder" })}
+                        onClick={() => newEntry("folder")}
                       >
                         <NewFolderIcon />
                       </button>

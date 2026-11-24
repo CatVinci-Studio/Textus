@@ -126,6 +126,12 @@ export const commands = {
 	 */
 	tree_trash_entry: (path: string, root: string) => __TAURI_INVOKE<null>("tree_trash_entry", { path, root }),
 	/**
+	 *  Watches `dirs`, the folders open in this window's tree, in place of what
+	 *  it watched before; none stops. False when one couldn't be watched (the
+	 *  system's limit on watches): the tree then reads its folders on focus.
+	 */
+	tree_watch: (dirs: string[]) => __TAURI_INVOKE<boolean>("tree_watch", { dirs }),
+	/**
 	 *  Where an Obsidian image embed's file is, as an absolute path for the asset
 	 *  protocol; None when it isn't an image or isn't in the vault.
 	 */

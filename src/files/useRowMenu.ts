@@ -60,6 +60,8 @@ export function useRowMenu(
   onEnter: ((path: string) => void) | null,
   /** The rows picked together, which a right-click on one of them acts on. */
   selection: TreeSelection,
+  /** The root's menu: every folder folds. */
+  onCollapseAll: () => void,
 ) {
   const [menu, setMenu] = useState<TreeMenu>(null);
   const rename = useCallback(
@@ -206,6 +208,11 @@ export function useRowMenu(
         },
       );
       items.push("separator", ...pathItems(t, path, root));
+      if (path === root)
+        items.push("separator", {
+          label: t.treeCollapseAll,
+          onSelect: onCollapseAll,
+        });
       if (path !== root)
         items.push({
           label: t.treeRenameItem,
@@ -244,7 +251,17 @@ export function useRowMenu(
         },
       );
     },
-    [root, linkBase, t, setDraft, rename, trash, onFileSelect, onEnter],
+    [
+      root,
+      linkBase,
+      t,
+      setDraft,
+      rename,
+      trash,
+      onFileSelect,
+      onEnter,
+      onCollapseAll,
+    ],
   );
   const onRowMenu = useCallback(
     (e: ReactMouseEvent, path: string, isDir: boolean) => {

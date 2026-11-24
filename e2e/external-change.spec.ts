@@ -410,3 +410,33 @@ test("a tracked document keeps its original while another tab is in front, throu
   await expect(editor.locator(".own-insert")).toContainText("Added words.");
   expect(await file()).not.toContain("Added words.");
 });
+
+test("a file made or removed on disk by another app shows in the tree", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/proj/a.md": "# A\n", "/proj/notes/n.md": "# N\n" };
+    w.__devPickFolder = "/proj";
+  });
+  await openApp(page);
+  await emit(page, "menu-open-folder");
+  const row = (name: string) => page.locator(".tree-row", { hasText: name });
+  await row("notes").click();
+  await expect(row("n.md")).toBeVisible();
+  // Written elsewhere; the disk watch names the open folders it touched.
+  await page.evaluate(() => {
+    const fs = (window as unknown as { __devFs: Record<string, string> })
+      .__devFs;
+    fs["/proj/b.md"] = "# B\n";
+    delete fs["/proj/notes/n.md"];
+    fs["/proj/notes/m.md"] = "# M\n";
+  });
+  await emit(page, "tree-dirs-changed", {
+    dirs: ["/proj", "/proj/notes"],
+    all: false,
+  });
+  await expect(row("b.md")).toBeVisible();
+  await expect(row("m.md")).toBeVisible();
+  await expect(row("n.md")).toHaveCount(0);
+});

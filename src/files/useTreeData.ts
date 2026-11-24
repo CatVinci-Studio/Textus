@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 
 import { absoluteIn, isInside, parentDir } from "../utils/path";
 import { FILE_CREATED_EVENT, FILE_WRITTEN_EVENT } from "../utils/events";
 import { type SearchScope } from "./file-search";
 import { getUiState } from "../storage/ui-state";
 import { type TreeSort } from "./tree-shared";
+import { OpenFolders, useDiskWatch } from "./useDiskWatch";
 
 /** What the file tree shows - its order, its filter, the folders' contents -
  *  and keeping it fresh as files change on disk, from plugins or elsewhere. */
@@ -38,9 +39,9 @@ export function useTreeView(base: string) {
     () => getUiState("fileTreeHidden") === "1",
   );
   const [versions, reload] = useFolderCounts();
-  const [stale, refresh] = useFolderCounts();
-  usePluginWrites(base, refresh);
-  const refreshed = useRefreshOnFocus();
+  const changes = useFolderChanges(base);
+  // Bumped by Collapse All: every folder below the root folds.
+  const [collapsed, collapseAll] = useReducer((n: number) => n + 1, 0);
   return {
     generation,
     setGeneration,
@@ -52,22 +53,21 @@ export function useTreeView(base: string) {
     setShowHidden,
     versions,
     reload,
-    stale,
-    refresh,
-    refreshed,
+    ...changes,
+    collapsed,
+    collapseAll,
   };
 }
 
-/** A count bumped each time the window comes back to the front, when Git,
- *  Obsidian or a file manager may have changed the folder. */
-function useRefreshOnFocus(): number {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    const onFocus = () => setCount((n) => n + 1);
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
-  }, []);
-  return count;
+/** What changed the folders apart from the tree's own doing - another
+ *  app on disk, a plugin - and the folders open, which the disk watch
+ *  follows. */
+function useFolderChanges(base: string) {
+  const [stale, refresh] = useFolderCounts();
+  usePluginWrites(base, refresh);
+  const [openFolders] = useState(() => new OpenFolders());
+  const refreshed = useDiskWatch(openFolders, refresh);
+  return { stale, refresh, refreshed, openFolders };
 }
 
 function bump(counts: Record<string, number>, dirs: string[]) {

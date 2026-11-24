@@ -221,6 +221,8 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         commands::tree_ops::tree_rename_entry,
         commands::tree_ops::tree_trash_entry,
         #[cfg(desktop)]
+        commands::fs::watch::tree_watch,
+        #[cfg(desktop)]
         commands::recents::add_recent_folder,
         #[cfg(desktop)]
         commands::recents::remove_recent,

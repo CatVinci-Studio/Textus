@@ -68,6 +68,8 @@ fn write_via_temp(target: &Path, contents: &[u8], secret: bool) -> std::io::Resu
     };
     let target = real.as_path();
     let tmp = tmp_path(target);
+    #[cfg(desktop)]
+    crate::commands::fs::watch::note_own_write(target);
     let result = (|| {
         let mut options = std::fs::OpenOptions::new();
         options.write(true).create_new(true);
