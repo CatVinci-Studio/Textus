@@ -1,4 +1,4 @@
-import { memo, type CSSProperties } from "react";
+import { memo, useLayoutEffect, useRef, type CSSProperties } from "react";
 import { useFileBadge } from "../plugins/contributions/file-badges";
 import { Tooltip } from "../engine/controls/Tooltip";
 import { useFileMark } from "../registry/file-marks";
@@ -127,8 +127,18 @@ export function FolderRow({
   const picked = useRowPicked(path);
   const rename = useRowRename(path);
   const cut = useRowCut(path);
+  // Folded from the top, where it stayed while its rows scrolled by: the
+  // row stays in sight, not left far above.
+  const row = useRef<HTMLDivElement>(null);
+  const folding = useRef(false);
+  useLayoutEffect(() => {
+    if (folding.current && !open)
+      row.current?.scrollIntoView?.({ block: "nearest" });
+    folding.current = false;
+  }, [open]);
   return (
     <div
+      ref={row}
       className={`tree-row${picked ? " tree-row-picked" : ""}${ignored ? " tree-row-ignored" : ""}${cut ? " tree-row-cut" : ""}`}
       role="treeitem"
       aria-level={depth}
@@ -142,6 +152,7 @@ export function FolderRow({
       onClick={(e) => {
         if (e.detail > 1) return;
         if (tree.onRowPick?.(e, path)) return;
+        folding.current = open;
         onToggle();
       }}
       onContextMenu={

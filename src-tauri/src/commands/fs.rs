@@ -3,6 +3,7 @@ use std::path::{Component, Path, PathBuf};
 use tokio::fs;
 
 pub(crate) mod copy_into;
+pub(crate) mod drag_out;
 pub(crate) mod dropped;
 mod pictures;
 mod secrets;

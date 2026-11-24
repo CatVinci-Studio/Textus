@@ -172,6 +172,10 @@ tauri-plugin-updater = "2.14"
 tauri-plugin-process = "2.4"
 # textus:// links for plugins (plugins/uri.rs).
 tauri-plugin-deep-link = "2"
+# Rows of the file tree dragged out of the window go to Finder, Explorer or
+# another app as real files (commands/fs/drag_out.rs): the system's own drag
+# on each desktop, which Tauri and wry don't offer.
+drag = "2.1"
 # A picture an accepted AI picture replaced goes to the system's Trash or
 # Recycle Bin when the user says so (commands/images.rs) - never deleted.
 trash = "5"

@@ -13,6 +13,9 @@ import { trackDrag } from "../engine/drag/pointer-drag";
 import { holdToDrag } from "../engine/drag/hold-drag";
 import { useLatest } from "../utils/hooks/useLatest";
 import { edgeScroll } from "../engine/drag/edge-scroll";
+import { canDragFilesOut } from "../platform/capabilities";
+import { dragOut, outsideWindow } from "./drag-out";
+import { isFarUrl } from "../platform/far-files";
 import { outermost, type TreeRow, type TreeSelection } from "./tree-selection";
 import type { TreeTransfer } from "./useTreeTransfer";
 
@@ -26,8 +29,9 @@ interface Drag {
 }
 
 /** No text selected while a row is held: dragged over the documents, the
- *  press would otherwise select everything it passes. */
-function holdSelection(): void {
+ *  press would otherwise select everything it passes. Returns the end of
+ *  it, for a press whose release the page never hears. */
+function holdSelection(): () => void {
   const stop = (e: Event) => e.preventDefault();
   const done = () => {
     window.removeEventListener("selectstart", stop);
@@ -37,6 +41,7 @@ function holdSelection(): void {
   window.addEventListener("selectstart", stop);
   window.addEventListener("pointerup", done);
   window.addEventListener("pointercancel", done);
+  return done;
 }
 
 const HELD: Record<"Shift" | "Alt" | "Control", (e: KeyboardEvent) => boolean> =
@@ -91,7 +96,7 @@ export function useRowDrag(
       if (e.button !== 0) return;
       // A modified press is a pick (tree-selection.ts), not a drag.
       if (e.shiftKey || e.metaKey || e.ctrlKey) return;
-      holdSelection();
+      const unhold = holdSelection();
       const group = selection.groupOf(path);
       const moving: TreeRow[] = group ? outermost(group) : [{ path, isDir }];
       // A copy may go beside itself; neither goes into itself.
@@ -110,6 +115,13 @@ export function useRowDrag(
       // No Shift under a finger, and no other way yet to choose: a file
       // a finger drags onto the documents opens there, as it always has.
       const opens = e.pointerType === "touch";
+      // A mouse taking the rows out of the window hands them to the
+      // system's drag: real files for a file manager or another app.
+      const outward =
+        canDragFilesOut &&
+        e.pointerType === "mouse" &&
+        !moving.some((row) => isFarUrl(row.path));
+      let tracked: { cancel: () => void } | null = null;
       /** The tree's box as the drag began: off it, nothing to hit-test. */
       let treeBox: DOMRect | null = null;
       let into: string | null = null;
@@ -151,6 +163,12 @@ export function useRowDrag(
           setDrag({ path, isDir, into: null });
         },
         move: (x, y, m) => {
+          if (outward && outsideWindow(x, y)) {
+            tracked?.cancel();
+            unhold();
+            void dragOut(moving.map((row) => row.path));
+            return;
+          }
           ghost.current?.move(x, y);
           last = { x, y };
           const box = treeRef.current?.getBoundingClientRect();
@@ -211,7 +229,7 @@ export function useRowDrag(
             latest.current.onHeld({ x, y }, path, isDir);
           },
         });
-      else trackDrag(e.nativeEvent, handlers);
+      else tracked = trackDrag(e.nativeEvent, handlers);
     },
     [treeRef, selection, latest],
   );

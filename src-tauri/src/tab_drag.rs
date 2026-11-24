@@ -332,7 +332,7 @@ struct DragTick {
 /// Global cursor position (logical points, top-left origin) and left-button
 /// state via CoreGraphics, which needs no Accessibility consent.
 #[cfg(target_os = "macos")]
-mod mouse {
+pub(crate) mod mouse {
     #[repr(C)]
     struct CGPoint {
         x: f64,
@@ -367,7 +367,7 @@ mod mouse {
 /// The same on Windows: the cursor in physical pixels, divided by the scale
 /// of the display it is on, so it compares with windows' logical bounds.
 #[cfg(windows)]
-mod mouse {
+pub(crate) mod mouse {
     use windows::Win32::Foundation::POINT;
     use windows::Win32::Graphics::Gdi::{MonitorFromPoint, MONITOR_DEFAULTTONEAREST};
     use windows::Win32::UI::HiDpi::{GetDpiForMonitor, MDT_EFFECTIVE_DPI};

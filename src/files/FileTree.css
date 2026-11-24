@@ -78,6 +78,60 @@
   background-size: calc((var(--depth, 1) - 1) * var(--tree-step)) 100%;
 }
 
+/* A folder's row over its rows (TreeNodes' tree-head): scrolled into, it
+   stays at the top, under its own folders' rows, until its last row goes
+   by; an outer folder's over an inner one's pushed up beneath it. Laid on
+   the frame's paint as the sidebar is, so the rows passing under it are
+   hidden. --tree-row-h is every row's height, so the stack fits exactly. */
+.file-tree {
+  --tree-row-h: max(26px, calc(1.35em + 4px));
+}
+
+.file-tree .tree-row {
+  min-height: var(--tree-row-h);
+}
+
+:root:not([data-window-chrome="mobile"]) .tree-head-sticky {
+  position: sticky;
+  top: calc((var(--depth) - 1) * var(--tree-row-h));
+  z-index: calc(10 - var(--depth));
+  background: var(--ui-frame-fill) fixed;
+}
+
+/* Shown by the keyboard or a reveal: below the folders' rows that stay
+   above it (at most TreeNodes' STICKY_LEVELS of them). */
+:root:not([data-window-chrome="mobile"]) .file-tree .tree-row {
+  scroll-margin-top: calc(min(var(--depth, 1) - 1, 5) * var(--tree-row-h));
+}
+
+/* In a folder lit for a drop, its rows that stay are lit too, with the
+   block's ring down their sides (and over the top of its own). */
+:root:not([data-window-chrome="mobile"]) .tx-drop-into .tree-head-sticky {
+  background:
+    linear-gradient(var(--ui-selected), var(--ui-selected)),
+    var(--ui-frame-fill) fixed;
+  box-shadow:
+    inset 1px 0 var(--ui-accent),
+    inset -1px 0 var(--ui-accent);
+}
+
+:root:not([data-window-chrome="mobile"])
+  .dir-node.tx-drop-into
+  > .tree-head-sticky {
+  border-radius: var(--shape-s) var(--shape-s) 0 0;
+  box-shadow:
+    inset 0 1px var(--ui-accent),
+    inset 1px 0 var(--ui-accent),
+    inset -1px 0 var(--ui-accent);
+}
+
+/* Rows picked together, with the keyboard elsewhere: still picked, in the
+   quieter fill. */
+.file-tree:not(:focus-within) .tree-row-picked:not(.tree-row-active) {
+  background-color: var(--ui-hover);
+  color: inherit;
+}
+
 /* Rows picked together: the open document's row looks picked only if it
    is one of them. */
 .file-tree-picking .tree-row-active:not(.tree-row-picked, :hover) {

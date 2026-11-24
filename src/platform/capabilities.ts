@@ -49,6 +49,10 @@ export const hasNativeMenuBar = isDesktopApp && isMacPlatform();
 export const canDragTabsBetweenWindows =
   isDesktopApp && (isMacPlatform() || isWindowsPlatform());
 
+/** Rows of the file tree dragged out of the window as real files, to a
+ *  file manager or any other app: the system's own drag. */
+export const canDragFilesOut = isDesktopApp;
+
 /** Web page tabs as a native webview over the tab. GTK can't place a second
  *  webview, so Linux keeps the framed page. */
 export const hasNativeWebPages = isDesktopApp && !isLinuxPlatform();

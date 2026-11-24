@@ -3,6 +3,7 @@ import { windowIpc } from "../../platform/ipc";
 import { isWindowsPlatform } from "../../platform/os";
 import type { DraggedFile } from "../../engine/controls/document-drop";
 import { dropPointInPage } from "../dropped-files";
+import { isDraggingOut } from "../../files/drag-out";
 
 type Point = { x: number; y: number };
 
@@ -36,12 +37,15 @@ export function watchSystemDrags(
   let at: Point = { x: 0, y: 0 };
   const point = (p: Point) =>
     dropPointInPage(p, isWindowsPlatform(), window.devicePixelRatio);
+  // The tree's own rows, dragged out and back, are no file manager's:
+  // told as the drag comes in, before its drop ends the drag out.
+  let own = false;
   const filesOf = (paths: string[]) =>
     Promise.all(
       paths.filter(Boolean).map(async (path) => ({
         path,
         isDir: await isFolder(path),
-        fromSystem: true,
+        fromSystem: !own,
       })),
     );
   const shift = () =>
@@ -62,6 +66,7 @@ export function watchSystemDrags(
   const listeners = [
     listenToThisWebview<DragPayload>("tauri://drag-enter", (e) => {
       drag++;
+      own = isDraggingOut();
       files = filesOf(e.payload.paths ?? []);
       at = point(e.payload.position);
       show();

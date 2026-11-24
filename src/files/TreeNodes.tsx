@@ -3,7 +3,14 @@ import { currentStrings } from "../i18n/current";
 // The file tree's folders: each reads and lists its entries, drawing a
 // row for each (TreeRows.tsx).
 
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { type DirEntryInfo } from "../platform/bindings/files";
 import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
@@ -25,6 +32,8 @@ import type { FileOpenHow } from "./tree-shared";
 
 /** How long something dragged rests on a folded folder before it opens. */
 const OPEN_UNDER_DRAG_MS = 500;
+/** How many levels of folders stay at the top while their rows scroll by. */
+const STICKY_LEVELS = 5;
 
 interface DirNodeProps {
   path: string;
@@ -208,13 +217,20 @@ export const DirNode = memo(function DirNode({
       data-drop-dir={depth > 0 ? path : undefined}
     >
       {depth > 0 && (
-        <FolderRow
-          path={path}
-          depth={depth}
-          open={open}
-          ignored={ignored}
-          onToggle={() => setOpen(!open)}
-        />
+        // Scrolled into, the folder's row stays at the top under its own
+        // folders' until its last row goes by (FileTree.css).
+        <div
+          className={`tree-head${depth <= STICKY_LEVELS ? " tree-head-sticky" : ""}`}
+          style={{ "--depth": depth } as CSSProperties}
+        >
+          <FolderRow
+            path={path}
+            depth={depth}
+            open={open}
+            ignored={ignored}
+            onToggle={() => setOpen(!open)}
+          />
+        </div>
       )}
       {open && sorted && (
         <div className="dir-children" role={depth > 0 ? "group" : "none"}>

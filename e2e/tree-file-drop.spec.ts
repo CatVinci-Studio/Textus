@@ -67,7 +67,9 @@ test("files from a file manager let go on a folder of the tree are copied in, af
   await emit(page, "tauri://drag-over", { position: assets });
   // The folder under the pointer lit, as for a row dragged onto it.
   await expect(
-    page.locator(".dir-node.tx-drop-into > .tree-row", { hasText: "assets" }),
+    page.locator(".dir-node.tx-drop-into > .tree-head > .tree-row", {
+      hasText: "assets",
+    }),
   ).toBeVisible();
   await expect(page.locator(".file-drop-room")).toHaveCount(0);
   await emit(page, "tauri://drag-drop", { paths, position: assets });
@@ -234,7 +236,7 @@ test("the folder a drop goes into is lit whole, its rows with it, and a folded o
     position: await centre(page, "assets"),
   });
   await expect(lit).toHaveCount(1);
-  await expect(lit.locator("> .tree-row")).toHaveText("assets");
+  await expect(lit.locator("> .tree-head > .tree-row")).toHaveText("assets");
   // Resting on the folded folder opens it, as a file manager's does.
   const boat = page.locator(".tree-row", { hasText: "boat.png" });
   await expect(boat).toBeVisible();
