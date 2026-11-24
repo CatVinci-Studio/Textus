@@ -72,17 +72,21 @@ pub async fn tree_create_folder(dir: String, name: String) -> Result<String, Str
     Ok(path.to_string_lossy().to_string())
 }
 
-/// Where `path` lands when moved into `into`, or why it can't: the same
-/// folder it is in, into itself or below, or onto a name already taken.
-fn move_target(path: &Path, into: &Path) -> Result<PathBuf, String> {
-    let name = path.file_name().ok_or("No file name")?;
-    if path.parent() == Some(into) {
+/// Where `path` lands when moved into `into` (named `name`, else its own
+/// name), or why it can't: where it already is, or into itself or below.
+fn move_target(path: &Path, into: &Path, name: Option<&str>) -> Result<PathBuf, String> {
+    let own = path.file_name().ok_or("No file name")?;
+    let to = match name {
+        Some(name) => into.join(crate::ids::typed_name(name)?),
+        None => into.join(own),
+    };
+    if to == path || (name.is_none() && path.parent() == Some(into)) {
         return Err(crate::errors::error("alreadyThere"));
     }
     if into.starts_with(path) {
         return Err(crate::errors::error("moveIntoItself"));
     }
-    Ok(into.join(name))
+    Ok(to)
 }
 
 /// `path` with its folder made canonical but not itself: a link is moved
@@ -104,51 +108,60 @@ fn itself(path: &str) -> Result<PathBuf, String> {
 
 /// What a window did to the folder, for the other windows: their trees
 /// read the folders again and their tabs follow a move.
-#[derive(Clone, serde::Serialize)]
+/// Its TypeScript side is `EntriesChanged` in src/app/useEntriesFromOtherWindows.ts.
+#[derive(Clone, Default, serde::Serialize)]
 struct EntriesChanged {
     from: String,
     moved: Option<(String, String)>,
     trashed: Option<String>,
+    /// Put back from the Trash.
+    restored: Option<String>,
 }
 
-fn tell_windows(
-    window: &tauri::WebviewWindow,
-    moved: Option<(String, String)>,
-    trashed: Option<String>,
-) {
+fn tell_windows(window: &tauri::WebviewWindow, change: EntriesChanged) {
     crate::settings::emit_to_all(
         tauri::Manager::app_handle(window),
         "entries-changed",
         EntriesChanged {
             from: window.label().to_string(),
-            moved,
-            trashed,
+            ..change
         },
     );
 }
 
-/// Moves a file or folder into the folder `into`. Returns its new path.
+/// Moves a file or folder into the folder `into`, under its own name or
+/// `name` exactly as given (an undo putting it back as it was). Returns its
+/// new path.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn tree_move_entry(
     window: tauri::WebviewWindow,
     path: String,
     into: String,
+    name: Option<String>,
 ) -> Result<String, String> {
-    let to = move_entry(path.clone(), into).await?;
-    tell_windows(&window, Some((path, to.clone())), None);
+    let to = move_entry(path.clone(), into, name).await?;
+    tell_windows(
+        &window,
+        EntriesChanged {
+            moved: Some((path, to.clone())),
+            ..Default::default()
+        },
+    );
     Ok(to)
 }
 
-async fn move_entry(path: String, into: String) -> Result<String, String> {
+async fn move_entry(path: String, into: String, name: Option<String>) -> Result<String, String> {
     let from = itself(&path)?;
     let given = into;
     let into = existing_dir(&given)
         .await?
         .canonicalize()
         .map_err(|e| e.to_string())?;
-    let to = move_target(&from, &into)?;
-    if fs::try_exists(&to).await.unwrap_or(true) {
+    let to = move_target(&from, &into, name.as_deref())?;
+    let case_only = to.to_string_lossy().to_lowercase() == from.to_string_lossy().to_lowercase()
+        && crate::atomic::same_file(&from, &to);
+    if !case_only && fs::try_exists(&to).await.unwrap_or(true) {
         return Err(crate::errors::error("exists"));
     }
     let (a, b) = (from.clone(), to.clone());
@@ -183,7 +196,13 @@ pub async fn tree_rename_entry(
 ) -> Result<String, String> {
     let to = rename_entry(path.clone(), name).await?;
     if to != path {
-        tell_windows(&window, Some((path, to.clone())), None);
+        tell_windows(
+            &window,
+            EntriesChanged {
+                moved: Some((path, to.clone())),
+                ..Default::default()
+            },
+        );
     }
     Ok(to)
 }
@@ -219,29 +238,62 @@ async fn rename_entry(path: String, name: String) -> Result<String, String> {
 }
 
 /// Moves a file or folder to the system's Trash (Recycle Bin), never
-/// deleting it, and refuses the folder the tree is showing.
+/// deleting it, and refuses the folder the tree is showing. Returns where
+/// the Trash keeps it, for `tree_put_back`, when the system says.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn tree_trash_entry(
     window: tauri::WebviewWindow,
     path: String,
     root: String,
-) -> Result<(), String> {
-    trash_entry(path.clone(), root).await?;
-    tell_windows(&window, None, Some(path));
-    Ok(())
+) -> Result<Option<String>, String> {
+    let place = trash_entry(path.clone(), root).await?;
+    tell_windows(
+        &window,
+        EntriesChanged {
+            trashed: Some(path),
+            ..Default::default()
+        },
+    );
+    Ok(place)
 }
 
-async fn trash_entry(path: String, root: String) -> Result<(), String> {
+async fn trash_entry(path: String, root: String) -> Result<Option<String>, String> {
     let target = itself(&path)?;
     tauri::async_runtime::spawn_blocking(move || {
         #[cfg(desktop)]
-        return crate::atomic::user_file_to_trash(&target, Some(Path::new(&root)));
+        {
+            crate::atomic::may_trash(&target, Some(Path::new(&root)))?;
+            super::trash_place::trash_keeping_place(&target)
+        }
         #[cfg(mobile)]
-        delete_document(&target, Path::new(&root))
+        delete_document(&target, Path::new(&root)).map(|()| None)
     })
     .await
     .map_err(|e| e.to_string())?
+}
+
+/// What `tree_trash_entry` sent to the Trash (kept at `place`) put back at
+/// `path`, never over anything there.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn tree_put_back(
+    window: tauri::WebviewWindow,
+    place: String,
+    path: String,
+) -> Result<(), String> {
+    let to = PathBuf::from(&path);
+    tauri::async_runtime::spawn_blocking(move || super::trash_place::put_back(&place, &to))
+        .await
+        .map_err(|e| e.to_string())??;
+    tell_windows(
+        &window,
+        EntriesChanged {
+            restored: Some(path),
+            ..Default::default()
+        },
+    );
+    Ok(())
 }
 
 /// A phone's delete: one file in the folder, never a folder.
@@ -293,14 +345,21 @@ mod tests {
     fn a_move_never_lands_in_itself_or_in_place() {
         let a = Path::new("/w/a");
         assert_eq!(
-            move_target(a, Path::new("/w/b")).unwrap(),
+            move_target(a, Path::new("/w/b"), None).unwrap(),
             Path::new("/w/b/a")
         );
-        assert!(move_target(a, Path::new("/w")).is_err());
-        assert!(move_target(a, Path::new("/w/a")).is_err());
-        assert!(move_target(a, Path::new("/w/a/sub")).is_err());
+        assert!(move_target(a, Path::new("/w"), None).is_err());
+        assert!(move_target(a, Path::new("/w/a"), None).is_err());
+        assert!(move_target(a, Path::new("/w/a/sub"), None).is_err());
         // "/w/ab" is not inside "/w/a".
-        assert!(move_target(a, Path::new("/w/ab")).is_ok());
+        assert!(move_target(a, Path::new("/w/ab"), None).is_ok());
+        // Named, it may stay in its folder: a rename taken back.
+        assert_eq!(
+            move_target(a, Path::new("/w"), Some("b")).unwrap(),
+            Path::new("/w/b")
+        );
+        assert!(move_target(a, Path::new("/w"), Some("a")).is_err());
+        assert!(move_target(a, Path::new("/w/b"), Some("../x")).is_err());
     }
 
     #[tokio::test]
@@ -320,15 +379,15 @@ mod tests {
         assert!(tree_create_folder(root.clone(), "Sub".into())
             .await
             .is_err());
-        let moved = move_entry(doc.clone(), sub.clone()).await.unwrap();
+        let moved = move_entry(doc.clone(), sub.clone(), None).await.unwrap();
         // In the folder's spelling as given (a temp dir is a symlink on macOS).
         assert_eq!(Path::new(&moved), Path::new(&sub).join("Notes.md"));
         // A second Notes.md at the top can't be moved onto the first.
         let again = tree_create_document(root.clone(), "Notes".into())
             .await
             .unwrap();
-        assert!(move_entry(again, sub.clone()).await.is_err());
-        assert!(move_entry(sub.clone(), sub).await.is_err());
+        assert!(move_entry(again, sub.clone(), None).await.is_err());
+        assert!(move_entry(sub.clone(), sub, None).await.is_err());
     }
 
     #[tokio::test]

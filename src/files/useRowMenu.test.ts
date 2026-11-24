@@ -32,6 +32,7 @@ const labelsFor = (path: string, isDir: boolean) => {
       noop,
       null,
       new TreeSelection(),
+      { record: () => undefined, show: noop, rowBeside: () => null },
     ),
   );
   act(() => result.current.openRowMenu({ x: 0, y: 0 }, path, isDir));

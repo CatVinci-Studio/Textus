@@ -43,6 +43,10 @@
     "en": "Already there.",
     "text": "errorAlreadyThere"
   },
+  "goneFromTrash": {
+    "en": "It is no longer in the Trash.",
+    "text": "errorGoneFromTrash"
+  },
   "moveIntoItself": {
     "en": "A folder can't move into itself.",
     "text": "errorMoveIntoItself"

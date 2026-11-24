@@ -8,8 +8,13 @@ import { fs } from "../platform/ipc";
 import type { Strings } from "../i18n/strings";
 import { showMessage } from "../engine/controls/app-dialog";
 import { documentDrop, setDragging } from "../engine/controls/document-drop";
-import { basename, parentDir } from "../utils/path";
+import { basename, folderName, parentDir } from "../utils/path";
 import { updateLinksAfterMove } from "./move-links";
+import { showNotice } from "../engine/controls/notices";
+import { counted } from "../i18n/current";
+import { fill } from "../i18n/fill";
+import type { FileStep, MovedEntry } from "./file-undo";
+import { keepKeyboardOn } from "./tree-reveal";
 import { canMoveInto, dropDirAt, failureText } from "./tree-shared";
 import { dragGhost } from "../engine/drag/ghost";
 import { trackDrag } from "../engine/drag/pointer-drag";
@@ -76,9 +81,18 @@ export function useRowDrag(
   selection: TreeSelection,
   /** A finger's hold let go where it was: the row's menu. */
   onHeld: (at: { x: number; y: number }, path: string, isDir: boolean) => void,
+  /** Keeps a move to take back; returns its notice's Undo. */
+  record: (step: FileStep) => { label: string; run: () => void } | undefined,
 ) {
   const [drag, setDrag] = useState<Drag | null>(null);
-  const latest = useLatest({ reload, onEntryMoved, linkBase, t, onHeld });
+  const latest = useLatest({
+    reload,
+    onEntryMoved,
+    linkBase,
+    t,
+    onHeld,
+    record,
+  });
 
   const onRowPointerDown = useCallback(
     (e: ReactPointerEvent, path: string, name: string, isDir: boolean) => {
@@ -185,19 +199,35 @@ export function useRowDrag(
     [treeRef, selection],
   );
 
+  /** The rows moved into `into` one after another, up to one that can't
+   *  be; what moved is one step to take back, with the links it updated. */
   const moveAll = async (rows: readonly TreeRow[], into: string) => {
-    const { reload, onEntryMoved, linkBase, t } = latest.current;
+    const { reload, onEntryMoved, linkBase, t, record } = latest.current;
+    const moved: MovedEntry[] = [];
+    const edits: ReturnType<typeof updateLinksAfterMove>[] = [];
     for (const { path: from } of rows) {
       try {
         const to = await fs.moveEntry(from, into);
         reload(parentDir(from) ?? into, into);
         onEntryMoved(from, to);
-        void updateLinksAfterMove(from, to, linkBase, t);
+        moved.push({ from, to });
+        edits.push(updateLinksAfterMove(from, to, linkBase, t).catch(() => []));
       } catch (err) {
         await showMessage(failureText(t, err, basename(from)));
-        return;
+        break;
       }
     }
+    if (!moved.length) return;
+    keepKeyboardOn(treeRef.current, moved[0]!.to);
+    const undo = record({
+      kind: "moved",
+      moved,
+      edits: Promise.all(edits).then((all) => all.flat()),
+    });
+    showNotice(
+      fill(counted(t.treeMoved, moved.length), { folder: folderName(into) }),
+      { action: undo },
+    );
   };
   return { drag, onRowPointerDown };
 }

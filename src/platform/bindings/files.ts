@@ -113,8 +113,12 @@ export const commands = {
 	tree_create_document: (dir: string, name: string) => __TAURI_INVOKE<string>("tree_create_document", { dir, name }),
 	/**  Creates a folder in `dir`. Returns its path. */
 	tree_create_folder: (dir: string, name: string) => __TAURI_INVOKE<string>("tree_create_folder", { dir, name }),
-	/**  Moves a file or folder into the folder `into`. Returns its new path. */
-	tree_move_entry: (path: string, into: string) => __TAURI_INVOKE<string>("tree_move_entry", { path, into }),
+	/**
+	 *  Moves a file or folder into the folder `into`, under its own name or
+	 *  `name` exactly as given (an undo putting it back as it was). Returns its
+	 *  new path.
+	 */
+	tree_move_entry: (path: string, into: string, name: string | null) => __TAURI_INVOKE<string>("tree_move_entry", { path, into, name }),
 	/**
 	 *  Gives a file or folder a new name in its folder. A document renamed without
 	 *  an extension gets `.md`; a folder takes the name as typed. Returns its new path.
@@ -122,9 +126,15 @@ export const commands = {
 	tree_rename_entry: (path: string, name: string) => __TAURI_INVOKE<string>("tree_rename_entry", { path, name }),
 	/**
 	 *  Moves a file or folder to the system's Trash (Recycle Bin), never
-	 *  deleting it, and refuses the folder the tree is showing.
+	 *  deleting it, and refuses the folder the tree is showing. Returns where
+	 *  the Trash keeps it, for `tree_put_back`, when the system says.
 	 */
-	tree_trash_entry: (path: string, root: string) => __TAURI_INVOKE<null>("tree_trash_entry", { path, root }),
+	tree_trash_entry: (path: string, root: string) => __TAURI_INVOKE<string | null>("tree_trash_entry", { path, root }),
+	/**
+	 *  What `tree_trash_entry` sent to the Trash (kept at `place`) put back at
+	 *  `path`, never over anything there.
+	 */
+	tree_put_back: (place: string, path: string) => __TAURI_INVOKE<null>("tree_put_back", { place, path }),
 	/**
 	 *  Where an Obsidian image embed's file is, as an absolute path for the asset
 	 *  protocol; None when it isn't an image or isn't in the vault.

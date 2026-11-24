@@ -199,6 +199,8 @@ objc2-foundation = { version = "0.3", features = [
     "NSOperation",
     # The system's version, for a problem report (commands/system_info.rs).
     "NSProcessInfo",
+    # The tree's Trash, keeping where each item went (commands/trash_place.rs).
+    "NSFileManager",
     "block2",
 ] }
 # CFString: the LaunchServices calls of commands/default_editor.rs.

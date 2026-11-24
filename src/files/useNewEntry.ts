@@ -5,6 +5,8 @@ import { announceFileCreated } from "../utils/events";
 import { showMessage } from "../engine/controls/app-dialog";
 import type { Strings } from "../i18n/strings";
 import { failureText, type TreeDraft } from "./tree-shared";
+import { stampOf } from "./file-undo";
+import type { FileUndo } from "./useFileUndo";
 
 /** The document or folder being named in place, and making it once
  *  named (a document opens). */
@@ -12,6 +14,7 @@ export function useNewEntry(
   t: Strings,
   reload: (...dirs: string[]) => void,
   onFileSelect: (path: string) => void,
+  fileUndo: FileUndo,
 ) {
   const [draft, setDraft] = useState<TreeDraft | null>(null);
   const finishDraft = useCallback(
@@ -24,7 +27,15 @@ export function useNewEntry(
             ? await fs.createDocument(draft.dir, name)
             : await fs.createFolder(draft.dir, name);
         reload(draft.dir);
-        if (draft.kind === "document") {
+        const isDir = draft.kind === "folder";
+        const stamp = await stampOf(made, isDir).catch(() => null);
+        if (stamp !== null)
+          fileUndo.record({
+            kind: "made",
+            made: [{ path: made, isDir, stamp }],
+          });
+        if (isDir) fileUndo.show(made);
+        else {
           announceFileCreated(made);
           onFileSelect(made);
         }
@@ -32,7 +43,7 @@ export function useNewEntry(
         await showMessage(failureText(t, err, name));
       }
     },
-    [draft, t, reload, onFileSelect],
+    [draft, t, reload, onFileSelect, fileUndo],
   );
   return { draft, setDraft, finishDraft };
 }

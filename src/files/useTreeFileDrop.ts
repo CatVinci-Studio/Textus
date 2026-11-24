@@ -82,7 +82,7 @@ export function useTreeFileDrop(
       }
       endProgress(progress);
       const lang = latest.current.settings.language;
-      const undo = latest.current.record({ kind: "copy", made });
+      const undo = latest.current.record({ kind: "made", made });
       if (copied)
         showNotice(fill(plural(t.treeCopied, copied, lang), where), {
           action: undo,

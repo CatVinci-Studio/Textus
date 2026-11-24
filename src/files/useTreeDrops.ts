@@ -4,7 +4,7 @@ import { useRowDrag } from "./useRowDrag";
 import { useTreeFileDrop } from "./useTreeFileDrop";
 import { scrollRowIntoView } from "./tree-reveal";
 import type { TreeSelection } from "./tree-selection";
-import { useFileUndo } from "./useFileUndo";
+import type { FileUndo } from "./useFileUndo";
 
 /**
  * What is dragged onto the tree: its own rows, moved (useRowDrag), and
@@ -23,6 +23,8 @@ export function useTreeDrops(input: {
   t: Strings;
   selection: TreeSelection;
   onHeld: (at: { x: number; y: number }, path: string, isDir: boolean) => void;
+  /** The tree's undo, which keeps what a drop did. */
+  fileUndo: FileUndo;
 }) {
   const { treeRef, folder, reload, selection } = input;
   const { drag, onRowPointerDown } = useRowDrag(
@@ -33,9 +35,8 @@ export function useTreeDrops(input: {
     input.t,
     selection,
     input.onHeld,
+    input.fileUndo.record,
   );
-  // What a drop did, to take back (the tree's undo stack, its one owner).
-  const fileUndo = useFileUndo(treeRef, input.linkBase, reload);
   const fromSystem = useTreeFileDrop(
     treeRef,
     folder,
@@ -45,7 +46,7 @@ export function useTreeDrops(input: {
       // The keyboard on it: Edit › Undo then takes the drop back.
       scrollRowIntoView(treeRef.current, path, true);
     },
-    fileUndo.record,
+    input.fileUndo.record,
   );
   return {
     drag,

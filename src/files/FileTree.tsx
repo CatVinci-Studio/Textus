@@ -30,7 +30,7 @@ import { isWithin } from "../utils/path";
 import type { FileOpenHow } from "./tree-shared";
 import { useTreeView } from "./useTreeData";
 import { useRowMenu } from "./useRowMenu";
-import { useNewEntry } from "./useNewEntry";
+import { useTreeEdits } from "./useTreeEdits";
 import { TreeSelectionContext, useTreeSelection } from "./tree-selection";
 
 interface FileTreeProps {
@@ -80,9 +80,16 @@ export function FileTree({
   // One handler for the tree's life: a row redraws only when it changes.
   const select = useLatestCallback(onFileSelect);
   const desktop = !isMobileApp && canOpenFolder;
-  const { draft, setDraft, finishDraft } = useNewEntry(t, reload, select);
   const { treeRef, onTreeKey, selection, picking, onRowPick } =
     useTreeSelection(root, activePath);
+  const { fileUndo, draft, setDraft, finishDraft } = useTreeEdits({
+    treeRef,
+    folder: folder ?? root,
+    t,
+    reload,
+    onFileSelect: select,
+    onEntryMoved,
+  });
 
   const { menu, setMenu, onRowMenu, openRowMenu } = useRowMenu(
     root,
@@ -94,6 +101,7 @@ export function FileTree({
     setDraft,
     folder ? null : onRootChange,
     selection,
+    fileUndo,
   );
   const { drag, onRowPointerDown, into } = useTreeDrops({
     treeRef,
@@ -104,6 +112,7 @@ export function FileTree({
     t,
     selection,
     onHeld: openRowMenu,
+    fileUndo,
   });
   const { rowActions, shared } = useTreeContexts({
     sort,

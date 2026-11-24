@@ -664,6 +664,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   errorAgentRefused: "Der Agent hat das abgelehnt.",
   errorAgentStopped: "Der Agent wurde beendet.",
   errorAlreadyThere: "Es liegt schon in diesem Ordner.",
+  errorGoneFromTrash: "Es ist nicht mehr im Papierkorb.",
   errorNotFolder: "Das ist kein Ordner.",
   errorTrashShownFolder:
     "Der Ordner, den der Baum zeigt, kann nicht in den Papierkorb.",
@@ -720,8 +721,20 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     other: "{n} Elemente nach „{folder}“ kopiert",
   },
   treeCopyFailed: "{name} konnte nicht kopiert werden",
-  treeCopyUndoChanged:
-    "Nichts wurde in den Papierkorb gelegt: Diese Objekte wurden nach dem Kopieren geändert.",
+  treeUndoChanged:
+    "Nichts wurde rückgängig gemacht: Diese Objekte wurden seitdem geändert.",
+  treeUndoGone:
+    "Nichts wurde rückgängig gemacht: Diese Objekte sind nicht mehr dort, wo sie abgelegt wurden.",
+  treeUndoTaken:
+    "Nichts wurde rückgängig gemacht: An der früheren Stelle dieser Objekte liegt jetzt etwas anderes.",
+  treeMoved: {
+    one: "{n} Element nach „{folder}“ verschoben",
+    other: "{n} Elemente nach „{folder}“ verschoben",
+  },
+  treeTrashed: {
+    one: "{n} Element in den Papierkorb gelegt",
+    other: "{n} Elemente in den Papierkorb gelegt",
+  },
   outlineCollapse: "Einklappen",
   outlineExpand: "Ausklappen",
   outlineExpandAll: "Alle aufklappen",

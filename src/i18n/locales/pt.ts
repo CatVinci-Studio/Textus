@@ -671,6 +671,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   errorAgentRefused: "O agente recusou.",
   errorAgentStopped: "O agente parou.",
   errorAlreadyThere: "Ele já está nessa pasta.",
+  errorGoneFromTrash: "Já não está na lixeira.",
   errorNotFolder: "Isso não é uma pasta.",
   errorTrashShownFolder:
     "A pasta que a árvore mostra não pode ir para a lixeira.",
@@ -734,8 +735,21 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     other: "{n} itens copiados para “{folder}”",
   },
   treeCopyFailed: "Não foi possível copiar {name}",
-  treeCopyUndoChanged:
-    "Nada foi movido para a lixeira: estes itens mudaram depois de copiados.",
+  treeUndoChanged: "Nada foi desfeito: estes itens mudaram desde então.",
+  treeUndoGone:
+    "Nada foi desfeito: estes itens já não estão onde foram colocados.",
+  treeUndoTaken:
+    "Nada foi desfeito: agora há outra coisa onde estes itens estavam.",
+  treeMoved: {
+    one: "{n} item movido para “{folder}”",
+    many: "{n} itens movidos para “{folder}”",
+    other: "{n} itens movidos para “{folder}”",
+  },
+  treeTrashed: {
+    one: "{n} item movido para a lixeira",
+    many: "{n} itens movidos para a lixeira",
+    other: "{n} itens movidos para a lixeira",
+  },
   outlineCollapse: "Recolher",
   outlineExpand: "Expandir",
   outlineExpandAll: "Expandir tudo",

@@ -11,8 +11,10 @@ import {
   undoStep,
   type FileStep,
   type MadeEntry,
+  type TrashedEntry,
   type StampFiles,
 } from "./file-undo";
+import type { TextEdit } from "./move-links";
 
 /** A disk of paths and their times; a folder is a path others are under. */
 function disk(times: Record<string, number>): StampFiles {
@@ -48,18 +50,39 @@ const madeOf = async (
   stamp: (await stampOf(path, isDir, files))!,
 });
 
+/** What undoing reaches, on `files`, writing down what it did. */
+function reach(
+  files: StampFiles,
+  unsaved: (path: string) => boolean = () => false,
+) {
+  const did: string[] = [];
+  const ctx = {
+    files,
+    unsaved,
+    trash: async (p: string) => {
+      did.push(`trash ${p}`);
+      return `bin:${p}`;
+    },
+    putBack: async (place: string, p: string) =>
+      void did.push(`back ${place} ${p}`),
+    move: async (from: string, to: string) =>
+      void did.push(`move ${from} ${to}`),
+    revertEdits: async (edits: readonly TextEdit[]) =>
+      edits.map((e) => ({ ...e, before: e.after, after: e.before })),
+  };
+  return { did, ctx };
+}
+
 /** A copy step undone on `files`, the paths it trashed. */
 async function undoCopy(
   made: MadeEntry[],
   files: StampFiles,
   unsaved: (path: string) => boolean = () => false,
 ) {
-  const trashed: string[] = [];
-  const result = await undoStep(
-    { kind: "copy", made },
-    { trash: async (p) => void trashed.push(p), files, unsaved },
-  );
-  return { result, trashed };
+  const { did, ctx } = reach(files, unsaved);
+  const result = await undoStep({ kind: "made", made }, ctx);
+  const trashed = did.map((d) => d.slice("trash ".length));
+  return { result: result.done ? { done: true } : result, trashed };
 }
 
 describe("undoing a drop of files into the tree", () => {
@@ -96,7 +119,7 @@ describe("undoing a drop of files into the tree", () => {
     ];
     times["/n/photos/day 1/boat.png"] = 11;
     expect(await undoCopy(made, files)).toEqual({
-      result: { done: false, changed: ["/n/photos"] },
+      result: { done: false, reason: "changed", paths: ["/n/photos"] },
       trashed: [],
     });
     times["/n/photos/day 1/boat.png"] = 10;
@@ -105,7 +128,7 @@ describe("undoing a drop of files into the tree", () => {
     delete times["/n/photos/day 1/new.md"];
     times["/n/todo.md"] = 11;
     expect(await undoCopy(made, files)).toEqual({
-      result: { done: false, changed: ["/n/todo.md"] },
+      result: { done: false, reason: "changed", paths: ["/n/todo.md"] },
       trashed: [],
     });
   });
@@ -114,7 +137,7 @@ describe("undoing a drop of files into the tree", () => {
     const files = disk({ "/n/photos/a.md": 10 });
     const made = [await madeOf(files, "/n/photos", true)];
     expect(await undoCopy(made, files, (p) => p === "/n/photos")).toEqual({
-      result: { done: false, changed: ["/n/photos"] },
+      result: { done: false, reason: "changed", paths: ["/n/photos"] },
       trashed: [],
     });
   });
@@ -149,7 +172,7 @@ describe("undoing a drop of files into the tree", () => {
 
 describe("the tree's undo stack", () => {
   const step = (path: string): FileStep => ({
-    kind: "copy",
+    kind: "made",
     made: [{ path, isDir: false, stamp: "1" }],
   });
 
@@ -170,8 +193,149 @@ describe("the tree's undo stack", () => {
     const stack = fileUndoStack();
     for (let i = 0; i < 60; i++) stack.push(step(`/n/${i}.md`));
     expect(stack.size).toBe(50);
-    expect(stack.take()?.made[0].path).toBe("/n/59.md");
+    const top = stack.take();
+    expect(top?.kind === "made" && top.made[0].path).toBe("/n/59.md");
     stack.clear();
     expect(stack.take()).toBeNull();
+  });
+});
+
+describe("undoing and redoing the tree's moves, renames and deletes", () => {
+  it("puts what went to the Trash back, last first, and trashes it again on redo", async () => {
+    const times: Record<string, number> = {};
+    const files = disk(times);
+    const trashed: TrashedEntry[] = [
+      { path: "/n/a.md", isDir: false, place: "bin:1" },
+      { path: "/n/b.md", isDir: false, place: "bin:2" },
+    ];
+    const { did, ctx } = reach(files);
+    ctx.putBack = async (place, p) => {
+      did.push(`back ${place} ${p}`);
+      times[p] = 1;
+    };
+    const result = await undoStep({ kind: "trashed", trashed }, ctx);
+    expect(did).toEqual(["back bin:2 /n/b.md", "back bin:1 /n/a.md"]);
+    expect(result.done && result.show).toBe("/n/a.md");
+    const redo = result.done ? result.redo! : null;
+    expect(redo?.kind).toBe("made");
+    did.length = 0;
+    const again = await undoStep(redo!, ctx);
+    expect(did).toEqual(["trash /n/a.md", "trash /n/b.md"]);
+    expect(again.done && again.redo).toEqual({
+      kind: "trashed",
+      trashed: [
+        { path: "/n/a.md", isDir: false, place: "bin:/n/a.md" },
+        { path: "/n/b.md", isDir: false, place: "bin:/n/b.md" },
+      ],
+    });
+  });
+
+  it("puts nothing back where something else now is", async () => {
+    const { did, ctx } = reach(disk({ "/n/b.md": 3 }));
+    const result = await undoStep(
+      {
+        kind: "trashed",
+        trashed: [
+          { path: "/n/a.md", isDir: false, place: "bin:1" },
+          { path: "/n/b.md", isDir: false, place: "bin:2" },
+        ],
+      },
+      ctx,
+    );
+    expect(result).toEqual({
+      done: false,
+      reason: "taken",
+      paths: ["/n/b.md"],
+    });
+    expect(did).toEqual([]);
+  });
+
+  it("moves back, last first, takes its link updates back, and redoes the move", async () => {
+    const { did, ctx } = reach(disk({ "/n/sub/a.md": 1, "/n/sub/b": 1 }));
+    const edits: TextEdit[] = [
+      { path: "/n/index.md", before: "[a](a.md)", after: "[a](sub/a.md)" },
+    ];
+    const step: FileStep = {
+      kind: "moved",
+      moved: [
+        { from: "/n/a.md", to: "/n/sub/a.md" },
+        { from: "/n/b", to: "/n/sub/b" },
+      ],
+      edits: Promise.resolve(edits),
+    };
+    const result = await undoStep(step, ctx);
+    expect(did).toEqual(["move /n/sub/b /n/b", "move /n/sub/a.md /n/a.md"]);
+    if (!result.done || result.redo?.kind !== "moved")
+      throw new Error("no redo");
+    expect(result.redo.moved).toEqual([
+      { from: "/n/sub/a.md", to: "/n/a.md" },
+      { from: "/n/sub/b", to: "/n/b" },
+    ]);
+    expect(await result.redo.edits).toEqual([
+      { path: "/n/index.md", before: "[a](sub/a.md)", after: "[a](a.md)" },
+    ]);
+  });
+
+  it("moves nothing back when it is gone or its old place is taken; a rename of case alone goes back", async () => {
+    const moved = (from: string, to: string): FileStep => ({
+      kind: "moved",
+      moved: [{ from, to }],
+      edits: Promise.resolve([]),
+    });
+    const files = disk({ "/n/b.md": 1, "/n/a.md": 1, "/n/Notes.md": 1 });
+    expect(
+      await undoStep(moved("/n/x.md", "/n/gone.md"), reach(files).ctx),
+    ).toEqual({ done: false, reason: "gone", paths: ["/n/gone.md"] });
+    expect(
+      await undoStep(moved("/n/a.md", "/n/b.md"), reach(files).ctx),
+    ).toEqual({
+      done: false,
+      reason: "taken",
+      paths: ["/n/a.md"],
+    });
+    const { did, ctx } = reach(files);
+    expect(
+      (await undoStep(moved("/n/notes.md", "/n/Notes.md"), ctx)).done,
+    ).toBe(true);
+    expect(did).toEqual(["move /n/Notes.md /n/notes.md"]);
+  });
+
+  it("takes back several steps done as one, last first", async () => {
+    const { did, ctx } = reach(disk({ "/n/a.md": 1 }));
+    const result = await undoStep(
+      {
+        kind: "steps",
+        steps: [
+          {
+            kind: "trashed",
+            trashed: [{ path: "/n/b.md", isDir: false, place: "bin:1" }],
+          },
+          {
+            kind: "moved",
+            moved: [{ from: "/x/b.md", to: "/n/a.md" }],
+            edits: Promise.resolve([]),
+          },
+        ],
+      },
+      ctx,
+    );
+    expect(did).toEqual(["move /n/a.md /x/b.md", "back bin:1 /n/b.md"]);
+    expect(result.done).toBe(true);
+  });
+
+  it("redoes what was undone until something new is done", () => {
+    const stack = fileUndoStack();
+    const step = (path: string): FileStep => ({
+      kind: "made",
+      made: [{ path, isDir: false, stamp: "1" }],
+    });
+    stack.push(step("/n/a.md"));
+    stack.undone(step("/n/a.md (redo)"));
+    const redo = stack.takeRedo();
+    expect(redo?.kind === "made" && redo.made[0].path).toBe("/n/a.md (redo)");
+    stack.redone(step("/n/a.md (undo)"));
+    stack.undone(step("/n/again"));
+    stack.push(step("/n/new.md"));
+    expect(stack.takeRedo()).toBeNull();
   });
 });

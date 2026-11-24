@@ -790,8 +790,12 @@ export function installDevTauriShim(): void {
       }
       case "tree_move_entry": {
         const into = String(args.into);
-        const target = `${into}/${path.split("/").pop()}`;
-        if (into === path.slice(0, path.lastIndexOf("/")))
+        const named = args.name == null ? null : String(args.name);
+        const target = `${into}/${named ?? path.split("/").pop()}`;
+        if (
+          target === path ||
+          (!named && into === path.slice(0, path.lastIndexOf("/")))
+        )
           return Promise.reject(ownError("alreadyThere"));
         if (into === path || into.startsWith(`${path}/`))
           return Promise.reject("A folder can't move into itself");
@@ -856,14 +860,34 @@ export function installDevTauriShim(): void {
       }
       case "tree_trash_entry": {
         if (path === String(args.root)) return Promise.reject("Tree root");
-        const trashed = ((
-          window as unknown as Record<string, unknown>
-        ).__devTrashed ??= []) as string[];
+        const w = window as unknown as Record<string, unknown>;
+        const trashed = (w.__devTrashed ??= []) as string[];
+        // What the Trash holds, by place: its files under their own paths.
+        const bin = (w.__devTrash ??= {}) as Record<
+          string,
+          Record<string, string>
+        >;
+        const place = `trash:${trashed.length}`;
+        bin[place] = {};
         for (const file of Object.keys(files)) {
           if (file !== path && !file.startsWith(`${path}/`)) continue;
+          bin[place][file] = files[file];
           delete files[file];
         }
         trashed.push(path);
+        return Promise.resolve(place);
+      }
+      case "tree_put_back": {
+        const bin = ((window as unknown as Record<string, unknown>)
+          .__devTrash ?? {}) as Record<string, Record<string, string>>;
+        const held = bin[String(args.place)];
+        if (!held) return Promise.reject(ownError("goneFromTrash"));
+        if (
+          Object.keys(files).some((f) => f === path || f.startsWith(`${path}/`))
+        )
+          return Promise.reject(ownError("exists"));
+        Object.assign(files, held);
+        delete bin[String(args.place)];
         return Promise.resolve(null);
       }
       case "folder_documents": {

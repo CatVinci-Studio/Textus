@@ -128,16 +128,18 @@ export function dropDirAt(
 export const trashable = (path: string) => canTrashFiles && !farEntries(path);
 
 /** `path` to the Trash from the tree: its folder read again, its open tabs
- *  let go (useDocumentActions), plugins told. */
+ *  let go (useDocumentActions), plugins told. Returns where the Trash keeps
+ *  it, when known. */
 export async function trashFromTree(
   path: string,
   root: string,
   reload: (...dirs: string[]) => void,
-): Promise<void> {
-  await fs.trashEntry(path, root);
+): Promise<string | null> {
+  const place = await fs.trashEntry(path, root);
   reload(parentDir(path) ?? root);
   sendAppEvent(ENTRY_TRASHED_EVENT, path);
   emitPluginEvent("fileDelete", { path });
+  return place;
 }
 
 /** The backend's refusal in the user's words. */

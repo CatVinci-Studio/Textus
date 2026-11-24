@@ -636,6 +636,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   errorAgentRefused: "エージェントがこの要求を断りました。",
   errorAgentStopped: "エージェントが停止しました。",
   errorAlreadyThere: "すでにそのフォルダーにあります。",
+  errorGoneFromTrash: "もうゴミ箱にありません。",
   errorNotFolder: "フォルダーではありません。",
   errorTrashShownFolder: "ツリーに表示中のフォルダーはゴミ箱に移せません。",
   errorNoTrash: "ここにはファイルを移せるゴミ箱がありません。",
@@ -684,8 +685,12 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeCopying: "「{folder}」にコピーしています…",
   treeCopied: { other: "{n} 個の項目を「{folder}」にコピーしました" },
   treeCopyFailed: "{name} をコピーできませんでした",
-  treeCopyUndoChanged:
-    "ゴミ箱には何も移動していません。次の項目はコピー後に変更されています。",
+  treeUndoChanged: "何も取り消していません。次の項目はその後変更されています。",
+  treeUndoGone: "何も取り消していません。次の項目は移動先にもうありません。",
+  treeUndoTaken:
+    "何も取り消していません。次の項目が元あった場所に、今は別のものがあります。",
+  treeMoved: { other: "{n} 個の項目を「{folder}」に移動しました" },
+  treeTrashed: { other: "{n} 個の項目をゴミ箱に入れました" },
   outlineCollapse: "折りたたむ",
   outlineExpand: "展開",
   outlineExpandAll: "すべて展開",

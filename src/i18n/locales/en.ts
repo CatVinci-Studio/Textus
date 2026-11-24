@@ -651,6 +651,7 @@ type /name in a conversation to use one.
   errorAgentRefused: "The agent turned that down.",
   errorAgentStopped: "The agent stopped.",
   errorAlreadyThere: "It is already in that folder.",
+  errorGoneFromTrash: "It is no longer in the Trash.",
   errorNotFolder: "That isn't a folder.",
   errorTrashShownFolder:
     "The folder the tree shows can't be moved to the Trash.",
@@ -704,8 +705,17 @@ type /name in a conversation to use one.
     other: "Copied {n} items to “{folder}”",
   },
   treeCopyFailed: "Couldn't copy {name}",
-  treeCopyUndoChanged:
-    "Nothing was moved to the Trash: these changed after they were copied.",
+  treeUndoChanged: "Nothing was undone: these changed since.",
+  treeUndoGone: "Nothing was undone: these are no longer where they were put.",
+  treeUndoTaken: "Nothing was undone: something else is now where these were.",
+  treeMoved: {
+    one: "Moved {n} item to “{folder}”",
+    other: "Moved {n} items to “{folder}”",
+  },
+  treeTrashed: {
+    one: "Moved {n} item to the Trash",
+    other: "Moved {n} items to the Trash",
+  },
   outlineCollapse: "Collapse",
   outlineExpand: "Expand",
   outlineExpandAll: "Expand All",

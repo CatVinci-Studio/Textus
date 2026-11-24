@@ -73,12 +73,14 @@ export const fs = {
   createFolder: (dir: string, name: string): Promise<string> =>
     farEntries(dir)?.createEntry(dir, name, true) ??
     command("tree_create_folder", dir, name),
-  moveEntry: (path: string, into: string): Promise<string> => {
+  /** Into the folder `into`, under its own name or exactly `name` (an
+   *  undo putting it back); a far folder keeps the name. */
+  moveEntry: (path: string, into: string, name?: string): Promise<string> => {
     const far = farEntries(path);
     const from = far && parentDir(path);
     return far && from
       ? far.moveEntry(path, from, into)
-      : command("tree_move_entry", path, into);
+      : command("tree_move_entry", path, into, name ?? null);
   },
   /** A file or folder from a file manager copied into the tree's folder
    *  `into`, numbered when its name is taken; returns the copy's path.
@@ -91,15 +93,20 @@ export const fs = {
     farEntries(path)?.renameEntry(path, name) ??
     command("tree_rename_entry", path, name),
   /** To the system's Trash; refuses the tree's own root. A phone has none:
-   *  there a document is deleted (the tree asks first), a folder never. */
-  trashEntry: (path: string, root: string): Promise<void> =>
+   *  there a document is deleted (the tree asks first), a folder never.
+   *  Returns where the Trash keeps it, for `putBack`, when that is known. */
+  trashEntry: (path: string, root: string): Promise<string | null> =>
     isIOSApp
-      ? nativeFiles.trash(path)
+      ? nativeFiles.trash(path).then(() => null)
       : isFarUrl(path)
         ? farFiles(path)
             .deleteEntry(path)
-            .then(() => {})
+            .then(() => null)
         : command("tree_trash_entry", path, root),
+  /** What `trashEntry` sent to the Trash (kept at `place`) back at `path`;
+   *  refused when something is there now or it left the Trash. */
+  putBack: (place: string, path: string): Promise<void> =>
+    command("tree_put_back", place, path),
   /** File > Open Folder…'s picker. Rejects with "TOO_BROAD" for the home
    *  folder or a drive root. A phone's is the system's folder picker. */
   pickOpenFolder: (): Promise<string | null> =>

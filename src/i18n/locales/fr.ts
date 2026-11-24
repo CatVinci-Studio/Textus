@@ -686,6 +686,7 @@ utiliser une.
   errorAgentRefused: "L’agent a refusé.",
   errorAgentStopped: "L’agent s’est arrêté.",
   errorAlreadyThere: "Il est déjà dans ce dossier.",
+  errorGoneFromTrash: "Il n'est plus dans la corbeille.",
   errorNotFolder: "Ce n'est pas un dossier.",
   errorTrashShownFolder:
     "Le dossier affiché par l'arborescence ne peut pas aller à la corbeille.",
@@ -754,8 +755,21 @@ utiliser une.
     other: "{n} éléments copiés dans «\u00a0{folder}\u00a0»",
   },
   treeCopyFailed: "Impossible de copier {name}",
-  treeCopyUndoChanged:
-    "Rien n'a été mis à la corbeille : ces éléments ont changé après la copie.",
+  treeUndoChanged: "Rien n'a été annulé : ces éléments ont changé depuis.",
+  treeUndoGone:
+    "Rien n'a été annulé : ces éléments ne sont plus là où ils ont été mis.",
+  treeUndoTaken:
+    "Rien n'a été annulé : autre chose occupe maintenant la place de ces éléments.",
+  treeMoved: {
+    one: "{n} élément déplacé dans «\u00a0{folder}\u00a0»",
+    many: "{n} éléments déplacés dans «\u00a0{folder}\u00a0»",
+    other: "{n} éléments déplacés dans «\u00a0{folder}\u00a0»",
+  },
+  treeTrashed: {
+    one: "{n} élément mis à la corbeille",
+    many: "{n} éléments mis à la corbeille",
+    other: "{n} éléments mis à la corbeille",
+  },
   outlineCollapse: "Replier",
   outlineExpand: "Déplier",
   outlineExpandAll: "Tout déplier",

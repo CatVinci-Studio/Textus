@@ -625,6 +625,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   errorAgentRefused: "에이전트가 이 요청을 거절했습니다.",
   errorAgentStopped: "에이전트가 중지되었습니다.",
   errorAlreadyThere: "이미 그 폴더에 있습니다.",
+  errorGoneFromTrash: "더 이상 휴지통에 없습니다.",
   errorNotFolder: "폴더가 아닙니다.",
   errorTrashShownFolder:
     "파일 트리에 표시된 폴더는 휴지통으로 옮길 수 없습니다.",
@@ -672,8 +673,14 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeCopying: "‘{folder}’에 복사하는 중…",
   treeCopied: { other: "항목 {n}개를 ‘{folder}’에 복사했습니다" },
   treeCopyFailed: "{name}을(를) 복사할 수 없습니다",
-  treeCopyUndoChanged:
-    "휴지통으로 옮긴 항목이 없습니다. 다음 항목이 복사된 뒤 변경되었습니다.",
+  treeUndoChanged:
+    "아무것도 실행 취소하지 않았습니다. 다음 항목이 그 뒤 변경되었습니다.",
+  treeUndoGone:
+    "아무것도 실행 취소하지 않았습니다. 다음 항목이 옮긴 곳에 더 이상 없습니다.",
+  treeUndoTaken:
+    "아무것도 실행 취소하지 않았습니다. 다음 항목이 있던 자리에 지금 다른 것이 있습니다.",
+  treeMoved: { other: "항목 {n}개를 ‘{folder}’(으)로 옮겼습니다" },
+  treeTrashed: { other: "항목 {n}개를 휴지통으로 옮겼습니다" },
   outlineCollapse: "접기",
   outlineExpand: "펼치기",
   outlineExpandAll: "모두 펼치기",

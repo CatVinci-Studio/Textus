@@ -345,7 +345,7 @@ test("a copy changed since the drop is not undone", async ({ page }) => {
   await emit(page, "menu-undo");
   const message = page.getByRole("alertdialog");
   await expect(message).toContainText(
-    "Nothing was moved to the Trash: these changed after they were copied.",
+    "Nothing was undone: these changed since.",
   );
   await expect(message).toContainText("todo.md");
   expect(await devFiles(page)).toContain("/trip/todo.md");

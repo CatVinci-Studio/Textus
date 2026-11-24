@@ -33,6 +33,9 @@ import { heldByFinger } from "../utils/gesture";
 import type { FileOpenHow } from "./tree-shared";
 import { counted } from "../i18n/current";
 import { outermost, type TreeRow, type TreeSelection } from "./tree-selection";
+import type { FileUndo } from "./useFileUndo";
+import type { TrashedEntry } from "./file-undo";
+import { showNotice } from "../engine/controls/notices";
 
 /** A row's right-click menu, while it is open. */
 type TreeMenu = {
@@ -58,6 +61,7 @@ export function useRowMenu(
   onEnter: ((path: string) => void) | null,
   /** The rows picked together, which a right-click on one of them acts on. */
   selection: TreeSelection,
+  fileUndo: FileUndo,
 ) {
   const [menu, setMenu] = useState<TreeMenu>(null);
   const rename = useCallback(
@@ -72,12 +76,43 @@ export function useRowMenu(
         reload(parentDir(path) ?? root);
         // Open documents follow, as for a move.
         onEntryMoved(path, to);
-        void updateLinksAfterMove(path, to, linkBase, t);
+        if (to === path) return;
+        fileUndo.show(to);
+        fileUndo.record({
+          kind: "moved",
+          moved: [{ from: path, to }],
+          edits: updateLinksAfterMove(path, to, linkBase, t).catch(() => []),
+        });
       } catch (err) {
         await showMessage(failureText(t, err, name.trim()));
       }
     },
-    [root, linkBase, t, reload, onEntryMoved],
+    [root, linkBase, t, reload, onEntryMoved, fileUndo],
+  );
+  /** Rows to the Trash one after another, up to one that can't go: what
+   *  went is one step to take back, said with its Undo. */
+  const trashAll = useCallback(
+    async (rows: readonly TreeRow[]) => {
+      const trashed: TrashedEntry[] = [];
+      let known = true;
+      const next = fileUndo.rowBeside(rows.map((row) => row.path));
+      for (const { path, isDir } of rows) {
+        try {
+          const place = await trashFromTree(path, root, reload);
+          if (place === null) known = false;
+          else trashed.push({ path, isDir, place });
+        } catch (err) {
+          await showMessage(failureText(t, err, basename(path)));
+          break;
+        }
+      }
+      fileUndo.show(next);
+      if (!known || !trashed.length) return;
+      showNotice(counted(t.treeTrashed, trashed.length), {
+        action: fileUndo.record({ kind: "trashed", trashed }),
+      });
+    },
+    [root, t, reload, fileUndo],
   );
   const trash = useCallback(
     async (path: string, isDir: boolean) => {
@@ -98,13 +133,9 @@ export function useRowMenu(
         },
       );
       if (!ok) return;
-      try {
-        await trashFromTree(path, root, reload);
-      } catch (err) {
-        await showMessage(failureText(t, err, name));
-      }
+      await trashAll([{ path, isDir }]);
     },
-    [root, t, reload],
+    [t, trashAll],
   );
 
   /** Several rows to the Trash at once, after one question; a row inside a
@@ -117,16 +148,9 @@ export function useRowMenu(
       );
       if (!ok) return;
       selection.clear();
-      for (const { path } of outermost(rows)) {
-        try {
-          await trashFromTree(path, root, reload);
-        } catch (err) {
-          await showMessage(failureText(t, err, basename(path)));
-          return;
-        }
-      }
+      await trashAll(outermost(rows));
     },
-    [root, t, reload, selection],
+    [t, selection, trashAll],
   );
 
   /** The menu of several rows picked together: open its documents, or
