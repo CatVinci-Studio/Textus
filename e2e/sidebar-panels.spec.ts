@@ -202,6 +202,59 @@ test("the folder's tools coming on hover move none of the tree's rows", async ({
   expect((await row.boundingBox())!.y).toBe(before);
 });
 
+test("scrolled into, the folders' rows stay at the top until their rows go by; folded there, it stays in sight", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const fs: Record<string, string> = { "/proj/z.md": "# Z\n" };
+    for (let i = 10; i < 50; i++) {
+      fs[`/proj/notes/inner/i${i}.md`] = "# I\n";
+      fs[`/proj/notes/n${i}.md`] = "# N\n";
+      fs[`/proj/r${i}.md`] = "# R\n";
+    }
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = fs;
+    w.__devPickFolder = "/proj";
+  });
+  await page.setViewportSize({ width: 1200, height: 600 });
+  await openApp(page);
+  await emit(page, "menu-open-folder");
+  const row = (name: string) =>
+    page.locator(".tree-row", { has: page.getByText(name, { exact: true }) });
+  await row("notes").click();
+  await row("inner").click();
+  await expect(row("i49.md")).toBeAttached();
+  const scroller = page.locator(".sidebar-body");
+  const top = async (name: string) =>
+    (await row(name).boundingBox())!.y - (await scroller.boundingBox())!.y;
+  const height = (await row("notes").boundingBox())!.height;
+
+  await scroller.evaluate((el) => (el.scrollTop = 600));
+  await expect.poll(() => top("notes")).toBeCloseTo(0, 0);
+  expect(await top("inner")).toBeCloseTo(height, 0);
+  // Past inner's last row, inner goes up with it; notes stays.
+  const pastInner = await row("n10.md").evaluate(
+    (el, h) =>
+      el.getBoundingClientRect().top -
+      el.closest(".sidebar-body")!.getBoundingClientRect().top +
+      el.closest(".sidebar-body")!.scrollTop -
+      h / 2,
+    height,
+  );
+  await scroller.evaluate((el, y) => (el.scrollTop = y), pastInner);
+  await expect.poll(() => top("inner")).toBeLessThan(0);
+  expect(await top("notes")).toBeCloseTo(0, 0);
+
+  // Folded from the top, notes stays in sight.
+  await scroller.evaluate((el) => (el.scrollTop = 600));
+  await expect.poll(() => top("notes")).toBeCloseTo(0, 0);
+  await row("notes").click();
+  await expect(row("inner")).toHaveCount(0);
+  const folded = await top("notes");
+  expect(folded).toBeGreaterThanOrEqual(-1);
+  expect(folded).toBeLessThan((await scroller.boundingBox())!.height);
+});
+
 test("a file closed at once opens again at once", async ({ page }) => {
   await page.addInitScript(() => {
     const w = window as unknown as Record<string, unknown>;

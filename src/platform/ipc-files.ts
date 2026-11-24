@@ -86,6 +86,11 @@ export const fs = {
    *  only, and never into a far folder (the tree doesn't offer it). */
   copyIntoFolder: (source: string, into: string): Promise<string> =>
     command("copy_into_folder", source, into),
+  /** Rows of the tree handed to the system's drag, as copies; resolves
+   *  when it ends, true when something took them. Rust side:
+   *  `start_file_drag_out` (commands/fs/drag_out.rs). Desktop only. */
+  dragOut: (paths: string[]): Promise<boolean> =>
+    command("start_file_drag_out", paths),
   /** A new name in the same folder; returns the new path. */
   renameEntry: (path: string, name: string): Promise<string> =>
     farEntries(path)?.renameEntry(path, name) ??

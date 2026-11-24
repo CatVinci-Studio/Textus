@@ -7,7 +7,15 @@ import { currentStrings } from "../i18n/current";
 
 import { useFileMark } from "../registry/file-marks";
 import { plural } from "../i18n/plural";
-import { memo, useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  memo,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { type DirEntryInfo } from "../platform/bindings/files";
 import { ChevronIcon } from "../engine/controls/icons";
 import { fs } from "../platform/ipc";
@@ -31,6 +39,8 @@ import { FileIcon, FolderEntryIcon } from "../engine/controls/file-icons";
 
 /** How long something dragged rests on a folded folder before it opens. */
 const OPEN_UNDER_DRAG_MS = 500;
+/** How many levels of folders stay at the top while their rows scroll by. */
+const STICKY_LEVELS = 5;
 
 interface DirNodeProps {
   path: string;
@@ -179,13 +189,20 @@ export const DirNode = memo(function DirNode({
       data-drop-dir={depth > 0 ? path : undefined}
     >
       {depth > 0 && (
-        <FolderRow
-          path={path}
-          depth={depth}
-          open={open}
-          ignored={ignored}
-          onToggle={() => setOpen(!open)}
-        />
+        // Scrolled into, the folder's row stays at the top under its own
+        // folders' until its last row goes by (FileTree.css).
+        <div
+          className={`tree-head${depth <= STICKY_LEVELS ? " tree-head-sticky" : ""}`}
+          style={{ "--depth": depth } as CSSProperties}
+        >
+          <FolderRow
+            path={path}
+            depth={depth}
+            open={open}
+            ignored={ignored}
+            onToggle={() => setOpen(!open)}
+          />
+        </div>
       )}
       {open && sorted && (
         <div className="dir-children" role={depth > 0 ? "group" : "none"}>
@@ -345,8 +362,18 @@ function FolderRow({
 }) {
   const tree = useTreeRowActions();
   const picked = useRowPicked(path);
+  // Folded from the top, where it stayed while its rows scrolled by: the
+  // row stays in sight, not left far above.
+  const row = useRef<HTMLDivElement>(null);
+  const folding = useRef(false);
+  useLayoutEffect(() => {
+    if (folding.current && !open)
+      row.current?.scrollIntoView?.({ block: "nearest" });
+    folding.current = false;
+  }, [open]);
   return (
     <div
+      ref={row}
       className={`tree-row${picked ? " tree-row-picked" : ""}${ignored ? " tree-row-ignored" : ""}`}
       role="treeitem"
       aria-level={depth}
@@ -360,6 +387,7 @@ function FolderRow({
       onClick={(e) => {
         if (e.detail > 1) return;
         if (tree.onRowPick?.(e, path)) return;
+        folding.current = open;
         onToggle();
       }}
       onContextMenu={

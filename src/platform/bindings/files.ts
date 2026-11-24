@@ -79,6 +79,14 @@ export const commands = {
 	 */
 	copy_into_folder: (source: string, into: string) => __TAURI_INVOKE<string>("copy_into_folder", { source, into }),
 	/**
+	 *  Starts the system's drag of `paths` from this window, as copies (a move
+	 *  would take files from under open tabs with nothing to undo it). Resolves
+	 *  once the drag ends: true when something took it. Nothing starts once the
+	 *  button is already up. Its TypeScript side is `fs.dragOut` in
+	 *  src/platform/ipc-files.ts.
+	 */
+	start_file_drag_out: (paths: string[]) => __TAURI_INVOKE<boolean>("start_file_drag_out", { paths }),
+	/**
 	 *  Brings a document's images into the image folder of the file it was just
 	 *  saved as, rewriting each `src`: a draft's pasted images are moved, and on Save
 	 *  As images relative to the old document are copied. Anything else is left alone.
