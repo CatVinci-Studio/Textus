@@ -116,9 +116,11 @@ pub fn counted_url(app: &AppHandle, d: &Download) -> Option<String> {
 /// redirects to (a page where no endpoint is deployed, say).
 pub fn check_redirected(response: &reqwest::Response) -> Result<(), String> {
     match endpoint() {
-        Some(base) if is_endpoint(response.url(), &base) => {
-            Err("the install counter didn't redirect".into())
-        }
+        Some(base) if is_endpoint(response.url(), &base) => Err(format!(
+            "the install counter didn't redirect (still at {}, proxy: {})",
+            response.url(),
+            aicompat::system_proxy::proxy_display()
+        )),
         _ => Ok(()),
     }
 }
