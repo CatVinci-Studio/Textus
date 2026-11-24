@@ -212,9 +212,16 @@ for (const { name, device } of TOUCH_DEVICES)
       if (phone) await page.mouse.click(380, 400);
       await page.getByRole("button", { name: "Menu", exact: true }).tap();
       await big([".context-menu-item"]);
-      // A Settings page's pills, "?" and switches.
+      // Settings' search box, a tap at its very edge too; a page's pills,
+      // "?" and switches.
       if (phone) {
         await page.getByRole("menuitem", { name: /Settings/ }).tap();
+        const search = page.locator(".settings-search");
+        await expect(search).toBeVisible();
+        await big([".settings-search input"]);
+        const box = (await search.boundingBox())!;
+        await page.touchscreen.tap(box.x + box.width / 2, box.y + 1);
+        await expect(search.locator("input")).toBeFocused();
         await page.getByRole("button", { name: "Extensions" }).tap();
         const controls = [
           ".settings-panel .tx-button",

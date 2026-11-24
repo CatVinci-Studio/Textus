@@ -238,6 +238,14 @@
   height: 40px;
 }
 
+/* The field a finger tall, past the box it is drawn in; clear, over the
+   box's focus ring. */
+:root[data-window-chrome="mobile"] .settings-search .tx-search-input {
+  height: var(--touch-target);
+  margin: calc((40px - var(--touch-target)) / 2) 0;
+  background: transparent;
+}
+
 /* The arrow keys' pick; under a finger it only spilled past the card. */
 :root[data-window-chrome="mobile"] .settings-search-result.is-active {
   background: none;
