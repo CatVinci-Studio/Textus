@@ -212,6 +212,21 @@
     :is(.tree-row, .tx-list-item, .context-menu-item) {
     min-height: var(--touch-target);
   }
+
+  /* Pills, "?" and switches keep their look; a finger gets 44pt around
+     whatever is shorter or narrower than that. */
+  :root:is([data-platform="ios"], [data-platform="android"]) .tx-button {
+    position: relative;
+  }
+  :root:is([data-platform="ios"], [data-platform="android"]) .tx-button::after,
+  :root:is([data-platform="ios"], [data-platform="android"])
+    .info-tip-button::after,
+  :root:is([data-platform="ios"], [data-platform="android"])
+    input[type="checkbox"].tx-switch::before {
+    content: "";
+    position: absolute;
+    inset: min(0px, calc((100% - var(--touch-target)) / 2));
+  }
 }
 
 /* The keyboard takes the page's colour scheme: dark or light as chosen in
