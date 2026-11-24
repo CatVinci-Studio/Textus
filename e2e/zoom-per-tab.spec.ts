@@ -273,7 +273,21 @@ test.describe("a pinch on an Android phone", () => {
   }) => {
     test.skip(browserName !== "chromium", "touches sent by CDP");
     await openApp(page);
-    const box = (await page.locator(".ProseMirror:visible").boundingBox())!;
+    const editor = page.locator(".ProseMirror:visible");
+    await editor.tap();
+    await page.keyboard.type("hello");
+    // The caret set again is iOS's fix alone: here it would cut into a
+    // keyboard's composing word.
+    await page.evaluate(() => {
+      const w = window as unknown as { setAgain: number };
+      w.setAgain = 0;
+      const set = Selection.prototype.setBaseAndExtent;
+      Selection.prototype.setBaseAndExtent = function (...args) {
+        w.setAgain++;
+        return set.apply(this, args);
+      };
+    });
+    const box = (await editor.boundingBox())!;
     const x = box.x + box.width / 2;
     const y = box.y + 120;
     // No gesture events in Android's web view: the touches themselves.
@@ -300,5 +314,50 @@ test.describe("a pinch on an Android phone", () => {
       touchPoints: [],
     });
     await expect.poll(() => zoomOf(page, 0)).toBe(2);
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { setAgain: number }).setAgain,
+      ),
+    ).toBe(0);
+  });
+
+  test("keeps the page from panning as the fingers drift", async ({
+    page,
+    browserName,
+  }) => {
+    test.skip(browserName !== "chromium", "touches sent by CDP");
+    await openApp(page);
+    await pasteMarkdown(
+      page,
+      Array.from({ length: 120 }, (_, i) => `Paragraph ${i}.`).join("\n\n"),
+    );
+    const scroller = page.locator(".editor-scroll:visible");
+    await scroller.evaluate((el) => (el.scrollTop = 1000));
+    const box = (await scroller.boundingBox())!;
+    const x = box.x + box.width / 2;
+    const cdp = await page.context().newCDPSession(page);
+    const fingers = (
+      type: "touchStart" | "touchMove",
+      apart: number,
+      y: number,
+    ) =>
+      cdp.send("Input.dispatchTouchEvent", {
+        type,
+        touchPoints: [
+          { x: x - apart / 2, y, id: 0 },
+          { x: x + apart / 2, y, id: 1 },
+        ],
+      });
+    await fingers("touchStart", 60, 400);
+    for (let step = 1; step <= 8; step++)
+      await fingers("touchMove", 60 + step * 10, 400 - step * 20);
+    // A pan lands on the compositor's next frames.
+    await page.waitForTimeout(100);
+    expect(await scroller.evaluate((el) => el.scrollTop)).toBe(1000);
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+    await expect.poll(() => zoomOf(page, 0)).toBeGreaterThan(1);
   });
 });

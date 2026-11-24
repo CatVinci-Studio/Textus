@@ -85,6 +85,10 @@ describe("the page is the hand's", () => {
 describe("holding a scroll position", () => {
   const scroller = (scrollTop: number) => {
     const el = document.createElement("div");
+    Object.defineProperties(el, {
+      scrollHeight: { value: 2000 },
+      clientHeight: { value: 500 },
+    });
     let top = scrollTop;
     Object.defineProperty(el, "scrollTop", {
       get: () => top,
@@ -148,6 +152,12 @@ describe("holding a scroll position", () => {
     const el = scroller(100);
     holdText(el, held, () => (top = 75));
     expect(el.scrollTop).toBe(135);
+    // As a block held still: whole pixels, and not while pulled past an end.
+    holdText(el, held, () => (top = 40.3));
+    expect(el.scrollTop).toBe(135);
+    const pulled = scroller(-30);
+    holdText(pulled, held, () => (top = 75));
+    expect(pulled.scrollTop).toBe(-30);
     hitAt(within, 0);
     expect(textAt(within, 0, 0)).toBeNull();
     rects.mockRestore();

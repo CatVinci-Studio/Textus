@@ -24,6 +24,10 @@ export const isMobileApp = isIOSApp || isAndroidApp;
  *  gesture events and no ctrl+wheel for it (app/touch-pinch.ts). */
 export const pinchFromTouches = isAndroidApp;
 
+/** The caret is placed only as the selection changes, so text zoomed
+ *  under it leaves it behind (iOS's WebKit; app/useZoom.ts's caretAgain). */
+export const caretStaysWhereTextWas = isIOSApp;
+
 /** A system Back (Android's button or gesture), which the page answers
  *  first (mobile/back.ts). */
 export const hasSystemBack = isAndroidApp;

@@ -52,13 +52,12 @@ export function listenToTouchPinch(
     const first = { ...at, scale: 1 };
     if (pinch.start(first)) last = first;
   };
-  // Held from the start: one added with the second finger comes after
-  // Chromium has made the touch's moves uncancelable.
+  // Passive, so a one-finger scroll never waits on the page: Android's
+  // root takes neither a pinch nor two fingers' pan (touch-action).
   const onMove = (event: TouchEvent) => {
     if (!last || event.touches.length !== 2) return;
     const { apart, ...at } = spreadOf(event.touches, apart0);
     if (!(apart > 0)) return;
-    if (event.cancelable) event.preventDefault();
     last = at;
     pinch.change(at);
   };
@@ -66,7 +65,7 @@ export function listenToTouchPinch(
     if (event.touches.length < 2) end();
   };
   target.addEventListener("touchstart", onStart);
-  target.addEventListener("touchmove", onMove, { passive: false });
+  target.addEventListener("touchmove", onMove, { passive: true });
   target.addEventListener("touchend", onEnd);
   target.addEventListener("touchcancel", end);
   return () => {

@@ -42,6 +42,12 @@
   right: var(--safe-right);
 }
 
+/* Android's pinch is the app's own (app/touch-pinch.ts), read from
+   passive touches: the page neither zooms nor pans under two fingers. */
+:root[data-platform="android"] {
+  touch-action: pan-x pan-y;
+}
+
 /* Android's navigation bar or a tablet's taskbar stays drawn over the
    page's foot (an iPhone's or iPad's home indicator hides itself): the
    desktop layout ends above it, as the phone's does. */
