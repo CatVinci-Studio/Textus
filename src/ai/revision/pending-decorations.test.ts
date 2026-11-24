@@ -1,10 +1,22 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from "vitest";
+import { act, renderHook } from "@testing-library/react";
 import { editorViewCtx } from "@milkdown/kit/core";
+import type { Ctx } from "@milkdown/kit/ctx";
+import type { EditorView } from "@milkdown/kit/prose/view";
 import type { Editor } from "@milkdown/kit/core";
 import { createTestEditor } from "../../document-view/editor-test-harness";
 import { buildDecorations } from "./pending-decorations";
-import { animations, textKey } from "./pending-animation";
+import {
+  animations,
+  newAnimation,
+  releaseView,
+  streamPendingInsertText,
+  textKey,
+} from "./pending-animation";
+import { usePendingEdits } from "./usePendingEdits";
+import { forgetReveals } from "./kept-reveals";
+import { setWindowTabs } from "../../engine/layout/store";
 import type { PendingPreview } from "./pending-types";
 
 let editor: Editor | null = null;
@@ -12,6 +24,7 @@ afterEach(() => {
   editor?.destroy();
   editor = null;
   animations.clear();
+  setWindowTabs(() => []);
 });
 
 const hooks = {
@@ -211,5 +224,67 @@ describe("a rewrite streamed sentence by sentence", () => {
     drawn = await drawnChange("> 甲。\n", "甲。", "> 甲。", "> 1984. 年。");
     expect(drawn.at).toBe(drawn.to);
     expect(drawn.key).toMatch(new RegExp(`-${textKey("1984. 年。")}$`));
+  });
+});
+
+/** A macrotask between editors, so jsdom lets the last one go. */
+const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+describe("a proposal's reveal lets go", () => {
+  it("of an editor that goes, its proposals still undecided", async () => {
+    for (let i = 0; i < 4; i++) {
+      editor = await createTestEditor("甲。\n", {}, { ai: true });
+      const view = editor.action((ctx) => ctx.get(editorViewCtx));
+      const anim = newAnimation(`c${i}`, "乙。", true);
+      anim.view = view;
+      anim.span = document.createElement("span");
+      animations.set(anim.callId, anim);
+      editor.destroy();
+      editor = null;
+      await tick();
+    }
+    expect(animations.size).toBe(0);
+  });
+
+  it("keeps what an open document offers again, until it closes", () => {
+    const keep = (id: string) => {
+      const view = {} as EditorView;
+      const anim = newAnimation(id, "乙。", true);
+      anim.view = view;
+      animations.set(id, anim);
+      releaseView(view, [{ callId: id }], "/a.md");
+    };
+    setWindowTabs(() => [{ id: "t", path: "/a.md" }]);
+    keep("k");
+    expect(animations.get("k")?.view).toBeNull();
+    // Not offered again by its next editor: it goes as that one does.
+    releaseView({} as EditorView, [], "/a.md");
+    expect(animations.has("k")).toBe(false);
+    keep("k2");
+    forgetReveals("/a.md");
+    expect(animations.has("k2")).toBe(false);
+  });
+
+  it("of streamed text that never reached the list", async () => {
+    editor = await createTestEditor("甲。\n");
+    const e = editor;
+    const run = <T>(fn: (ctx: Ctx) => T) => e.action(fn);
+    const hook = renderHook(() => usePendingEdits(run));
+    streamPendingInsertText("gone", "乙。", true);
+    act(() => hook.result.current.discard("gone"));
+    expect(animations.has("gone")).toBe(false);
+    streamPendingInsertText("lost", "乙。", true);
+    act(() =>
+      hook.result.current.showPreviews(
+        [
+          {
+            callId: "lost",
+            proposal: { action: "replace", anchor: "没有这句。", text: "乙。" },
+          },
+        ],
+        null,
+      ),
+    );
+    expect(animations.has("lost")).toBe(false);
   });
 });
