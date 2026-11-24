@@ -25,6 +25,13 @@ test.describe("a phone on its side", () => {
       "flex-direction",
       "column",
     );
+    // Every category in the list, none clipped: the sidebar scrolls it.
+    const nav = page.locator(".settings-nav");
+    await expect(nav.getByRole("button", { name: "About" })).toBeAttached();
+    const clipped = await nav.evaluate(
+      (el) => el.scrollHeight - el.clientHeight,
+    );
+    expect(clipped).toBeLessThanOrEqual(1);
   });
 
   test("keeps its island and rail clear of the cutout and the far corner", async ({
@@ -189,6 +196,21 @@ for (const { name, device } of TOUCH_DEVICES)
       if (phone) await page.mouse.click(380, 400);
       await page.getByRole("button", { name: "Menu", exact: true }).tap();
       await big([".context-menu-item"]);
+      // A Settings page's pills, "?" and switches.
+      if (phone) {
+        await page.getByRole("menuitem", { name: /Settings/ }).tap();
+        await page.getByRole("button", { name: "Extensions" }).tap();
+        const controls = [
+          ".settings-panel .tx-button",
+          ".settings-panel .info-tip-button",
+          ".settings-panel .tx-switch",
+        ];
+        for (const selector of controls)
+          await expect(
+            page.locator(`${selector}:visible`).first(),
+          ).toBeVisible();
+        await big(controls);
+      }
     });
   });
 

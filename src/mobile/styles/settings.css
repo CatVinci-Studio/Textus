@@ -92,7 +92,10 @@
   margin: 8px 16px 0;
 }
 
+/* Its full height, the sidebar scrolling it: on a phone on its side,
+   shrunk to fit, it clipped the last categories out of reach. */
 :root[data-window-chrome="mobile"] .settings-nav {
+  flex: none;
   flex-direction: column;
   flex-wrap: nowrap;
   gap: 0;
