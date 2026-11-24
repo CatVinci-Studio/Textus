@@ -11,10 +11,11 @@ import { useLatest } from "../utils/hooks/useLatest";
 import { parentDir } from "../utils/path";
 import { updateLinksAfterMove } from "./move-links";
 import { failureText } from "./tree-shared";
+import { movedStep } from "./file-undo";
 import type { FileUndo } from "./useFileUndo";
 
 /** The row whose name is being typed in place, if any. */
-class Renaming {
+export class Renaming {
   path: string | null = null;
   private readonly listeners = createSubscribers();
   subscribe = this.listeners.subscribe;
@@ -27,7 +28,7 @@ class Renaming {
 
 /** A row's rename in place: its name given, or given up; `byKey`: ended
  *  with a key, the keyboard back on the row (NameField). */
-export interface RowRename {
+interface RowRename {
   commit: (
     path: string,
     name: string,
@@ -67,9 +68,10 @@ export function useRename(input: {
   reload: (...dirs: string[]) => void;
   onEntryMoved: (from: string, to: string) => void;
   fileUndo: FileUndo;
+  renaming: Renaming;
 }) {
   const latest = useLatest(input);
-  const renaming = useMemo(() => new Renaming(), []);
+  const { renaming } = input;
   const rename = useMemo<RowRename>(
     () => ({
       async commit(path, name, byKey) {
@@ -85,11 +87,9 @@ export function useRename(input: {
         onEntryMoved(path, to);
         if (byKey) fileUndo.show(to);
         if (to !== path)
-          fileUndo.record({
-            kind: "moved",
-            moved: [{ from: path, to }],
-            edits: updateLinksAfterMove(path, to, linkBase, t).catch(() => []),
-          });
+          fileUndo.record(
+            movedStep(path, to, updateLinksAfterMove(path, to, linkBase, t)),
+          );
         return null;
       },
       cancel(path, byKey) {

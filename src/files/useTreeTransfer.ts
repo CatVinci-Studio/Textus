@@ -5,22 +5,38 @@ import type { Strings } from "../i18n/strings";
 import { showChoice, showMessage } from "../engine/controls/app-dialog";
 import { showNotice } from "../engine/controls/notices";
 import { fs } from "../platform/ipc";
-import {
-  announceFileCreated,
-  FILE_WRITTEN_EVENT,
-  sendAppEvent,
-} from "../utils/events";
 import { useLatest } from "../utils/hooks/useLatest";
-import { basename, folderName, isWithin, parentDir } from "../utils/path";
+import {
+  basename,
+  folderName,
+  isWithin,
+  joinPath,
+  parentDir,
+} from "../utils/path";
 import type { CopyNaming } from "../platform/bindings/files";
-import { stampOf, type FileStep } from "./file-undo";
+import {
+  copyIn,
+  exists,
+  movedStep,
+  trashEach,
+  type FileStep,
+} from "./file-undo";
 import { updateLinksAfterMove } from "./move-links";
 import { failureText, trashFromTree } from "./tree-shared";
 import { outermost, type TreeRow, type TreeSelection } from "./tree-selection";
 import type { FileUndo } from "./useFileUndo";
 
+/** Whether the entry at `path` is a folder, as its folder lists it;
+ *  `guess` when it can't be read. */
+async function kindAt(path: string, guess: boolean): Promise<boolean> {
+  const dir = parentDir(path);
+  const name = basename(path).toLowerCase();
+  const entries = dir ? await fs.listDir(dir).catch(() => []) : [];
+  return entries.find((e) => e.name.toLowerCase() === name)?.is_dir ?? guess;
+}
+
 /** What the tree does with rows taken to a folder. */
-export type TransferHow = "move" | "copy";
+type TransferHow = "move" | "copy";
 
 /** What a name already taken in the folder becomes, as asked. */
 type Clash = "replace" | "keepBoth";
@@ -72,13 +88,14 @@ export function useTreeTransfer(input: {
       const here = parentDir(row.path) === into;
       if (how === "move" && here) return null;
       if (clash === "replace") {
-        const old = `${into}/${basename(row.path)}`;
-        const place = await trashFromTree(old, folder, reload);
-        if (place)
-          steps.push({
-            kind: "trashed",
-            trashed: [{ path: old, isDir: row.isDir, place }],
-          });
+        const old = joinPath(into, basename(row.path));
+        const isDir = await kindAt(old, row.isDir);
+        const { trashed, failed } = await trashEach(
+          [{ path: old, isDir }],
+          (paths) => trashFromTree(paths, folder, reload),
+        );
+        if (failed) throw failed.error;
+        if (trashed.length) steps.push({ kind: "trashed", trashed });
       }
       if (how === "move") {
         const to = await fs.moveEntry(
@@ -89,11 +106,13 @@ export function useTreeTransfer(input: {
         );
         reload(parentDir(row.path) ?? into, into);
         onEntryMoved(row.path, to);
-        steps.push({
-          kind: "moved",
-          moved: [{ from: row.path, to }],
-          edits: updateLinksAfterMove(row.path, to, folder, t).catch(() => []),
-        });
+        steps.push(
+          movedStep(
+            row.path,
+            to,
+            updateLinksAfterMove(row.path, to, folder, t),
+          ),
+        );
         return to;
       }
       const naming: CopyNaming = here
@@ -101,16 +120,14 @@ export function useTreeTransfer(input: {
         : clash === "keepBoth"
           ? "numbered"
           : "own";
-      const copy = await fs.copyEntry(row.path, into, naming);
-      reload(into);
-      if (row.isDir) sendAppEvent(FILE_WRITTEN_EVENT, copy);
-      else announceFileCreated(copy);
-      const stamp = await stampOf(copy, row.isDir).catch(() => null);
-      if (stamp !== null)
-        steps.push({
-          kind: "made",
-          made: [{ path: copy, isDir: row.isDir, stamp }],
-        });
+      const { copy, made } = await copyIn(
+        row.path,
+        row.isDir,
+        into,
+        naming,
+        reload,
+      );
+      if (made) steps.push({ kind: "made", made: [made] });
       return copy;
     };
 
@@ -128,7 +145,7 @@ export function useTreeTransfer(input: {
         const into = to ?? parentDir(row.path);
         if (into === null) continue;
         const name = basename(row.path);
-        const target = `${into}/${name}`;
+        const target = joinPath(into, name);
         const here = parentDir(row.path) === into;
         // Never into itself, nor over a folder it is in.
         if (row.isDir && isWithin(into, row.path)) {
@@ -136,10 +153,7 @@ export function useTreeTransfer(input: {
           break;
         }
         let clash: Clash | null = null;
-        if (
-          !here &&
-          (await fs.fileMtimeMs(target).catch(() => null)) !== null
-        ) {
+        if (!here && (await exists(target))) {
           if (isWithin(row.path, target)) continue;
           clash = await askClash(name, into);
           if (!clash) break;

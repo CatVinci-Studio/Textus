@@ -11,7 +11,7 @@ import { showNotice } from "../engine/controls/notices";
 import { useSettingsIfAny } from "../prefs/SettingsContext";
 import { useLatest } from "../utils/hooks/useLatest";
 import { basename } from "../utils/path";
-import type { TrashedEntry } from "./file-undo";
+import { trashEach } from "./file-undo";
 import { failureText, trashable, trashFromTree } from "./tree-shared";
 import { outermost, type TreeRow, type TreeSelection } from "./tree-selection";
 import type { FileUndo } from "./useFileUndo";
@@ -55,19 +55,12 @@ export function useTreeTrash(input: {
   return useMemo(() => {
     const trashAll = async (rows: readonly TreeRow[]) => {
       const { root, t, reload, fileUndo } = latest.current;
-      const trashed: TrashedEntry[] = [];
-      let known = true;
       const next = fileUndo.rowBeside(rows.map((row) => row.path));
-      for (const { path, isDir } of rows) {
-        try {
-          const place = await trashFromTree(path, root, reload);
-          if (place === null) known = false;
-          else trashed.push({ path, isDir, place });
-        } catch (err) {
-          await showMessage(failureText(t, err, basename(path)));
-          break;
-        }
-      }
+      const { trashed, known, failed } = await trashEach(rows, (paths) =>
+        trashFromTree(paths, root, reload),
+      );
+      if (failed)
+        await showMessage(failureText(t, failed.error, basename(failed.path)));
       fileUndo.show(next);
       if (!known || !trashed.length) return;
       showNotice(counted(t.treeTrashed, trashed.length), {

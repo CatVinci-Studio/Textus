@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { createSubscribers } from "../utils/store";
-import { isWithin } from "../utils/path";
+import { isWithin, movedTo } from "../utils/path";
 import type { TreeRow } from "./tree-selection";
 
 /** Rows cut or copied in the file tree, to paste into a folder. */
@@ -27,6 +27,24 @@ class FileClipboard {
   set(held: Held | null): void {
     this.held = held?.rows.length ? held : null;
     this.listeners.publish();
+  }
+
+  /** `from` moved to `to`: what was taken at or under it follows. */
+  moved(from: string, to: string): void {
+    if (!this.held) return;
+    const rows = this.held.rows.map((row) => {
+      const path = movedTo(row.path, from, to);
+      return path === null ? row : { ...row, path };
+    });
+    if (rows.some((row, i) => row !== this.held!.rows[i]))
+      this.set({ ...this.held, rows });
+  }
+
+  /** Only the rows for which `kept` holds stay taken. */
+  keepOnly(kept: (path: string) => boolean): void {
+    if (!this.held) return;
+    const rows = this.held.rows.filter((row) => kept(row.path));
+    if (rows.length !== this.held.rows.length) this.set({ ...this.held, rows });
   }
 
   /** Whether `path` was cut, or is inside a folder that was. */

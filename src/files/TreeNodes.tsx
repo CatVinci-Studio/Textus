@@ -129,17 +129,24 @@ function useFolderOpen(
   }, [activePath, tree.reveal, path]);
   // Something was made in it or moved into it, or is being named in it:
   // show it.
+  // Only a change since Collapse All, or since it was drawn, opens it: a
+  // folder drawn again keeps the fold Collapse All gave it.
   const drafting = tree.draft?.dir === path ? tree.draft.kind : null;
   const draftBelow = !!tree.draft && isInside(tree.draft.dir, path);
+  const versionSeen = useRef(tree.collapsed[path] ?? 0);
   useEffect(() => {
-    if (version > 0 || drafting || draftBelow) setOpen(true);
+    const grew = version > versionSeen.current;
+    versionSeen.current = version;
+    if (grew || drafting || draftBelow) setOpen(true);
   }, [version, drafting, draftBelow]);
   // Collapse All folds it; a folder drawn after keeps its own state.
   const collapsedSeen = useRef(tree.collapsed);
   useEffect(() => {
     if (collapsedSeen.current === tree.collapsed) return;
     collapsedSeen.current = tree.collapsed;
+    versionSeen.current = version;
     if (depth > 0) setOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the version as it folds
   }, [tree.collapsed, depth]);
   const { openFolders } = tree;
   useEffect(
@@ -215,6 +222,11 @@ export const DirNode = memo(function DirNode({
     <div
       className={`dir-node${dropping ? " tx-drop-into" : ""}`}
       data-drop-dir={depth > 0 ? path : undefined}
+      style={
+        depth === 0
+          ? ({ "--tree-sticky-levels": STICKY_LEVELS } as CSSProperties)
+          : undefined
+      }
     >
       {depth > 0 && (
         // Scrolled into, the folder's row stays at the top under its own

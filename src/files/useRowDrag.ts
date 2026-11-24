@@ -14,9 +14,9 @@ import { holdToDrag } from "../engine/drag/hold-drag";
 import { useLatest } from "../utils/hooks/useLatest";
 import { edgeScroll } from "../engine/drag/edge-scroll";
 import { canDragFilesOut } from "../platform/capabilities";
-import { dragOut, outsideWindow } from "./drag-out";
+import { dragOut, LEAVE_AFTER_MS, outsideWindow } from "./drag-out";
 import { isFarUrl } from "../platform/far-files";
-import { outermost, type TreeRow, type TreeSelection } from "./tree-selection";
+import { outermost, type TreeSelection } from "./tree-selection";
 import type { TreeTransfer } from "./useTreeTransfer";
 
 /** A row being dragged (or the first of several picked), and the folder
@@ -98,7 +98,7 @@ export function useRowDrag(
       if (e.shiftKey || e.metaKey || e.ctrlKey) return;
       const unhold = holdSelection();
       const group = selection.groupOf(path);
-      const moving: TreeRow[] = group ? outermost(group) : [{ path, isDir }];
+      const moving = outermost(selection.rowsFor(path, isDir));
       // A copy may go beside itself; neither goes into itself.
       const fits = (dir: string) =>
         moving.every((row) =>
@@ -122,6 +122,8 @@ export function useRowDrag(
         e.pointerType === "mouse" &&
         !moving.some((row) => isFarUrl(row.path));
       let tracked: { cancel: () => void } | null = null;
+      /** Set while the pointer is past the window, to take the rows out. */
+      let leaving: number | undefined;
       /** The tree's box as the drag began: off it, nothing to hit-test. */
       let treeBox: DOMRect | null = null;
       let into: string | null = null;
@@ -164,11 +166,15 @@ export function useRowDrag(
         },
         move: (x, y, m) => {
           if (outward && outsideWindow(x, y)) {
-            tracked?.cancel();
-            unhold();
-            void dragOut(moving.map((row) => row.path));
+            leaving ??= window.setTimeout(() => {
+              tracked?.cancel();
+              unhold();
+              void dragOut(moving.map((row) => row.path));
+            }, LEAVE_AFTER_MS);
             return;
           }
+          window.clearTimeout(leaving);
+          leaving = undefined;
           ghost.current?.move(x, y);
           last = { x, y };
           const box = treeRef.current?.getBoundingClientRect();
@@ -191,6 +197,7 @@ export function useRowDrag(
           else documentDrop()?.leave();
         },
         end: (x, y, dropped, up) => {
+          window.clearTimeout(leaving);
           edge.stop();
           shift?.stop();
           copy?.stop();

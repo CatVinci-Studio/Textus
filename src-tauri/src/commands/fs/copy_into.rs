@@ -1,36 +1,10 @@
-//! Files and folders dragged from a file manager onto a folder of the
-//! sidebar's tree: copied in, never moved, never over anything there.
+//! The sidebar tree's copies: a paste, Duplicate, a drag with ⌥ or Ctrl,
+//! and files dragged from a file manager onto a folder. Never over anything.
 
 use super::dropped::{copy_file_new, into_free_name};
 use super::secrets::{not_a_secret, own_config_dir};
 use super::*;
-
-/// Copies the file or folder `source` (a folder with all it holds) into the
-/// folder `into` under its own name, or numbered as a file manager names a
-/// copy (`report 2.pdf`, `photos 2`) when that is taken, and returns the
-/// copy's path in `into`'s spelling. A folder is never copied into itself.
-/// Its TypeScript side is `fs.copyIntoFolder` in src/platform/ipc-files.ts.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn copy_into_folder(
-    app: tauri::AppHandle,
-    source: String,
-    into: String,
-) -> Result<String, String> {
-    require_non_empty(&source)?;
-    require_non_empty(&into)?;
-    not_a_secret(&app, &source)?;
-    let config = own_config_dir(&app);
-    let (from, dir) = (PathBuf::from(&source), PathBuf::from(&into));
-    let name = tokio::task::spawn_blocking(move || {
-        copy_entry(&from, &dir, &CopyNaming::Numbered, &|p: &Path| {
-            config.as_deref().is_some_and(|c| p.starts_with(c))
-        })
-    })
-    .await
-    .map_err(|e| e.to_string())??;
-    Ok(Path::new(&into).join(name).to_string_lossy().to_string())
-}
+use crate::ids::Numbered;
 
 /// How a copy is named: as itself, refused when that is taken; numbered
 /// when taken (`report 2.pdf`), as a file manager keeps both; or as a copy
@@ -78,14 +52,7 @@ fn names_for(naming: &CopyNaming, name: &str, is_dir: bool) -> Box<dyn Iterator<
     let name = name.to_string();
     match naming {
         CopyNaming::Own => Box::new(std::iter::once(name)),
-        CopyNaming::Numbered => {
-            let style = if is_dir {
-                crate::ids::Numbered::SpaceWhole
-            } else {
-                crate::ids::Numbered::Space
-            };
-            Box::new(copy_names(name, style))
-        }
+        CopyNaming::Numbered => Box::new(copy_names(name, Numbered::for_entry(is_dir))),
         CopyNaming::Beside(pattern) => {
             let (stem, ext) = match name.rsplit_once('.') {
                 Some((stem, ext)) if !is_dir && !stem.is_empty() => {
@@ -98,16 +65,13 @@ fn names_for(naming: &CopyNaming, name: &str, is_dir: bool) -> Box<dyn Iterator<
             } else {
                 "{name} copy"
             };
-            let base = pattern.replace("{name}", &stem);
-            Box::new((1..10_000).map(move |n| match n {
-                1 => format!("{base}{ext}"),
-                n => format!("{base} {n}{ext}"),
-            }))
+            let first = format!("{}{ext}", pattern.replace("{name}", &stem));
+            Box::new(copy_names(first, Numbered::for_entry(is_dir)))
         }
     }
 }
 
-/// `copy_into_folder` off the async runtime: the name the copy took.
+/// `tree_copy_entry` off the async runtime: the name the copy took.
 /// `secret`: a place never copied from (the app's keys).
 fn copy_entry(
     from: &Path,
@@ -125,10 +89,6 @@ fn copy_entry(
         .ok_or("No file name")?
         .to_string_lossy()
         .to_string();
-    let io = |e: std::io::Error| match e.kind() {
-        std::io::ErrorKind::AlreadyExists => crate::errors::error("exists"),
-        _ => e.to_string(),
-    };
     if matches!(naming, CopyNaming::Own) && std::fs::symlink_metadata(into.join(&name)).is_ok() {
         return Err(crate::errors::error("exists"));
     }
@@ -144,7 +104,7 @@ fn copy_entry(
             |to| std::fs::create_dir(to),
             |_| false,
         )
-        .map_err(io)?;
+        .map_err(crate::errors::exists_or)?;
         let to = into.join(&made);
         if let Err(e) = copy_tree(&from, &to, secret) {
             // Half a copy is no copy: the folder made here a moment ago goes.
@@ -159,12 +119,12 @@ fn copy_entry(
             |to| copy_file_new(&from, to),
             |_| false,
         )
-        .map_err(io)
+        .map_err(crate::errors::exists_or)
     }
 }
 
 /// `name`, then numbered from 2 as a file manager names a copy.
-fn copy_names(name: String, style: crate::ids::Numbered) -> impl Iterator<Item = String> {
+fn copy_names(name: String, style: Numbered) -> impl Iterator<Item = String> {
     (0..10_000)
         .filter(|&n| n != 1)
         .map(move |n| crate::ids::numbered(&name, n, style))

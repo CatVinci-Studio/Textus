@@ -3,7 +3,7 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { TreeSelection } from "./tree-selection";
 import { useRowDrag } from "./useRowDrag";
-import { isDraggingOut } from "./drag-out";
+import { isDraggingOut, LEAVE_AFTER_MS } from "./drag-out";
 
 const ipc = vi.hoisted(() => ({
   out: null as null | ((took: boolean) => void),
@@ -86,7 +86,17 @@ it("hands the picked rows to the system's drag once the mouse leaves the window"
   expect(ipc.dragOut).not.toHaveBeenCalled();
   expect(result.current.drag).not.toBeNull();
 
+  // Past the edge a moment, as a push at the edge to scroll overshoots.
+  vi.useFakeTimers();
   act(() => pointer("pointermove", -100, 20));
+  act(() => vi.advanceTimersByTime(LEAVE_AFTER_MS - 50));
+  act(() => pointer("pointermove", 60, 20));
+  act(() => vi.advanceTimersByTime(LEAVE_AFTER_MS));
+  expect(ipc.dragOut).not.toHaveBeenCalled();
+
+  act(() => pointer("pointermove", -100, 20));
+  act(() => vi.advanceTimersByTime(LEAVE_AFTER_MS));
+  vi.useRealTimers();
   // The folder carries what is inside it; the drag in the page is over.
   expect(ipc.dragOut).toHaveBeenCalledWith(["/proj/b.md", "/proj/notes"]);
   expect(result.current.drag).toBeNull();
@@ -103,4 +113,15 @@ it("keeps a pen's drag in the window, where it can drop", () => {
   dragFrom("/proj/b.md", "pen", new TreeSelection());
   act(() => pointer("pointermove", -100, 20));
   expect(ipc.dragOut).not.toHaveBeenCalled();
+});
+
+it("lets go of a drag out whose end never came at the next press", () => {
+  dragFrom("/proj/b.md", "mouse", new TreeSelection());
+  vi.useFakeTimers();
+  act(() => pointer("pointermove", -100, 20));
+  act(() => vi.advanceTimersByTime(LEAVE_AFTER_MS));
+  vi.useRealTimers();
+  expect(isDraggingOut()).toBe(true);
+  act(() => pointer("pointerdown", 20, 20));
+  expect(isDraggingOut()).toBe(false);
 });

@@ -71,14 +71,6 @@ export const commands = {
 	 */
 	save_dropped_file: (docPath: string, source: string, folder: string) => __TAURI_INVOKE<SavedImage_Serialize>("save_dropped_file", { docPath, source, folder }),
 	/**
-	 *  Copies the file or folder `source` (a folder with all it holds) into the
-	 *  folder `into` under its own name, or numbered as a file manager names a
-	 *  copy (`report 2.pdf`, `photos 2`) when that is taken, and returns the
-	 *  copy's path in `into`'s spelling. A folder is never copied into itself.
-	 *  Its TypeScript side is `fs.copyIntoFolder` in src/platform/ipc-files.ts.
-	 */
-	copy_into_folder: (source: string, into: string) => __TAURI_INVOKE<string>("copy_into_folder", { source, into }),
-	/**
 	 *  The file tree's copy (a paste, Duplicate, a drag with ⌥ or Ctrl): the
 	 *  file or folder `path` copied into the folder `into`, named as `naming`
 	 *  says. Returns the copy's path in `into`'s spelling. Its TypeScript side
@@ -126,14 +118,14 @@ export const commands = {
 	pick_open_folder: () => __TAURI_INVOKE<string | null>("pick_open_folder"),
 	/**
 	 *  Creates an empty Markdown document in `dir`, and the folders on the way
-	 *  a name with slashes gives. Returns its path.
+	 *  a name with slashes gives.
 	 */
-	tree_create_document: (dir: string, name: string) => __TAURI_INVOKE<string>("tree_create_document", { dir, name }),
+	tree_create_document: (dir: string, name: string) => __TAURI_INVOKE<Created>("tree_create_document", { dir, name }),
 	/**
 	 *  Creates a folder in `dir`, and the folders on the way a name with
-	 *  slashes gives. Returns its path.
+	 *  slashes gives.
 	 */
-	tree_create_folder: (dir: string, name: string) => __TAURI_INVOKE<string>("tree_create_folder", { dir, name }),
+	tree_create_folder: (dir: string, name: string) => __TAURI_INVOKE<Created>("tree_create_folder", { dir, name }),
 	/**
 	 *  Moves a file or folder into the folder `into`, under its own name or
 	 *  `name` exactly as given (an undo putting it back as it was). With
@@ -147,22 +139,26 @@ export const commands = {
 	 */
 	tree_rename_entry: (path: string, name: string) => __TAURI_INVOKE<string>("tree_rename_entry", { path, name }),
 	/**
-	 *  Moves a file or folder to the system's Trash (Recycle Bin), never
-	 *  deleting it, and refuses the folder the tree is showing. Returns where
-	 *  the Trash keeps it, for `tree_put_back`, when the system says.
+	 *  Moves files and folders to the system's Trash (Recycle Bin) in turn, up
+	 *  to one that can't go, never deleting them, and refuses the folder the
+	 *  tree is showing. Says where the Trash keeps each, for `tree_put_back`,
+	 *  when the system says. A phone has no Trash: there a document is
+	 *  deleted, a folder never.
 	 */
-	tree_trash_entry: (path: string, root: string) => __TAURI_INVOKE<string | null>("tree_trash_entry", { path, root }),
+	tree_trash_entries: (paths: string[], root: string) => __TAURI_INVOKE<Trashing_Serialize>("tree_trash_entries", { paths, root }),
 	/**
-	 *  What `tree_trash_entry` sent to the Trash (kept at `place`) put back at
+	 *  What `tree_trash_entries` sent to the Trash (kept at `place`) put back at
 	 *  `path`, never over anything there.
 	 */
 	tree_put_back: (place: string, path: string) => __TAURI_INVOKE<null>("tree_put_back", { place, path }),
 	/**
 	 *  Watches `dirs`, the folders open in this window's tree, in place of what
-	 *  it watched before; none stops. False when one couldn't be watched (the
-	 *  system's limit on watches): the tree then reads its folders on focus.
+	 *  it watched before; none stops. `seq` numbers the window's calls, which
+	 *  can arrive out of order: an older one than the last is passed over. False
+	 *  when one couldn't be watched (the system's limit on watches), or the
+	 *  window is gone: the tree then reads its folders on focus.
 	 */
-	tree_watch: (dirs: string[]) => __TAURI_INVOKE<boolean>("tree_watch", { dirs }),
+	tree_watch: (dirs: string[], seq: number | null) => __TAURI_INVOKE<boolean>("tree_watch", { dirs, seq }),
 	/**
 	 *  Where an Obsidian image embed's file is, as an absolute path for the asset
 	 *  protocol; None when it isn't an image or isn't in the vault.
@@ -402,6 +398,17 @@ export type Conventions_Serialize = {
  *  Its TypeScript side is `CopyNaming` in src/platform/bindings/files.ts.
  */
 export type CopyNaming = "own" | "numbered" | { beside: string };
+
+/**
+ *  What a new document or folder made: its path, and the topmost entry
+ *  made for it (the first folder on the way that wasn't there, else the
+ *  entry itself), which an undo takes away. Shape shared with
+ *  `fs.createDocument` in src/platform/ipc-files.ts.
+ */
+export type Created = {
+	path: string,
+	made: string,
+};
 
 export type Daily = Daily_Serialize | Daily_Deserialize;
 
@@ -741,6 +748,33 @@ export type TemplateFormats_Deserialize = {
 export type TemplateFormats_Serialize = {
 	date: string | null,
 	time: string | null,
+};
+
+/**
+ *  What `tree_trash_entries` did: where the Trash keeps each entry that went
+ *  (None where the system doesn't say), and why the next one didn't go.
+ *  Shape shared with `fs.trashEntries` in src/platform/ipc-files.ts.
+ */
+export type Trashing = Trashing_Serialize | Trashing_Deserialize;
+
+/**
+ *  What `tree_trash_entries` did: where the Trash keeps each entry that went
+ *  (None where the system doesn't say), and why the next one didn't go.
+ *  Shape shared with `fs.trashEntries` in src/platform/ipc-files.ts.
+ */
+export type Trashing_Deserialize = {
+	places: (string | null)[],
+	error?: string | null,
+};
+
+/**
+ *  What `tree_trash_entries` did: where the Trash keeps each entry that went
+ *  (None where the system doesn't say), and why the next one didn't go.
+ *  Shape shared with `fs.trashEntries` in src/platform/ipc-files.ts.
+ */
+export type Trashing_Serialize = {
+	places: (string | null)[],
+	error: string | null,
 };
 
 export type UploadedImage = {

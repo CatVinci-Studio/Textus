@@ -6,7 +6,6 @@ import {
   unsavedAtOrUnder,
 } from "../registry/open-documents";
 import {
-  fileUndoStack,
   stampOf,
   undoStep,
   type FileStep,
@@ -59,9 +58,9 @@ function reach(
   const ctx = {
     files,
     unsaved,
-    trash: async (p: string) => {
-      did.push(`trash ${p}`);
-      return `bin:${p}`;
+    trash: async (paths: readonly string[]) => {
+      for (const p of paths) did.push(`trash ${p}`);
+      return { places: paths.map((p) => `bin:${p}`), error: undefined };
     },
     putBack: async (place: string, p: string) =>
       void did.push(`back ${place} ${p}`),
@@ -167,36 +166,6 @@ describe("undoing a drop of files into the tree", () => {
     const before = await stampOf("/n/photos", true, disk(times));
     times["/n/photos/.DS_Store"] = 9;
     expect(await stampOf("/n/photos", true, disk(times))).toBe(before);
-  });
-});
-
-describe("the tree's undo stack", () => {
-  const step = (path: string): FileStep => ({
-    kind: "made",
-    made: [{ path, isDir: false, stamp: "1" }],
-  });
-
-  it("takes the newest first, each once; an older notice's Undo does nothing", () => {
-    const stack = fileUndoStack();
-    const first = step("/n/a.md");
-    const second = step("/n/b.md");
-    stack.push(first);
-    stack.push(second);
-    expect(stack.take(first)).toBeNull();
-    expect(stack.take(second)).toBe(second);
-    expect(stack.take(second)).toBeNull();
-    expect(stack.take()).toBe(first);
-    expect(stack.take()).toBeNull();
-  });
-
-  it("keeps the last fifty, and empties for another folder", () => {
-    const stack = fileUndoStack();
-    for (let i = 0; i < 60; i++) stack.push(step(`/n/${i}.md`));
-    expect(stack.size).toBe(50);
-    const top = stack.take();
-    expect(top?.kind === "made" && top.made[0].path).toBe("/n/59.md");
-    stack.clear();
-    expect(stack.take()).toBeNull();
   });
 });
 
@@ -321,21 +290,5 @@ describe("undoing and redoing the tree's moves, renames and deletes", () => {
     );
     expect(did).toEqual(["move /n/a.md /x/b.md", "back bin:1 /n/b.md"]);
     expect(result.done).toBe(true);
-  });
-
-  it("redoes what was undone until something new is done", () => {
-    const stack = fileUndoStack();
-    const step = (path: string): FileStep => ({
-      kind: "made",
-      made: [{ path, isDir: false, stamp: "1" }],
-    });
-    stack.push(step("/n/a.md"));
-    stack.undone(step("/n/a.md (redo)"));
-    const redo = stack.takeRedo();
-    expect(redo?.kind === "made" && redo.made[0].path).toBe("/n/a.md (redo)");
-    stack.redone(step("/n/a.md (undo)"));
-    stack.undone(step("/n/again"));
-    stack.push(step("/n/new.md"));
-    expect(stack.takeRedo()).toBeNull();
   });
 });

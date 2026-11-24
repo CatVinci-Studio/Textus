@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { absoluteIn, isInside, parentDir } from "../utils/path";
 import { FILE_CREATED_EVENT, FILE_WRITTEN_EVENT } from "../utils/events";
@@ -40,8 +40,12 @@ export function useTreeView(base: string) {
   );
   const [versions, reload] = useFolderCounts();
   const changes = useFolderChanges(base);
-  // Bumped by Collapse All: every folder below the root folds.
-  const [collapsed, collapseAll] = useReducer((n: number) => n + 1, 0);
+  // Collapse All: every folder below the root folds, as `versions` stood.
+  const [collapsed, setCollapsed] = useState<Record<string, number>>({});
+  const collapseAll = useCallback(
+    () => setCollapsed({ ...versions }),
+    [versions],
+  );
   return {
     generation,
     setGeneration,

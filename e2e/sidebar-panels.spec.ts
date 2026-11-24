@@ -649,6 +649,33 @@ test("the sidebar stepping aside and back leaves the rows of tabs in place, not 
   await expect(rows).toHaveCount(before.length);
 });
 
+test("Collapse All holds as a folder opens again, things made in the folders below it before", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/proj/a.md": "# A\n", "/proj/notes/deep/d.md": "# D\n" };
+    w.__devPickFolder = "/proj";
+  });
+  await openApp(page, { settings: { language: "en" } });
+  await emit(page, "menu-open-folder");
+  const row = (name: string) =>
+    page.locator(".tree-row", { hasText: new RegExp(`^${name}$`) });
+  await row("notes").click();
+  await row("deep").click();
+  await page.locator(".tree-toolbar").hover();
+  await page.getByRole("button", { name: "New Folder", exact: true }).click();
+  await page.locator(".tree-draft-input").fill("inner");
+  await page.locator(".tree-draft-input").press("Enter");
+  await expect(row("inner")).toBeVisible();
+
+  await page.getByRole("button", { name: "Sort" }).click();
+  await page.getByRole("menuitem", { name: "Collapse All" }).click();
+  await expect(row("deep")).toHaveCount(0);
+  await row("notes").click();
+  await expect(row("deep")).toHaveAttribute("aria-expanded", "false");
+});
+
 test("New makes things in the folder last clicked, folders on the way too; Collapse All folds every folder", async ({
   page,
 }) => {

@@ -7,7 +7,7 @@ const MORE = "[data-more-rows]";
 
 /** The rows on screen, top to bottom: a folded folder's are not mounted, a
  *  hidden tree (the file tree behind search results) has none. */
-function visibleItems(root: HTMLElement): HTMLElement[] {
+export function visibleItems(root: HTMLElement): HTMLElement[] {
   return Array.from(root.querySelectorAll<HTMLElement>(ITEM)).filter(
     (el) => el.getClientRects().length > 0,
   );

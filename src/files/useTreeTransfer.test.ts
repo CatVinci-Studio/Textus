@@ -27,7 +27,7 @@ vi.mock("./move-links", () => ({
 }));
 vi.mock("./tree-shared", async (real) => ({
   ...(await real<typeof import("./tree-shared")>()),
-  trashFromTree: vi.fn(async () => "bin:1"),
+  trashFromTree: vi.fn(async () => ({ places: ["bin:1"], error: undefined })),
 }));
 
 /** What is on disk: a path's time, or none. */
@@ -61,6 +61,7 @@ function transfer() {
         record: (step) => void recorded.push(step),
         show: () => {},
         rowBeside: () => null,
+        act: { undo: () => false, redo: () => false },
       },
       selection: new TreeSelection(),
     }),
@@ -96,7 +97,7 @@ it("a name taken where it goes asks: Keep Both numbers it, Replace trashes the o
   vi.mocked(showChoice).mockResolvedValueOnce("ok");
   await transfer()(plan, "/n/sub", "move");
   expect(trashFromTree).toHaveBeenCalledWith(
-    "/n/sub/plan.md",
+    ["/n/sub/plan.md"],
     "/n",
     expect.any(Function),
   );
@@ -124,4 +125,30 @@ it("a copy elsewhere keeps its name; a cut pasted where it is stays", async () =
   expect(fs.copyEntry).toHaveBeenCalledWith("/n/plan.md", "/n/other", "own");
   await transfer()(plan, "/n", "move");
   expect(fs.moveEntry).not.toHaveBeenCalled();
+});
+
+it("Replace keeps the old entry as what it was: a folder a file replaced comes back a folder", async () => {
+  vi.mocked(fs.listDir).mockResolvedValueOnce([
+    { name: "plan.md", path: "/n/sub/plan.md", is_dir: true } as never,
+  ]);
+  vi.mocked(showChoice).mockResolvedValueOnce("ok");
+  await transfer()(plan, "/n/sub", "move");
+  const replaced = recorded.at(-1)!;
+  const trashed = replaced.kind === "steps" ? replaced.steps[0] : null;
+  expect(trashed?.kind === "trashed" && trashed.trashed[0]).toEqual({
+    path: "/n/sub/plan.md",
+    isDir: true,
+    place: "bin:1",
+  });
+});
+
+it("a Windows folder's paths are joined with its own separator", async () => {
+  disk = { "C:\\n\\plan.md": 1 };
+  vi.mocked(fs.moveEntry).mockResolvedValueOnce("C:\\n\\sub\\plan.md");
+  await transfer()(
+    [{ path: "C:\\n\\plan.md", isDir: false }],
+    "C:\\n\\sub",
+    "move",
+  );
+  expect(fs.fileMtimeMs).toHaveBeenCalledWith("C:\\n\\sub\\plan.md");
 });

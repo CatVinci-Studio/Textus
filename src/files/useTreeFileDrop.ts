@@ -1,5 +1,4 @@
 import { useEffect, useState, type RefObject } from "react";
-import { fs } from "../platform/ipc";
 import { canDropFilesIntoTree } from "../platform/capabilities";
 import { useSettings } from "../prefs/SettingsContext";
 import { showConfirmCheck, showMessage } from "../engine/controls/app-dialog";
@@ -10,20 +9,15 @@ import {
   startProgress,
 } from "../engine/controls/notices";
 import { fill } from "../i18n/fill";
-import { plural } from "../i18n/plural";
+import { counted } from "../i18n/current";
 import { basename, folderName } from "../utils/path";
-import {
-  announceFileCreated,
-  FILE_WRITTEN_EVENT,
-  sendAppEvent,
-} from "../utils/events";
 import { isFarUrl } from "../platform/far-files";
 import { explainError } from "../utils/error-explain";
 import { useLatest } from "../utils/hooks/useLatest";
 import { dropDirAt } from "./tree-shared";
 import type { DraggedFile } from "../engine/controls/document-drop";
 import { copyQuestion, setTreeFileDrop } from "./tree-file-drop";
-import { stampOf, type FileStep, type MadeEntry } from "./file-undo";
+import { copyIn, type FileStep, type MadeEntry } from "./file-undo";
 
 /**
  * Files and folders from a file manager let go on the tree, with a folder
@@ -65,15 +59,9 @@ export function useTreeFileDrop(
           message: basename(path),
         });
         try {
-          const copy = await fs.copyIntoFolder(path, dir);
-          const stamp = await stampOf(copy, isDir).catch(() => null);
-          if (stamp !== null) made.push({ path: copy, isDir, stamp });
-          reload(dir);
-          // A folder is no file a plugin made; the tree and search hear of
-          // it as of one moved in.
-          if (isDir) sendAppEvent(FILE_WRITTEN_EVENT, copy);
-          else announceFileCreated(copy);
-          if (copied++ === 0) show(copy, isDir);
+          const done = await copyIn(path, isDir, dir, "numbered", reload);
+          if (done.made) made.push(done.made);
+          if (copied++ === 0) show(done.copy, isDir);
         } catch (err) {
           failed.push(
             `${fill(t.treeCopyFailed, { name: basename(path) })}: ${explainError(err, t)}`,
@@ -81,10 +69,9 @@ export function useTreeFileDrop(
         }
       }
       endProgress(progress);
-      const lang = latest.current.settings.language;
       const undo = latest.current.record({ kind: "made", made });
       if (copied)
-        showNotice(fill(plural(t.treeCopied, copied, lang), where), {
+        showNotice(fill(counted(t.treeCopied, copied), where), {
           action: undo,
         });
       if (failed.length)

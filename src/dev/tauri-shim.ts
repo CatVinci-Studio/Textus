@@ -718,6 +718,19 @@ export function installDevTauriShim(): void {
     // No fake folder: the folder of a document opened anyway (dropped in,
     // `__devFiles`) lists as empty, as the native side never answers null.
     if (!files) return cmd === "list_dir" ? Promise.resolve([]) : null;
+    const taken = (p: string) =>
+      Object.keys(files).some((f) => f === p || f.startsWith(`${p}/`));
+    const isFolder = (p: string) =>
+      Object.keys(files).some((f) => f.startsWith(`${p}/`));
+    /** `name`, or the first of it numbered from 2 free in `into`, as the
+     *  backend's ids.rs `numbered` (a file's number before its extension). */
+    const freeName = (into: string, name: string, isDir: boolean) => {
+      const [stem, ext] = stemAndExt(name, isDir);
+      let free = name;
+      for (let n = 2; taken(`${into}/${free}`); n++)
+        free = `${stem} ${n}${ext}`;
+      return free;
+    };
     const path = String(args.path ?? args.root ?? "");
     const times = (w.__devFsTimes ??= {}) as Record<string, number>;
     switch (cmd) {
@@ -783,15 +796,17 @@ export function installDevTauriShim(): void {
           return Promise.reject(ownError("badName"));
         const name = parts.join("/");
         const doc = cmd === "tree_create_document";
-        const target = `${String(args.dir)}/${doc && !/\.(md|markdown)$/i.test(name) ? `${name}.md` : name}`;
-        if (
-          Object.keys(files).some(
-            (f) => f === target || f.startsWith(`${target}/`),
-          )
-        )
-          return Promise.reject(ownError("exists"));
+        const dir = String(args.dir);
+        const target = `${dir}/${doc && !/\.(md|markdown)$/i.test(name) ? `${name}.md` : name}`;
+        if (taken(target)) return Promise.reject(ownError("exists"));
+        // The topmost folder on the way not there yet, else the entry.
+        const made =
+          parts
+            .slice(0, -1)
+            .map((_, i) => `${dir}/${parts.slice(0, i + 1).join("/")}`)
+            .find((folder) => !taken(folder)) ?? target;
         files[doc ? target : `${target}/.keep`] = "";
-        return Promise.resolve(target);
+        return Promise.resolve({ path: target, made });
       }
       case "open_path_in_new_window": {
         // No second window in the browser: what would open is recorded.
@@ -804,7 +819,8 @@ export function installDevTauriShim(): void {
       case "tree_move_entry": {
         const into = String(args.into);
         const named = args.name == null ? null : String(args.name);
-        const target = `${into}/${named ?? path.split("/").pop()}`;
+        const name = named ?? path.split("/").pop()!;
+        const target = `${into}/${name}`;
         if (
           target === path ||
           (!named && into === path.slice(0, path.lastIndexOf("/")))
@@ -812,18 +828,9 @@ export function installDevTauriShim(): void {
           return Promise.reject(ownError("alreadyThere"));
         if (into === path || into.startsWith(`${path}/`))
           return Promise.reject("A folder can't move into itself");
-        const taken = (p: string) =>
-          Object.keys(files).some((f) => f === p || f.startsWith(`${p}/`));
         if (taken(target) && !args.keepBoth)
           return Promise.reject(ownError("exists"));
-        const isDir = Object.keys(files).some((f) => f.startsWith(`${path}/`));
-        const dot = isDir ? -1 : target.lastIndexOf(".");
-        const [stem, ext] =
-          dot > target.lastIndexOf("/") + 1
-            ? [target.slice(0, dot), target.slice(dot)]
-            : [target, ""];
-        let free = target;
-        for (let n = 2; taken(free); n++) free = `${stem} ${n}${ext}`;
+        const free = `${into}/${freeName(into, name, isFolder(path))}`;
         for (const file of Object.keys(files)) {
           if (file !== path && !file.startsWith(`${path}/`)) continue;
           files[free + file.slice(path.length)] = files[file];
@@ -836,53 +843,20 @@ export function installDevTauriShim(): void {
         const into = String(args.into);
         const naming = args.naming as "own" | "numbered" | { beside: string };
         const name = path.slice(path.lastIndexOf("/") + 1);
-        const isDir = Object.keys(files).some((f) => f.startsWith(`${path}/`));
+        const isDir = isFolder(path);
         if (isDir && (into === path || into.startsWith(`${path}/`)))
           return Promise.reject(ownError("copyIntoItself"));
-        const dot = isDir ? -1 : name.lastIndexOf(".");
-        const [stem, ext] =
-          dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ""];
-        const taken = (p: string) =>
-          Object.keys(files).some((f) => f === p || f.startsWith(`${p}/`));
-        const names = (n: number) =>
+        if (naming === "own" && taken(`${into}/${name}`))
+          return Promise.reject(ownError("exists"));
+        const [stem, ext] = stemAndExt(name, isDir);
+        const first =
           typeof naming === "object"
-            ? `${fill(naming.beside, { name: stem })}${n > 1 ? ` ${n}` : ""}${ext}`
-            : n > 1
-              ? `${stem} ${n}${ext}`
-              : name;
-        let n = 1;
-        while (taken(`${into}/${names(n)}`)) {
-          if (naming === "own") return Promise.reject(ownError("exists"));
-          n++;
-        }
-        const target = `${into}/${names(n)}`;
+            ? `${fill(naming.beside, { name: stem })}${ext}`
+            : name;
+        const target = `${into}/${freeName(into, first, isDir)}`;
         for (const file of Object.keys(files))
           if (file === path || file.startsWith(`${path}/`))
             files[target + file.slice(path.length)] = files[file];
-        return Promise.resolve(target);
-      }
-      // From a file manager onto the tree: copied, its name numbered as
-      // the backend's (" 2", a file's before its extension).
-      case "copy_into_folder": {
-        const source = String(args.source);
-        const into = String(args.into);
-        if (into === source || into.startsWith(`${source}/`))
-          return Promise.reject(ownError("copyIntoItself"));
-        const name = source.slice(source.lastIndexOf("/") + 1);
-        const isDir = Object.keys(files).some((f) =>
-          f.startsWith(`${source}/`),
-        );
-        const dot = isDir ? -1 : name.lastIndexOf(".");
-        const [stem, ext] =
-          dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ""];
-        const taken = (p: string) =>
-          Object.keys(files).some((f) => f === p || f.startsWith(`${p}/`));
-        let target = `${into}/${name}`;
-        for (let n = 2; taken(target); n++)
-          target = `${into}/${stem} ${n}${ext}`;
-        for (const file of Object.keys(files))
-          if (file === source || file.startsWith(`${source}/`))
-            files[target + file.slice(source.length)] = files[file];
         return Promise.resolve(target);
       }
       case "tree_rename_entry": {
@@ -907,8 +881,7 @@ export function installDevTauriShim(): void {
         }
         return Promise.resolve(target);
       }
-      case "tree_trash_entry": {
-        if (path === String(args.root)) return Promise.reject("Tree root");
+      case "tree_trash_entries": {
         const w = window as unknown as Record<string, unknown>;
         const trashed = (w.__devTrashed ??= []) as string[];
         // What the Trash holds, by place: its files under their own paths.
@@ -916,15 +889,21 @@ export function installDevTauriShim(): void {
           string,
           Record<string, string>
         >;
-        const place = `trash:${trashed.length}`;
-        bin[place] = {};
-        for (const file of Object.keys(files)) {
-          if (file !== path && !file.startsWith(`${path}/`)) continue;
-          bin[place][file] = files[file];
-          delete files[file];
+        const places: string[] = [];
+        for (const one of args.paths as string[]) {
+          if (one === String(args.root))
+            return Promise.resolve({ places, error: "Tree root" });
+          const place = `trash:${trashed.length}`;
+          bin[place] = {};
+          for (const file of Object.keys(files)) {
+            if (file !== one && !file.startsWith(`${one}/`)) continue;
+            bin[place][file] = files[file];
+            delete files[file];
+          }
+          trashed.push(one);
+          places.push(place);
         }
-        trashed.push(path);
-        return Promise.resolve(place);
+        return Promise.resolve({ places, error: null });
       }
       case "tree_put_back": {
         const bin = ((window as unknown as Record<string, unknown>)
@@ -1898,6 +1877,12 @@ export function installDevTauriShim(): void {
 }
 
 /** A request body's base64 as text, or null when it isn't UTF-8 text. */
+/** A name's stem and extension; a folder's whole name is its stem. */
+function stemAndExt(name: string, isDir: boolean): [string, string] {
+  const dot = isDir ? -1 : name.lastIndexOf(".");
+  return dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ""];
+}
+
 function textOf(base64: string): string | null {
   try {
     return new TextDecoder("utf-8", { fatal: true }).decode(

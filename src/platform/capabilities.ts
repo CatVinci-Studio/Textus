@@ -39,8 +39,16 @@ export const canUseWindows = isDesktopApp;
 /** A menu bar and everything that arrives through it. */
 export const hasAppMenu = isDesktopApp;
 
-/** The menu bar is the OS's own (macOS), so it gets UI-language labels sent. */
-export const hasNativeMenuBar = isDesktopApp && isMacPlatform();
+/** The page runs in a real Tauri window. Read as this module loads, before
+ *  the dev shim (dev/tauri-shim.ts) stands in for Tauri in a plain browser,
+ *  which has no menu bar of its own. */
+const inTauriWindow =
+  typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+
+/** The menu bar is the OS's own (macOS), so it gets UI-language labels sent
+ *  and takes its keys (⌘Z) before the page. */
+export const hasNativeMenuBar =
+  isDesktopApp && isMacPlatform() && inTauriWindow;
 
 /** Tabs dragged out of one window into another, or into a new one, with
  *  the window following the pointer: macOS and Windows give the global

@@ -1,4 +1,4 @@
-import { isInside } from "../utils/path";
+import { isWithin } from "../utils/path";
 
 // The documents open in this window's tabs, by path: each editor sets its
 // own, and what reads a file (a rename's link update, a plugin) reads the
@@ -49,6 +49,6 @@ export function unsavedDocumentAt(path: string): OpenDocumentAccess | null {
  *  has unsaved changes. */
 export function unsavedAtOrUnder(path: string): boolean {
   for (const open of openDocuments.keys())
-    if ((open === path || isInside(open, path)) && unsaved(open)) return true;
+    if (isWithin(open, path) && unsaved(open)) return true;
   return false;
 }

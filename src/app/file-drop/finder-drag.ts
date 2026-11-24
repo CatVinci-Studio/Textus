@@ -14,7 +14,7 @@ interface DragPayload {
   position: Point;
 }
 
-export interface SystemDrag {
+interface SystemDrag {
   over(files: readonly DraggedFile[], at: Point, shift: boolean): void;
   leave(): void;
   drop(files: readonly DraggedFile[], at: Point, shift: boolean): void;

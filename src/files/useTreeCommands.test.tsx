@@ -56,6 +56,10 @@ function setup() {
           did.push(`duplicate ${rows.map((r) => r.path).join(" ")}`),
         pasteInto: (el) => `into ${el.dataset.path}`,
       },
+      undo: {
+        undo: () => did.push("undo") > 0,
+        redo: () => did.push("redo") > 0,
+      },
     });
     const row = (e: DirEntryInfo) => (
       <div key={e.path} role="treeitem" tabIndex={-1} data-path={e.path}>

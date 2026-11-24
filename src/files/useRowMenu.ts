@@ -68,9 +68,7 @@ export function useRowMenu(input: {
     treeRef: input.treeRef,
     transfer: input.transfer,
     rowsAt: (el) =>
-      selection.groupOf(el.dataset.path!) ?? [
-        { path: el.dataset.path!, isDir: el.hasAttribute("aria-expanded") },
-      ],
+      selection.rowsFor(el.dataset.path!, el.hasAttribute("aria-expanded")),
   });
   const onCommandKey = useTreeCommands({
     treeRef: input.treeRef,
@@ -79,6 +77,7 @@ export function useRowMenu(input: {
     open: (path) => onFileSelect(path),
     trash: (rows) => void askTrash(rows),
     clip,
+    undo: input.fileUndo.act,
   });
 
   const openGroupMenu = useCallback(

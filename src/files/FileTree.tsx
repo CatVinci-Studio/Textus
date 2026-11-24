@@ -11,7 +11,7 @@ import {
 } from "../engine/controls/icons";
 
 import { useSettings } from "../prefs/SettingsContext";
-import { fs } from "../platform/ipc";
+import { exists } from "./file-undo";
 import { isFarUrl } from "../platform/far-files";
 import { folderName, parentDir } from "../utils/path";
 import { canOpenFolder, isMobileApp } from "../platform/capabilities";
@@ -60,6 +60,14 @@ interface FileTreeProps {
   onEntryMoved: (from: string, to: string) => void;
 }
 
+/** A value that changes whenever a folder of the tree is read again. */
+const rereadOf = (view: {
+  versions: object;
+  stale: object;
+  refreshed: number;
+}) =>
+  `${Object.values(view.versions).join()}|${Object.values(view.stale).join()}|${view.refreshed}`;
+
 export function FileTree({
   root,
   onRootChange,
@@ -93,6 +101,7 @@ export function FileTree({
     onFileSelect: select,
     onEntryMoved,
     selection,
+    reread: rereadOf(view),
   });
   const { fileUndo, draft, setDraft, finishDraft } = edits;
 
@@ -146,10 +155,7 @@ export function FileTree({
   // at the root once that folder is gone (renamed, moved, trashed).
   const newEntry = async (kind: "document" | "folder") => {
     const dir = selection.newEntryDir(root, activePath);
-    const there =
-      dir === root ||
-      isFarUrl(dir) ||
-      (await fs.fileMtimeMs(dir).catch(() => null)) !== null;
+    const there = dir === root || isFarUrl(dir) || (await exists(dir));
     setDraft({ dir: there ? dir : root, kind });
   };
 

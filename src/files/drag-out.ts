@@ -5,8 +5,18 @@ import { scaledPx } from "../engine/tokens/chrome-scale";
  *  it: a push past the edge to scroll, or an overshoot, stays in the tree. */
 const LEAVE_MARGIN = 24;
 
+/** How long the pointer stays past the window's edge before the rows
+ *  leave it: a push at the edge to scroll that overshoots comes straight
+ *  back, and stays the tree's drag. */
+export const LEAVE_AFTER_MS = 300;
+
 /** Whether the system's drag is carrying rows out of this window. */
 let goingOut = false;
+
+// A press in the page means no system drag is running, even one whose end
+// was never heard.
+if (typeof window !== "undefined")
+  window.addEventListener("pointerdown", () => (goingOut = false), true);
 
 /** Whether rows of this window are out with the system's drag now: one
  *  coming back over the window is the tree's own, not a file manager's.

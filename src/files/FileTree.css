@@ -99,9 +99,17 @@
 }
 
 /* Shown by the keyboard or a reveal: below the folders' rows that stay
-   above it (at most TreeNodes' STICKY_LEVELS of them). */
+   above it (at most --tree-sticky-levels, TreeNodes' STICKY_LEVELS). */
 :root:not([data-window-chrome="mobile"]) .file-tree .tree-row {
-  scroll-margin-top: calc(min(var(--depth, 1) - 1, 5) * var(--tree-row-h));
+  scroll-margin-top: calc(
+    min(var(--depth, 1) - 1, var(--tree-sticky-levels)) * var(--tree-row-h)
+  );
+}
+
+/* A folder's row being renamed stays over the other rows that stay, so
+   what its name field says below it shows. */
+:root:not([data-window-chrome="mobile"]) .tree-head-sticky:focus-within {
+  z-index: 10;
 }
 
 /* In a folder lit for a drop, its rows that stay are lit too, with the
@@ -356,7 +364,8 @@ body.tree-drag-copy .tree-drag-ghost::before {
   top: calc(100% + 2px);
   left: 0;
   right: 0;
-  z-index: 1;
+  /* Over the folders' rows that stay at the top (z-index up to 9). */
+  z-index: 11;
   padding: var(--space-1) var(--space-2);
   border: 1px solid var(--ui-danger);
   border-radius: var(--shape-xs);

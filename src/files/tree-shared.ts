@@ -7,6 +7,7 @@ import {
 } from "react";
 import type { SearchScope } from "./file-search";
 import type { OpenFolders } from "./useDiskWatch";
+import type { Trashing } from "./file-undo";
 import type { Strings } from "../i18n/strings";
 import { isInside, parentDir } from "../utils/path";
 import { explainError } from "../utils/error-explain";
@@ -40,8 +41,10 @@ export interface TreeShared {
   refreshed: number;
   /** Where each open folder says so, for the disk watch to follow. */
   openFolders: OpenFolders;
-  /** Bumped by Collapse All: every folder below the root folds. */
-  collapsed: number;
+  /** A new one at each Collapse All, every folder below the root folding:
+   *  the folders' `versions` then, below which a folder drawn later
+   *  stays folded. */
+  collapsed: Readonly<Record<string, number>>;
   dropInto: string | null;
   /** A right-click (a computer's, or an iPad's trackpad). */
   onRowMenu:
@@ -134,19 +137,22 @@ export function dropDirAt(
  *  deleted for good. */
 export const trashable = (path: string) => canTrashFiles && !farEntries(path);
 
-/** `path` to the Trash from the tree: its folder read again, its open tabs
- *  let go (useDocumentActions), plugins told. Returns where the Trash keeps
- *  it, when known. */
+/** `paths` to the Trash from the tree, in turn up to one that fails: their
+ *  folders read again, their open tabs let go (useDocumentActions),
+ *  plugins told. */
 export async function trashFromTree(
-  path: string,
+  paths: readonly string[],
   root: string,
   reload: (...dirs: string[]) => void,
-): Promise<string | null> {
-  const place = await fs.trashEntry(path, root);
-  reload(parentDir(path) ?? root);
-  sendAppEvent(ENTRY_TRASHED_EVENT, path);
-  emitPluginEvent("fileDelete", { path });
-  return place;
+): Promise<Trashing> {
+  const done = await fs.trashEntries(paths, root);
+  const went = paths.slice(0, done.places.length);
+  if (went.length) reload(...went.map((path) => parentDir(path) ?? root));
+  for (const path of went) {
+    sendAppEvent(ENTRY_TRASHED_EVENT, path);
+    emitPluginEvent("fileDelete", { path });
+  }
+  return done;
 }
 
 /** The backend's refusal in the user's words. */

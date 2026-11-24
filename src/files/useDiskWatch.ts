@@ -35,6 +35,10 @@ interface DirsChanged {
   all: boolean;
 }
 
+/** The watch's calls, numbered: growing across the page loading again, as
+ *  the backend passes over one older than the last it had. */
+let watchCalls = Date.now();
+
 /** Open folders gathered this long before the watch is told. */
 const SETTLE_MS = 50;
 
@@ -58,7 +62,7 @@ export function useDiskWatch(
       const dirs = open.list();
       const near = dirs.filter((dir) => !isFarUrl(dir));
       const ask = ++asked;
-      fs.watchFolders(near).then(
+      fs.watchFolders(near, ++watchCalls).then(
         (ok) => {
           if (ask === asked) live.current = ok && near.length === dirs.length;
         },
@@ -89,7 +93,7 @@ export function useDiskWatch(
       stopEvents();
       window.removeEventListener("focus", onFocus);
       live.current = false;
-      void fs.watchFolders([]).catch(() => {});
+      void fs.watchFolders([], ++watchCalls).catch(() => {});
     };
   }, [open, refresh]);
   return count;

@@ -1,4 +1,10 @@
 import { fs } from "../platform/ipc";
+import type { CopyNaming } from "../platform/bindings/files";
+import {
+  announceFileCreated,
+  FILE_WRITTEN_EVENT,
+  sendAppEvent,
+} from "../utils/events";
 import { farEntries } from "../platform/far-files";
 import { unsavedAtOrUnder } from "../registry/open-documents";
 import type { TextEdit } from "./move-links";
@@ -47,7 +53,7 @@ export type UndoRefusal = "changed" | "gone" | "taken";
 
 /** Taken back, with the step that does it again (null when it can't be);
  *  or refused, naming the entries in the way. */
-export type UndoOutcome =
+type UndoOutcome =
   | { done: true; redo: FileStep | null; show: string | null }
   | { done: false; reason: UndoRefusal; paths: string[] };
 
@@ -55,9 +61,9 @@ export type UndoOutcome =
 export type StampFiles = Pick<typeof fs, "fileMtimeMs" | "listDir">;
 
 /** What undoing reaches: the disk, the Trash, the open tabs. */
-export interface UndoContext {
-  /** To the Trash; where it keeps it, when known. */
-  trash: (path: string) => Promise<string | null>;
+interface UndoContext {
+  /** To the Trash, in order, up to one that fails. */
+  trash: TrashPaths;
   putBack: (place: string, path: string) => Promise<void>;
   /** A move or a rename to exactly `to`, open tabs following. */
   move: (from: string, to: string) => Promise<void>;
@@ -101,8 +107,77 @@ export async function stampOf(
   return lines.sort().join("\n");
 }
 
-const exists = async (path: string, files: StampFiles) =>
+/** Whether something is at `path`. */
+export const exists = async (path: string, files: StampFiles = fs) =>
   (await files.fileMtimeMs(path).catch(() => null)) !== null;
+
+/** What sending paths to the Trash did: where the Trash keeps each that
+ *  went (null when it doesn't say), and why the next one didn't go. */
+export interface Trashing {
+  places: (string | null)[];
+  error: unknown;
+}
+
+/** Paths to the Trash, one after another, up to one that fails. */
+type TrashPaths = (paths: readonly string[]) => Promise<Trashing>;
+
+/** `rows` to the Trash with `trash`: the entries that went, whether the
+ *  Trash said where each is kept (else none can come back), and the one
+ *  that didn't go and why, stopping the rest. */
+export async function trashEach(
+  rows: readonly { path: string; isDir: boolean }[],
+  trash: TrashPaths,
+): Promise<{
+  trashed: TrashedEntry[];
+  known: boolean;
+  failed: { path: string; error: unknown } | null;
+}> {
+  const { places, error } = await trash(rows.map((row) => row.path));
+  const trashed: TrashedEntry[] = [];
+  places.forEach((place, i) => {
+    const { path, isDir } = rows[i]!;
+    if (place !== null) trashed.push({ path, isDir, place });
+  });
+  const stopped = places.length < rows.length ? rows[places.length]! : null;
+  return {
+    trashed,
+    known: !places.includes(null),
+    failed: stopped && { path: stopped.path, error },
+  };
+}
+
+/** `path` copied into the folder `into`, named as `naming` says: the
+ *  folder read again, the tree and search told (a folder as one moved in,
+ *  a file as one made), and the copy as a made entry to undo, when its
+ *  stamp could be read. */
+export async function copyIn(
+  path: string,
+  isDir: boolean,
+  into: string,
+  naming: CopyNaming,
+  reload: (...dirs: string[]) => void,
+): Promise<{ copy: string; made: MadeEntry | null }> {
+  const copy = await fs.copyEntry(path, into, naming);
+  reload(into);
+  if (isDir) sendAppEvent(FILE_WRITTEN_EVENT, copy);
+  else announceFileCreated(copy);
+  const stamp = await stampOf(copy, isDir).catch(() => null);
+  return { copy, made: stamp === null ? null : { path: copy, isDir, stamp } };
+}
+
+/** A move or rename of `from` to `to` as a step, its documents' links
+ *  following (`edits`, settled later; none when they fail). */
+export function movedStep(
+  from: string,
+  to: string,
+  edits: Promise<readonly TextEdit[]>,
+): FileStep {
+  return {
+    kind: "moved",
+    moved: [{ from, to }],
+    edits: edits.catch(() => []),
+  };
+}
 
 /** The paths of `paths` for which `test` holds. */
 async function where(
@@ -131,14 +206,9 @@ async function trashUnchanged(
       reason: "changed",
       paths: changed.map((m) => m.path),
     };
-  const trashed: TrashedEntry[] = [];
-  let known = true;
-  for (const [i, { path, isDir }] of made.entries()) {
-    if (now[i] === null) continue;
-    const place = await ctx.trash(path);
-    if (place === null) known = false;
-    else trashed.push({ path, isDir, place });
-  }
+  const there = made.filter((_, i) => now[i] !== null);
+  const { trashed, known, failed } = await trashEach(there, ctx.trash);
+  if (failed) throw failed.error;
   const redo = known && trashed.length ? { kind: "trashed", trashed } : null;
   return { done: true, redo: redo as FileStep | null, show: null };
 }
@@ -257,52 +327,4 @@ export function undoStep(
     unsaved: unsavedAtOrUnder,
     ...ctx,
   });
-}
-
-/** How many steps the tree keeps to take back. */
-const KEPT_STEPS = 50;
-
-/** The tree's file operations to take back, newest last, and those taken
- *  back to do again. A step is taken off once, so a notice's Undo and the
- *  key can't both run it. */
-export function fileUndoStack() {
-  const steps: FileStep[] = [];
-  const undone: FileStep[] = [];
-  const keep = (list: FileStep[], step: FileStep) => {
-    list.push(step);
-    if (list.length > KEPT_STEPS) list.shift();
-  };
-  return {
-    /** A new operation: what was undone before can't be done again. */
-    push(step: FileStep) {
-      keep(steps, step);
-      undone.length = 0;
-    },
-    clear() {
-      steps.length = 0;
-      undone.length = 0;
-    },
-    get size() {
-      return steps.length;
-    },
-    /** The newest step, taken off; with `which`, only if it is the newest
-     *  (an older notice's Undo does nothing). */
-    take(which?: FileStep): FileStep | null {
-      const top = steps[steps.length - 1];
-      if (!top || (which && which !== top)) return null;
-      return steps.pop()!;
-    },
-    /** A step was taken back: `redo` does it again. */
-    undone(redo: FileStep) {
-      keep(undone, redo);
-    },
-    /** The newest step taken back, to do again. */
-    takeRedo(): FileStep | null {
-      return undone.pop() ?? null;
-    },
-    /** A step done again: `undo` takes it back once more. */
-    redone(undo: FileStep) {
-      keep(steps, undo);
-    },
-  };
 }

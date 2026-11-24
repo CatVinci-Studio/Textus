@@ -1,3 +1,7 @@
+import { visibleItems } from "../engine/controls/useTreeKeys";
+import { isWithin } from "../utils/path";
+import { rowAt } from "./tree-selection";
+
 /** How long a row just made has to be drawn before it is given up: its
  *  folder reads its entries again first. */
 const WAIT_MS = 2000;
@@ -11,10 +15,7 @@ export function scrollRowIntoView(
   focus = false,
 ) {
   if (!tree) return;
-  const find = () =>
-    [...tree.querySelectorAll<HTMLElement>("[data-path]")].find(
-      (el) => el.dataset.path === path,
-    );
+  const find = () => rowAt(tree, path);
   const show = (row: HTMLElement) => {
     row.scrollIntoView({ block: "nearest" });
     if (focus) row.focus({ preventScroll: true });
@@ -60,11 +61,8 @@ export function rowBeside(
   paths: readonly string[],
 ): string | null {
   if (!tree) return null;
-  const going = (p: string) =>
-    paths.some((gone) => p === gone || p.startsWith(`${gone}/`));
-  const rows = [
-    ...tree.querySelectorAll<HTMLElement>('[role="treeitem"][data-path]'),
-  ].filter((el) => el.getClientRects().length > 0);
+  const going = (p: string) => paths.some((gone) => isWithin(p, gone));
+  const rows = visibleItems(tree);
   const first = rows.findIndex((el) => going(el.dataset.path!));
   if (first === -1) return null;
   const after = rows.slice(first).find((el) => !going(el.dataset.path!));

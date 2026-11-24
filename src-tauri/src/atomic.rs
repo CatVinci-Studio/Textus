@@ -8,6 +8,23 @@ use std::sync::atomic::{AtomicU32, Ordering};
 
 static COUNTER: AtomicU32 = AtomicU32::new(0);
 
+/// Whether `path` is the temp file a write renames into place (`tmp_path`).
+#[cfg(desktop)]
+pub(crate) fn is_temp_name(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|n| n.to_str())
+        .is_some_and(|n| n.starts_with('.') && n.ends_with(".tmp"))
+}
+
+/// Where `path` really is, links followed; for one not there yet, its
+/// folder's real path with its name.
+pub(crate) fn real_path(path: &Path) -> Option<PathBuf> {
+    std::fs::canonicalize(path).ok().or_else(|| {
+        let dir = std::fs::canonicalize(path.parent()?).ok()?;
+        Some(dir.join(path.file_name()?))
+    })
+}
+
 fn tmp_path(target: &Path) -> PathBuf {
     let name = target
         .file_name()

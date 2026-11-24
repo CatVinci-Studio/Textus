@@ -33,7 +33,12 @@ const labelsFor = (path: string, isDir: boolean) => {
       setDraft: noop,
       onEnter: null,
       selection: new TreeSelection(),
-      fileUndo: { record: () => undefined, show: noop, rowBeside: () => null },
+      fileUndo: {
+        record: () => undefined,
+        show: noop,
+        rowBeside: () => null,
+        act: { undo: () => false, redo: () => false },
+      },
       rename: (p: string) => void renamed.push(p),
       treeRef: { current: null },
       transfer: async () => false,

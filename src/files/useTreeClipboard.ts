@@ -3,22 +3,12 @@ import { copyPath } from "../clipboard/copy-path";
 import { useLatest } from "../utils/hooks/useLatest";
 import { parentDir } from "../utils/path";
 import { fileClipboard, pathsText } from "./file-clipboard";
-import type { TreeRow } from "./tree-selection";
+import { rowOfEvent, type TreeRow } from "./tree-selection";
 import type { TreeTransfer } from "./useTreeTransfer";
-
-const rowIn = (tree: HTMLElement | null) => {
-  const el = document.activeElement as HTMLElement | null;
-  return tree &&
-    el?.getAttribute("role") === "treeitem" &&
-    el.dataset.path &&
-    tree.contains(el)
-    ? el
-    : null;
-};
 
 /** The rows a command on the row `el` acts on: the picked ones if it is
  *  one of them, else itself. */
-export type RowsAt = (el: HTMLElement) => readonly TreeRow[];
+type RowsAt = (el: HTMLElement) => readonly TreeRow[];
 
 /**
  * Cut, Copy, Paste and Duplicate for the tree's rows (file-clipboard.ts
@@ -67,7 +57,10 @@ export function useTreeClipboard(input: {
 
   useEffect(() => {
     const claim = (e: ClipboardEvent) => {
-      const row = rowIn(latest.current.treeRef.current);
+      const row = rowOfEvent(
+        { target: document.activeElement },
+        latest.current.treeRef.current,
+      );
       if (!row) return;
       e.preventDefault();
       if (e.type.startsWith("before")) return;

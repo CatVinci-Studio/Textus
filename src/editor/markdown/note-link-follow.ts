@@ -36,8 +36,8 @@ async function createNote(path: string): Promise<boolean> {
   for (const folder of missing)
     await fs.createFolder(dirname(folder), basename(folder)).catch(() => {});
   return fs.createDocument(dir, basename(path)).then(
-    (made) => {
-      announceFileCreated(made);
+    ({ path }) => {
+      announceFileCreated(path);
       return true;
     },
     () => false,

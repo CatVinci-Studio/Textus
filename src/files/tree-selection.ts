@@ -11,7 +11,7 @@ import { useLatestCallback } from "../utils/hooks/useLatest";
 import { createSubscribers } from "../utils/store";
 import { drawHeldRows, useTreeKeys } from "../engine/controls/useTreeKeys";
 import { isMacPlatform } from "../platform/os";
-import { isInside, isWithin, parentDir } from "../utils/path";
+import { isInside, isWithin, movedTo, parentDir } from "../utils/path";
 
 /** What a click with a modifier does to the tree's selection. */
 type PickHow = "toggle" | "range";
@@ -144,6 +144,36 @@ export class TreeSelection {
     return this.rows.length > 1 && this.has(path) ? this.rows : null;
   }
 
+  /** What a command on the row of `path` acts on: the picked rows if it
+   *  is one of them, else the row itself. */
+  rowsFor(path: string, isDir: boolean): readonly TreeRow[] {
+    return this.groupOf(path) ?? [{ path, isDir }];
+  }
+
+  /** `from` moved to `to`: the rows at or under it follow. */
+  moved(from: string, to: string): void {
+    const follow = (row: TreeRow) => {
+      const path = movedTo(row.path, from, to);
+      return path === null ? row : { ...row, path };
+    };
+    if (this.anchor) this.anchor = follow(this.anchor);
+    this.set(this.rows.map(follow));
+  }
+
+  /** Only the rows for which `kept` holds stay. */
+  keepOnly(kept: (path: string) => boolean): void {
+    if (this.anchor && !kept(this.anchor.path)) this.anchor = null;
+    this.set(this.rows.filter((row) => kept(row.path)));
+  }
+
+  /** Every path it holds, the anchor's too. */
+  get paths(): string[] {
+    return [
+      ...this.rows.map((row) => row.path),
+      this.anchor?.path ?? "",
+    ].filter(Boolean);
+  }
+
   private set(next: readonly TreeRow[]): void {
     if (
       next.length === this.rows.length &&
@@ -182,8 +212,8 @@ export function useTreeSelection(root: string, activePath: string | null) {
     if (how === "range" && tree)
       drawHeldRows(
         tree,
-        rowOf(tree, selection.anchorPath ?? activePath),
-        rowOf(tree, path),
+        rowAt(tree, selection.anchorPath ?? activePath),
+        rowAt(tree, path),
       );
     selection.pick(how, path, shownRows(tree), activePath);
     return true;
@@ -212,13 +242,28 @@ export function useRowPicked(path: string): boolean {
 const noSubscribe = () => () => {};
 
 /** The row of `path` in the tree `tree`, if drawn. */
-function rowOf(tree: HTMLElement, path: string | null): HTMLElement | null {
-  if (path === null) return null;
+export function rowAt(
+  tree: HTMLElement | null,
+  path: string | null,
+): HTMLElement | null {
+  if (!tree || path === null) return null;
   return (
     [...tree.querySelectorAll<HTMLElement>("[role=treeitem][data-path]")].find(
       (el) => el.dataset.path === path,
     ) ?? null
   );
+}
+
+/** The tree row an event is on (its target, the row with the keyboard),
+ *  inside `tree` when given; null for anything else. */
+export function rowOfEvent(
+  e: { target: EventTarget | null },
+  tree?: HTMLElement | null,
+): HTMLElement | null {
+  const el = e.target as HTMLElement | null;
+  if (el?.getAttribute?.("role") !== "treeitem" || !el.dataset.path)
+    return null;
+  return tree === undefined || tree?.contains(el) ? el : null;
 }
 
 /** The tree's rows in the order shown: its folders' rows are drawn as they

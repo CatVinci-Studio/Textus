@@ -8,7 +8,7 @@ use tokio::fs;
 
 /// A new document's file name: what was typed, with `.md` added unless it
 /// already names a Markdown file.
-fn document_name(name: &str) -> String {
+pub(super) fn document_name(name: &str) -> String {
     if crate::extract::is_markdown(Path::new(name)) {
         name.to_string()
     } else {
@@ -29,7 +29,7 @@ fn names_a_type(name: &str) -> bool {
         })
 }
 
-async fn existing_dir(dir: &str) -> Result<PathBuf, String> {
+pub(super) async fn existing_dir(dir: &str) -> Result<PathBuf, String> {
     let dir = PathBuf::from(dir);
     if !fs::metadata(&dir)
         .await
@@ -39,62 +39,6 @@ async fn existing_dir(dir: &str) -> Result<PathBuf, String> {
         return Err(crate::errors::error("notFolder"));
     }
     Ok(dir)
-}
-
-/// A typed name that may name folders on the way (`2026/March/plan`):
-/// those folders and the last name, each one name that can't walk out.
-fn typed_path(name: &str) -> Result<(Vec<&str>, &str), String> {
-    let mut parts = name
-        .trim()
-        .split(|c| c == '/' || (cfg!(windows) && c == '\\'))
-        .map(crate::ids::typed_name)
-        .collect::<Result<Vec<_>, _>>()?;
-    let last = parts.pop().ok_or_else(|| crate::errors::error("badName"))?;
-    Ok((parts, last))
-}
-
-/// `dir`, then the folders on the way, made where missing.
-async fn way_down(dir: &str, folders: &[&str]) -> Result<PathBuf, String> {
-    let dir = folders
-        .iter()
-        .fold(existing_dir(dir).await?, |d, f| d.join(f));
-    fs::create_dir_all(&dir).await.map_err(|e| e.to_string())?;
-    Ok(dir)
-}
-
-/// Creates an empty Markdown document in `dir`, and the folders on the way
-/// a name with slashes gives. Returns its path.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn tree_create_document(dir: String, name: String) -> Result<String, String> {
-    let (folders, name) = typed_path(&name)?;
-    let dir = way_down(&dir, &folders).await?;
-    let path = dir.join(document_name(name));
-    fs::OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(&path)
-        .await
-        .map_err(|e| match e.kind() {
-            std::io::ErrorKind::AlreadyExists => crate::errors::error("exists"),
-            _ => e.to_string(),
-        })?;
-    Ok(path.to_string_lossy().to_string())
-}
-
-/// Creates a folder in `dir`, and the folders on the way a name with
-/// slashes gives. Returns its path.
-#[tauri::command]
-#[cfg_attr(test, specta::specta)]
-pub async fn tree_create_folder(dir: String, name: String) -> Result<String, String> {
-    let (folders, name) = typed_path(&name)?;
-    let dir = way_down(&dir, &folders).await?;
-    let path = dir.join(name);
-    fs::create_dir(&path).await.map_err(|e| match e.kind() {
-        std::io::ErrorKind::AlreadyExists => crate::errors::error("exists"),
-        _ => e.to_string(),
-    })?;
-    Ok(path.to_string_lossy().to_string())
 }
 
 /// Where `path` lands when moved into `into` (named `name`, else its own
@@ -197,11 +141,7 @@ async fn move_entry(
         if !keep_both {
             return Err(crate::errors::error("exists"));
         }
-        let style = if from.is_dir() {
-            crate::ids::Numbered::SpaceWhole
-        } else {
-            crate::ids::Numbered::Space
-        };
+        let style = crate::ids::Numbered::for_entry(from.is_dir());
         let taken = to.file_name().ok_or("No file name")?.to_string_lossy();
         to = into.join(crate::ids::free_name(&into, &taken, style));
     }
@@ -278,43 +218,77 @@ async fn rename_entry(path: String, name: String) -> Result<String, String> {
     Ok(to.to_string_lossy().to_string())
 }
 
-/// Moves a file or folder to the system's Trash (Recycle Bin), never
-/// deleting it, and refuses the folder the tree is showing. Returns where
-/// the Trash keeps it, for `tree_put_back`, when the system says.
+/// What `tree_trash_entries` did: where the Trash keeps each entry that went
+/// (None where the system doesn't say), and why the next one didn't go.
+/// Shape shared with `fs.trashEntries` in src/platform/ipc-files.ts.
+#[derive(serde::Serialize, Debug, Default)]
+#[cfg_attr(test, derive(specta::Type))]
+pub struct Trashing {
+    places: Vec<Option<String>>,
+    error: Option<String>,
+}
+
+/// Moves files and folders to the system's Trash (Recycle Bin) in turn, up
+/// to one that can't go, never deleting them, and refuses the folder the
+/// tree is showing. Says where the Trash keeps each, for `tree_put_back`,
+/// when the system says. A phone has no Trash: there a document is
+/// deleted, a folder never.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub async fn tree_trash_entry(
+pub async fn tree_trash_entries(
     window: tauri::WebviewWindow,
-    path: String,
+    paths: Vec<String>,
     root: String,
-) -> Result<Option<String>, String> {
-    let place = trash_entry(path.clone(), root).await?;
-    tell_windows(
-        &window,
-        EntriesChanged {
-            trashed: Some(path),
-            ..Default::default()
-        },
-    );
-    Ok(place)
+) -> Result<Trashing, String> {
+    let targets = paths.iter().map(|p| itself(p)).collect::<Vec<_>>();
+    let trashing = tauri::async_runtime::spawn_blocking(move || trash_entries(targets, &root))
+        .await
+        .map_err(|e| e.to_string())?;
+    for path in &paths[..trashing.places.len()] {
+        tell_windows(
+            &window,
+            EntriesChanged {
+                trashed: Some(path.clone()),
+                ..Default::default()
+            },
+        );
+    }
+    Ok(trashing)
 }
 
-async fn trash_entry(path: String, root: String) -> Result<Option<String>, String> {
-    let target = itself(&path)?;
-    tauri::async_runtime::spawn_blocking(move || {
-        #[cfg(desktop)]
-        {
-            crate::atomic::may_trash(&target, Some(Path::new(&root)))?;
-            super::trash_place::trash_keeping_place(&target)
+/// `tree_trash_entries` off the async runtime: `targets` as `itself` found
+/// them, up to the first that wasn't there.
+fn trash_entries(targets: Vec<Result<PathBuf, String>>, root: &str) -> Trashing {
+    let found = targets.iter().take_while(|t| t.is_ok()).count();
+    let missing = targets.get(found).and_then(|t| t.clone().err());
+    let targets: Vec<PathBuf> = targets.into_iter().take(found).flatten().collect();
+    let root = Path::new(root);
+    #[cfg(desktop)]
+    let (places, error) = super::trash_place::trash_keeping_places(&targets, |target| {
+        crate::atomic::may_trash(target, Some(root))
+    });
+    #[cfg(mobile)]
+    let (places, error) = {
+        let mut places = Vec::new();
+        let mut error = None;
+        for target in &targets {
+            match delete_document(target, root) {
+                Ok(()) => places.push(None),
+                Err(e) => {
+                    error = Some(e);
+                    break;
+                }
+            }
         }
-        #[cfg(mobile)]
-        delete_document(&target, Path::new(&root)).map(|()| None)
-    })
-    .await
-    .map_err(|e| e.to_string())?
+        (places, error)
+    };
+    Trashing {
+        error: error.or(missing),
+        places,
+    }
 }
 
-/// What `tree_trash_entry` sent to the Trash (kept at `place`) put back at
+/// What `tree_trash_entries` sent to the Trash (kept at `place`) put back at
 /// `path`, never over anything there.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
@@ -355,6 +329,7 @@ fn delete_document(target: &Path, root: &Path) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
+    use super::super::tree_create::{tree_create_document, tree_create_folder};
     use super::*;
 
     #[test]
@@ -404,43 +379,21 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_name_with_slashes_makes_the_folders_on_the_way() {
-        let dir = tempfile::tempdir().unwrap();
-        let root = dir.path().to_string_lossy().to_string();
-        let doc = tree_create_document(root.clone(), "2026/March/plan".into())
-            .await
-            .unwrap();
-        assert_eq!(Path::new(&doc), dir.path().join("2026/March/plan.md"));
-        // An existing folder on the way is used, not refused.
-        let sub = tree_create_folder(root.clone(), "2026/April".into())
-            .await
-            .unwrap();
-        assert!(Path::new(&sub).is_dir());
-        for bad in ["../out", "a/../../out", "/abs", "a//b", "a/", " / "] {
-            assert!(
-                tree_create_document(root.clone(), bad.into())
-                    .await
-                    .is_err(),
-                "{bad}"
-            );
-        }
-        assert!(!dir.path().parent().unwrap().join("out.md").exists());
-    }
-
-    #[tokio::test]
     async fn create_and_move_refuse_to_overwrite() {
         let dir = tempfile::tempdir().unwrap();
         let root = dir.path().to_string_lossy().to_string();
         let doc = tree_create_document(root.clone(), "Notes".into())
             .await
-            .unwrap();
+            .unwrap()
+            .path;
         assert!(doc.ends_with("Notes.md"));
         assert!(tree_create_document(root.clone(), "Notes".into())
             .await
             .is_err());
         let sub = tree_create_folder(root.clone(), "Sub".into())
             .await
-            .unwrap();
+            .unwrap()
+            .path;
         assert!(tree_create_folder(root.clone(), "Sub".into())
             .await
             .is_err());
@@ -452,7 +405,8 @@ mod tests {
         // A second Notes.md at the top can't be moved onto the first.
         let again = tree_create_document(root.clone(), "Notes".into())
             .await
-            .unwrap();
+            .unwrap()
+            .path;
         assert!(move_entry(again.clone(), sub.clone(), None, false)
             .await
             .is_err());
@@ -468,7 +422,8 @@ mod tests {
         let root = dir.path().to_string_lossy().to_string();
         let doc = tree_create_document(root.clone(), "Draft".into())
             .await
-            .unwrap();
+            .unwrap()
+            .path;
         let renamed = rename_entry(doc, "Chapter 1".into()).await.unwrap();
         assert!(renamed.ends_with("Chapter 1.md"));
         // A dot in a date or a version isn't a file type.
@@ -477,7 +432,8 @@ mod tests {
         rename_entry(dated, "Chapter 1".into()).await.unwrap();
         let other = tree_create_document(root.clone(), "Other".into())
             .await
-            .unwrap();
+            .unwrap()
+            .path;
         assert!(rename_entry(other.clone(), "Chapter 1".into())
             .await
             .is_err());
@@ -486,9 +442,12 @@ mod tests {
         assert!(as_text.ends_with("notes.txt"));
         let sub = tree_create_folder(root.clone(), "Sub".into())
             .await
-            .unwrap();
+            .unwrap()
+            .path;
         let folder = rename_entry(sub, "Part One".into()).await.unwrap();
         assert!(folder.ends_with("Part One"));
-        assert!(trash_entry(root.clone(), root).await.is_err());
+        // The folder the tree shows never goes.
+        let shown = trash_entries(vec![itself(&root)], &root);
+        assert!(shown.places.is_empty() && shown.error.is_some());
     }
 }

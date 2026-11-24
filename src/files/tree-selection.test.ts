@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { fileClipboard } from "./file-clipboard";
 import { outermost, TreeSelection } from "./tree-selection";
 
 const rows = ["/p/a", "/p/b", "/p/c", "/p/d"].map((path) => ({
@@ -79,5 +80,33 @@ describe("picking with the keyboard", () => {
     const s = new TreeSelection();
     s.selectAll(rows);
     expect(picked(s)).toEqual(rows.map((row) => row.path));
+  });
+});
+
+describe("the paths the tree holds after a move or a delete", () => {
+  it("follow a move and let go of what is gone, picked and cut alike", () => {
+    const selection = new TreeSelection();
+    const held = [
+      { path: "/n/a", isDir: true },
+      { path: "/n/a/x.md", isDir: false },
+      { path: "/n/b.md", isDir: false },
+    ];
+    selection.selectAll(held);
+    selection.moved("/n/a", "/n/z");
+    expect(selection.picked.map((r) => r.path)).toEqual([
+      "/n/z",
+      "/n/z/x.md",
+      "/n/b.md",
+    ]);
+    selection.keepOnly((p) => p !== "/n/b.md");
+    expect(selection.picked.map((r) => r.path)).toEqual(["/n/z", "/n/z/x.md"]);
+
+    fileClipboard.set({ rows: held, cut: true });
+    fileClipboard.moved("/n/a", "/n/z");
+    expect(fileClipboard.isCut("/n/z/x.md")).toBe(true);
+    expect(fileClipboard.isCut("/n/a/x.md")).toBe(false);
+    fileClipboard.keepOnly((p) => p === "/n/b.md");
+    expect(fileClipboard.get()?.rows).toEqual([held[2]]);
+    fileClipboard.set(null);
   });
 });

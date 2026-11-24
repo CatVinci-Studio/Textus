@@ -49,6 +49,17 @@ pub(crate) enum Numbered {
     SpaceWhole,
 }
 
+impl Numbered {
+    /// As a file manager numbers a copy of a file, or of a folder.
+    pub(crate) fn for_entry(is_dir: bool) -> Self {
+        if is_dir {
+            Self::SpaceWhole
+        } else {
+            Self::Space
+        }
+    }
+}
+
 /// `name` numbered `n`, before its extension; `n` 0 is `name` itself.
 pub(crate) fn numbered(name: &str, n: usize, style: Numbered) -> String {
     if n == 0 {

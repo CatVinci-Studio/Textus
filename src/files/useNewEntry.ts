@@ -25,7 +25,7 @@ export function useNewEntry(
         return null;
       }
       try {
-        const made =
+        const { path, made } =
           draft.kind === "document"
             ? await fs.createDocument(draft.dir, name)
             : await fs.createFolder(draft.dir, name);
@@ -33,24 +33,26 @@ export function useNewEntry(
         // A name with slashes made folders on the way: they open too.
         const dirs = [];
         for (
-          let d = parentDir(made);
+          let d = parentDir(path);
           d && isInside(d, draft.dir);
           d = parentDir(d)
         )
           dirs.push(d);
         reload(draft.dir, ...dirs);
-        const isDir = draft.kind === "folder";
+        // What goes on undo: the topmost folder made on the way, with all
+        // in it, else the entry itself.
+        const isDir = draft.kind === "folder" || made !== path;
         const stamp = await stampOf(made, isDir).catch(() => null);
         if (stamp !== null)
           fileUndo.record({
             kind: "made",
             made: [{ path: made, isDir, stamp }],
           });
-        if (isDir) {
-          if (byKey) fileUndo.show(made);
+        if (draft.kind === "folder") {
+          if (byKey) fileUndo.show(path);
         } else {
-          announceFileCreated(made);
-          onFileSelect(made);
+          announceFileCreated(path);
+          onFileSelect(path);
         }
         return null;
       } catch (err) {
