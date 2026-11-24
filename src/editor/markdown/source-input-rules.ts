@@ -1,14 +1,16 @@
 import { InputRule } from "@milkdown/kit/prose/inputrules";
 import { $inputRule } from "@milkdown/kit/utils";
+import { plainTextRun } from "./link-input-rule";
 
 /**
  * Markup typed out becomes the node Textus reads it as from a file, or
  * saving would escape it (`<br>` as `\<br>`, `[^1]` as `\[^1]`).
  */
 
-/** An HTML tag just closed. The object replacement character is another
- *  inline node in the rule's view of the text. */
-export const TYPED_TAG = /<\/?[A-Za-z][A-Za-z0-9-]*(?:\s[^<>\n￼]*)?\/?>$/;
+/** An HTML tag just closed, not a link's `](<destination>`. The object
+ *  replacement character is another inline node in the rule's view of the text. */
+export const TYPED_TAG =
+  /(?<!\]\()<\/?[A-Za-z][A-Za-z0-9-]*(?:\s[^<>\n￼]*)?\/?>$/;
 
 /** A footnote reference just closed: `[^1]`, `[^note]`. Not a link's
  *  `[^x](url)`, which the link rule takes once its `)` goes in. */
@@ -35,7 +37,12 @@ export const footnoteInputRule = $inputRule(
     new InputRule(TYPED_FOOTNOTE, (state, match, start, end) => {
       const reference = state.schema.nodes.footnote_reference;
       const $start = state.doc.resolve(start);
-      if (!reference || $start.parent.type.spec.code) return null;
+      if (
+        !reference ||
+        !plainTextRun(state, start, end) ||
+        $start.parent.type.spec.code
+      )
+        return null;
       return state.tr.replaceWith(
         start,
         end,
