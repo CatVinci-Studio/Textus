@@ -261,8 +261,16 @@ describe("a proposal's reveal lets go", () => {
     releaseView({} as EditorView, [], "/a.md");
     expect(animations.has("k")).toBe(false);
     keep("k2");
+    // Still streaming: it starts over, its text coming in anew.
+    releaseView(
+      {} as EditorView,
+      [{ callId: "k2" }, { callId: "s", streaming: true }],
+      "/a.md",
+    );
+    streamPendingInsertText("s", "丙。", false);
     forgetReveals("/a.md");
     expect(animations.has("k2")).toBe(false);
+    expect(animations.has("s")).toBe(false);
   });
 
   it("of streamed text that never reached the list", async () => {

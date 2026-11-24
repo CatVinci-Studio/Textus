@@ -328,7 +328,8 @@ export function dropAnimation(callId: string) {
 }
 
 /** An editor going: its reveals let go of it. Those its document keeps
- *  stay (without the view) while its tab is open; the rest go. The window
+ *  stay (without the view) while its tab is open; the rest go. One still
+ *  streaming starts over, but is the tab's to drop as it closes. The window
  *  drops a closing tab before its editor goes. */
 export function releaseView(
   view: EditorView,
@@ -340,7 +341,8 @@ export function releaseView(
     windowTabs<{ id: string; path?: string | null }>().some(
       (tab) => tab.path === path,
     );
-  const kept = open
+  const kept = open ? previews.map((p) => p.callId) : [];
+  const drawn = open
     ? previews.filter((p) => !p.streaming).map((p) => p.callId)
     : [];
   for (const [callId, anim] of animations) {
@@ -349,7 +351,7 @@ export function releaseView(
     stopFrame(anim);
     anim.view = null;
     anim.span = null;
-    if (!kept.includes(callId)) animations.delete(callId);
+    if (!drawn.includes(callId)) animations.delete(callId);
   }
   if (path !== null) keepReveals(path, kept, dropAnimation);
 }
