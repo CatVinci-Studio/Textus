@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { scaledPx } from "../engine/tokens/chrome-scale";
 import { onBack } from "./back";
 import { OPEN_SETTINGS_PAGE_EVENT } from "../settings/settings-nav";
@@ -22,7 +22,8 @@ export function usePushedSidebar(
   setOpen: (open: boolean) => void,
   activeTabId: string,
 ): void {
-  useEffect(() => {
+  // Before paint: crossing into a phone's layout never shows it sliding.
+  useLayoutEffect(() => {
     if (!phone) return;
     setOpen(false);
   }, [phone, activeTabId, setOpen]);

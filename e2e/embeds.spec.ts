@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { MAC, mockInvoke, openApp, PHONE, sourceOf } from "./helpers";
+import { MAC, mockInvoke, openApp, PHONE, settled, sourceOf } from "./helpers";
 import { openPath, PNG } from "./plugin-helpers";
 
 // `![[...]]` while the caret is away: a picture drawn in place of its source.
@@ -160,4 +160,43 @@ test("a diagram with a syntax error shows the error under its source", async ({
   await expect(doc.locator(".mermaid-preview svg")).toHaveCount(0);
   // The note is not part of the document.
   expect(await sourceOf(page)).not.toContain("图表无法绘制");
+});
+
+test("a diagram drawn above the screen doesn't move what is on screen", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1000, height: 700 });
+  const words = Array.from(
+    { length: 40 },
+    (_, i) => `Paragraph ${i} ${"words to read ".repeat(12)}`,
+  );
+  await page.addInitScript(
+    (text) => {
+      (window as unknown as { __devFiles: Record<string, string> }).__devFiles =
+        {
+          "/work/d.md": text,
+        };
+    },
+    "Top\n\n```mermaid\ngraph TD\n  A --> B\n  B --> C\n  C --> D\n  D --> E\n```\n\n" +
+      words.join("\n\n"),
+  );
+  // Mermaid arrives once the reader has scrolled past the diagram.
+  await page.route(/\/\.vite\/deps\/mermaid\.js/, async (route) => {
+    await new Promise((done) => setTimeout(done, 1500));
+    await route.continue();
+  });
+  await openApp(page);
+  await openPath(page, "/work/d.md");
+  const doc = page.locator('[data-active-tab="true"] .ProseMirror');
+  const read = doc.locator("p", { hasText: "Paragraph 6 " });
+  await read.waitFor();
+  await page.evaluate(() => (document.activeElement as HTMLElement)?.blur());
+  const scroller = page.locator('[data-active-tab="true"] .editor-scroll');
+  await scroller.evaluate((s) => (s.scrollTop = 400));
+  const before = (await read.boundingBox())!.y;
+  await expect(doc.locator(".mermaid-preview svg")).toBeAttached({
+    timeout: 10_000,
+  });
+  await settled(page);
+  expect(Math.abs((await read.boundingBox())!.y - before)).toBeLessThan(1);
 });

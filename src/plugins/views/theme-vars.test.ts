@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-import { afterEach, describe, expect, it } from "vitest";
-import { webviewThemeCss } from "./theme-vars";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { watchTheme, webviewThemeCss } from "./theme-vars";
 
 describe("webviewThemeCss", () => {
   afterEach(() => document.documentElement.removeAttribute("style"));
@@ -16,5 +16,25 @@ describe("webviewThemeCss", () => {
     expect(css).toContain("--dur-medium: 250ms;");
     // Reduced motion's distances come along as they are.
     expect(css).toContain("--motion-distance-sm: 0px;");
+  });
+});
+
+describe("watchTheme", () => {
+  it("tells plugins of a theme change before the window paints it, once per batch", async () => {
+    // No frame ever comes: the post must not wait for one.
+    const frame = vi
+      .spyOn(window, "requestAnimationFrame")
+      .mockImplementation(() => 0);
+    const heard = vi.fn();
+    const stop = watchTheme(heard);
+    const root = document.documentElement;
+    root.setAttribute("data-theme", "dark");
+    root.setAttribute("data-content-theme", "paper");
+    await new Promise((done) => setTimeout(done, 0));
+    expect(heard).toHaveBeenCalledTimes(1);
+    stop();
+    frame.mockRestore();
+    root.removeAttribute("data-theme");
+    root.removeAttribute("data-content-theme");
   });
 });

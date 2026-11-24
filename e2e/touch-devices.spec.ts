@@ -543,6 +543,65 @@ test.describe("a phone's tab row", () => {
   });
 });
 
+test.describe("a phone's sidebar pushed back", () => {
+  test.use(PHONE);
+
+  test("keeps the tab row in sight as the page slides back", async ({
+    page,
+  }) => {
+    await openApp(page, { animations: true });
+    const toggle = page.locator(".window-bar-sidebar-toggle");
+    await toggle.tap();
+    await expect(page.locator(".app-shell")).toHaveAttribute(
+      "data-sidebar",
+      "open",
+    );
+    const sliding = () =>
+      page.evaluate(
+        () =>
+          document
+            .getAnimations()
+            .filter((motion) => motion instanceof CSSTransition).length,
+      );
+    await expect.poll(sliding).toBe(0);
+    await toggle.tap({ force: true });
+    // Held halfway: the page still moved, as WebKit can leave it. Nothing
+    // drawn over its open tab hides it.
+    const over = await page.evaluate(() => {
+      for (const motion of document.getAnimations()) {
+        if (!(motion instanceof CSSTransition)) continue;
+        motion.pause();
+        motion.currentTime =
+          Number(motion.effect?.getComputedTiming().duration) / 2;
+      }
+      const tab = document.querySelector(".tab-pill-active")!;
+      const box = tab.getBoundingClientRect();
+      const stack = document.elementsFromPoint(
+        box.left + box.width / 2,
+        box.top + box.height / 2,
+      );
+      return (
+        stack
+          .slice(
+            0,
+            stack.findIndex((el) => tab.contains(el)),
+          )
+          // Its own parts and what holds it are drawn under it.
+          .filter((el) => !tab.contains(el) && !el.contains(tab))
+          .filter((el) => {
+            const look = getComputedStyle(el);
+            return (
+              look.backgroundImage !== "none" ||
+              !/rgba\(.*, 0\)|transparent/.test(look.backgroundColor)
+            );
+          })
+          .map((el) => el.className)
+      );
+    });
+    expect(over).toEqual([]);
+  });
+});
+
 test.describe("reordering tabs on a phone", () => {
   test.use(PHONE);
 

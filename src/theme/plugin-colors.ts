@@ -1,4 +1,8 @@
-import { onAppearance, windowIsDark } from "../engine/tokens/appearance";
+import {
+  onAppearance,
+  windowIsDark,
+  writeThemeStyle,
+} from "../engine/tokens/appearance";
 import { CUSTOM_CSS_STYLE_ID, PLUGIN_COLORS_STYLE_ID } from "./style-ids";
 import {
   chromePalette,
@@ -176,7 +180,7 @@ function apply(): void {
     Object.assign(document.createElement("style"), {
       id: PLUGIN_COLORS_STYLE_ID,
     });
-  style.textContent = ruleText(values);
+  writeThemeStyle(style, ruleText(values));
   place(style);
 }
 

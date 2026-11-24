@@ -154,15 +154,16 @@ export function webviewThemeCss(inDocument = false): string {
 }
 
 /**
- * Calls `onChange` whenever the window's theme may have changed. Returns the
- * function that stops listening.
+ * Calls `onChange` whenever the window's theme may have changed, once per
+ * batch of changes and before the window paints them, so a plugin's frame
+ * changes with it. Returns the function that stops listening.
  */
 export function watchTheme(onChange: () => void): () => void {
   let queued = false;
   const changed = () => {
     if (queued) return;
     queued = true;
-    requestAnimationFrame(() => {
+    queueMicrotask(() => {
       queued = false;
       onChange();
     });

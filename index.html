@@ -8,27 +8,26 @@
     />
     <title>Textus</title>
     <!-- Painted before any script or stylesheet loads, so a new window opens
-         in the system's colours instead of flashing white (App.css's --bg).
-         An appearance pinned in Settings wins: Rust's boot script
-         (src-tauri/src/boot.js) has set data-theme before this is parsed.
-         On Linux the window itself is built in the pinned colour too, for
-         the frames before this paints: pinned_background in
-         src-tauri/src/settings.rs, whose test checks it against these two
-         colours and App.css's --bg. -->
+         in the system's colours instead of flashing white (base.css's
+         --doc-bg). An appearance pinned in Settings wins: Rust's boot script
+         (src-tauri/src/boot.js) has set data-theme before this is parsed,
+         and --boot-bg to the theme's own page colour where it is known
+         (window_background in src-tauri/src/settings/window_background.rs, whose test
+         checks these colours against base.css). -->
     <style>
       html {
-        background: #ffffff;
+        background: var(--boot-bg, #ffffff);
       }
       @media (prefers-color-scheme: dark) {
         html {
-          background: #1c1c1e;
+          background: var(--boot-bg, #1c1c1e);
         }
       }
       html[data-theme="light"] {
-        background: #ffffff;
+        background: var(--boot-bg, #ffffff);
       }
       html[data-theme="dark"] {
-        background: #1c1c1e;
+        background: var(--boot-bg, #1c1c1e);
       }
     </style>
   </head>

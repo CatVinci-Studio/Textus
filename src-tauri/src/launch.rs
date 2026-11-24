@@ -19,6 +19,71 @@ pub(crate) static UI_READY: AtomicBool = AtomicBool::new(false);
 #[cfg(target_os = "macos")]
 pub(crate) static LAUNCH_OPENED: Mutex<Option<Vec<String>>> = Mutex::new(Some(Vec::new()));
 
+/// What a launch opens in its first window: files handed over (argv, or
+/// Finder's before setup), else the last session's windows when kept.
+#[cfg(desktop)]
+pub(crate) enum LaunchOpens {
+    Paths(Vec<String>),
+    Windows(Vec<WindowSession>),
+}
+
+/// Set as the launch decides what it opens, before the first window is built:
+/// that window's boot snapshot is made before the queue is filled.
+#[cfg(desktop)]
+static OPENING_AT_LAUNCH: AtomicBool = AtomicBool::new(false);
+
+#[cfg(desktop)]
+pub(crate) fn launch_opens(app: &tauri::AppHandle) -> Option<LaunchOpens> {
+    #[allow(unused_mut)]
+    let mut paths = paths_from_argv(
+        std::env::args(),
+        &std::env::current_dir().unwrap_or_default(),
+    );
+    #[cfg(target_os = "macos")]
+    paths.extend(LAUNCH_OPENED.lock().unwrap().take().unwrap_or_default());
+    let opens = if !paths.is_empty() {
+        Some(LaunchOpens::Paths(paths))
+    } else if crate::commands::prefs::read_restore_session_on_startup(app) {
+        let windows = crate::commands::session::read_session_windows(app);
+        (!windows.is_empty()).then_some(LaunchOpens::Windows(windows))
+    } else {
+        None
+    };
+    OPENING_AT_LAUNCH.store(opens.is_some(), Ordering::Relaxed);
+    opens
+}
+
+#[cfg(desktop)]
+pub(crate) fn queue_launch(app: &tauri::AppHandle, opens: Option<LaunchOpens>) {
+    match opens {
+        Some(LaunchOpens::Paths(paths)) => queue_paths_to_open(app, paths),
+        Some(LaunchOpens::Windows(windows)) => queue_windows_to_open(app, windows),
+        None => {}
+    }
+}
+
+/// Whether the window being built may have something to open as it starts,
+/// for its boot snapshot: the page then holds its first frame back rather
+/// than showing a blank document or the start page that something replaces.
+/// Wrong only towards yes, which costs a moment of empty sheet.
+#[cfg(desktop)]
+pub(crate) fn window_restores(app: &tauri::AppHandle, label: &str) -> bool {
+    let queued = !app.state::<PendingOpenPaths>().0.lock().unwrap().is_empty();
+    let launching = OPENING_AT_LAUNCH.load(Ordering::Relaxed) && !UI_READY.load(Ordering::Relaxed);
+    let detached = app
+        .try_state::<crate::tab_drag::PendingDetachedTabs>()
+        .is_some_and(|pending| pending.0.lock().unwrap().contains_key(label));
+    let help = PENDING_SHOW_HELP.lock().unwrap().is_some();
+    let drafts = label == "main" && crate::commands::drafts::drafts_waiting(app);
+    queued || launching || detached || help || drafts
+}
+
+/// A phone's one page always has its last documents to look for.
+#[cfg(not(desktop))]
+pub(crate) fn window_restores(_app: &tauri::AppHandle, _label: &str) -> bool {
+    true
+}
+
 /// Park paths for the next window to drain as it mounts.
 #[cfg(desktop)]
 pub(crate) fn queue_pending(app: &tauri::AppHandle, paths: Vec<String>) {

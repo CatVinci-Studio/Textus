@@ -19,7 +19,7 @@ import {
   localizedTheme,
 } from "../../theme/theme-gallery";
 import { withUserTheme } from "../../theme/theme-import";
-import { isEffectiveDark } from "../../theme/apply-appearance";
+import { isEffectiveDark } from "../../theme/imported-theme";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { useSettings } from "../../prefs/SettingsContext";
 import { explainError } from "../../utils/error-explain";

@@ -3,19 +3,13 @@ import { InputRule } from "@milkdown/kit/prose/inputrules";
 import type { Transaction } from "@milkdown/kit/prose/state";
 import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
 import type {
-  Code,
-  Effects,
-  Extension,
-  State,
-  TokenizeContext,
-} from "micromark-util-types";
-import type {
   Extension as FromMarkdownExtension,
   Handle as FromMarkdownHandle,
 } from "mdast-util-from-markdown";
 import type { Options as ToMarkdownExtension } from "mdast-util-to-markdown";
 import type { Literal } from "mdast";
 import { WIKILINK_SOURCE } from "../../utils/note-link";
+import { doubleBracketSyntax } from "./double-brackets";
 
 /**
  * Obsidian's wikilinks (`[[Note]]`, `[[Note|text]]`, `[[Note#Heading]]`),
@@ -42,55 +36,6 @@ declare module "mdast" {
   }
 }
 
-const OPEN = 91; // "["
-const CLOSE = 93; // "]"
-const PAREN = 40; // "("
-
-/** micromark: `[[...]]` as one token, so a "_" in a name isn't emphasis.
- *  `[[x]](url)`, a link whose text has brackets, is left to CommonMark. */
-function wikilinkSyntax(): Extension {
-  return {
-    text: { [OPEN]: { name: "wikilink", tokenize } },
-  };
-
-  function tokenize(
-    this: TokenizeContext,
-    effects: Effects,
-    ok: State,
-    nok: State,
-  ): State {
-    let brackets = 0;
-    let empty = true;
-    return open;
-
-    function open(code: Code): State | undefined {
-      if (code !== OPEN) return nok(code);
-      if (brackets === 0) effects.enter("wikilink");
-      effects.consume(code);
-      return ++brackets === 2 ? inside : open;
-    }
-    function inside(code: Code): State | undefined {
-      // Negative codes are line endings and tabs.
-      if (code === null || code < 0 || code === OPEN) return nok(code);
-      if (code === CLOSE && empty) return nok(code);
-      effects.consume(code);
-      if (code === CLOSE) return closeSecond;
-      empty = false;
-      return inside;
-    }
-    function closeSecond(code: Code): State | undefined {
-      if (code !== CLOSE) return nok(code);
-      effects.consume(code);
-      return after;
-    }
-    function after(code: Code): State | undefined {
-      if (code === PAREN) return nok(code);
-      effects.exit("wikilink");
-      return ok(code);
-    }
-  }
-}
-
 const enterWikilink: FromMarkdownHandle = function (token) {
   this.enter({ type: "wikilink", value: this.sliceSerialize(token) }, token);
 };
@@ -113,7 +58,9 @@ const remarkWikilink: RemarkPluginRaw<unknown> = function (
   this: ThisParameterType<RemarkPluginRaw<unknown>>,
 ) {
   const data = this.data();
-  (data.micromarkExtensions ??= []).push(wikilinkSyntax());
+  (data.micromarkExtensions ??= []).push(
+    doubleBracketSyntax("wikilink", { bang: false, refuseParen: true }),
+  );
   (data.fromMarkdownExtensions ??= []).push(wikilinkFromMarkdown);
   (data.toMarkdownExtensions ??= []).push(wikilinkToMarkdown);
 };

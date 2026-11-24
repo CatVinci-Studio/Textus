@@ -14,7 +14,11 @@ import type {
   PendingState,
 } from "./pending-types";
 import { pendingEditKey } from "./pending-types";
-import { dropAnimation, stillRevealing } from "./pending-animation";
+import {
+  dropAnimation,
+  releaseView,
+  stillRevealing,
+} from "./pending-animation";
 import type { SentencePickLabels } from "./pending-widgets";
 import {
   type SentenceHooks,
@@ -350,6 +354,11 @@ export function createPendingEditPlugin(options: {
           return {
             destroy() {
               stopPictures();
+              releaseView(
+                editorView,
+                pendingEditKey.getState(editorView.state)?.previews ?? [],
+                options.docPath?.() ?? null,
+              );
             },
             update(view) {
               syncDisplay(view, display());

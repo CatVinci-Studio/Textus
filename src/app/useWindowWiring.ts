@@ -15,6 +15,7 @@ import {
   useNativeMenuChecks,
 } from "./menu/menu-bridge";
 import { useStartupRestore } from "../document/startup-restore";
+import { launchesStartPage } from "../document/first-tab";
 import { useOpenPathsPush } from "./window-file-events";
 import { useFileDrops } from "./file-drop/useFileDrops";
 import { useSettingsCommands } from "./useSettingsCommands";
@@ -121,8 +122,7 @@ function useWhatOpens(input: WiringInput) {
     openFile,
     replaceTabWithFile: docs.replaceTabWithFile,
     restoreCarets: settings.restoreSessionOnStartup,
-    launchStartPage:
-      settings.startPageOnLaunch && !settings.restoreSessionOnStartup,
+    launchStartPage: launchesStartPage(settings),
     startTutorial: tutorial.start,
     stopTutorial: tutorial.exit,
   });

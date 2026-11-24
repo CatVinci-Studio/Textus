@@ -4,9 +4,11 @@ import {
   blockAt,
   holdBlock,
   holdBy,
+  holdText,
   holdStill,
   keepWhile,
   pageIsTheHands,
+  textAt,
 } from "./scroll-hold";
 
 describe("what is on screen held still", () => {
@@ -83,6 +85,10 @@ describe("the page is the hand's", () => {
 describe("holding a scroll position", () => {
   const scroller = (scrollTop: number) => {
     const el = document.createElement("div");
+    Object.defineProperties(el, {
+      scrollHeight: { value: 2000 },
+      clientHeight: { value: 500 },
+    });
     let top = scrollTop;
     Object.defineProperty(el, "scrollTop", {
       get: () => top,
@@ -112,20 +118,52 @@ describe("holding a scroll position", () => {
     expect(el.scrollTop).toBe(313);
   });
 
-  it("keeps a block's share of its height at the line, unrounded", () => {
-    const el = scroller(100);
+  it("keeps a block's share of its height at the line, as a block held still", () => {
     const block = document.createElement("p");
     let rect = { top: 50, height: 100, bottom: 150 };
     block.getBoundingClientRect = () => rect as DOMRect;
+    const grow = () => (rect = { top: 60, height: 200, bottom: 260 });
     // The line a quarter down the block; the block grows to 200 and moves
-    // to 60: that share of it is now at 109, 34.5 past the line.
-    holdBlock(
-      el,
-      block,
-      74.5,
-      () => (rect = { top: 60, height: 200, bottom: 260 }),
-    );
-    expect(el.scrollTop).toBeCloseTo(100 + 60 + 0.245 * 200 - 74.5);
+    // to 60: that share of it is now at 109, 34.5 past the line - 35 in
+    // whole pixels.
+    const el = scroller(100);
+    holdBlock(el, block, 74.5, grow);
+    expect(el.scrollTop).toBe(135);
+    rect = { top: 50, height: 100, bottom: 150 };
+    const pulled = scroller(-30);
+    holdBlock(pulled, block, 74.5, grow);
+    expect(pulled.scrollTop).toBe(-30);
+  });
+
+  it("holds the character at a point, at the end of its text too, and none off text", () => {
+    const within = document.body.appendChild(document.createElement("p"));
+    const text = within.appendChild(document.createTextNode("abc"));
+    let top = 40;
+    const rects = vi
+      .spyOn(Range.prototype, "getClientRects")
+      .mockImplementation(() => [{ top }] as unknown as DOMRectList);
+    const hitAt = (node: Node, offset: number) =>
+      (document.caretRangeFromPoint = () =>
+        ({ startContainer: node, startOffset: offset }) as Range);
+    hitAt(text, 3);
+    const held = textAt(within, 0, 0)!;
+    expect(held.range.startOffset).toBe(2);
+    expect(held.top).toBe(40);
+    // The text rewraps: its character's line put back where it was.
+    const el = scroller(100);
+    holdText(el, held, () => (top = 75));
+    expect(el.scrollTop).toBe(135);
+    // As a block held still: whole pixels, and not while pulled past an end.
+    holdText(el, held, () => (top = 40.3));
+    expect(el.scrollTop).toBe(135);
+    const pulled = scroller(-30);
+    holdText(pulled, held, () => (top = 75));
+    expect(pulled.scrollTop).toBe(-30);
+    hitAt(within, 0);
+    expect(textAt(within, 0, 0)).toBeNull();
+    rects.mockRestore();
+    Reflect.deleteProperty(document, "caretRangeFromPoint");
+    within.remove();
   });
 
   it("finds the block at a line, else the first below it", () => {

@@ -48,6 +48,7 @@ The pieces:
 | Telling plugins about something in the window | `emitPluginEvent` (`plugins/app-bridge.ts`), as `plugins/panels-state.ts` does                   |
 | Asking plugins in turn, the first answer wins | `firstAnswer` (`plugins/contributions/first-answer.ts`), as the paste and drop handlers do       |
 | Letting go of what is out of sight            | `keepLoaded` / `useKeptLoaded` (`utils/kept-loaded.ts`), `onMemoryIdle` (`utils/memory-idle.ts`) |
+| A cache bounded to the most recent            | `keepFresh` (`utils/keep-fresh.ts`)                                                              |
 
 ## Text, links and folders
 

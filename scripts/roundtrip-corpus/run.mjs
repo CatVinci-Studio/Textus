@@ -2,7 +2,7 @@
 // Runs the save round trip on the fetched corpus, one vitest process per
 // shard, and prints what failed, by kind.
 import { spawn } from "node:child_process";
-import { availableParallelism } from "node:os";
+import { availableParallelism, totalmem } from "node:os";
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,8 +13,18 @@ const arg = (name, fallback) => {
   const at = process.argv.indexOf(`--${name}`);
   return at > 0 ? process.argv[at + 1] : fallback;
 };
+// Each shard's heap is capped, and as many run as the memory holds with room
+// left for the system, not just as the cores allow: six uncapped shards once
+// grew past 20 GB on a 16 GB Mac and brought it down.
+const SHARD_HEAP_MB = 2048;
+const SHARD_PEAK_MB = SHARD_HEAP_MB + 512;
+const SYSTEM_MB = 4096;
+const byMemory = Math.floor((totalmem() / 2 ** 20 - SYSTEM_MB) / SHARD_PEAK_MB);
 const shards = Number(
-  arg("shards", Math.max(1, Math.floor(availableParallelism() / 2))),
+  arg(
+    "shards",
+    Math.max(1, Math.min(Math.floor(availableParallelism() / 2), byMemory)),
+  ),
 );
 const rounds = arg("rounds", "1");
 
@@ -38,6 +48,8 @@ const runShard = (shard) =>
         stdio: ["ignore", "ignore", "inherit"],
         env: {
           ...process.env,
+          // A shard that leaks ends itself instead of the machine.
+          NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ""} --max-old-space-size=${SHARD_HEAP_MB}`,
           ROUNDTRIP_CORPUS: "1",
           ROUNDTRIP_SHARD: `${shard}/${shards}`,
           ROUNDTRIP_ROUNDS: rounds,

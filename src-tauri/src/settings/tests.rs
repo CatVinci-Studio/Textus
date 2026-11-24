@@ -261,12 +261,13 @@ fn the_appearance_gives_windows_the_page_background() {
     // index.html paints first and ui/base.css's --doc-bg (--ui-bg follows it) keeps.
     let index = include_str!("../../../index.html");
     let app_css = include_str!("../../../src/engine/tokens/base.css");
+    let none = json!({});
     for (theme, app_css_rule) in [
         ("dark", ":root[data-theme=\"dark\"] {"),
         ("light", ":root {"),
     ] {
         let Some(tauri::window::Color(r, g, b, a)) =
-            window_background(&json!({ "theme": theme }), None)
+            window_background(&json!({ "theme": theme }), &none, &none, None)
         else {
             panic!("no window background for a pinned {theme}");
         };
@@ -274,41 +275,108 @@ fn the_appearance_gives_windows_the_page_background() {
         assert_eq!(a, 0xff, "{theme}: an opaque window");
         let index_rule = format!("html[data-theme=\"{theme}\"] {{");
         assert_eq!(
-            css_value(index, &index_rule, "background:"),
-            hex,
+            declared(index, &index_rule, "background:").expect("index.html's rule"),
+            format!("var(--boot-bg, {hex})"),
             "index.html, {theme}"
         );
         assert_eq!(
-            css_value(app_css, app_css_rule, "--doc-bg:"),
+            declared(app_css, app_css_rule, "--doc-bg:").expect("base.css's rule"),
             hex,
             "ui/base.css, {theme}"
+        );
+        // "system": the same under the system's own appearance.
+        let system = match theme {
+            "dark" => {
+                &index[index
+                    .find("(prefers-color-scheme: dark)")
+                    .expect("a dark rule")..]
+            }
+            _ => index,
+        };
+        assert_eq!(
+            declared(system, "html {", "background:").expect("index.html's system rule"),
+            format!("var(--boot-bg, {hex})"),
+            "index.html, system {theme}"
         );
     }
     // "system" or missing with the system's mode unknown, or unreadable:
     // the toolkit's own default.
-    assert_eq!(window_background(&json!({ "theme": "system" }), None), None);
-    assert_eq!(window_background(&json!({}), None), None);
-    assert_eq!(window_background(&json!({ "theme": 1 }), Some(true)), None);
+    assert_eq!(
+        window_background(&json!({ "theme": "system" }), &none, &none, None),
+        None
+    );
+    assert_eq!(window_background(&json!({}), &none, &none, None), None);
+    assert_eq!(
+        window_background(&json!({ "theme": 1 }), &none, &none, Some(true)),
+        None
+    );
     // "system" with the system's mode known (Windows): the page's colour for it.
-    let dark = window_background(&json!({ "theme": "system" }), Some(true));
-    assert_eq!(dark, window_background(&json!({ "theme": "dark" }), None));
-    let light = window_background(&json!({}), Some(false));
-    assert_eq!(light, window_background(&json!({ "theme": "light" }), None));
+    let dark = window_background(&json!({ "theme": "system" }), &none, &none, Some(true));
+    assert_eq!(
+        dark,
+        window_background(&json!({ "theme": "dark" }), &none, &none, None)
+    );
+    let light = window_background(&json!({}), &none, &none, Some(false));
+    assert_eq!(
+        light,
+        window_background(&json!({ "theme": "light" }), &none, &none, None)
+    );
 }
 
-/// The value `property` has in the first rule that starts with `rule`.
-fn css_value<'a>(css: &'a str, rule: &str, property: &str) -> &'a str {
-    let start = css.find(rule).unwrap_or_else(|| panic!("no `{rule}` rule"));
-    let body = &css[start + rule.len()..];
-    let body = &body[..body.find('}').expect("an unclosed rule")];
-    let at = body
-        .find(property)
-        .unwrap_or_else(|| panic!("no `{property}` in `{rule}`"));
-    body[at + property.len()..]
-        .split(';')
-        .next()
-        .unwrap_or_default()
-        .trim()
+#[test]
+fn a_theme_gives_windows_its_own_page_background() {
+    use tauri::window::Color;
+    let none = json!({});
+    let paper = |theme: &str| {
+        window_background(
+            &json!({ "theme": theme, "themeId": "paper" }),
+            &none,
+            &none,
+            None,
+        )
+    };
+    // content-themes.css's --doc-bg for Paper, light and dark.
+    assert_eq!(paper("light"), Some(Color(0xfa, 0xf6, 0xee, 0xff)));
+    assert_eq!(paper("dark"), Some(Color(0x1f, 0x1b, 0x16, 0xff)));
+    // Prism keeps the default page.
+    assert_eq!(
+        window_background(
+            &json!({ "theme": "dark", "themeId": "prism" }),
+            &none,
+            &none,
+            None
+        ),
+        window_background(&json!({ "theme": "dark" }), &none, &none, None)
+    );
+    // An imported theme: the chrome the frontend last derived for it from
+    // this stylesheet in this appearance, as applyThemeChrome writes it.
+    let settings = json!({ "theme": "dark", "themeId": "mine" });
+    // Measured as JavaScript does: 20 UTF-16 units, 23 bytes.
+    let sources = json!({ "light": "p {}", "dark": "p { content: \"é—\"; }" });
+    let chrome = |id: &str, dark: bool, source_length: usize| {
+        json!({ "themeChrome": {
+            "id": id, "dark": dark, "sourceLength": source_length,
+            "css": ":root { --ui-bg: rgb(18, 52, 86) !important;\n--ui-text: rgb(1, 2, 3) !important; }",
+        } })
+    };
+    assert_eq!(
+        window_background(&settings, &chrome("mine", true, 20), &sources, None),
+        Some(Color(18, 52, 86, 0xff))
+    );
+    // Derived for another theme, the other appearance, a stylesheet since
+    // changed, or with the stylesheet left out of the boot script: the default.
+    let default = window_background(&json!({ "theme": "dark" }), &none, &none, None);
+    for (ui_state, theme_css) in [
+        (chrome("other", true, 20), &sources),
+        (chrome("mine", false, 20), &sources),
+        (chrome("mine", true, 23), &sources),
+        (chrome("mine", true, 20), &Value::Null),
+    ] {
+        assert_eq!(
+            window_background(&settings, &ui_state, theme_css, None),
+            default
+        );
+    }
 }
 
 #[test]

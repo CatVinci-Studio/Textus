@@ -185,9 +185,9 @@ in `src/storage/local.ts`.
   script applies it when it matches.
 - Until its page first paints, a window shows the platform's own
   background, so Rust also follows a pinned Light or Dark natively
-  (`theme_changed` in `settings.rs`): on macOS it sets the app's appearance
-  (`apply_app_theme`), on Linux it builds windows in the page's background
-  colour and recolours open ones (`pinned_background`).
+  (`theme_changed` in `settings/app.rs`): on macOS it sets the app's appearance
+  (`apply_app_theme`), on Linux and Windows it builds windows in the page's background
+  colour and recolours open ones (`window_background`).
 
 ## Project folders: `.textus/`
 

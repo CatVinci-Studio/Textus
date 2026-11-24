@@ -1,6 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
+  discardGeneratedImage,
   generatedAlt,
+  generatedImageData,
+  generatedImageFailure,
+  generatedImageUrl,
+  loadGeneratedImage,
+  redrawGeneratedImage,
+  rememberSaved,
+  savedSrc,
   generatedIdsIn,
   generatedImageId,
   generatedImageSize,
@@ -15,6 +23,13 @@ import {
   withSavedSrc,
   withoutPicture,
 } from "./generated-images";
+
+const backend = vi.hoisted(() => ({
+  generatedImage: vi.fn(),
+  discardGeneratedImage: vi.fn(() => Promise.resolve()),
+  redrawGeneratedImage: vi.fn(() => Promise.resolve()),
+}));
+vi.mock("../../platform/ipc", () => ({ ai: backend }));
 
 const call = (args: object) => JSON.stringify(args);
 
@@ -163,5 +178,56 @@ describe("pictures written into streaming text", () => {
     expect(withBegunPictures("w3", "One.\n\n![a](b.png)")).toBe(
       "One.\n\n![a](b.png)",
     );
+  });
+});
+
+describe("an accepted picture", () => {
+  it("lets its bytes go once saved, its address kept for its card", async () => {
+    backend.generatedImage.mockResolvedValueOnce({
+      mime: "image/png",
+      dataBase64: "iVBORw0KGgo=",
+    });
+    expect(await loadGeneratedImage("s1")).toBe(true);
+    expect(generatedImageData("s1")?.dataBase64).toBe("iVBORw0KGgo=");
+    rememberSaved("s1", "images/s1.png");
+    expect(generatedImageData("s1")).toBeNull();
+    expect(generatedImageUrl("s1")).toMatch(/^blob:/);
+  });
+
+  it("rejected after an undo, keeps its file and its card's picture", async () => {
+    backend.generatedImage.mockResolvedValueOnce({
+      mime: "image/png",
+      dataBase64: "iVBORw0KGgo=",
+    });
+    await loadGeneratedImage("s2");
+    rememberSaved("s2", "images/s2.png");
+    backend.discardGeneratedImage.mockClear();
+    discardGeneratedImage("s2");
+    // Its card still shows it; the backend's copy went when it was saved.
+    expect(generatedImageUrl("s2")).toMatch(/^blob:/);
+    expect(backend.discardGeneratedImage).not.toHaveBeenCalled();
+    expect(savedSrc("s2")).toBe("images/s2.png");
+    // Accepted again, it is the saved file: nothing asked of the backend.
+    backend.generatedImage.mockClear();
+    expect(await loadGeneratedImage("s2")).toBe(true);
+    expect(backend.generatedImage).not.toHaveBeenCalled();
+    expect(generatedImageFailure("s2")).toBeNull();
+  });
+
+  it("drawn again after an undo, is fetched anew and saved anew", async () => {
+    const png = {
+      mime: "image/png",
+      dataBase64: "iVBORw0KGgo=",
+      ext: "png",
+      width: 1,
+      height: 1,
+    };
+    backend.generatedImage.mockResolvedValueOnce(png);
+    await loadGeneratedImage("s3");
+    rememberSaved("s3", "images/s3.png");
+    backend.generatedImage.mockResolvedValueOnce(png);
+    expect(await redrawGeneratedImage("s3", "again")).toBe(true);
+    expect(savedSrc("s3")).toBeUndefined();
+    expect(generatedImageData("s3")?.dataBase64).toBe("iVBORw0KGgo=");
   });
 });

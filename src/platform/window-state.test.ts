@@ -3,6 +3,7 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const win = vi.hoisted(() => ({
+  maximized: false,
   fullscreen: false,
   resized: undefined as undefined | (() => void),
   told: undefined as undefined | ((event: { payload: boolean }) => void),
@@ -10,7 +11,7 @@ const win = vi.hoisted(() => ({
 
 vi.mock("./this-window", () => ({
   thisWindow: () => ({
-    isMaximized: () => Promise.resolve(false),
+    isMaximized: () => Promise.resolve(win.maximized),
     isFullscreen: () => Promise.resolve(win.fullscreen),
     onResized: (handler: () => void) => {
       win.resized = handler;
@@ -44,5 +45,29 @@ describe("the window's full-screen state", () => {
       vi.advanceTimersByTime(150);
     });
     expect(result.current.fullscreen).toBe(true);
+  });
+});
+
+describe("the window's maximized state", () => {
+  it("is asked as a resize burst starts, not only once it settles", async () => {
+    const { result } = renderHook(() => useWindowState());
+    await act(async () => {});
+    expect(result.current.maximized).toBe(false);
+
+    // Maximize is a single resize: the caption buttons change with it.
+    win.maximized = true;
+    win.resized!();
+    await act(async () => {});
+    expect(result.current.maximized).toBe(true);
+
+    // Each later resize of the burst waits for its end.
+    win.maximized = false;
+    win.resized!();
+    await act(async () => {});
+    expect(result.current.maximized).toBe(true);
+    await act(async () => {
+      vi.advanceTimersByTime(150);
+    });
+    expect(result.current.maximized).toBe(false);
   });
 });

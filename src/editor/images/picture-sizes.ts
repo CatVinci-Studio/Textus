@@ -1,10 +1,17 @@
 import { fs } from "../../platform/ipc";
 import { imageLocation } from "./missing-image";
+import { keepFresh } from "../../utils/keep-fresh";
 
 /** Each picture's size, by document and src: known once it has loaded, or
  *  read ahead from its file's header. Drawn, a picture takes its room before
  *  it loads, so nothing below it moves when it arrives. */
 const sizes = new Map<string, { width: number; height: number }>();
+const SIZES_KEPT = 500;
+
+/** A picture written into the document (`data:`): its key would hold all
+ *  of it, and it draws at once anyway. */
+const inline = (key: string) =>
+  /^\s*data:/i.test(key.slice(key.indexOf("\n") + 1));
 
 function setRoom(
   img: HTMLImageElement,
@@ -34,7 +41,7 @@ export function reserveRoom(
     .pictureSize(location.path)
     .then((read) => {
       if (!read || !stillWanted() || img.naturalWidth) return;
-      sizes.set(key, read);
+      keepFresh(sizes, key, read, SIZES_KEPT);
       setRoom(img, read);
     })
     .catch(() => {});
@@ -42,6 +49,11 @@ export function reserveRoom(
 
 /** The size `img` loaded at, for the next time it is drawn. */
 export function rememberSize(key: string, img: HTMLImageElement): void {
-  if (img.naturalWidth)
-    sizes.set(key, { width: img.naturalWidth, height: img.naturalHeight });
+  if (img.naturalWidth && !inline(key))
+    keepFresh(
+      sizes,
+      key,
+      { width: img.naturalWidth, height: img.naturalHeight },
+      SIZES_KEPT,
+    );
 }

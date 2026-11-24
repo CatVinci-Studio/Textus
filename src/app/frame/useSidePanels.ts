@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -59,7 +60,7 @@ function useSidebarOpen() {
  *  layout (a fold opened out), the wide layout's own, as remembered. */
 function useSidebarRemembered(phone: boolean, open: boolean, setOpen: SetOpen) {
   const wasPhone = useRef(phone);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (wasPhone.current && !phone) setOpen(getUiState("sidebarOpen") === true);
     wasPhone.current = phone;
   }, [phone, setOpen]);
