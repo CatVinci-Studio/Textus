@@ -67,11 +67,11 @@ a key the macOS menu takes reaches nothing.
 
 CI has three layers (`.github/workflows/ci.yml`):
 
-| When                                              | What runs                                                                                                                                                                                              | Required                      |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
-| Every pull request (forks too)                    | `check` (types, lint, formats, repo checks and build, beside the unit tests in 2 shards); the whole e2e suite in Chromium (2 shards) and in WebKit (3 shards); Rust on Linux when `src-tauri/` changed | check, e2e, native, ci-config |
-| A push to `main` (a merged pull request)          | `check`, Rust and the Linux app build; the browsers' cache refreshed. No e2e: it ran on the pull request                                                                                               | -                             |
-| Before a release (the version bump's PR, the tag) | everything: the above, plus Rust on macOS and Windows and the iOS simulator                                                                                                                            | all of them                   |
+| When                                     | What runs                                                                                                                                                                                              | Required                      |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
+| Every pull request (forks too)           | `check` (types, lint, formats, repo checks and build, beside the unit tests in 2 shards); the whole e2e suite in Chromium (2 shards) and in WebKit (3 shards); Rust on Linux when `src-tauri/` changed | check, e2e, native, ci-config |
+| A push to `main` (a merged pull request) | `check`, Rust and the Linux app build; the browsers' cache refreshed. No e2e: it ran on the pull request                                                                                               | -                             |
+| Before a release (the version bump's PR) | everything: the above, plus Rust on macOS and Windows and the iOS simulator                                                                                                                            | all of them                   |
 
 A change to GitHub's settings, the license or the root Markdown alone
 checks only their format (`light` in `scripts/ci-changes.mjs`).
@@ -251,9 +251,10 @@ device is a manual step on a Mac.
 runs the quick suite: `check`, the e2e flows, and `native` on Linux when
 the change reaches Rust; a push to `main` runs it again without the e2e
 flows, which the pull request ran. The full suite - every job below on every
-platform, whatever changed - runs on the tagged commit before a release is
-built (`release.yml` calls `ci.yml`) and on the pull request that changes
-the version. Run the e2e flows locally before a pull request
+platform, whatever changed - runs on the pull request that changes the
+version, and again on the tagged commit before a release is built
+(`release.yml` calls `ci.yml`) unless that pull request's run already
+passed on the same tree (`scripts/ci-tested.mjs`). Run the e2e flows locally before a pull request
 that reaches the browser. The required checks are `check`, `e2e`, `native`
 and `ci-config`; `e2e` and `native` are one-line jobs that pass when every
 job they stand for passed, or when all of them were skipped.
@@ -275,7 +276,8 @@ job they stand for passed, or when all of them were skipped.
 
 macOS, Windows and iOS run only in the full suite; in the quick one
 `native` is the Linux job alone. A release builds only once the full suite
-passed on its tag ([releasing.md](releasing.md#what-the-workflow-does)).
+passed on its tree, on the version bump's pull request or on the tag
+([releasing.md](releasing.md#what-the-workflow-does)).
 
 `scripts/ci-changes.mjs` has the rules for "reaches"; the header of
 `ci.yml` sums them up. A light change - only GitHub's settings and
