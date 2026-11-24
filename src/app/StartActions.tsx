@@ -7,7 +7,6 @@ import {
 } from "../engine/controls/icons";
 import { Tooltip } from "../engine/controls/Tooltip";
 import { canOpenFolder } from "../platform/capabilities";
-import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
 import type { Strings } from "../i18n/strings";
 
 /**
@@ -21,12 +20,14 @@ import type { Strings } from "../i18n/strings";
 export function StartActions({
   t,
   look = "rows",
+  only,
 }: {
   t: Strings;
   look?: "rows" | "buttons";
+  /** These of the three alone, by their events. */
+  only?: readonly string[];
 }) {
-  const phone = usePhoneLayout();
-  const actions = [
+  const all = [
     {
       label: t.menuNewFile,
       event: "menu-new-file",
@@ -50,6 +51,7 @@ export function StartActions({
         ]
       : []),
   ];
+  const actions = only ? all.filter((a) => only.includes(a.event)) : all;
   if (look === "buttons")
     return (
       <div className="start-page-buttons">
@@ -88,8 +90,7 @@ export function StartActions({
               {a.icon}
             </span>
             <span className="start-page-action-label">{a.label}</span>
-            {/* A phone has no keys; a tablet may have a keyboard. */}
-            {a.combo && !phone && (
+            {a.combo && (
               <kbd className="start-page-action-keys">
                 {formatCombo(a.combo)}
               </kbd>

@@ -2,259 +2,283 @@
    inside the safe area, so there is no second settings page to keep in step.
    Only its frame and sizes change; it opens as the desktop's dialog does. */
 
-@media (max-width: 760px) {
-  /* Over the whole screen, the card kept clear of the status bar and the
-     home indicator. */
-  :root[data-window-chrome="mobile"] .settings-backdrop {
-    top: 0;
-    z-index: var(--z-phone-page);
-    padding: calc(var(--safe-top) + 8px) 8px calc(var(--safe-bottom) + 8px);
-  }
+/* Over the whole screen, the card kept clear of the status bar, the home
+   indicator and, on its side, the camera's cutout. */
+:root[data-window-chrome="mobile"] .settings-backdrop {
+  top: 0;
+  z-index: var(--z-phone-page);
+  padding: calc(var(--safe-top) + 8px) calc(var(--safe-right) + 8px)
+    calc(var(--safe-bottom) + 8px) calc(var(--safe-left) + 8px);
+}
 
-  :root[data-window-chrome="mobile"] .settings-panel {
-    width: 100%;
-    max-width: none;
-    height: 100%;
-    max-height: none;
-  }
+:root[data-window-chrome="mobile"] .settings-panel {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+}
 
-  /* A navigation bar: the title centred, Done at the right. */
-  :root[data-window-chrome="mobile"] .settings-header {
-    position: relative;
-    justify-content: center;
-    min-height: 48px;
-    padding: 0 16px;
-    font-size: var(--text-body);
-    font-weight: 600;
-  }
+/* A navigation bar: the title centred, Done at the right. */
+:root[data-window-chrome="mobile"] .settings-header {
+  position: relative;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 16px;
+  font-size: var(--text-body);
+  font-weight: 600;
+}
 
-  :root[data-window-chrome="mobile"] .settings-close-button {
-    position: absolute;
-    top: 0;
-    right: 4px;
-    width: 48px;
-    height: 48px;
-  }
+:root[data-window-chrome="mobile"] .settings-close-button {
+  position: absolute;
+  top: 0;
+  right: 4px;
+  width: 48px;
+  height: 48px;
+}
 
-  /* The bar's symbol size, as the title row's. */
-  :root[data-window-chrome="mobile"] .settings-close-button svg {
-    width: 18px;
-    height: 18px;
-  }
+/* The bar's symbol size, as the title row's. */
+:root[data-window-chrome="mobile"] .settings-close-button svg {
+  width: 18px;
+  height: 18px;
+}
 
-  /* Back: a chevron in the bar's left corner, as the × is in its right. */
-  :root[data-window-chrome="mobile"] .settings-bar-back {
-    position: absolute;
-    top: 0;
-    left: 4px;
-    width: 48px;
-    height: 48px;
-    margin: 0;
-  }
+/* Back: a chevron in the bar's left corner, as the × is in its right. */
+:root[data-window-chrome="mobile"] .settings-bar-back {
+  position: absolute;
+  top: 0;
+  left: 4px;
+  width: 48px;
+  height: 48px;
+  margin: 0;
+}
 
-  :root[data-window-chrome="mobile"] .settings-bar-back .settings-back-chevron {
-    width: 18px;
-    height: 18px;
-  }
+:root[data-window-chrome="mobile"] .settings-bar-back .settings-back-chevron {
+  width: 18px;
+  height: 18px;
+}
 
-  /* The bar has the way back; the page doesn't repeat it. */
-  :root[data-window-chrome="mobile"] .settings-content .settings-back-button {
-    display: none;
-  }
+/* The bar has the way back; the page doesn't repeat it. */
+:root[data-window-chrome="mobile"] .settings-content .settings-back-button {
+  display: none;
+}
 
-  /* The list of categories: one card under the search box, as the
-     settings' own cards are, each row leading to its page. */
-  /* On its own the list is the page, in the panel's colour: the card of
-     categories stands out on it as the settings' cards do. */
-  :root[data-window-chrome="mobile"] .settings-sidebar {
-    flex: 1;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    background: var(--ui-bg);
-  }
+/* The list of categories: one card under the search box, as the
+   settings' own cards are, each row leading to its page. */
+/* On its own the list is the page, in the panel's colour: the card of
+   categories stands out on it as the settings' cards do. */
+/* One column, upright or on its side (the desktop's narrow window's goes
+   by width). */
+:root[data-window-chrome="mobile"] .settings-layout {
+  flex-direction: column;
+}
 
-  /* Searching, the list keeps only its search box and the results below
-     take the rest. */
-  :root[data-window-chrome="mobile"]
-    .settings-sidebar:has(+ .settings-content) {
-    flex: none;
-  }
+:root[data-window-chrome="mobile"] .settings-sidebar {
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--ui-bg);
+}
 
-  :root[data-window-chrome="mobile"] .settings-search {
-    margin: 8px 16px 0;
-  }
+/* Searching, the list keeps only its search box and the results below
+   take the rest. */
+:root[data-window-chrome="mobile"] .settings-sidebar:has(+ .settings-content) {
+  flex: none;
+}
 
-  :root[data-window-chrome="mobile"] .settings-nav {
-    flex-direction: column;
-    flex-wrap: nowrap;
-    gap: 0;
-    margin: 16px 16px 36px;
-    padding: 0;
-    overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
-    border-radius: var(--shape-m);
-    background: var(--ui-subtle);
-  }
+:root[data-window-chrome="mobile"] .settings-search {
+  margin: 8px 16px 0;
+}
 
-  :root[data-window-chrome="mobile"] .settings-nav-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    width: 100%;
-    min-height: 48px;
-    position: relative;
-    padding: 0 16px;
-    border-radius: 0;
-    font-size: var(--text-body);
-    font-weight: 400;
-    white-space: normal;
-  }
+/* Its full height, the sidebar scrolling it: on a phone on its side,
+   shrunk to fit, it clipped the last categories out of reach. */
+:root[data-window-chrome="mobile"] .settings-nav {
+  flex: none;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 0;
+  margin: 16px 16px 36px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--ui-border) 75%, transparent);
+  border-radius: var(--shape-m);
+  background: var(--ui-subtle);
+}
 
-  /* The hairline between rows starts where the text does, as iOS's. */
-  :root[data-window-chrome="mobile"]
-    .settings-nav-item
-    + .settings-nav-item::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 18px;
-    right: 0;
-    border-top: 1px solid var(--ui-border);
-  }
+:root[data-window-chrome="mobile"] .settings-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  position: relative;
+  padding: 0 16px;
+  border-radius: 0;
+  font-size: var(--text-body);
+  font-weight: 400;
+  white-space: normal;
+}
 
-  :root[data-window-chrome="mobile"] .settings-nav-item::after {
-    display: none;
-  }
+/* The hairline between rows starts where the text does, as iOS's. */
+:root[data-window-chrome="mobile"]
+  .settings-nav-item
+  + .settings-nav-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 18px;
+  right: 0;
+  border-top: 1px solid var(--ui-border);
+}
 
-  :root[data-window-chrome="mobile"] .settings-nav-item:active {
-    background: var(--ui-pressed-row);
-  }
+:root[data-window-chrome="mobile"] .settings-nav-item::after {
+  display: none;
+}
 
-  :root[data-window-chrome="mobile"] .settings-nav-chevron {
-    flex: none;
-    width: 14px;
-    height: 14px;
-    color: var(--ui-muted);
-  }
+:root[data-window-chrome="mobile"] .settings-nav-item:active {
+  background: var(--ui-pressed-row);
+}
 
-  /* A page pushed in from the right edge; back, the page before returns from
-     a little way to the left, as a navigation stack does. */
-  :root[data-window-chrome="mobile"]
-    .settings-layout[data-nav="push"]
-    > .settings-content {
-    animation: motion-edge-in-end var(--dur-slow) var(--ease-spring);
-  }
+:root[data-window-chrome="mobile"] .settings-nav-chevron {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--ui-muted);
+}
 
-  :root[data-window-chrome="mobile"]
-    .settings-layout[data-nav="pop"]
-    > :is(.settings-content, .settings-sidebar) {
-    --enter-x: calc(-30% * var(--motion-travel));
-    animation: motion-enter var(--dur-slow) var(--ease-spring);
-  }
+/* A page pushed in from the right edge; back, the page before returns from
+   a little way to the left, as a navigation stack does. */
+:root[data-window-chrome="mobile"]
+  .settings-layout[data-nav="push"]
+  > .settings-content {
+  animation: motion-edge-in-end var(--dur-slow) var(--ease-spring);
+}
 
-  /* The bar names the page; no second title under it. */
-  :root[data-window-chrome="mobile"] .settings-category-title {
-    display: none;
-  }
+:root[data-window-chrome="mobile"]
+  .settings-layout[data-nav="pop"]
+  > :is(.settings-content, .settings-sidebar) {
+  --enter-x: calc(-30% * var(--motion-travel));
+  animation: motion-enter var(--dur-slow) var(--ease-spring);
+}
 
-  /* Its scrollbar draws over the page, so the cards line up with the list's. */
-  :root[data-window-chrome="mobile"] .settings-content {
-    padding: 16px 16px 36px;
-    scrollbar-gutter: auto;
-  }
+/* The bar names the page; no second title under it. */
+:root[data-window-chrome="mobile"] .settings-category-title {
+  display: none;
+}
 
-  :root[data-window-chrome="mobile"] .settings-group + .settings-group,
-  :root[data-window-chrome="mobile"] .settings-advanced {
-    margin-top: 28px;
-  }
+/* Its scrollbar draws over the page, so the cards line up with the list's. */
+:root[data-window-chrome="mobile"] .settings-content {
+  padding: 16px 16px 36px;
+  scrollbar-gutter: auto;
+}
 
-  :root[data-window-chrome="mobile"] .settings-group-title {
-    font-size: var(--text-footnote);
-  }
+:root[data-window-chrome="mobile"] .settings-group + .settings-group,
+:root[data-window-chrome="mobile"] .settings-advanced {
+  margin-top: 28px;
+}
 
-  :root[data-window-chrome="mobile"] .settings-row {
-    min-height: 58px;
-    gap: 12px;
-  }
+:root[data-window-chrome="mobile"] .settings-group-title {
+  font-size: var(--text-footnote);
+}
 
-  /* A short name gives its room to the control beside it, so a picker
-     with a long value stays on the row instead of dropping under it. */
-  :root[data-window-chrome="mobile"]
-    .settings-row:not([data-stacked])
-    > *:first-child {
-    flex-basis: 96px;
-    /* As narrow as its longest word, so the control goes under it rather
-       than squeezing it letter by letter; a word wider than the row still
-       breaks. No hyphens, which would cut file names ("agen-t.md"). */
-    max-width: 100%;
-    overflow-wrap: break-word;
-  }
+/* A title level with its buttons, as tall as a finger's: on their foot
+   the title sat lower than their middle. */
+:root[data-window-chrome="mobile"] .settings-group-head {
+  align-items: center;
+}
 
-  /* Stacked (Custom CSS), that basis would be a height: a gap under the name. */
-  :root[data-window-chrome="mobile"] .settings-row-stacked > *:first-child {
-    flex-basis: auto;
-  }
+:root[data-window-chrome="mobile"] .settings-row {
+  min-height: 58px;
+  gap: 12px;
+}
 
-  :root[data-window-chrome="mobile"]
-    :is(
-      .settings-row-label,
-      button.settings-link-row,
-      .settings-advanced > summary
-    ) {
-    font-size: var(--text-body);
-  }
+/* A short name gives its room to the control beside it, so a picker
+   with a long value stays on the row instead of dropping under it. */
+:root[data-window-chrome="mobile"]
+  .settings-row:not([data-stacked])
+  > *:first-child {
+  flex-basis: 96px;
+  /* As narrow as its longest word, so the control goes under it rather
+     than squeezing it letter by letter; a word wider than the row still
+     breaks. No hyphens, which would cut file names ("agen-t.md"). */
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
 
-  :root[data-window-chrome="mobile"] .settings-row-hint {
-    font-size: var(--text-footnote);
-  }
+/* Stacked (Custom CSS), that basis would be a height: a gap under the name. */
+:root[data-window-chrome="mobile"] .settings-row-stacked > *:first-child {
+  flex-basis: auto;
+}
 
-  /* Controls a finger can hit: 36pt tall, in the body's 15pt type. */
-  :root[data-window-chrome="mobile"]
-    .settings-panel
-    :is(.settings-select, button.settings-inline-button, .tx-segment) {
-    min-height: 40px;
-    font-size: var(--text-secondary);
-  }
+:root[data-window-chrome="mobile"]
+  :is(
+    .settings-row-label,
+    button.settings-link-row,
+    .settings-advanced > summary
+  ) {
+  font-size: var(--text-body);
+}
 
-  :root[data-window-chrome="mobile"] .settings-search {
-    height: 40px;
-  }
+:root[data-window-chrome="mobile"] .settings-row-hint {
+  font-size: var(--text-footnote);
+}
 
-  /* The arrow keys' pick; under a finger it only spilled past the card. */
-  :root[data-window-chrome="mobile"] .settings-search-result.is-active {
-    background: none;
-    box-shadow: none;
-  }
+/* Controls a finger can hit: 36pt tall, in the body's 15pt type. */
+:root[data-window-chrome="mobile"]
+  .settings-panel
+  :is(.settings-select, button.settings-inline-button, .tx-segment) {
+  min-height: 40px;
+  font-size: var(--text-secondary);
+}
 
-  /* A built-in skill: Customize… on its own line under what it does; beside the
-     switch it squeezed the text and was cut short. */
-  :root[data-window-chrome="mobile"] .settings-builtin-skill {
-    flex-wrap: wrap;
-    row-gap: 0;
-  }
+:root[data-window-chrome="mobile"] .settings-search {
+  height: 40px;
+}
 
-  :root[data-window-chrome="mobile"]
-    .settings-builtin-skill
-    .settings-row-control {
-    display: contents;
-  }
+/* The field a finger tall, past the box it is drawn in; clear, over the
+   box's focus ring. */
+:root[data-window-chrome="mobile"] .settings-search .tx-search-input {
+  height: var(--touch-target);
+  margin: calc((40px - var(--touch-target)) / 2) 0;
+  background: transparent;
+}
 
-  :root[data-window-chrome="mobile"] .settings-skill-actions {
-    order: 3;
-    flex-basis: 100%;
-    margin: 0 0 0 -4px;
-  }
+/* The arrow keys' pick; under a finger it only spilled past the card. */
+:root[data-window-chrome="mobile"] .settings-search-result.is-active {
+  background: none;
+  box-shadow: none;
+}
 
-  /* No hover on glass: a tapped row stays as it was. */
-  :root[data-window-chrome="mobile"] .settings-nav-item:hover:not(:active) {
-    background: transparent;
-  }
+/* A built-in skill: Customize… on its own line under what it does; beside the
+   switch it squeezed the text and was cut short. */
+:root[data-window-chrome="mobile"] .settings-builtin-skill {
+  flex-wrap: wrap;
+  row-gap: 0;
+}
+
+:root[data-window-chrome="mobile"]
+  .settings-builtin-skill
+  .settings-row-control {
+  display: contents;
+}
+
+:root[data-window-chrome="mobile"] .settings-skill-actions {
+  order: 3;
+  flex-basis: 100%;
+  margin: 0 0 0 -4px;
+}
+
+/* No hover on glass: a tapped row stays as it was. */
+:root[data-window-chrome="mobile"] .settings-nav-item:hover:not(:active) {
+  background: transparent;
 }
 
 /* A hairline is one device pixel where the screen has two or more per
    point, as iOS draws its separators. */
-@media (max-width: 760px) and (min-resolution: 2dppx) {
+@media (min-resolution: 2dppx) {
   :root[data-window-chrome="mobile"] {
     --divider-width: 0.5px;
   }

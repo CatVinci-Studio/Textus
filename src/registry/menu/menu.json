@@ -60,8 +60,8 @@
       "items": [
         {
           "id": "new-file",
-          "label": "menuNewTab",
-          "en": "New Tab",
+          "label": "menuNewFile",
+          "en": "New File",
           "keys": "mod+n",
           "keysOff": ["windows"]
         },
@@ -198,7 +198,7 @@
         {
           "id": "find-replace",
           "label": "menuFindReplace",
-          "en": "Find & Replace…",
+          "en": "Find…",
           "setting": "findReplace"
         },
         {
@@ -220,6 +220,18 @@
       "label": "menuFormat",
       "en": "Format",
       "items": [
+        {
+          "id": "toggle-mark:bold",
+          "label": "toolbarBold",
+          "en": "Bold",
+          "keys": "mod+b"
+        },
+        {
+          "id": "toggle-mark:italic",
+          "label": "toolbarItalic",
+          "en": "Italic",
+          "keys": "mod+i"
+        },
         {
           "id": "toggle-mark:highlight",
           "label": "toolbarHighlight",
@@ -243,6 +255,11 @@
           "label": "menuInsertLink",
           "en": "Link",
           "keys": "mod+k"
+        },
+        {
+          "id": "toggle-mark:clear",
+          "label": "menuClearFormatting",
+          "en": "Clear Formatting"
         },
         "-",
         { "section": "headings" },
@@ -284,8 +301,8 @@
         },
         {
           "id": "toggle-agent-panel",
-          "label": "menuToggleAgentPanel",
-          "en": "AI Panel",
+          "label": "menuTextusAi",
+          "en": "Textus AI",
           "setting": "toggleAgentPanel",
           "check": true
         },
@@ -324,13 +341,13 @@
         "-",
         {
           "menu": "view-mode",
-          "label": "menuViewMode",
-          "en": "Mode",
+          "label": "viewModeLabel",
+          "en": "Editing view",
           "items": [
             {
               "id": "view-mode-default",
-              "label": "menuViewModeDefault",
-              "en": "Default",
+              "label": "viewModeRich",
+              "en": "Rich text",
               "check": true
             },
             {

@@ -149,7 +149,6 @@ export interface ContextMenuOptions {
   paste: () => void;
   pasteAsPlainText?: () => void;
   selectAll: () => void;
-  openFindReplace: () => void;
   openTableDialog: () => void;
   /** A note of the writer's own on the selection, offered while there is one. */
   addNote?: () => void;
@@ -309,12 +308,11 @@ export function buildPhoneMoreItems(
   }
   if (imagePos !== null) return [...clipboard, ...generalItems(options)];
   // A tap only edits a link: here it opens.
+  // Insert Table is the strip's, Find ⋯'s: not repeated here.
   const link = options.link ? linkMenuItems(run, t, options.link) : [];
   return [
     ...link,
     ...(link.length ? ["separator" as const] : []),
-    { label: t.insertTable, onSelect: options.openTableDialog },
-    "separator",
     ...clipboard,
     ...generalItems(options),
   ];
@@ -342,13 +340,11 @@ export function selectedText(run: EditorRunner): string {
   );
 }
 
-/** Select All, Find, and the AI items: offered wherever the caret is. */
+/** Select All and the AI items: offered wherever the caret is. */
 function generalItems(options: ContextMenuOptions): ContextMenuEntry[] {
   const { t, aiItems } = options;
   return [
     { label: t.selectAll, onSelect: options.selectAll },
-    "separator",
-    { label: t.findReplace, onSelect: options.openFindReplace },
     ...(aiItems.length > 0
       ? (["separator", ...aiItems] as ContextMenuEntry[])
       : []),

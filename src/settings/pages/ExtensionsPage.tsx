@@ -22,18 +22,21 @@ import {
   type ExtensionsTab,
 } from "./extensions-tab";
 import { explainError } from "../../utils/error-explain";
-
-const TABS = extensionsTabs();
+import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 
 /**
  * Settings › Extensions: themes, plugins, skills and MCP servers, a tab
  * each, all laid out alike: what is installed, then what is available; and
- * Create, where Textus AI makes one of them.
- * Desktop only, as plugins are.
+ * Create, where Textus AI makes one of them. A phone's layout shows fewer
+ * tabs, and follows the screen as it turns or unfolds.
  */
 export function ExtensionsPage(props: SettingsPageProps) {
   const { t } = props;
-  const [tab, setTabState] = useState<ExtensionsTab>(extensionsStartTab);
+  const [picked, setTabState] = useState<ExtensionsTab>(extensionsStartTab);
+  // Read on each render: the layout picks the tabs.
+  usePhoneLayout();
+  const tabs = extensionsTabs();
+  const tab = tabs.includes(picked) ? picked : tabs[0];
   const [skillError, setSkillError] = useState<string | null>(null);
   const [skillQuery, setSkillQuery] = useState("");
   const catalog = useSyncExternalStore(subscribeCatalog, catalogSnapshot);
@@ -53,13 +56,16 @@ export function ExtensionsPage(props: SettingsPageProps) {
   };
   return (
     <>
-      <Segmented
-        className="extensions-tabs"
-        label={t.navExtensions}
-        options={TABS.map((id) => ({ id, label: label[id] }))}
-        value={tab}
-        onChange={setTab}
-      />
+      {/* One tab alone (an iPhone's Plugins) needs no row to pick it. */}
+      {tabs.length > 1 && (
+        <Segmented
+          className="extensions-tabs"
+          label={t.navExtensions}
+          options={tabs.map((id) => ({ id, label: label[id] }))}
+          value={tab}
+          onChange={setTab}
+        />
+      )}
       {!props.indexing && (
         <div
           role="tabpanel"

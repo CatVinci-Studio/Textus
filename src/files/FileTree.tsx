@@ -119,7 +119,7 @@ export function FileTree({
     onRowPick,
     draft,
     finishDraft,
-    newDocumentLabel: t.treeNewDocument,
+    newDocumentLabel: t.menuNewFile,
     setDraft,
     root,
     reveal,
@@ -205,11 +205,11 @@ export function FileTree({
                 </span>
                 {desktop && (
                   <>
-                    <Tooltip text={t.treeNewDocument}>
+                    <Tooltip text={t.menuNewFile}>
                       <button
                         type="button"
                         className="tx-icon-button tree-tool"
-                        aria-label={t.treeNewDocument}
+                        aria-label={t.menuNewFile}
                         onClick={() =>
                           setDraft({ dir: root, kind: "document" })
                         }

@@ -35,7 +35,7 @@ export function actionLabels(t: Strings): Record<ShortcutAction, string> {
     toggleTextusAi: t.shortcutToggleTextusAi,
     findReplace: plain(t.menuFindReplace),
     toggleSidebar: t.menuToggleSidebar,
-    toggleAgentPanel: t.menuToggleAgentPanel,
+    toggleAgentPanel: t.menuTextusAi,
     toggleSplitView: t.menuToggleSplitView,
     toggleZenMode: t.menuToggleZenMode,
     splitEditor: t.menuSplitRight,

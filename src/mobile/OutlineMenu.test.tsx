@@ -13,7 +13,10 @@ vi.mock("../prefs/SettingsContext", () => ({
     },
   }),
 }));
-vi.mock("../files/outline-current", () => ({ currentHeading: () => 1 }));
+vi.mock("../files/outline-current", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../files/outline-current")>()),
+  currentHeading: () => 1,
+}));
 vi.mock("../editor/tab-jump", () => ({ setTabJump: vi.fn() }));
 vi.mock("../editor/nav-history", () => ({ noteJump: vi.fn() }));
 
@@ -26,11 +29,18 @@ beforeAll(() => {
 });
 afterEach(cleanup);
 
-const { OutlineSheet } = await import("./OutlineSheet");
+const { OutlineMenu } = await import("./OutlineMenu");
 const { setTabJump } = await import("../editor/tab-jump");
 
 function renderSheet(content: string) {
-  render(<OutlineSheet content={content} tabId="tab-1" onClose={() => {}} />);
+  render(
+    <OutlineMenu
+      content={content}
+      tabId="tab-1"
+      at={{ x: 300, y: 40, anchor: null }}
+      onClose={() => {}}
+    />,
+  );
 }
 
 describe("a document's outline on a phone", () => {

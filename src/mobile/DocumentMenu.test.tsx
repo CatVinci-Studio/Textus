@@ -1,7 +1,13 @@
 // @vitest-environment jsdom
 
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+} from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 vi.mock("../prefs/SettingsContext", () => ({
@@ -11,7 +17,7 @@ vi.mock("../prefs/SettingsContext", () => ({
       docMore: "More",
       outlineTab: "Outline",
       outlineEmpty: "No headings yet",
-      menuFindReplace: "Find & Replace…",
+      menuFindReplace: "Find…",
       menuToggleSourceMode: "Source Mode",
       menuShare: "Share…",
     },
@@ -60,14 +66,12 @@ describe("a document's menu on a phone", () => {
     open();
     expect(screen.getByRole("menu", { name: "notes.md" })).toBeTruthy();
     expect(screen.getByRole("menuitem", { name: "Outline" })).toBeTruthy();
-    expect(
-      screen.getByRole("menuitem", { name: "Find & Replace…" }),
-    ).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "Find…" })).toBeTruthy();
     expect(screen.getByRole("menuitem", { name: "Source Mode" })).toBeTruthy();
     expect(screen.getByRole("menuitem", { name: "Share…" })).toBeTruthy();
   });
 
-  it("opens the outline sheet, and a row goes to its heading", () => {
+  it("opens the outline, and a row goes to its heading", () => {
     open();
     fireEvent.click(screen.getByRole("menuitem", { name: "Outline" }));
     expect(screen.getByRole("menu", { name: "Outline" })).toBeTruthy();
@@ -82,7 +86,7 @@ describe("a document's menu on a phone", () => {
 
   it("runs the same commands the menus do", () => {
     open();
-    fireEvent.click(screen.getByRole("menuitem", { name: "Find & Replace…" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Find…" }));
     expect(sendAppEvent).toHaveBeenCalledWith(TOGGLE_FIND_REPLACE_EVENT);
     cleanup();
 
@@ -94,5 +98,21 @@ describe("a document's menu on a phone", () => {
     open();
     fireEvent.click(screen.getByRole("menuitem", { name: "Share…" }));
     expect(emitMenuEvent).toHaveBeenCalledWith("share");
+  });
+
+  it("is the desktop's menu, and Android's Back closes it", async () => {
+    const { back } = await import("./back");
+    open();
+    const menu = screen.getByRole("menu", { name: "notes.md" });
+    expect(menu).toHaveClass("context-menu");
+    expect(document.querySelector(".sheet-scrim")).toBeNull();
+    menu.getClientRects = () => [{}] as unknown as DOMRectList;
+    act(() => {
+      expect(back()).toBe(true);
+    });
+    expect(screen.getByRole("button", { name: "More" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
   });
 });

@@ -24,7 +24,7 @@ Les cinq usages les plus courants, à commencer par la conversation.
 
 ### Conversations
 
-Les conversations s'ouvrent en **onglets**. Cliquez sur le bouton **Textus AI** (les étincelles) à l'extrémité droite de la barre de la fenêtre, appuyez sur <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> ou choisissez **Présentation › Panneau IA** : l'IA s'ouvre dans un îlot à part, à droite. Ses onglets sont des onglets comme les autres : faites-en glisser un à côté d'un document, dans un autre îlot, ou hors de la fenêtre pour lui donner la sienne.
+Les conversations s'ouvrent en **onglets**. Cliquez sur le bouton **Textus AI** (les étincelles) à l'extrémité droite de la barre de la fenêtre, appuyez sur <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> ou choisissez **Présentation › Textus AI** : l'IA s'ouvre dans un îlot à part, à droite. Ses onglets sont des onglets comme les autres : faites-en glisser un à côté d'un document, dans un autre îlot, ou hors de la fenêtre pour lui donner la sienne.
 
 - **Par dossier** : les conversations appartiennent au dossier où vous travaillez, pas à un document. Chaque conversation ouverte est un onglet ; celle au premier plan est celle à qui vous parlez, au sujet du document au premier plan. Une conversation fermée reste dans l'historique.
 - **Nouvelle conversation** : faites un clic droit sur la page vide d'un onglet IA et choisissez **Nouvelle conversation** (s'il reste des modifications en attente, une confirmation est d'abord demandée). **Mémoire** se trouve dans le même menu.

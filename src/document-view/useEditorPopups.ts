@@ -98,8 +98,8 @@ export function useEditorPopups({
     grammarCard: grammar.hide,
   });
 
-  // A phone shows the menu and the grammar card as action sheets, which
-  // usePopupDismiss leaves alone.
+  // A phone's menu hangs from the format bar and its grammar card is a
+  // sheet, neither pointing at the text: usePopupDismiss leaves them.
   usePopupDismiss({
     anyPopup: !phone && (menu !== null || grammar.popover !== null),
     setMenu,

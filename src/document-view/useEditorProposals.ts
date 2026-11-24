@@ -27,7 +27,7 @@ import { useLatest } from "../utils/hooks/useLatest";
 import { announce } from "../engine/controls/announce";
 import { plural } from "../i18n/plural";
 import { useAddPreviews, useDocumentPort } from "./useProposalFlow";
-import { usePluginDocumentAccess } from "./plugins/usePluginDocumentAccess";
+import { useEditorPluginDocument } from "./plugins/usePluginDocumentAccess";
 import { noteBase } from "../ai/chat/file-changes";
 import { useKeptProposals } from "../ai/revision/useKeptProposals";
 import { explainError } from "../utils/error-explain";
@@ -291,7 +291,7 @@ export function useEditorProposals(options: Options) {
     { workspaceRoot, port, citations, armSupersede, markSent, addRequested },
   );
   // A plugin's edits are proposals too, shown as Textus AI's are.
-  usePluginDocumentAccess({ run, isActive, filePath, addPreviews, textOf });
+  useEditorPluginDocument({ run, isActive, filePath, addPreviews, textOf });
 
   return {
     workspaceRoot,

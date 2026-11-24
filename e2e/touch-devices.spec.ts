@@ -89,7 +89,8 @@ for (const device of DEVICES)
         await page.getByRole("button", { name: "Menu", exact: true }).tap();
         await page.getByRole("menuitem", { name: /Settings/ }).tap();
         await page.getByRole("button", { name: "Extensions" }).tap();
-        await page.getByRole("tab", { name: "Plugins" }).tap();
+        // Plugins is an iPhone's one Extensions tab: no row of tabs.
+        await expect(page.getByRole("tab", { name: "Plugins" })).toHaveCount(0);
         await store.getByRole("button", { name: "Search" }).first().tap();
       } else {
         await page
@@ -156,20 +157,24 @@ for (const device of DEVICES)
       // come in pushing the island aside.
       const toggle = page.locator(".window-bar-sidebar-toggle:visible");
       if (await toggle.count()) await toggle.tap();
-      const settings = page.locator(".activity-rail-settings");
-      await expect(settings).toBeVisible();
+      await expect(page.locator(".activity-rail")).toBeVisible();
       await fitsTheScreen(page, ".activity-rail");
-      await settings.tap();
-      // A phone's Settings is a sheet over the window; a tablet's a tab, as
-      // on the desktop.
+      // A phone's Settings is ☰'s, a sheet over the window; a tablet's the
+      // rail's gear and a tab, as on the desktop.
       if (device.name === "a phone") {
+        await page.locator(".window-menu-button").tap();
+        await page.getByRole("menuitem", { name: /设置/ }).tap();
         const dialog = page.getByRole("dialog", { name: "设置" });
         await expect(
           dialog.getByRole("button", { name: "外观" }),
         ).toBeVisible();
         await fitsTheScreen(page, '[role="dialog"]');
       } else {
+        await page.locator(".activity-rail-settings").tap();
         await expect(page.locator(".settings-tab-page")).toBeVisible();
+        // Its sidebar opens with it: the sheet takes the room left in the
+        // frame it is drawn, not the moment the tab is mounted.
+        await settled(page);
         await fitsTheScreen(page, ".settings-tab-page");
       }
     });

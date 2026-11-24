@@ -77,6 +77,35 @@ describe("toggleSourceMark", () => {
     expect(view.state.doc.toString()).toBe("****a** and **b****");
   });
 
+  it("clears every run the selection touches, leaving code and snake_case", () => {
+    const view = viewOf("a **b [c** ~~d~~ ==e==] *f* `**g**` snake_case_name");
+    expect(toggleSourceMark(view, "clear")).toBe(true);
+    expect(shown(view)).toBe("a b [c d e] *f* `**g**` snake_case_name");
+  });
+
+  it("leaves a code fence's text, the fence opened above the selection too", () => {
+    const view = viewOf(
+      "```py\nif __name__:\n[    f(**kw, **opts)\n```\n**b**]",
+    );
+    toggleSourceMark(view, "clear");
+    expect(view.state.doc.toString()).toBe(
+      "```py\nif __name__:\n    f(**kw, **opts)\n```\nb",
+    );
+  });
+
+  it("counts a line's emoji as two units, and leaves a thematic break", () => {
+    const view = viewOf("[😀 **a** **b** tail\n***]");
+    toggleSourceMark(view, "clear");
+    expect(view.state.doc.toString()).toBe("😀 a b tail\n***");
+  });
+
+  it("clears nested runs, and nothing with nothing to clear", () => {
+    const view = viewOf("[***x***]");
+    toggleSourceMark(view, "clear");
+    expect(view.state.doc.toString()).toBe("x");
+    expect(toggleSourceMark(viewOf("[2 * 3 * 4]"), "clear")).toBe(false);
+  });
+
   it("refuses a mark it doesn't write", () => {
     expect(toggleSourceMark(viewOf("|"), "underline")).toBe(false);
   });

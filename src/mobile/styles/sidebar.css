@@ -3,13 +3,18 @@
    right by their width, a strip of it left at the right edge. Nothing
    dims; a tap on that strip pushes it back (usePushedSidebar). */
 :root[data-window-chrome="mobile"] .app-shell {
-  --rail-width: 56px;
+  /* Its icons, a touch target wide, on whole pixels (--mobile-bar). */
+  --rail-width: calc(var(--touch-target) + 2 * var(--space-1));
   --sidebar-width: min(240px, calc(100vw - var(--rail-width) - 64px));
+  /* The screen between a phone's cutout and its far corner, turned on its
+     side (#root's padding, base.css). */
+  --phone-width: calc(100vw - var(--safe-left, 0px) - var(--safe-right, 0px));
 }
 
 :root[data-window-chrome="mobile"] :is(.activity-rail, .sidebar) {
   position: fixed;
   top: 0;
+  margin-left: var(--safe-left, 0px);
   z-index: 0;
   padding-top: var(--safe-top);
   padding-bottom: var(--safe-bottom);
@@ -60,7 +65,7 @@
 }
 
 :root[data-window-chrome="mobile"] .main-pane {
-  width: 100vw;
+  width: var(--phone-width);
   flex: none;
   background: var(--ui-frame-fill) fixed;
 }
@@ -85,6 +90,11 @@
   border-bottom: 0;
 }
 
+/* The rows below it on whole pixels (--mobile-bar). */
+:root[data-window-chrome="mobile"] .tree-toolbar {
+  margin-bottom: var(--space-1);
+}
+
 /* A tap leaves :hover on the row until something else is touched. */
 :root[data-window-chrome="mobile"] .tree-row:hover:not(.tree-row-active) {
   background: none;
@@ -98,13 +108,10 @@
   user-select: none;
 }
 
-/* Rows and tabs a finger can hit (an iPad's too). */
-:root[data-window-chrome="mobile"] :is(.tree-row, .sidebar-tab) {
-  min-height: 48px;
-}
-
+/* Tabs a finger can hit; rows take theirs with a tablet's (base.css). */
 :root[data-window-chrome="mobile"] .sidebar-tab {
-  min-width: 48px;
+  min-width: var(--touch-target);
+  min-height: var(--touch-target);
 }
 
 :root[data-window-chrome="mobile"] .sidebar-tab:hover:not(.sidebar-tab-active) {

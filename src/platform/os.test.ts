@@ -3,6 +3,7 @@ import {
   isAndroidPlatform,
   isDesktop,
   isIOSPlatform,
+  isLinuxPlatform,
   isWebKitEngine,
   modIsMeta,
 } from "./os";
@@ -45,6 +46,19 @@ describe("isIOSPlatform / isDesktop", () => {
     expect(isDesktop()).toBe(true);
     stub("Linux x86_64", "Mozilla/5.0 (X11; Linux x86_64)");
     expect(isDesktop()).toBe(true);
+  });
+
+  it("counts only a Linux desktop as Linux, not an iPhone emulated on one", () => {
+    stub("Linux x86_64", "Mozilla/5.0 (X11; Linux x86_64)");
+    expect(isLinuxPlatform()).toBe(true);
+    stub(
+      "Linux x86_64",
+      "Mozilla/5.0 (iPhone; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
+      1,
+    );
+    expect(isLinuxPlatform()).toBe(false);
+    stub("Linux armv8l", "Mozilla/5.0 (Linux; Android 14; Pixel 8)", 5);
+    expect(isLinuxPlatform()).toBe(false);
   });
 
   it("never counts Android as desktop", () => {

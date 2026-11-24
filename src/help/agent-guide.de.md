@@ -24,7 +24,7 @@ Die fünf Wege, die du am häufigsten nutzen wirst – zuerst das Gespräch mit 
 
 ### Unterhaltungen
 
-Unterhaltungen öffnen sich als **Tabs**. Klicke auf die Schaltfläche **Textus AI** (die Funken) am rechten Ende der Fensterleiste, drücke <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> oder wähle **Ansicht › KI-Bereich**: Die KI öffnet sich in einer eigenen Insel rechts. Ihre Tabs sind Tabs wie alle anderen: Zieh einen neben ein Dokument, in eine andere Insel oder hinaus in ein eigenes Fenster.
+Unterhaltungen öffnen sich als **Tabs**. Klicke auf die Schaltfläche **Textus AI** (die Funken) am rechten Ende der Fensterleiste, drücke <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> oder wähle **Ansicht › Textus AI**: Die KI öffnet sich in einer eigenen Insel rechts. Ihre Tabs sind Tabs wie alle anderen: Zieh einen neben ein Dokument, in eine andere Insel oder hinaus in ein eigenes Fenster.
 
 - **Pro Ordner**: Unterhaltungen gehören zu dem Ordner, in dem du arbeitest, nicht zu einem einzelnen Dokument. Jede offene Unterhaltung ist ein Tab; mit der vorderen sprichst du, und zwar über das vordere Dokument. Eine geschlossene Unterhaltung bleibt im Verlauf.
 - **Neue Unterhaltung**: Klicke mit rechts auf das leere Papier eines KI-Tabs und wähle **Neue Unterhaltung** (sind noch Änderungen offen, wird vorher nachgefragt). **Gedächtnis** steht im selben Menü.

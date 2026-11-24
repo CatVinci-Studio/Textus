@@ -75,13 +75,15 @@
 }
 
 :root[data-window-chrome="mobile"] {
-  --mobile-bar: 48px;
+  /* Exact pixels, not the chrome's step: a 44pt target that starts between
+     device pixels is hit a pixel short in WebKit. */
+  --mobile-bar: var(--touch-target);
   --mobile-top: calc(var(--safe-top) + var(--mobile-bar));
   /* No grey flash over whatever a finger lands on. */
   -webkit-tap-highlight-color: transparent;
   /* Phone-only layers. A full-screen page covers the find bar (300) and the
-     app menu (310) but stays under its own alerts (400-450); an action sheet
-     is over everything. */
+     app menu (310) but stays under its own alerts (400-450); a sheet from
+     the bottom is over everything. */
   --z-phone-page: 350;
   --z-sheet-menu: 500;
 }
@@ -115,21 +117,29 @@
   background: transparent;
 }
 
-:root[data-window-chrome="mobile"] .window-menu-button,
-:root[data-window-chrome="mobile"] .window-bar-toggle {
-  width: 48px;
-  height: 48px;
+:root[data-window-chrome="mobile"]
+  :is(.window-menu-button, .window-bar-sidebar-toggle, .window-bar-toggle) {
+  width: var(--touch-target);
+  height: var(--touch-target);
   border-radius: var(--shape-pill);
   corner-shape: round;
 }
 
-/* A touch leaves :hover stuck on the last thing tapped. */
-:root[data-window-chrome="mobile"] .window-menu-button:hover {
-  background: none;
+/* The sidebar's fill, when on, keeps the desktop's small rounded box inside
+   its fingertip-wide button. */
+:root[data-window-chrome="mobile"] .window-bar-sidebar-toggle {
+  padding: 12px;
+  background-clip: content-box;
 }
 
+/* A touch leaves :hover on the last thing tapped, also on a phone that says
+   it can hover (a stylus, a paired mouse). */
 :root[data-window-chrome="mobile"]
-  .window-bar-toggle:hover:not(.window-bar-toggle-on) {
+  :is(
+    .window-menu-button,
+    .window-bar-sidebar-toggle,
+    .window-bar-toggle:not(.window-bar-toggle-on)
+  ):hover {
   background: none;
 }
 
@@ -148,17 +158,18 @@
   }
 }
 
-/* The desktop's 12-14px glyphs read as specks in a 44pt button; iOS draws
+/* The desktop's 12-15px glyphs read as specks in a 44pt button; iOS draws
    bar and toolbar symbols at about 20pt. */
 :root[data-window-chrome="mobile"]
   :is(
     .window-menu-button,
+    .window-bar-sidebar-toggle,
     .window-bar-toggle,
+    .tab-bar-add,
+    .activity-rail-item,
     .agent-panel-actions .inline-chat-header-button
-  )
-  svg {
-  width: 22px;
-  height: 22px;
+  ) {
+  --icon-scale: 1.35;
 }
 
 /* Small bar buttons keep their look; a finger gets a 44pt target around
@@ -168,23 +179,80 @@
     :is(.inline-chat-header-actions, .agent-island-tools) {
     gap: 16px;
   }
-  :root[data-window-chrome="mobile"]
-    :is(.window-bar-sidebar-toggle, .inline-chat-header-button) {
+  :root[data-window-chrome="mobile"] .inline-chat-header-button,
+  :root:is([data-platform="ios"], [data-platform="android"])
+    .window-menu-button {
     position: relative;
   }
+  /* The + is sticky at the row's end (TabBar.css), its own containing
+     block; a finger wide, as the scroller clips what reaches past it. A
+     tab's x keeps its size on a tablet: in a 32px tab a fingertip's target
+     would take the taps meant for the tab. */
+  :root:is([data-platform="ios"], [data-platform="android"]) .tab-bar-add {
+    min-width: var(--touch-target);
+  }
   :root[data-window-chrome="mobile"]
-    :is(
-      .window-bar-sidebar-toggle,
-      .inline-chat-header-button,
-      .tab-bar-list
-    )::after {
+    :is(.inline-chat-header-button, .tab-bar-list)::after,
+  :root:is([data-platform="ios"], [data-platform="android"])
+    :is(.window-menu-button, .tab-bar-add)::after {
     content: "";
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 44px;
-    height: 44px;
+    width: var(--touch-target);
+    height: var(--touch-target);
     transform: translate(-50%, -50%);
+  }
+
+  /* Bare glyphs and rows, a tablet's too: the box itself a finger wide. */
+  :root:is([data-platform="ios"], [data-platform="android"])
+    :is(.activity-rail-item, .tree-tool) {
+    width: var(--touch-target);
+    height: var(--touch-target);
+  }
+  :root:is([data-platform="ios"], [data-platform="android"])
+    :is(.tree-row, .tx-list-item, .context-menu-item) {
+    min-height: var(--touch-target);
+  }
+
+  /* A phone's folder tools stay small, leaving the name its room; each
+     44pt target overlaps the next one's, which it lies over. */
+  :root[data-window-chrome="mobile"] .tree-toolbar {
+    min-height: var(--touch-target);
+    gap: var(--space-2);
+    padding-right: calc((var(--touch-target) - var(--icon-button-s)) / 2);
+  }
+  :root[data-window-chrome="mobile"] .tree-toolbar .tree-tool {
+    position: relative;
+    z-index: 3;
+    width: var(--icon-button-s);
+    height: var(--icon-button-s);
+  }
+  :root[data-window-chrome="mobile"] .tree-toolbar .tree-tool ~ .tree-tool {
+    z-index: 2;
+  }
+  :root[data-window-chrome="mobile"]
+    .tree-toolbar
+    .tree-tool
+    ~ .tree-tool
+    ~ .tree-tool {
+    z-index: 1;
+  }
+
+  /* Pills, "?" and switches keep their look; a finger gets 44pt around
+     whatever is shorter or narrower than that. */
+  :root:is([data-platform="ios"], [data-platform="android"]) .tx-button {
+    position: relative;
+  }
+  :root:is([data-platform="ios"], [data-platform="android"]) .tx-button::after,
+  :root[data-window-chrome="mobile"] .tree-toolbar .tree-tool::after,
+  :root:is([data-platform="ios"], [data-platform="android"])
+    .info-tip-button::after,
+  :root:is([data-platform="ios"], [data-platform="android"])
+    input[type="checkbox"].tx-switch::before {
+    content: "";
+    position: absolute;
+    inset: min(0px, calc((100% - var(--touch-target)) / 2));
   }
 }
 

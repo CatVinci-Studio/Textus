@@ -25,6 +25,7 @@ import {
   toggleFormat,
 } from "../editor/keys/format-shortcut-plugin";
 import type { EditorView } from "@milkdown/kit/prose/view";
+import { clearSpans } from "../editor/marks/span-commands";
 import {
   cycleHeading,
   toggleBlockquote,
@@ -176,8 +177,8 @@ function useFormatEvents(events: Events) {
     });
   });
 
-  // The iPhone keyboard toolbar's bold and italic, and Format › Highlight,
-  // Strikethrough, Inline Code and Link: each as its key does it.
+  // The keyboard toolbar's marks and Format's (Bold to Inline Code, Clear
+  // Formatting): each as its key does it.
   useWindowEvent(TOGGLE_MARK_EVENT, (e) => {
     if (!isOnScreen()) return;
     const toggle = MARKS[(e as CustomEvent<string>).detail];
@@ -251,16 +252,18 @@ function useToolbarEvents(events: Events) {
     setMenu({ x, y, imagePos: null, block: { pos } });
   });
 
-  // The iPhone keyboard toolbar's "More": the editor's menu for where the
-  // caret is, as an action sheet.
-  useWindowEvent(EDITOR_MORE_EVENT, () => {
+  // The phone's format bar's "More": the editor's menu for where the caret
+  // is, hung from the button.
+  useWindowEvent(EDITOR_MORE_EVENT, (e) => {
     if (!isOnScreen()) return;
+    const button = (e as CustomEvent<HTMLElement>).detail;
+    const box = button.getBoundingClientRect();
     setMenu({
-      x: 0,
-      y: 0,
+      x: box.left,
+      y: box.bottom + 4,
       imagePos: selectedImagePos(run),
       link: caretLink(run, docPath),
-      phone: true,
+      phone: button,
     });
   });
 
@@ -303,6 +306,7 @@ const MARKS: Record<string, (view: EditorView) => unknown> = {
   highlight: (view) => toggleFormat(view, HIGHLIGHT),
   strikethrough: (view) => toggleFormat(view, STRIKETHROUGH),
   code: toggleCodeSpan,
+  clear: clearSpans,
 };
 
 export function useEditorWindowEvents(editor: EditorEvents) {
