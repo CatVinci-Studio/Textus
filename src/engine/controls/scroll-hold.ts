@@ -30,10 +30,23 @@ export interface Still {
   top: number;
 }
 
-/** Scrolls by what `still` moved. */
-export function holdStill(scroller: Element, still: Still | null): void {
-  if (pageIsTheHands(scroller) || !still?.el.isConnected) return;
-  scrollByHeld(scroller, still.el.getBoundingClientRect().top - still.top);
+/** Where `held` is on screen now; undefined once gone. */
+function topNow(held: Still | HeldText): number | undefined {
+  if ("range" in held)
+    return held.range.startContainer.isConnected
+      ? held.range.getClientRects()[0]?.top
+      : undefined;
+  return held.el.isConnected ? held.el.getBoundingClientRect().top : undefined;
+}
+
+/** Scrolls by what `still`, a block or a character, moved. */
+export function holdStill(
+  scroller: Element,
+  still: Still | HeldText | null,
+): void {
+  if (!still || pageIsTheHands(scroller)) return;
+  const top = topNow(still);
+  if (top !== undefined) scrollByHeld(scroller, top - still.top);
 }
 
 /** By how much a scroller scrolls when a box that starts above its top
@@ -145,8 +158,7 @@ export function holdText(
   change: () => void,
 ) {
   change();
-  const now = held.range.getClientRects()[0];
-  if (now) scroller.scrollTop += now.top - held.top;
+  holdStill(scroller, held);
 }
 
 /** `scroller` put back at `top` if something scrolled it; `then` hears
