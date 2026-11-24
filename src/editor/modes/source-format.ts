@@ -87,17 +87,25 @@ const SPAN = /(\*\*|__|~~|==|\*|_)(?=\S)([^\n]*?\S)\1/g;
 const WORD = /[\p{L}\p{N}]/u;
 
 /** Clear Formatting: the markers of every run the selection touches taken
- *  off, as the rendered editor does; code spans stay. False with nothing
+ *  off, as the rendered editor does; code stays. False with nothing
  *  to clear. */
 function clearSourceMarks(view: EditorView): boolean {
   const { state } = view;
   let cleared = false;
   const result = state.changeByRange((range) => {
     if (range.empty) return { range };
-    const start = state.doc.lineAt(range.from).from;
-    // Code spans masked; `at` holds each remaining character's offset.
+    const first = state.doc.lineAt(range.from);
+    const last = state.doc.lineAt(range.to);
+    const start = first.from;
+    const fenced = fencedLines(state.doc, first.number, last.number);
+    // Code masked; `at` holds each remaining character's offset.
     let text = state
-      .sliceDoc(start, state.doc.lineAt(range.to).to)
+      .sliceDoc(start, last.to)
+      .split("\n")
+      .map((line, i) =>
+        fenced(first.number + i) ? "\u0001".repeat(line.length) : line,
+      )
+      .join("\n")
       .replace(/`+[^`\n]*`+/g, (code) => "\u0001".repeat(code.length));
     let at = [...text].map((_, i) => start + i);
     const gone: { from: number; to: number }[] = [];
@@ -222,32 +230,57 @@ export function insertSourceLink(view: EditorView): void {
 
 const FENCE = /^\s*(`{3,}|~{3,})(.*)$/;
 
-/** The code fence holding line `at` (1-based), as its opening and closing
- *  line numbers; null outside one, or in one never closed. Read from the
- *  document's start, as Markdown reads it: a closing fence is of the opening
- *  one's character, as long at least, with nothing after it. */
-function fenceAround(
+/** The document's code fences, as opening and closing line numbers (1-based;
+ *  null for one never closed), read from its start as Markdown reads it: a
+ *  closing fence is of the opening one's character, as long at least, with
+ *  nothing after it. */
+function* fences(
   doc: EditorState["doc"],
-  at: number,
-): { open: number; close: number } | null {
+): Generator<{ open: number; close: number | null }> {
   let open: { line: number; marks: string } | null = null;
   for (let n = 1; n <= doc.lines; n++) {
     const found = FENCE.exec(doc.line(n).text);
     if (!found) continue;
     const [, marks, rest] = found;
-    if (!open) {
-      if (n > at) return null;
-      open = { line: n, marks };
-    } else if (
+    if (!open) open = { line: n, marks };
+    else if (
       marks[0] === open.marks[0] &&
       marks.length >= open.marks.length &&
       !rest.trim()
     ) {
-      if (n >= at) return { open: open.line, close: n };
+      yield { open: open.line, close: n };
       open = null;
     }
   }
+  if (open) yield { open: open.line, close: null };
+}
+
+/** The code fence holding line `at`; null outside one, or in one never
+ *  closed. */
+function fenceAround(
+  doc: EditorState["doc"],
+  at: number,
+): { open: number; close: number } | null {
+  for (const { open, close } of fences(doc)) {
+    if (open > at) return null;
+    if (close !== null && close >= at) return { open, close };
+  }
   return null;
+}
+
+/** Whether lines `first` to `last` are in code fences, each by its number;
+ *  an unclosed fence runs to the end, as Markdown reads it. */
+function fencedLines(
+  doc: EditorState["doc"],
+  first: number,
+  last: number,
+): (n: number) => boolean {
+  const spans: [number, number][] = [];
+  for (const { open, close } of fences(doc)) {
+    if (open > last) break;
+    if ((close ?? doc.lines) >= first) spans.push([open, close ?? doc.lines]);
+  }
+  return (n) => spans.some(([a, b]) => n >= a && n <= b);
 }
 
 /** The selected lines in a code fence, or the fence around them taken off. */

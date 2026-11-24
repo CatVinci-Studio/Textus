@@ -83,6 +83,16 @@ describe("toggleSourceMark", () => {
     expect(shown(view)).toBe("a b [c d e] *f* `**g**` snake_case_name");
   });
 
+  it("leaves a code fence's text, the fence opened above the selection too", () => {
+    const view = viewOf(
+      "```py\nif __name__:\n[    f(**kw, **opts)\n```\n**b**]",
+    );
+    toggleSourceMark(view, "clear");
+    expect(view.state.doc.toString()).toBe(
+      "```py\nif __name__:\n    f(**kw, **opts)\n```\nb",
+    );
+  });
+
   it("clears nested runs, and nothing with nothing to clear", () => {
     const view = viewOf("[***x***]");
     toggleSourceMark(view, "clear");
