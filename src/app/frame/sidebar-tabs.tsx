@@ -84,13 +84,13 @@ function FilesPanel({
 }: SidebarTabProps) {
   const phone = usePhoneLayout();
   if (!openFolder.treeRoot)
-    // No folder: the start page's three ways to begin, so a window with
-    // nothing open is never a dead end. A phone's ☰ has the same three.
-    return phone ? (
-      <p className="tx-list-note">{t.sidebarStartHint}</p>
-    ) : (
+    // No folder: where to begin, so a window with nothing open is never a
+    // dead end. New and Open are the menu's; a phone's ☰ has Open Folder
+    // too.
+    return (
       <div className="sidebar-start">
-        <StartActions t={t} />
+        <p className="tx-list-note">{t.sidebarStartHint}</p>
+        {!phone && <StartActions t={t} only={["menu-open-folder"]} />}
       </div>
     );
   return (

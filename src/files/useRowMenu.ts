@@ -197,7 +197,7 @@ export function useRowMenu(
         );
       items.push(
         {
-          label: t.treeNewDocument,
+          label: t.menuNewFile,
           onSelect: () => setDraft({ dir, kind: "document" }),
         },
         {

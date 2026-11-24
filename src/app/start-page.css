@@ -197,7 +197,7 @@
   }
 }
 
-/* The sidebar with no folder: the same three rows. */
+/* The sidebar with no folder: a line, then Open Folder's row. */
 /* In the sidebar: rows as every list's, their fill from the body's edge,
    their icons on the title's line. */
 .sidebar-start .start-page-actions {

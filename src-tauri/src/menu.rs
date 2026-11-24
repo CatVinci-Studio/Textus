@@ -263,7 +263,7 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
     {
         emit_to_focused_payload(app_handle, event, payload.to_string());
     } else if id == "new-file" {
-        // New Tab, as a browser's: a tab in the focused window whatever
+        // New File: a tab in the focused window whatever
         // Settings says files open in; a window when there is none.
         if focused_editor_window(app_handle).is_some() {
             emit_to_focused(app_handle, "menu-new-file");

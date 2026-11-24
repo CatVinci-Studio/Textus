@@ -31,7 +31,14 @@ export function addFromTabRow(
   newConversation: (from: string, fallback: () => void) => void,
 ): void {
   const view = front?.view;
-  if (view?.kind === "page" && view.view === "ai")
-    newConversation(conversationIn(view.state), addDocument);
+  if (isConversationTab(front))
+    newConversation(conversationIn(view?.state), addDocument);
   else addDocument();
+}
+
+/** Whether a tab is an AI conversation's: the tab row's + starts another. */
+export function isConversationTab(
+  tab: { view?: { kind: string; view: string } | null } | undefined,
+): boolean {
+  return tab?.view?.kind === "page" && tab.view.view === "ai";
 }

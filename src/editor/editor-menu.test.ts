@@ -276,7 +276,7 @@ describe("the editor menu", () => {
     expect(inText).not.toContain(t.menuBulletList);
     // The strip inserts a table; ⋯ finds.
     expect(inText).not.toContain(t.insertTable);
-    expect(inText).not.toContain(t.findReplace);
+    expect(inText).not.toContain(t.menuFindReplace);
     // A tap only edits a link: its Open is here.
     const link = { pos: 0, source: "[a](b.md)", href: "b.md", docPath: null };
     expect(

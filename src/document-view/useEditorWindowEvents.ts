@@ -25,6 +25,7 @@ import {
   toggleFormat,
 } from "../editor/keys/format-shortcut-plugin";
 import type { EditorView } from "@milkdown/kit/prose/view";
+import { clearSpans } from "../editor/marks/span-commands";
 import {
   cycleHeading,
   toggleBlockquote,
@@ -176,8 +177,8 @@ function useFormatEvents(events: Events) {
     });
   });
 
-  // The iPhone keyboard toolbar's bold and italic, and Format › Highlight,
-  // Strikethrough, Inline Code and Link: each as its key does it.
+  // The keyboard toolbar's marks and Format's (Bold to Inline Code, Clear
+  // Formatting): each as its key does it.
   useWindowEvent(TOGGLE_MARK_EVENT, (e) => {
     if (!isOnScreen()) return;
     const toggle = MARKS[(e as CustomEvent<string>).detail];
@@ -305,6 +306,7 @@ const MARKS: Record<string, (view: EditorView) => unknown> = {
   highlight: (view) => toggleFormat(view, HIGHLIGHT),
   strikethrough: (view) => toggleFormat(view, STRIKETHROUGH),
   code: toggleCodeSpan,
+  clear: clearSpans,
 };
 
 export function useEditorWindowEvents(editor: EditorEvents) {

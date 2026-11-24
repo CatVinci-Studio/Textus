@@ -46,7 +46,7 @@ import {
 } from "../../document/pinned";
 import { useTabsInBar } from "./tabs-in-bar";
 import { pullTab } from "./tab-pull";
-import { addFromTabRow, newConversation } from "./ai-tabs";
+import { addFromTabRow, isConversationTab, newConversation } from "./ai-tabs";
 import { useDocumentsApart } from "./useDocumentsApart";
 import type { ContextMenuItem } from "../../engine/controls/ContextMenu";
 import { contributedContextItems } from "../../registry/context-menu-items";
@@ -266,7 +266,10 @@ export function DocumentIslands({
       labels={{
         tabs: t.menuDocuments,
         close: t.menuCloseTab,
-        add: t.menuNewTab,
+        // Over a conversation the + starts another (addFromTabRow).
+        add: isConversationTab(byId.get(active))
+          ? t.chatNewConversation
+          : t.menuNewFile,
         unsaved: t.unsavedIndicator,
         all: t.menuAllTabs,
         readOnly: t.readOnlyLock,

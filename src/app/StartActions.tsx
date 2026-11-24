@@ -20,11 +20,14 @@ import type { Strings } from "../i18n/strings";
 export function StartActions({
   t,
   look = "rows",
+  only,
 }: {
   t: Strings;
   look?: "rows" | "buttons";
+  /** These of the three alone, by their events. */
+  only?: readonly string[];
 }) {
-  const actions = [
+  const all = [
     {
       label: t.menuNewFile,
       event: "menu-new-file",
@@ -48,6 +51,7 @@ export function StartActions({
         ]
       : []),
   ];
+  const actions = only ? all.filter((a) => only.includes(a.event)) : all;
   if (look === "buttons")
     return (
       <div className="start-page-buttons">

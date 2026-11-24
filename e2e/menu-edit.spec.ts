@@ -370,7 +370,7 @@ test.describe("the app-drawn menu (Windows, Linux)", () => {
     await page.getByRole("button", { name: "Menu" }).click();
     await row(page, "View").hover();
     await expect(row(page, "Zen Mode")).toBeVisible();
-    await row(page, "Mode").hover();
+    await row(page, "Editing view").hover();
     await expect(menus(page)).toHaveCount(3);
     const [first, second, third] = await Promise.all(
       [0, 1, 2].map((i) => menus(page).nth(i).boundingBox()),

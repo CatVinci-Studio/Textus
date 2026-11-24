@@ -15,6 +15,7 @@ import {
   NO_RECENTS,
   nativeMenuChecks,
   type MenuChecks,
+  type MenuEntry,
   type MenuNode,
 } from "./app-menu-model";
 import {
@@ -72,7 +73,7 @@ describe("the Windows app menu", () => {
   });
 
   it("has other editors' keys: Ctrl+N a new tab, Ctrl+Shift+N a window, Ctrl+W, Ctrl+Shift+T", () => {
-    expect(accelOf(t.menuNewTab)).toBe("mod+n");
+    expect(accelOf(t.menuNewFile)).toBe("mod+n");
     expect(accelOf(t.menuNewWindow)).toBe("mod+shift+n");
     expect(accelOf(t.menuCloseTab)).toBe("mod+w");
     expect(accelOf(t.menuReopenClosedTab)).toBe("mod+shift+t");
@@ -146,7 +147,7 @@ describe("the View menu's on/off items", () => {
     expect(checked).toEqual([
       t.menuToggleSidebar,
       t.menuFormatBarHidden,
-      t.menuViewModeDefault,
+      t.viewModeRich,
       t.menuToggleZenMode,
       t.menuFullscreen,
     ]);
@@ -188,15 +189,26 @@ describe("the View menu's on/off items", () => {
     ]);
   });
 
-  it("keep Textus AI out of View, and the AI panel out of reach while it is off", () => {
+  it("keep Textus AI's switch out of View, name its panel Textus AI, and keep it out of reach while off", () => {
     const items = (checks: { textusAi?: boolean }) =>
       flatten(buildAppMenu(t, shortcuts, NO_RECENTS, checks));
     const panel = (checks: { textusAi?: boolean }) =>
-      items(checks).find((item) => item.label === t.menuToggleAgentPanel);
+      items(checks).find(
+        (item) =>
+          item.action !== undefined &&
+          "native" in item.action &&
+          item.action.native === "toggle-agent-panel",
+      );
     // The window bar's button and Settings carry the switch on a desktop.
-    expect(items({}).find((item) => item.label === t.menuTextusAi)).toBe(
-      undefined,
-    );
+    expect(
+      items({}).some(
+        (item) =>
+          item.action !== undefined &&
+          "native" in item.action &&
+          item.action.native === "toggle-textus-ai",
+      ),
+    ).toBe(false);
+    expect(panel({})?.label).toBe("Textus AI");
     expect(nativeMenuChecks({})).not.toHaveProperty("toggle-textus-ai");
     expect(panel({})?.disabled).toBe(false);
     expect(panel({ textusAi: false })?.disabled).toBe(true);
@@ -400,6 +412,40 @@ describe("the menu ids", () => {
   });
 });
 
+describe("one name for one thing", () => {
+  const item = (native: string) =>
+    flatten(buildAppMenu(t, shortcuts, NO_RECENTS)).find(
+      (e) =>
+        e.action !== undefined &&
+        "native" in e.action &&
+        e.action.native === native,
+    );
+
+  it("calls New File, Find and the view's names as everywhere else", () => {
+    expect(item("new-file")?.label).toBe(t.menuNewFile);
+    expect(item("find-replace")?.label).toBe("Find…");
+    expect(item("view-mode-default")?.label).toBe(t.viewModeRich);
+    const view = buildAppMenu(t, shortcuts, NO_RECENTS).find(
+      (n) => n !== "separator" && n.label === t.menuView,
+    ) as MenuEntry;
+    expect(view.submenu?.map((n) => n !== "separator" && n.label)).toContain(
+      t.viewModeLabel,
+    );
+  });
+
+  it("puts Bold, Italic and Clear Formatting in Format, as the editor's menu has them", () => {
+    expect(item("toggle-mark:bold")).toMatchObject({
+      label: t.toolbarBold,
+      accel: "mod+b",
+    });
+    expect(item("toggle-mark:italic")).toMatchObject({
+      label: t.toolbarItalic,
+      accel: "mod+i",
+    });
+    expect(item("toggle-mark:clear")?.label).toBe(t.menuClearFormatting);
+  });
+});
+
 describe("the sponsor link", () => {
   it("is in Help, and left out where the store forbids it (iOS)", async () => {
     expect(entries.map((e) => e.label)).toContain(t.menuHelpSponsor);
@@ -417,7 +463,7 @@ describe("the sponsor link", () => {
   it("leaves out on an iPad what can't work there: the AI panel and guide, the welcome, a report, Pandoc", async () => {
     const labels = (nodes: MenuNode[]) => flatten(nodes).map((e) => e.label);
     const gone = [
-      t.menuToggleAgentPanel,
+      t.menuTextusAi,
       t.menuHelpAgent,
       t.menuHelpWelcome,
       t.menuHelpReport,

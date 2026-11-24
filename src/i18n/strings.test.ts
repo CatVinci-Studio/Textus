@@ -173,3 +173,19 @@ describe.each(LANGS.filter((lang) => lang !== "en"))("%s", (lang) => {
       expect(missing).toEqual([]);
     });
 });
+
+/** Every string of a language, plurals' forms included. */
+const textsOf = (lang: Lang): string[] =>
+  Object.values(LOCALES[lang].default).flatMap((value) =>
+    typeof value === "string" ? [value] : Object.values(value ?? {}),
+  );
+
+// One word for one thing within a language: the variants that had crept in.
+describe.each([
+  ["zh-Hant", /檔案夾/],
+  ["ja", /フォルダ(?!ー)|ドキュメント|エクスポート/],
+] as const)("%s's words", (lang, variant) => {
+  it("use one word for each thing", () => {
+    expect(textsOf(lang).filter((text) => variant.test(text))).toEqual([]);
+  });
+});

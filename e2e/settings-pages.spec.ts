@@ -248,7 +248,7 @@ test("Layout switched in Settings lays the islands out again at once", async ({
     ((await sidebar.boundingBox())!.x + (await sidebar.boundingBox())!.width);
   expect(await gap()).toBeGreaterThan(4);
   await page.getByRole("combobox", { name: "布局" }).click();
-  await page.getByRole("option", { name: "经典" }).click();
+  await page.getByRole("option", { name: "平铺" }).click();
   // Flush against the sidebar, with no island gap left over.
   await expect.poll(gap).toBeLessThanOrEqual(1);
 });
@@ -260,14 +260,14 @@ test("the classic look turns on in one switch, and off gives back the look befor
   await emit(page, "menu-settings");
   await page.getByRole("button", { name: "外观" }).first().click();
   const classic = page.getByRole("switch", { name: "使用旧版本样式" });
-  const rail = page.getByRole("switch", { name: "显示左侧图标栏" });
+  const rail = page.getByRole("switch", { name: "显示图标栏", exact: true });
   const titleRow = page.getByRole("switch", { name: "标题栏单独一行显示" });
   const layout = page.getByRole("combobox", { name: "布局" });
   await expect(classic).not.toBeChecked();
   await titleRow.click();
   await classic.click();
   await expect(classic).toBeChecked();
-  await expect(layout).toContainText("经典");
+  await expect(layout).toContainText("平铺");
   // The rail itself still shows while the sidebar is open.
   await expect(rail).not.toBeChecked();
   await expect(titleRow).toBeChecked();

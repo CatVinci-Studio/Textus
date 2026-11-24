@@ -26,7 +26,7 @@ import {
 } from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
 import { IconButton } from "../../engine/controls/IconButton";
-import { CloseIcon, PlusIcon } from "../../engine/controls/icons";
+import { CloseIcon } from "../../engine/controls/icons";
 import type { Strings } from "../../i18n/strings";
 import { chatTitle, chatTitles } from "../../ai/chat/chat-title";
 
@@ -167,16 +167,7 @@ export function AgentIslandTools({
   }, []);
   return (
     <div className="agent-island-tools" ref={ref}>
-      <IconButton
-        className="tx-icon-button inline-chat-header-button"
-        label={t.chatNewConversation}
-        onClick={() => {
-          panel.setTab("chat");
-          onNew();
-        }}
-      >
-        <PlusIcon />
-      </IconButton>
+      {/* New conversation is the tab row's +. */}
       <ChatHistoryMenu
         buttonClassName="tx-icon-button inline-chat-header-button"
         onReopen={(entry) => void reopenConversation(entry, t)}

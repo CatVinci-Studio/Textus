@@ -481,11 +481,22 @@ test("an unsaved document in front keeps the folder's conversation; + opens anot
   const ai = tabs(page).filter({ hasText: "Textus AI" });
   await ai.click();
   await expect(turns).toContainText("第三章写了什么？");
-  // + beside History: a second conversation, a tab of its own, in front.
-  await page
-    .locator(".ai-tab .agent-island-tools")
-    .getByRole("button", { name: "新对话" })
-    .click();
+  // The tab row's +, over a conversation, is New Conversation: a second
+  // one, a tab of its own, in front. The island keeps History, no + of its
+  // own.
+  await expect(
+    page.locator(".ai-tab:visible .agent-island-tools").getByRole("button", {
+      name: "新对话",
+    }),
+  ).toHaveCount(0);
+  const add = page
+    .locator(".tab-bar", {
+      has: page.locator('[aria-selected="true"]', { hasText: "Textus AI" }),
+    })
+    .locator(".tab-bar-add");
+  await add.hover();
+  await expect(page.getByRole("tooltip")).toHaveText("新对话");
+  await add.click();
   await expect(ai).toHaveCount(2);
   await expect(
     page.locator(".ai-tab:visible .inline-chat-messages"),

@@ -113,11 +113,11 @@ for (const { name, device } of TOUCH_DEVICES)
       const sidebar = page.getByRole("complementary", { name: "Sidebar" });
       await expect
         .soft(sidebar.locator(".start-page-action"))
-        .toHaveCount(phone ? 0 : 3);
-      if (phone)
-        await expect
-          .soft(sidebar)
-          .toContainText("Open a document or a folder from the menu.");
+        .toHaveCount(phone ? 0 : 1);
+      // A line saying ☰ opens files; a tablet adds Open Folder's row.
+      await expect
+        .soft(sidebar)
+        .toContainText("Open a document or a folder from the menu.");
       if (phone) await page.mouse.click(380, 400);
       await page.getByRole("button", { name: "Menu", exact: true }).tap();
       await expect(
