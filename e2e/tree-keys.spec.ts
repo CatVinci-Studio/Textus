@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { devPaths, openTreeFolder, treeRow } from "./helpers";
+import { devPaths, openTreeFolder, treeRow, treeRowAt } from "./helpers";
 
 const openFolder = (page: Page, more: Record<string, string> = {}) =>
   openTreeFolder(page, "/proj", {
@@ -51,7 +51,8 @@ test("what a folder's name field says shows over the folder rows that stay at th
   page,
 }) => {
   await openFolder(page, { "/proj/zoo/z.md": "# Z\n" });
-  await row(page, "notes").click();
+  // Folded, so the next row is another folder's that stays at the top.
+  await row(page, "notes").focus();
   await page.keyboard.press("F2");
   await page.keyboard.press("ControlOrMeta+a");
   await page.keyboard.type("zoo");
@@ -59,10 +60,11 @@ test("what a folder's name field says shows over the folder rows that stay at th
   const problem = page.getByRole("alert");
   await expect(problem).toContainText("zoo");
   const box = (await problem.boundingBox())!;
+  const zoo = (await treeRowAt(page, "/proj/zoo").boundingBox())!;
   const onTop = await page.evaluate(
     ({ x, y }) =>
       !!document.elementFromPoint(x, y)?.closest(".tree-name-problem"),
-    { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+    { x: box.x + box.width / 2, y: Math.max(box.y, zoo.y) + 4 },
   );
   expect(onTop).toBe(true);
 });
