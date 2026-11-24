@@ -1,6 +1,11 @@
 import { linkHref, parseLink } from "../editor/markdown/link-syntax";
 import type { Editor } from "@milkdown/kit/core";
-import { editorViewCtx, parserCtx, serializerCtx } from "@milkdown/kit/core";
+import {
+  editorViewCtx,
+  parserCtx,
+  rootCtx,
+  serializerCtx,
+} from "@milkdown/kit/core";
 import type { Ctx } from "@milkdown/kit/ctx";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { createTestEditor } from "./editor-test-harness";
@@ -162,6 +167,20 @@ interface Opened {
   mountDoc: ProseNode;
 }
 
+/**
+ * Destroys an opened editor, takes its root out of the page, and lets the
+ * task end. jsdom reaches nodes through WeakRefs, and V8 keeps what a WeakRef
+ * gave until the task ends: files checked back to back in one task kept
+ * every editor alive, some 3 MB each, until a corpus run filled the machine.
+ */
+async function close(opened: Opened | null): Promise<void> {
+  if (!opened) return;
+  const root = opened.editor.ctx.get(rootCtx);
+  await opened.editor.destroy();
+  if (root instanceof Element) root.remove();
+  await new Promise((done) => setTimeout(done, 0));
+}
+
 async function open(raw: string): Promise<Opened> {
   const text = toEditorText(raw);
   // Swatches on: drawn on load and redrawn around each edit, they must
@@ -283,7 +302,7 @@ export async function roundTripFile(
   } catch (error) {
     fail("exception", "none", seed, String((error as Error)?.stack ?? error));
   } finally {
-    await opened.editor.destroy();
+    await close(opened);
   }
 
   for (let round = 0; round < rounds; round++)
@@ -395,6 +414,6 @@ async function checkEdit(
   } catch (error) {
     fail("exception", kind, seed, String((error as Error)?.stack ?? error));
   } finally {
-    await opened?.editor.destroy();
+    await close(opened);
   }
 }
