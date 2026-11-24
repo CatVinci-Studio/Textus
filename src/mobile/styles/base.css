@@ -43,7 +43,7 @@
 }
 
 /* Android's pinch is the app's own (app/touch-pinch.ts), read from
-   passive touches: the page neither zooms nor pans under two fingers. */
+   passive touches: the page still pans under a finger but never zooms. */
 :root[data-platform="android"] {
   touch-action: pan-x pan-y;
 }

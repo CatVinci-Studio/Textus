@@ -99,8 +99,6 @@ export function typedImage(
     )
   )
     return null;
-  // A URL pasted between the parentheses is a link; the replacement drops it
-  // with the rest of the typed text.
   return state.tr
     .replaceWith(start, end, image.create({ src, alt }))
     .setStoredMarks([]);
@@ -108,9 +106,8 @@ export function typedImage(
 
 /**
  * A typed link or image whose ")" is the last character before `end`, for
- * the bracket autopair's ")" that is already there. The block's text is read
- * across text nodes, since a URL pasted inside is a link of its own. Null
- * when there is none.
+ * the bracket autopair's ")" that is already there, read across the text
+ * nodes a paste or marks split it into. Null when there is none.
  */
 export function typedLinkEndingAt(
   state: EditorState,
