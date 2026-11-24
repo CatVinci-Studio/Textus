@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EDIT_ACTION_EVENT } from "../../utils/events";
-import { editInFocus } from "./edit-in-focus";
+import { editInFocus, typingOutsideDocument } from "./edit-in-focus";
 
 describe("editInFocus", () => {
   let seen: string[];
@@ -65,5 +65,19 @@ describe("editInFocus", () => {
     editInFocus("undo");
     expect(seen).toEqual([]);
     expect(document.execCommand).not.toHaveBeenCalled();
+  });
+});
+
+describe("typingOutsideDocument", () => {
+  afterEach(() => {
+    document.body.innerHTML = "";
+  });
+
+  it("counts a focused plugin frame as typing outside the document", () => {
+    const frame = document.createElement("iframe");
+    document.body.append(frame);
+    frame.focus();
+    expect(document.activeElement).toBe(frame);
+    expect(typingOutsideDocument()).toBe(true);
   });
 });

@@ -60,10 +60,11 @@ function editNatively(action: FocusedEdit): void {
 const DOCUMENT_EDITOR = ".milkdown, .source-view";
 
 /** Whether the keyboard is in a field of its own outside the document (the
- *  AI's box, a search, a rename): a format key the menu took then belongs
- *  to that field, not to the document's selection. */
+ *  AI's box, a search, a rename, a plugin frame): a format key the menu
+ *  took then belongs to that field, not to the document's selection. */
 export function typingOutsideDocument(): boolean {
   const focused = document.activeElement;
+  if (focused instanceof HTMLIFrameElement) return true;
   if (!(focused instanceof HTMLElement)) return false;
   const field =
     focused instanceof HTMLInputElement ||
