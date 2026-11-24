@@ -589,6 +589,7 @@ utiliser une.
   searchTextCapped: "Seuls les premiers résultats sont affichés.",
   searchTextNone: "Aucun texte ne correspond.",
   searchNoFolder: "Ouvrez un document ou un dossier pour chercher.",
+  sidebarStartHint: "Ouvrez un document ou un dossier depuis le menu.",
   treeParentFolder: "Dossier parent",
   outlineEmpty: "Pas encore de titres",
   treeRefresh: "Actualiser",

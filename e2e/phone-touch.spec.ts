@@ -88,6 +88,44 @@ for (const { name, device } of TOUCH_DEVICES)
   test.describe(`on ${name}`, () => {
     test.use(device);
 
+    test("a command has one way in: the rail, the empty sidebar and ☰ don't repeat another's", async ({
+      page,
+    }) => {
+      await openApp(page, { settings: { language: "en" } });
+      const phone = name === "a phone";
+      const toggle = page.locator(".window-bar-sidebar-toggle:visible");
+      if (phone) await toggle.tap();
+      const rail = page.getByRole("navigation", { name: "Activity bar" });
+      await expect(rail.getByRole("button", { name: "Files" })).toBeVisible();
+      // A phone's outline is ⋯'s, its Settings ☰'s; a tablet's are the
+      // desktop's.
+      for (const button of ["Outline", "Settings"])
+        await expect
+          .soft(rail.getByRole("button", { name: button }))
+          .toHaveCount(phone ? 0 : 1);
+      if (!phone) await rail.getByRole("button", { name: "Files" }).tap();
+      const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+      await expect
+        .soft(sidebar.locator(".start-page-action"))
+        .toHaveCount(phone ? 0 : 3);
+      if (phone)
+        await expect
+          .soft(sidebar)
+          .toContainText("Open a document or a folder from the menu.");
+      if (phone) await page.mouse.click(380, 400);
+      await page.getByRole("button", { name: "Menu", exact: true }).tap();
+      await expect(
+        page.getByRole("menuitem", { name: /Settings/ }),
+      ).toHaveCount(1);
+      // A phone's sidebar is the bar's button (a tablet's is under View).
+      if (phone)
+        await expect
+          .soft(
+            page.locator(".context-menu").getByText("Sidebar", { exact: true }),
+          )
+          .toHaveCount(0);
+    });
+
     test("every bar, rail, tree and menu control takes a 44pt tap", async ({
       page,
     }) => {
@@ -131,7 +169,8 @@ for (const { name, device } of TOUCH_DEVICES)
       await expect(page.locator(".tree-row").first()).toBeVisible();
       await big([
         ".activity-rail-item",
-        ".activity-rail-settings",
+        // A phone's Settings is ☰'s: no gear.
+        ...(phone ? [] : [".activity-rail-settings"]),
         ".tree-tool",
         ".tree-row",
       ]);

@@ -559,6 +559,7 @@ type /name in a conversation to use one.
   searchTextCapped: "Showing the first matches only.",
   searchTextNone: "No text matches.",
   searchNoFolder: "Open a document or a folder to search.",
+  sidebarStartHint: "Open a document or a folder from the menu.",
   treeParentFolder: "Parent folder",
   outlineEmpty: "No headings yet",
   treeRefresh: "Refresh",

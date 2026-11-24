@@ -589,6 +589,7 @@ export default {
   searchTextCapped: "Показаны только первые совпадения.",
   searchTextNone: "В тексте ничего не найдено.",
   searchNoFolder: "Откройте документ или папку для поиска.",
+  sidebarStartHint: "Откройте документ или папку через меню.",
   treeParentFolder: "Родительская папка",
   outlineEmpty: "Заголовков пока нет",
   treeRefresh: "Обновить",

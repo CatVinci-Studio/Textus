@@ -534,6 +534,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   searchTextCapped: "앞부분 결과만 표시합니다.",
   searchTextNone: "본문에서 찾지 못했습니다.",
   searchNoFolder: "문서나 폴더를 열면 검색할 수 있습니다.",
+  sidebarStartHint: "메뉴에서 문서나 폴더를 여세요.",
   treeParentFolder: "상위 폴더",
   outlineEmpty: "아직 제목이 없습니다",
   treeRefresh: "새로 고침",

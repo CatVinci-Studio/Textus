@@ -544,6 +544,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   searchTextCapped: "最初の一部の結果だけを表示しています。",
   searchTextNone: "本文に一致するものはありません。",
   searchNoFolder: "文書かフォルダを開くと検索できます。",
+  sidebarStartHint: "メニューから文書かフォルダを開きます。",
   treeParentFolder: "親フォルダー",
   outlineEmpty: "見出しはまだありません",
   treeRefresh: "更新",

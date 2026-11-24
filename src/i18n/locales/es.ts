@@ -587,6 +587,7 @@ para usar una.
   searchTextCapped: "Solo se muestran los primeros resultados.",
   searchTextNone: "Ningún texto coincide.",
   searchNoFolder: "Abre un documento o una carpeta para buscar.",
+  sidebarStartHint: "Abre un documento o una carpeta desde el menú.",
   treeParentFolder: "Carpeta superior",
   outlineEmpty: "Aún no hay encabezados",
   treeRefresh: "Actualizar",

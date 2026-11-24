@@ -20,6 +20,7 @@ import { lazyModule } from "../../lazy/lazy-module";
 import { lazyComponent } from "../../lazy/lazy-component";
 import { canOpenFolder } from "../../platform/capabilities";
 import { isPhoneLayout } from "../../platform/phone-layout";
+import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import type { Strings } from "../../i18n/strings";
 import type { OpenFolder } from "../useOpenFolder";
 import type { FileOpenHow } from "../../files/tree-shared";
@@ -69,6 +70,9 @@ export interface SidebarTabDef {
   Panel: ComponentType<SidebarTabProps>;
   /** Not among the rail's icons (Settings: the gear at its foot). */
   railFoot?: boolean;
+  /** Not on a phone: its way in there is a menu (Outline the document's ⋯,
+   *  Settings ☰) or Settings (Plugins). */
+  offPhone?: boolean;
 }
 
 function FilesPanel({
@@ -78,10 +82,13 @@ function FilesPanel({
   onOpenFile,
   onEntryMoved,
 }: SidebarTabProps) {
+  const phone = usePhoneLayout();
   if (!openFolder.treeRoot)
     // No folder: the start page's three ways to begin, so a window with
-    // nothing open is never a dead end.
-    return (
+    // nothing open is never a dead end. A phone's ☰ has the same three.
+    return phone ? (
+      <p className="tx-list-note">{t.sidebarStartHint}</p>
+    ) : (
       <div className="sidebar-start">
         <StartActions t={t} />
       </div>
@@ -115,6 +122,7 @@ const BUILT_IN: SidebarTabDef[] = [
     Panel: ({ activeContent, activeTabId }) => (
       <Outline content={activeContent} tabId={activeTabId} />
     ),
+    offPhone: true,
   },
   {
     id: "search",
@@ -164,10 +172,8 @@ const PLUGINS_TAB: SidebarTabDef = {
       <PluginsPanel t={t} />
     </Suspense>
   ),
+  offPhone: true,
 };
-
-// A phone manages plugins in Settings; a tablet's layout is the desktop's.
-const pluginsTab = () => (isPhoneLayout() ? [] : [PLUGINS_TAB]);
 
 // Settings' pages, loaded when the gear first opens them.
 const SettingsNavPanel = lazyComponent(
@@ -190,9 +196,9 @@ const SETTINGS_TAB: SidebarTabDef = {
     </Suspense>
   ),
   railFoot: true,
+  // A phone opens Settings from ☰, as a sheet (SettingsLayer).
+  offPhone: true,
 };
-// A phone opens Settings from its menu, as a sheet (SettingsLayer).
-const settingsTab = () => (isPhoneLayout() ? [] : [SETTINGS_TAB]);
 
 /** The first tab, Files: where the sidebar opens with nothing remembered. */
 export const DEFAULT_SIDEBAR_TAB = "tree";
@@ -218,10 +224,17 @@ export function sidebarTabs(): SidebarTabDef[] {
   ];
 }
 
-/** The tabs as the rail shows them: plugins' pinned among Textus's own. */
+/** The tabs as the rail shows them: plugins' pinned among Textus's own.
+ *  A tablet's layout is the desktop's, and so are its tabs. */
 export function railTabs(): SidebarTabDef[] {
+  const phone = isPhoneLayout();
   return orderTabs(
-    [...BUILT_IN, ...pluginsTab(), ...settingsTab(), ...addedSidebarTabs()],
+    [
+      ...[...BUILT_IN, PLUGINS_TAB, SETTINGS_TAB].filter(
+        (tab) => !(phone && tab.offPhone),
+      ),
+      ...addedSidebarTabs(),
+    ],
     loadSettings().activityRailOrder,
   );
 }

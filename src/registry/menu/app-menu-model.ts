@@ -353,15 +353,13 @@ export function menuBarSections(menu: MenuNode[]): MenuBarSection[] {
 
 /**
  * A phone's ☰: one flat list of the app and its files (new, open, save,
- * the sidebar, Textus AI, plugins, Settings); the document in front has
+ * plugins, Settings); the document in front has
  * its own ⋯.
  */
 export function buildMobileMenu(
   t: Strings,
   checks: MenuChecks = {},
   plugins: readonly PluginMenuEntry[] = [],
-  /** Textus AI is offered on this install. */
-  ai = true,
 ): MenuNode[] {
   const words = checks.words;
   return [
@@ -393,21 +391,7 @@ export function buildMobileMenu(
       action: { native: "save-file" },
       disabled: checks.noDocument,
     },
-    "separator",
-    {
-      label: t.menuToggleSidebar,
-      action: { native: "toggle-sidebar" },
-      checked: !!checks.sidebar,
-    },
-    ...(ai
-      ? [
-          {
-            label: t.menuTextusAi,
-            action: { native: "toggle-textus-ai" },
-            checked: checks.textusAi !== false,
-          } as MenuNode,
-        ]
-      : []),
+    // The sidebar and Textus AI are the bar's buttons, not rows here.
     "separator",
     ...pluginsMenu(t, plugins),
     { label: t.menuSettings, action: { native: "settings" } },

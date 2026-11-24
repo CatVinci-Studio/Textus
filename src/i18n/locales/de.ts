@@ -567,6 +567,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   searchTextCapped: "Nur die ersten Treffer werden gezeigt.",
   searchTextNone: "Kein Text passt.",
   searchNoFolder: "Öffne ein Dokument oder einen Ordner, um zu suchen.",
+  sidebarStartHint: "Öffne ein Dokument oder einen Ordner über das Menü.",
   treeParentFolder: "Übergeordneter Ordner",
   outlineEmpty: "Noch keine Überschriften",
   treeRefresh: "Aktualisieren",

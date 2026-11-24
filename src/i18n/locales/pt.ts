@@ -577,6 +577,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   searchTextCapped: "Mostrando só os primeiros resultados.",
   searchTextNone: "Nenhum texto corresponde.",
   searchNoFolder: "Abra um documento ou uma pasta para pesquisar.",
+  sidebarStartHint: "Abra um documento ou uma pasta pelo menu.",
   treeParentFolder: "Pasta superior",
   outlineEmpty: "Ainda não há títulos",
   treeRefresh: "Atualizar",

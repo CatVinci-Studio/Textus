@@ -507,6 +507,7 @@ export default {
   searchTextCapped: "只显示了前面一部分结果。",
   searchTextNone: "内容里没有找到。",
   searchNoFolder: "打开文档或文件夹后即可搜索。",
+  sidebarStartHint: "从菜单打开文档或文件夹。",
   treeParentFolder: "上一级文件夹",
   outlineEmpty: "还没有标题",
   treeRefresh: "刷新",
