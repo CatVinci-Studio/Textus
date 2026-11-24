@@ -439,4 +439,15 @@ test("a file made or removed on disk by another app shows in the tree", async ({
   await expect(row("b.md")).toBeVisible();
   await expect(row("m.md")).toBeVisible();
   await expect(row("n.md")).toHaveCount(0);
+
+  // A folded folder is not watched: opened again, it is read again.
+  await row("notes").click();
+  await expect(row("m.md")).toHaveCount(0);
+  await page.evaluate(() => {
+    (window as unknown as { __devFs: Record<string, string> }).__devFs[
+      "/proj/notes/z.md"
+    ] = "# Z\n";
+  });
+  await row("notes").click();
+  await expect(row("z.md")).toBeVisible();
 });

@@ -11,6 +11,8 @@ import {
 } from "../engine/controls/icons";
 
 import { useSettings } from "../prefs/SettingsContext";
+import { fs } from "../platform/ipc";
+import { isFarUrl } from "../platform/far-files";
 import { folderName, parentDir } from "../utils/path";
 import { canOpenFolder, isMobileApp } from "../platform/capabilities";
 import { ContextMenu } from "../engine/controls/ContextMenu";
@@ -128,9 +130,16 @@ export function FileTree({
     reveal,
   });
 
-  // The toolbar's New: in the folder last clicked, as the row's menu does.
-  const newEntry = (kind: "document" | "folder") =>
-    setDraft({ dir: selection.newEntryDir(root, activePath), kind });
+  // The toolbar's New: in the folder last clicked, as the row's menu does;
+  // at the root once that folder is gone (renamed, moved, trashed).
+  const newEntry = async (kind: "document" | "folder") => {
+    const dir = selection.newEntryDir(root, activePath);
+    const there =
+      dir === root ||
+      isFarUrl(dir) ||
+      (await fs.fileMtimeMs(dir).catch(() => null)) !== null;
+    setDraft({ dir: there ? dir : root, kind });
+  };
 
   const openSortMenu = (e: ReactMouseEvent<HTMLButtonElement>) => {
     const box = e.currentTarget.getBoundingClientRect();
@@ -219,7 +228,7 @@ export function FileTree({
                         type="button"
                         className="tx-icon-button tree-tool"
                         aria-label={t.menuNewFile}
-                        onClick={() => newEntry("document")}
+                        onClick={() => void newEntry("document")}
                       >
                         <NewDocumentIcon />
                       </button>
@@ -229,7 +238,7 @@ export function FileTree({
                         type="button"
                         className="tx-icon-button tree-tool"
                         aria-label={t.treeNewFolder}
-                        onClick={() => newEntry("folder")}
+                        onClick={() => void newEntry("folder")}
                       >
                         <NewFolderIcon />
                       </button>

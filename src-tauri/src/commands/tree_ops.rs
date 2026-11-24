@@ -46,7 +46,7 @@ async fn existing_dir(dir: &str) -> Result<PathBuf, String> {
 fn typed_path(name: &str) -> Result<(Vec<&str>, &str), String> {
     let mut parts = name
         .trim()
-        .split(['/', '\\'])
+        .split(|c| c == '/' || (cfg!(windows) && c == '\\'))
         .map(crate::ids::typed_name)
         .collect::<Result<Vec<_>, _>>()?;
     let last = parts.pop().ok_or_else(|| crate::errors::error("badName"))?;

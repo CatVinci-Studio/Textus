@@ -174,6 +174,8 @@ export const DirNode = memo(function DirNode({
   } | null>(null);
 
   useEffect(() => {
+    // Folded, it is not watched: read again when it next opens.
+    if (!open && loaded?.listing) setLoaded({ ...loaded, listing: "" });
     if (!open || loaded?.listing === listing) return;
     let cancelled = false;
     fs.listDir(path).then(

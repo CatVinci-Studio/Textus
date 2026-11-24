@@ -730,7 +730,14 @@ export function installDevTauriShim(): void {
         times[path] = (times[path] ?? 1) + 1;
         return Promise.resolve(null);
       case "file_mtime_ms":
-        return Promise.resolve(path in files ? (times[path] ?? 1) : null);
+        // A folder is there while a file is under it.
+        return Promise.resolve(
+          path in files
+            ? (times[path] ?? 1)
+            : Object.keys(files).some((f) => f.startsWith(`${path}/`))
+              ? 1
+              : null,
+        );
       case "list_dir": {
         const entries = new Map<string, boolean>();
         for (const file of Object.keys(files)) {

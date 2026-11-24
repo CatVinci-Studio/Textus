@@ -657,4 +657,16 @@ test("New makes things in the folder last clicked, folders on the way too; Colla
   await expect.poll(files).toContain("/proj/notes/deep/week/days/.keep");
   await expect(row("week")).toHaveAttribute("aria-expanded", "true");
   await expect(row("days")).toBeVisible();
+
+  // The folder last clicked gone (moved elsewhere): New goes to the top.
+  await page.evaluate(() => {
+    const fs = (window as unknown as { __devFs: Record<string, string> })
+      .__devFs;
+    for (const f of Object.keys(fs))
+      if (f.startsWith("/proj/notes/deep/")) delete fs[f];
+  });
+  await emit(page, "tree-dirs-changed", { dirs: ["/proj/notes"], all: false });
+  await expect(row("deep")).toHaveCount(0);
+  await make("New File", "top");
+  await expect.poll(files).toContain("/proj/top.md");
 });

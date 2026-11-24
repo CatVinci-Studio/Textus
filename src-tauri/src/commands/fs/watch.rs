@@ -56,7 +56,7 @@ fn canonical(path: &Path) -> PathBuf {
     }
 }
 
-/// The app is about to write `path`: its change is not news to the tree.
+/// The app is about to write over `path`: its change is not news to the tree.
 pub(crate) fn note_own_write(path: &Path) {
     let path = canonical(path);
     let now = Instant::now();
@@ -177,7 +177,11 @@ pub async fn tree_watch(
     if !watches.contains_key(label) {
         let (app, to) = (window.app_handle().clone(), label.to_string());
         let watch = watcher(move |changed| {
-            let _ = app.emit_to(to.as_str(), EVENT, changed);
+            let _ = app.emit_to(
+                tauri::EventTarget::webview_window(to.as_str()),
+                EVENT,
+                changed,
+            );
         })
         .map_err(|e| e.to_string())?;
         watches.insert(label.to_string(), watch);

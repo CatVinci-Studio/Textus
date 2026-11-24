@@ -166,9 +166,19 @@ async fn a_real_folder_reports_files_made_renamed_and_removed() {
     std::fs::remove_file(dir.path().join("b.md")).unwrap();
     assert_eq!(next(), expect);
 
-    // Written by the app itself: not news.
+    // A new file the app wrote is news, to other windows' trees too; the
+    // same file saved again is not.
+    let own = dir.path().join("own.md");
+    crate::atomic::write_sync(&own, "# Own").unwrap();
+    assert_eq!(next(), expect);
     tokio::time::sleep(Duration::from_millis(300)).await;
     while sent.try_recv().is_ok() {}
-    crate::atomic::write_sync(&dir.path().join("own.md"), "# Own").unwrap();
+    crate::atomic::write_sync(&own, "# Own, again").unwrap();
+    assert!(sent.recv_timeout(Duration::from_secs(1)).is_err());
+
+    // The tree reading the folder is not a change: no loop.
+    for entry in std::fs::read_dir(dir.path()).unwrap() {
+        entry.unwrap().metadata().unwrap();
+    }
     assert!(sent.recv_timeout(Duration::from_secs(1)).is_err());
 }
