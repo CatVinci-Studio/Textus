@@ -73,6 +73,7 @@ for (const autoCloseBrackets of [true, false])
     ["[^<b>] c", "\\[^<b>] c"],
     ["[**b**](u) c", "\\[**b**]\\(u) c"],
     ["![**b**](u) c", "!\\[**b**]\\(u) c"],
+    ["<a **b**> c", "\\<a **b**> c"],
   ])(
     `%s typed (brackets closed: ${autoCloseBrackets}) saves as %s`,
     async (line, saved) => {

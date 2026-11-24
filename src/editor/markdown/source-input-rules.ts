@@ -22,7 +22,12 @@ export const htmlTagInputRule = $inputRule(
     new InputRule(TYPED_TAG, (state, match, start, end) => {
       const html = state.schema.nodes.html;
       const $start = state.doc.resolve(start);
-      if (!html || $start.parent.type.spec.code) return null;
+      if (
+        !html ||
+        !plainTextRun(state, start, end) ||
+        $start.parent.type.spec.code
+      )
+        return null;
       return state.tr.replaceWith(
         start,
         end,
