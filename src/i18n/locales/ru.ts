@@ -633,7 +633,6 @@ export default {
   treeCollapseAll: "Свернуть все",
   treeSortModified: "По дате изменения",
   treeRenameItem: "Переименовать…",
-  treeRename: "Переименовать",
   treeRenamePrompt: "Новое имя",
   treeUpdateLinksConfirm:
     "Обновить ссылки на «{name}» и из него, чтобы они продолжали работать?",

@@ -611,7 +611,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   treeCollapseAll: "Alle einklappen",
   treeSortModified: "Nach Änderungsdatum",
   treeRenameItem: "Umbenennen…",
-  treeRename: "Umbenennen",
   treeRenamePrompt: "Neuer Name",
   treeUpdateLinksConfirm:
     "Links zu und aus „{name}“ aktualisieren, damit sie weiter funktionieren?",

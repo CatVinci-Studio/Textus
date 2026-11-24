@@ -578,7 +578,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeCollapseAll: "모두 접기",
   treeSortModified: "수정한 날짜순",
   treeRenameItem: "이름 바꾸기…",
-  treeRename: "이름 바꾸기",
   treeRenamePrompt: "새 이름",
   treeUpdateLinksConfirm:
     "“{name}”(으)로 가는 링크와 그 안의 링크가 계속 작동하도록 업데이트할까요?",

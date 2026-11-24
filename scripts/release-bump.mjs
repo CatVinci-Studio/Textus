@@ -1,6 +1,9 @@
 // The pure half of scripts/release.mjs: its arguments, version order, and
 // the version bump of the five files check-versions.mjs compares.
 import { collectVersions, versionProblems } from "./check-versions.mjs";
+import { compareVersions } from "./updater-manifest.mjs";
+
+export { compareVersions };
 
 const VERSION = /^\d+\.\d+\.\d+(-[0-9A-Za-z]+(\.[0-9A-Za-z]+)*)?$/;
 
@@ -30,34 +33,6 @@ export function parseArgs(argv) {
 }
 
 export const isStable = (version) => !version.includes("-");
-
-function parse(version) {
-  const [core, pre] = version.split(/-(.*)/s);
-  return { core: core.split(".").map(Number), pre: pre?.split(".") };
-}
-
-function compareIds(a, b) {
-  const numeric = /^\d+$/;
-  if (numeric.test(a) && numeric.test(b)) return Number(a) - Number(b);
-  if (numeric.test(a) !== numeric.test(b)) return numeric.test(a) ? -1 : 1;
-  return a < b ? -1 : a > b ? 1 : 0;
-}
-
-/** Semver order: negative when `a` comes before `b`. */
-export function compareVersions(a, b) {
-  const x = parse(a);
-  const y = parse(b);
-  for (let i = 0; i < 3; i++)
-    if (x.core[i] !== y.core[i]) return x.core[i] - y.core[i];
-  if (!x.pre || !y.pre) return (x.pre ? -1 : 0) - (y.pre ? -1 : 0);
-  for (let i = 0; i < Math.max(x.pre.length, y.pre.length); i++) {
-    if (x.pre[i] === undefined) return -1;
-    if (y.pre[i] === undefined) return 1;
-    const order = compareIds(x.pre[i], y.pre[i]);
-    if (order !== 0) return order;
-  }
-  return 0;
-}
 
 /** Each file's version lines, matched as written (so the diff is those
  *  lines alone, which is what makes CI take the pull request as a bump). */

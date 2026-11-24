@@ -550,7 +550,6 @@ export default {
   treeCollapseAll: "全部收合",
   treeSortModified: "依修改時間",
   treeRenameItem: "重新命名…",
-  treeRename: "重新命名",
   treeRenamePrompt: "新名稱",
   treeUpdateLinksConfirm:
     "更新指向「{name}」和它裡面的連結，讓它們繼續有效嗎？",

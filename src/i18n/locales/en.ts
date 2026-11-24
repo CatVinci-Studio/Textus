@@ -603,7 +603,6 @@ type /name in a conversation to use one.
   treeCollapseAll: "Collapse All",
   treeSortModified: "By date modified",
   treeRenameItem: "Rename…",
-  treeRename: "Rename",
   treeRenamePrompt: "New name",
   treeUpdateLinksConfirm:
     "Update the links to and from “{name}” so they keep working?",

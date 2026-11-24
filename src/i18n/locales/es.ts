@@ -631,7 +631,6 @@ para usar una.
   treeCollapseAll: "Contraer todo",
   treeSortModified: "Por fecha de modificación",
   treeRenameItem: "Cambiar nombre…",
-  treeRename: "Cambiar nombre",
   treeRenamePrompt: "Nombre nuevo",
   treeUpdateLinksConfirm:
     "¿Actualizar los enlaces hacia y desde «{name}» para que sigan funcionando?",

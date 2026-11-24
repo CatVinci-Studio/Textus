@@ -588,7 +588,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeCollapseAll: "すべて折りたたむ",
   treeSortModified: "変更日順",
   treeRenameItem: "名前を変更…",
-  treeRename: "名前を変更",
   treeRenamePrompt: "新しい名前",
   treeUpdateLinksConfirm:
     "「{name}」へのリンクと、その中のリンクを更新して使えるままにしますか？",

@@ -633,7 +633,6 @@ utiliser une.
   treeCollapseAll: "Tout réduire",
   treeSortModified: "Par date de modification",
   treeRenameItem: "Renommer…",
-  treeRename: "Renommer",
   treeRenamePrompt: "Nouveau nom",
   treeUpdateLinksConfirm:
     "Mettre à jour les liens vers et depuis « {name} » pour qu’ils continuent de fonctionner ?",
