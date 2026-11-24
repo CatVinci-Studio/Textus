@@ -215,10 +215,7 @@ pub fn list_recent_folders(app: tauri::AppHandle) -> Vec<String> {
 /// Quit: every window is asked to close, so each unsaved document gets its
 /// prompt, and the app exits once the last one is gone.
 pub(crate) fn quit(app_handle: &tauri::AppHandle) {
-    // The window last in use is the one a launch opens like.
-    if let Some(window) = crate::editor_windows::last_editor(app_handle) {
-        commands::prefs::remember_editor_window(app_handle, &window);
-    }
+    commands::prefs::remember_open_windows(app_handle);
     // Capture every editor before destruction order can progressively
     // shrink the session. A cancelled dirty-window prompt resets this
     // through cancel_session_quit.

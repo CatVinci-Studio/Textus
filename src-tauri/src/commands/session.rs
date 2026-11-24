@@ -241,18 +241,40 @@ pub fn keep_frame(
     write_session(app, &merged);
 }
 
-/// Captures the complete session, each window's frame with it, before File >
-/// Quit starts closing windows.
+/// Every open window's frame read now, kept with its documents: as the app
+/// quits, before any window closes. Read with the map unlocked, since a
+/// window's state is read on the main thread, which may be waiting for it.
+#[cfg(desktop)]
+pub fn keep_open_frames(app: &AppHandle, state: &SessionTabsState) {
+    let labels: Vec<String> = state.0.lock().unwrap().keys().cloned().collect();
+    let frames: Vec<_> = labels
+        .into_iter()
+        .filter_map(|label| {
+            let window = app.get_window(&label)?;
+            Some((label, crate::commands::prefs::closing_frame(&window)?))
+        })
+        .collect();
+    let merged = {
+        let mut map = state.0.lock().unwrap();
+        let mut changed = false;
+        for (label, frame) in frames {
+            if let Some(window) = map.get_mut(&label) {
+                changed |= window.frame != Some(frame);
+                window.frame = Some(frame);
+            }
+        }
+        changed.then(|| merge_windows(&map))
+    };
+    if let Some(windows) = merged {
+        write_session(app, &windows);
+    }
+}
+
+/// Captures the complete session before File > Quit starts closing windows.
 #[cfg(desktop)]
 pub fn begin_app_quit(app: &AppHandle, state: &SessionTabsState) {
     APP_QUITTING.store(true, Ordering::SeqCst);
-    let mut map = state.0.lock().unwrap();
-    for (label, window) in map.iter_mut() {
-        if let Some(live) = app.get_window(label) {
-            window.frame = crate::commands::prefs::closing_frame(&live);
-        }
-    }
-    if let Some(windows) = quit_snapshot(&map) {
+    if let Some(windows) = quit_snapshot(&state.0.lock().unwrap()) {
         write_session(app, &windows);
     }
 }

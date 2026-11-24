@@ -303,6 +303,11 @@ pub fn run() {
         .run(|app_handle, event| {
             // Flush whatever is still waiting on its debounce.
             if let tauri::RunEvent::Exit = event {
+                // Quit from outside the menu (the Dock, logging out) closes no window first.
+                #[cfg(desktop)]
+                if !commands::session::app_quitting() {
+                    commands::prefs::remember_open_windows(app_handle);
+                }
                 settings::flush_all(app_handle);
                 #[cfg(desktop)]
                 agents::stop_all(app_handle);

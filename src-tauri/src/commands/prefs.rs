@@ -134,3 +134,14 @@ pub fn remember_editor_window(app: &AppHandle, window: &tauri::Window) {
     }
     keep(app, "editorWindowMode", json!(kept.mode));
 }
+
+/// As the app quits, before any window closes: the window last in use for the
+/// next launch, and each window's frame with its documents.
+pub fn remember_open_windows(app: &AppHandle) {
+    if let Some(window) = crate::editor_windows::last_editor(app) {
+        remember_editor_window(app, &window);
+    }
+    if let Some(state) = app.try_state::<crate::commands::session::SessionTabsState>() {
+        crate::commands::session::keep_open_frames(app, &state);
+    }
+}
