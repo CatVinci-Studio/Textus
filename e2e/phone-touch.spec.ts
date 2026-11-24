@@ -189,19 +189,34 @@ for (const { name, device } of TOUCH_DEVICES)
         ".tree-row",
       ]);
       // A phone's tools keep to their glyphs, their targets overlapping:
-      // the folder's name has more of the row than they do.
+      // the folder's name has more of the row than they do, and each tool
+      // a tap across the whole step from it to the next.
       if (phone) {
         const row = await page.evaluate(() => {
           const width = (el: Element) => el.getBoundingClientRect().width;
           const tools = [
             ...document.querySelectorAll(".tree-toolbar .tree-tool"),
-          ].map((el) => el.getBoundingClientRect());
+          ];
+          const boxes = tools.map((el) => el.getBoundingClientRect());
+          const across = tools.map((el, i) => {
+            const { left, right, top, height } = boxes[i];
+            const y = top + height / 2;
+            let x = left;
+            while (el.contains(document.elementFromPoint(x - 1, y))) x--;
+            let end = right;
+            while (el.contains(document.elementFromPoint(end, y))) end++;
+            return end - x;
+          });
           return {
             name: width(document.querySelector(".tree-root-label")!),
-            tools: tools.at(-1)!.right - tools[0].left,
+            tools: boxes.at(-1)!.right - boxes[0].left,
+            step: boxes[1].left - boxes[0].left,
+            across,
           };
         });
         expect.soft(row.name).toBeGreaterThan(row.tools);
+        for (const width of row.across)
+          expect.soft(width).toBeGreaterThanOrEqual(row.step - 1);
       }
       // A tablet's Settings list, in the sidebar.
       if (!phone) {

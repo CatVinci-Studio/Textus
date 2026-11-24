@@ -215,25 +215,27 @@
     min-height: var(--touch-target);
   }
 
-  /* The folder's tools keep their size and spacing, the name its room: a
-     44pt target around each glyph, reaching over the gaps (each glyph
-     stays inside its own) and past the row's end into its padding. The
-     first one's lies over the next's: only it has room to its left. */
-  :root:is([data-platform="ios"], [data-platform="android"]) .tree-toolbar {
+  /* A phone's folder tools stay small, leaving the name its room; each
+     44pt target overlaps the next one's, which it lies over. */
+  :root[data-window-chrome="mobile"] .tree-toolbar {
     min-height: var(--touch-target);
     gap: var(--space-2);
     padding-right: calc((var(--touch-target) - var(--icon-button-s)) / 2);
   }
-  :root:is([data-platform="ios"], [data-platform="android"])
-    .tree-toolbar
-    .tree-tool {
+  :root[data-window-chrome="mobile"] .tree-toolbar .tree-tool {
     position: relative;
+    z-index: 3;
     width: var(--icon-button-s);
     height: var(--icon-button-s);
   }
-  :root:is([data-platform="ios"], [data-platform="android"])
-    .tree-root-label
-    + .tree-tool {
+  :root[data-window-chrome="mobile"] .tree-toolbar .tree-tool ~ .tree-tool {
+    z-index: 2;
+  }
+  :root[data-window-chrome="mobile"]
+    .tree-toolbar
+    .tree-tool
+    ~ .tree-tool
+    ~ .tree-tool {
     z-index: 1;
   }
 
@@ -243,9 +245,7 @@
     position: relative;
   }
   :root:is([data-platform="ios"], [data-platform="android"]) .tx-button::after,
-  :root:is([data-platform="ios"], [data-platform="android"])
-    .tree-toolbar
-    .tree-tool::after,
+  :root[data-window-chrome="mobile"] .tree-toolbar .tree-tool::after,
   :root:is([data-platform="ios"], [data-platform="android"])
     .info-tip-button::after,
   :root:is([data-platform="ios"], [data-platform="android"])
