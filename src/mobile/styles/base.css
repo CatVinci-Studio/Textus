@@ -201,7 +201,7 @@
     height: var(--touch-target);
   }
   :root:is([data-platform="ios"], [data-platform="android"])
-    :is(.tree-row, .context-menu-item) {
+    :is(.tree-row, .tx-list-item, .context-menu-item) {
     min-height: var(--touch-target);
   }
 }

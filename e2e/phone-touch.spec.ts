@@ -26,6 +26,27 @@ test.describe("a phone on its side", () => {
       "column",
     );
   });
+
+  test("keeps its island and rail clear of the cutout and the far corner", async ({
+    page,
+  }) => {
+    await openApp(page);
+    await page.evaluate(() => {
+      const style = document.documentElement.style;
+      style.setProperty("--native-safe-left", "47px");
+      style.setProperty("--native-safe-right", "47px");
+    });
+    const island = (await page
+      .locator("section.island")
+      .first()
+      .boundingBox())!;
+    expect(island.x).toBeGreaterThanOrEqual(47);
+    // Its whole width shows, a margin short of the corner's room.
+    expect(island.x + island.width).toBeLessThan(844 - 47);
+    await page.locator(".window-bar-sidebar-toggle").tap();
+    const rail = (await page.locator(".activity-rail").boundingBox())!;
+    expect(rail.x).toBeGreaterThanOrEqual(47);
+  });
 });
 
 /** How wide and tall a tap still lands on the first visible `selector`,
@@ -114,6 +135,12 @@ for (const { name, device } of TOUCH_DEVICES)
         ".tree-tool",
         ".tree-row",
       ]);
+      // A tablet's Settings list, in the sidebar.
+      if (!phone) {
+        await page.locator(".activity-rail-settings").tap();
+        await expect(page.locator(".tx-list-item").first()).toBeVisible();
+        await big([".tx-list-item"]);
+      }
       if (phone) await page.mouse.click(380, 400);
       await page.getByRole("button", { name: "Menu", exact: true }).tap();
       await big([".context-menu-item"]);
