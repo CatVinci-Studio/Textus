@@ -1,4 +1,3 @@
-import { counted } from "../../i18n/current";
 import type { Strings } from "../../i18n/strings";
 import type { Shortcuts } from "../../prefs/SettingsContext";
 import type { FormatBarSide } from "../../prefs/settings-values";
@@ -28,6 +27,8 @@ import {
   canToggleFullscreen,
   canUseWindows,
   hasDocumentsList,
+  hasTextusAi,
+  isDesktopApp,
   isMobileApp,
 } from "../../platform/capabilities";
 /**
@@ -142,9 +143,6 @@ export interface MenuChecks {
   /** Not a check mark: a folder is open, so Close Folder has something to
    *  close. */
   folderOpen?: boolean;
-  /** Not a check mark: the document's word count, which the phone's menu
-   *  shows when its title row has no room for it. */
-  words?: number;
   /** Not a check mark: the tab in front is a page (AI, Settings), with no
    *  document to save, share or search. */
   noDocument?: boolean;
@@ -204,8 +202,13 @@ export const NO_RECENTS: RecentLists = { files: [], folders: [] };
 
 /** Entries this platform leaves out: the sponsor link on iOS, whose store
  *  rules keep payment outside the app from being linked to, and on an
- *  iPad what it can't do (windows, quitting, updating itself). */
+ *  iPad what it can't do (windows, quitting, updating itself, Textus AI)
+ *  and what About leaves to the desktop (the welcome, a problem report). */
 const LEFT_OUT: Record<string, boolean> = {
+  "toggle-agent-panel": !hasTextusAi,
+  "help-doc:agent": !hasTextusAi,
+  "help-doc:welcome": !isDesktopApp,
+  "help-report": !isDesktopApp,
   "help-sponsor": !canLinkSponsor,
   "new-window": !canUseWindows,
   "close-window": !canUseWindows,
@@ -361,17 +364,7 @@ export function buildMobileMenu(
   checks: MenuChecks = {},
   plugins: readonly PluginMenuEntry[] = [],
 ): MenuNode[] {
-  const words = checks.words;
   return [
-    ...(words
-      ? [
-          {
-            label: counted(t.wordCount, words),
-            disabled: true,
-          },
-          "separator" as const,
-        ]
-      : []),
     ...(hasDocumentsList
       ? [
           {

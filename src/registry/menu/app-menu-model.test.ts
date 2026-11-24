@@ -209,13 +209,6 @@ describe("the View menu's on/off items", () => {
     ).toEqual({ native: "open-folder" });
   });
 
-  it("head the phone's menu with the word count when the title row has no room for it", () => {
-    const t = resolveStrings("en");
-    const [first] = buildMobileMenu(t, { words: 49 });
-    expect(first).toEqual({ label: "49 words", disabled: true });
-    expect(buildMobileMenu(t)[0]).toMatchObject({ label: t.menuNewFile });
-  });
-
   it("grey Save on the phone while a page (AI, Settings) is in front", () => {
     const t = resolveStrings("en");
     const off = (checks: MenuChecks) =>
@@ -418,6 +411,31 @@ describe("the sponsor link", () => {
     const model = await import("./app-menu-model");
     const ios = flatten(model.buildAppMenu(t, shortcuts, NO_RECENTS));
     expect(ios.map((e) => e.label)).not.toContain(t.menuHelpSponsor);
+    vi.doUnmock("../../platform/capabilities");
+  });
+
+  it("leaves out on an iPad what can't work there: the AI panel and guide, the welcome, a report, Pandoc", async () => {
+    const labels = (nodes: MenuNode[]) => flatten(nodes).map((e) => e.label);
+    const gone = [
+      t.menuToggleAgentPanel,
+      t.menuHelpAgent,
+      t.menuHelpWelcome,
+      t.menuHelpReport,
+      t.menuExportDocx,
+    ];
+    const desktop = labels(buildAppMenu(t, shortcuts, NO_RECENTS));
+    for (const label of gone) expect(desktop).toContain(label);
+    vi.resetModules();
+    vi.doMock("../../platform/capabilities", async (importOriginal) => ({
+      ...(await importOriginal<object>()),
+      hasTextusAi: false,
+      isDesktopApp: false,
+      canExportWithPandoc: false,
+    }));
+    const model = await import("./app-menu-model");
+    const ipad = labels(model.buildAppMenu(t, shortcuts, NO_RECENTS));
+    for (const label of gone) expect(ipad).not.toContain(label);
+    expect(ipad).toContain(t.menuExportHtml);
     vi.doUnmock("../../platform/capabilities");
   });
 

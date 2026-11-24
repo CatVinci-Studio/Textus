@@ -105,7 +105,6 @@ const options = (pos: number | null): ContextMenuOptions => ({
   pasteAsPlainText: () => {},
   paste: () => {},
   selectAll: () => {},
-  openFindReplace: () => {},
   openTableDialog: () => {},
 });
 const labels = (items: ReturnType<typeof buildContextMenuItems>): string[] =>
@@ -274,8 +273,10 @@ describe("the editor menu", () => {
     const inText = labels(
       buildPhoneMoreItems(editorAt(caretIn("text")).run, options(null)),
     );
-    expect(inText).toContain(t.insertTable);
     expect(inText).not.toContain(t.menuBulletList);
+    // The strip inserts a table; ⋯ finds.
+    expect(inText).not.toContain(t.insertTable);
+    expect(inText).not.toContain(t.findReplace);
     // A tap only edits a link: its Open is here.
     const link = { pos: 0, source: "[a](b.md)", href: "b.md", docPath: null };
     expect(
