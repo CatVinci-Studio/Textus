@@ -596,7 +596,7 @@ test("the sidebar stepping aside and back leaves the rows of tabs in place, not 
   await expect(rows).toHaveCount(before.length);
 });
 
-test("New makes things in the folder last clicked; Collapse All folds every folder", async ({
+test("New makes things in the folder last clicked, folders on the way too; Collapse All folds every folder", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -651,4 +651,10 @@ test("New makes things in the folder last clicked; Collapse All folds every fold
   await make("New File", "later");
   await expect.poll(files).toContain("/proj/notes/deep/later.md");
   await expect(row("notes")).toHaveAttribute("aria-expanded", "true");
+
+  // Slashes in the name make the folders on the way, shown open.
+  await make("New Folder", "week/days");
+  await expect.poll(files).toContain("/proj/notes/deep/week/days/.keep");
+  await expect(row("week")).toHaveAttribute("aria-expanded", "true");
+  await expect(row("days")).toBeVisible();
 });

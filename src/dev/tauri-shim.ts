@@ -766,9 +766,14 @@ export function installDevTauriShim(): void {
       // A folder is the files under it; an empty one holds a hidden ".keep".
       case "tree_create_document":
       case "tree_create_folder": {
-        const name = String(args.name).trim();
-        if (!name || name.includes("/"))
+        // Slashes name folders on the way (tree_ops.rs `typed_path`).
+        const parts = String(args.name)
+          .trim()
+          .split("/")
+          .map((part) => part.trim());
+        if (parts.some((part) => !part || part === "." || part === ".."))
           return Promise.reject(ownError("badName"));
+        const name = parts.join("/");
         const doc = cmd === "tree_create_document";
         const target = `${String(args.dir)}/${doc && !/\.(md|markdown)$/i.test(name) ? `${name}.md` : name}`;
         if (

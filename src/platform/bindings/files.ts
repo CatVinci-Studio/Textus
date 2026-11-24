@@ -109,9 +109,15 @@ export const commands = {
 	 *  refused as tooBroad for the frontend to explain.
 	 */
 	pick_open_folder: () => __TAURI_INVOKE<string | null>("pick_open_folder"),
-	/**  Creates an empty Markdown document in `dir`. Returns its path. */
+	/**
+	 *  Creates an empty Markdown document in `dir`, and the folders on the way
+	 *  a name with slashes gives. Returns its path.
+	 */
 	tree_create_document: (dir: string, name: string) => __TAURI_INVOKE<string>("tree_create_document", { dir, name }),
-	/**  Creates a folder in `dir`. Returns its path. */
+	/**
+	 *  Creates a folder in `dir`, and the folders on the way a name with
+	 *  slashes gives. Returns its path.
+	 */
 	tree_create_folder: (dir: string, name: string) => __TAURI_INVOKE<string>("tree_create_folder", { dir, name }),
 	/**  Moves a file or folder into the folder `into`. Returns its new path. */
 	tree_move_entry: (path: string, into: string) => __TAURI_INVOKE<string>("tree_move_entry", { path, into }),

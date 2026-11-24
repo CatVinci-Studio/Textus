@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { fs } from "../platform/ipc";
 import { announceFileCreated } from "../utils/events";
+import { isInside, parentDir } from "../utils/path";
 
 import { showMessage } from "../engine/controls/app-dialog";
 import type { Strings } from "../i18n/strings";
@@ -23,7 +24,15 @@ export function useNewEntry(
           draft.kind === "document"
             ? await fs.createDocument(draft.dir, name)
             : await fs.createFolder(draft.dir, name);
-        reload(draft.dir);
+        // A name with slashes made folders on the way: they open too.
+        const dirs = [];
+        for (
+          let d = parentDir(made);
+          d && isInside(d, draft.dir);
+          d = parentDir(d)
+        )
+          dirs.push(d);
+        reload(draft.dir, ...dirs);
         if (draft.kind === "document") {
           announceFileCreated(made);
           onFileSelect(made);
