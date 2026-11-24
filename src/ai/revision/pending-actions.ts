@@ -32,6 +32,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { writeAccept, type AcceptOutcome } from "./pending-accept";
 import { settle } from "./settle-motion";
 import { makeProposalJoins } from "./pending-join";
+import { dropAnimation } from "./pending-animation";
 import type { PendingEditOptions } from "./usePendingEdits";
 
 /** What a writer does with proposals, as plain functions over an
@@ -124,6 +125,10 @@ export function makePendingActions(env: PendingEnv) {
         );
       }
       if (invalidIds.length > 0) {
+        // Its streamed text never reached the list: nothing else lets it go.
+        const listed = pendingEditKey.getState(view.state)?.previews ?? [];
+        for (const id of invalidIds)
+          if (!listed.some((p) => p.callId === id)) dropAnimation(id);
         env.setStatuses((prev) =>
           recordStatuses(prev, invalidIds, {
             type: "decided",
@@ -271,9 +276,12 @@ export function makePendingActions(env: PendingEnv) {
       const preview = (
         pendingEditKey.getState(view.state)?.previews ?? []
       ).find((p) => p.callId === callId);
-      // A rejected picture leaves nothing behind.
+      // A rejected picture leaves nothing behind; a saved one replaced
+      // still shows on its card.
       for (const id of generatedIdsIn(preview?.proposal.text ?? ""))
-        discardGeneratedImage(id);
+        if (status !== "replaced" || !savedSrc(id)) discardGeneratedImage(id);
+      // A draft that never reached the list: only its streamed text is here.
+      if (!preview) dropAnimation(callId);
       settle(view, [callId], () =>
         view.dispatch(
           view.state.tr.setMeta(pendingEditKey, { type: "remove", callId }),

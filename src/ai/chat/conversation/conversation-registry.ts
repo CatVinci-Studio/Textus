@@ -11,6 +11,7 @@ import { ConversationModel } from "./conversation-model";
 import type { ConversationEnv } from "./conversation-types";
 import { attachedDocument } from "./document-port";
 import { aiRoot } from "../../../ai/workspace/ai-root";
+import { subscribeSplit, windowTabs } from "../../../engine/layout/store";
 
 /**
  * The window's conversations, one model each, whatever draws them: an AI
@@ -21,6 +22,21 @@ const models: ConversationModel[] = [];
 /** The one not yet sent in any scope. */
 let draft: ConversationModel | null = null;
 let watching = false;
+/** Conversations with no scope an AI tab has shown: one goes once none
+ *  does. Not before, as a restored one's tab comes after it. */
+const tabbed = new WeakSet<ConversationModel>();
+
+/** The conversations the window's AI tabs show. */
+function inAiTabs(): Set<string> {
+  const ids = new Set<string>();
+  for (const tab of windowTabs()) {
+    const view = tab.view as { view?: string; state?: unknown } | undefined;
+    const id = (view?.state as { conversation?: string } | undefined)
+      ?.conversation;
+    if (view?.view === "ai" && id) ids.add(id);
+  }
+  return ids;
+}
 
 /** The window as a conversation finds it: the document in front, if any,
  *  and the settings as they are now. */
@@ -80,7 +96,8 @@ function dropTwins(model: ConversationModel) {
     if (other !== model && other.id === model.id) drop(other);
 }
 
-/** A conversation whose tab was closed, here or in another window, ends. */
+/** A conversation whose tab was closed, here or in another window, ends;
+ *  one with no scope, kept nowhere else, once this window's tab goes. */
 function watch() {
   if (watching) return;
   watching = true;
@@ -92,8 +109,23 @@ function watch() {
       if (liveConversation(scope) !== id) drop(model);
     }
   };
+  const untabbed = () => {
+    const shown = inAiTabs();
+    for (const model of [...models]) {
+      if (model.scope || model === draft) continue;
+      if (shown.has(model.id)) tabbed.add(model);
+      else if (tabbed.has(model)) drop(model);
+    }
+  };
   onOpenConversations(closed);
   onLiveConversation(closed);
+  subscribeSplit(untabbed);
+}
+
+/** Conversation `id`, restored for a tab that never came: it goes. */
+export function forgetConversation(id: string): void {
+  const model = models.find((m) => m.id === id && m !== draft);
+  if (model) drop(model);
 }
 
 /** Forgets every conversation, for tests. */
