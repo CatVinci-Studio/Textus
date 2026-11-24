@@ -2,7 +2,7 @@ import { InputRule } from "@milkdown/kit/prose/inputrules";
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import { $inputRule } from "@milkdown/kit/utils";
 import { LINK } from "./link-source";
-import { parseLink } from "./link-syntax";
+import { linkHref, parseLink } from "./link-syntax";
 
 /**
  * `[text](url)` typed out becomes a link as its `)` goes in. A run holding an
@@ -18,6 +18,24 @@ export const TYPED_LINK = /(?<!!)\[([^[\]\n\ufffc]+)\]\(([^()\s\ufffc]+)\)$/;
 export const TYPED_IMAGE = /!\[([^[\]\n\ufffc]*)\]\(([^()\s\ufffc]+)\)$/;
 
 type Match = RegExpMatchArray | RegExpExecArray;
+
+/** Whether start..end is plain text in one block. A rule's match counts the
+ *  text inside an inline node (raw HTML, a bold span) but not its two edges,
+ *  so a match running over one would start that many positions off. */
+export function plainTextRun(
+  state: EditorState,
+  start: number,
+  end: number,
+): boolean {
+  if (!state.doc.resolve(start).sameParent(state.doc.resolve(end)))
+    return false;
+  let plain = true;
+  state.doc.nodesBetween(start, end, (node) => {
+    if (node.isInline && !node.isText) plain = false;
+    return plain;
+  });
+  return plain;
+}
 
 /** `[text](url)` at start..end as a link: the input rule's change, and the
  *  autopair's and link-settle's when the caret leaves a ")". */
@@ -43,6 +61,7 @@ export function linkNodeAt(
   if (
     !link ||
     !parseLink(source) ||
+    !plainTextRun(state, start, end) ||
     $start.parent.type.spec.code ||
     !$start.parent.canReplaceWith(
       $start.index(),
@@ -66,10 +85,12 @@ export function typedImage(
   end: number,
 ): Transaction | null {
   const image = state.schema.nodes.image;
-  const [, alt, src] = match;
+  const [, alt, written] = match;
+  const src = linkHref(match[0].slice(1)) ?? written;
   const $start = state.doc.resolve(start);
   if (
     !image ||
+    !plainTextRun(state, start, end) ||
     $start.parent.type.spec.code ||
     !$start.parent.canReplaceWith(
       $start.index(),

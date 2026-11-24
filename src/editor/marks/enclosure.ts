@@ -87,7 +87,9 @@ export function redirectMisattributedInput(
     sel.from !== nodeEnd
   )
     return false;
-  const deflt = () => state.tr.insertText(text, sel.from, sel.to);
+  // From the state as it is then: a handler may change it and still pass (the
+  // bracket autopair takes out the ")" a typed one replaces).
+  const deflt = () => view.state.tr.insertText(text, sel.from, sel.to);
   const handled = view.someProp("handleTextInput", (f) =>
     f(view, sel.from, sel.to, text, deflt),
   );

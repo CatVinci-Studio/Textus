@@ -7,8 +7,8 @@ describe("TYPED_TAG", () => {
       expect(TYPED_TAG.exec(`text ${tag}`)?.[0]).toBe(tag);
   });
 
-  it("leaves comparisons and arrows alone", () => {
-    for (const text of ["a < b > c", "x -> y", "<>", "1<2>"])
+  it("leaves comparisons, arrows and a link's <destination> alone", () => {
+    for (const text of ["a < b > c", "x -> y", "<>", "1<2>", "[a](<b>"])
       expect(TYPED_TAG.test(text)).toBe(false);
   });
 });

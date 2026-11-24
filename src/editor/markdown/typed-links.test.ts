@@ -64,6 +64,28 @@ for (const [way, write] of ways)
     expect(t.markdown()).toBe(`${LINK}\n\n${IMAGE}`);
   });
 
+for (const autoCloseBrackets of [true, false])
+  it.each([
+    ["[a](<b>) c", "[a](<b>) c"],
+    ["![a](<b>) c", "![a](b) c"],
+    // Over another inline node: left as written, never the text doubled.
+    ["[x<b>](y) z", "\\[x<b>]\\(y) z"],
+    ["[^<b>] c", "\\[^<b>] c"],
+    ["[**b**](u) c", "\\[**b**]\\(u) c"],
+    ["![**b**](u) c", "!\\[**b**]\\(u) c"],
+  ])(
+    `%s typed (brackets closed: ${autoCloseBrackets}) saves as %s`,
+    async (line, saved) => {
+      const t = await openView("", {
+        enableCompletion: false,
+        autoCloseBrackets,
+      });
+      t.type(line);
+      t.press("Enter");
+      expect(t.markdown()).toBe(saved);
+    },
+  );
+
 it("an image typed mid-sentence goes in where it was typed", async () => {
   const t = await open();
   t.type("See ![](assets/a.png) here");
