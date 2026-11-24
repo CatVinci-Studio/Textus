@@ -155,15 +155,21 @@ for (const { name, device } of TOUCH_DEVICES)
       });
       await openApp(page, { settings: { language: "en" } });
       const phone = name === "a phone";
+      // Each control in first, then measured until the window is placed:
+      // until the bar's controls are measured (a second or two, cold, on a
+      // slow machine) the tabs' row runs under ⋯, the +'s target over it,
+      // and a tablet's sidebar is clipped while it slides in.
       const big = async (selectors: string[]) => {
         for (const selector of selectors) {
-          const size = await reach(page, selector);
-          expect
-            .soft(size.width, `${selector} wide`)
-            .toBeGreaterThanOrEqual(44);
-          expect
-            .soft(size.height, `${selector} tall`)
-            .toBeGreaterThanOrEqual(44);
+          await expect(
+            page.locator(`${selector}:visible`).first(),
+          ).toBeVisible();
+          for (const side of ["width", "height"] as const)
+            await expect.soft
+              .poll(async () => (await reach(page, selector))[side], {
+                message: `${selector} ${side === "width" ? "wide" : "tall"}`,
+              })
+              .toBeGreaterThanOrEqual(44);
         }
       };
       await big([
@@ -279,21 +285,29 @@ test.describe("a phone's Extensions page", () => {
     // With a catalog, Available's sort and its Hide.
     if (hasPlugin("catvinci.abc"))
       await expect(page.getByRole("button", { name: "Hide" })).toBeVisible();
-    // Each title's and control's centre, from the title's.
+    // Each control's centre, from its title's. Controls too wide to fit
+    // beside the title wrap onto a line of their own under it (by design;
+    // how wide depends on the fonts): then level with one another.
     const off = await page.evaluate(() =>
       [...document.querySelectorAll(".settings-group-head")].flatMap((head) => {
-        const middle = (el: Element) => {
-          const box = el.getBoundingClientRect();
-          return box.top + box.height / 2;
-        };
-        const title = middle(head.querySelector(".settings-group-title")!);
-        return [
+        const title = head
+          .querySelector(".settings-group-title")!
+          .getBoundingClientRect();
+        const controls = [
           ...head.querySelectorAll(
             ".settings-group-actions :is(button, .ui-select)",
           ),
         ]
           .filter((el) => el.checkVisibility())
-          .map((el) => Math.round(Math.abs(middle(el) - title)));
+          .map((el) => el.getBoundingClientRect());
+        const wrapped =
+          controls.length > 0 &&
+          controls.every((box) => box.top >= title.bottom);
+        const level = wrapped ? controls[0] : title;
+        const middle = level.top + level.height / 2;
+        return controls.map((box) =>
+          Math.round(Math.abs(box.top + box.height / 2 - middle)),
+        );
       }),
     );
     expect(off.length).toBeGreaterThan(0);
