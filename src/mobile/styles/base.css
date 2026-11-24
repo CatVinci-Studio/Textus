@@ -75,7 +75,9 @@
 }
 
 :root[data-window-chrome="mobile"] {
-  --mobile-bar: 48px;
+  /* Exact pixels, not the chrome's step: a 44pt target that starts between
+     device pixels is hit a pixel short in WebKit. */
+  --mobile-bar: var(--touch-target);
   --mobile-top: calc(var(--safe-top) + var(--mobile-bar));
   /* No grey flash over whatever a finger lands on. */
   -webkit-tap-highlight-color: transparent;

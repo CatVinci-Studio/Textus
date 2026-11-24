@@ -164,6 +164,8 @@
   width: max-content;
   min-width: 264px;
   max-width: min(352px, calc(100vw - 18px));
+  /* Its rows on whole pixels (--mobile-bar). */
+  padding: var(--space-1);
 }
 
 :root[data-window-chrome="mobile"] .context-menu-item {
