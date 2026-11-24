@@ -172,6 +172,9 @@ for (const device of DEVICES)
       } else {
         await page.locator(".activity-rail-settings").tap();
         await expect(page.locator(".settings-tab-page")).toBeVisible();
+        // Its sidebar opens with it: the sheet takes the room left in the
+        // frame it is drawn, not the moment the tab is mounted.
+        await settled(page);
         await fitsTheScreen(page, ".settings-tab-page");
       }
     });
