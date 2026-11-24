@@ -115,8 +115,8 @@
   background: transparent;
 }
 
-:root[data-window-chrome="mobile"] .window-menu-button,
-:root[data-window-chrome="mobile"] .window-bar-toggle {
+:root[data-window-chrome="mobile"]
+  :is(.window-menu-button, .window-bar-sidebar-toggle, .window-bar-toggle) {
   width: 48px;
   height: 48px;
   border-radius: var(--shape-pill);
@@ -148,17 +148,18 @@
   }
 }
 
-/* The desktop's 12-14px glyphs read as specks in a 44pt button; iOS draws
+/* The desktop's 12-15px glyphs read as specks in a 44pt button; iOS draws
    bar and toolbar symbols at about 20pt. */
 :root[data-window-chrome="mobile"]
   :is(
     .window-menu-button,
+    .window-bar-sidebar-toggle,
     .window-bar-toggle,
+    .tab-bar-add,
+    .activity-rail-item,
     .agent-panel-actions .inline-chat-header-button
-  )
-  svg {
-  width: 22px;
-  height: 22px;
+  ) {
+  --icon-scale: 1.35;
 }
 
 /* Small bar buttons keep their look; a finger gets a 44pt target around
@@ -168,23 +169,41 @@
     :is(.inline-chat-header-actions, .agent-island-tools) {
     gap: 16px;
   }
-  :root[data-window-chrome="mobile"]
-    :is(.window-bar-sidebar-toggle, .inline-chat-header-button) {
+  :root:is([data-platform="ios"], [data-platform="android"])
+    :is(.inline-chat-header-button, .window-menu-button, .tab-pill-close) {
     position: relative;
   }
-  :root[data-window-chrome="mobile"]
+  /* The + is sticky at the row's end (TabBar.css), its own containing
+     block; a finger wide, as the scroller clips what reaches past it. */
+  :root:is([data-platform="ios"], [data-platform="android"]) .tab-bar-add {
+    min-width: var(--touch-target);
+  }
+  :root:is([data-platform="ios"], [data-platform="android"])
     :is(
-      .window-bar-sidebar-toggle,
       .inline-chat-header-button,
-      .tab-bar-list
+      .tab-bar-list,
+      .window-menu-button,
+      .tab-bar-add,
+      .tab-pill-close
     )::after {
     content: "";
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 44px;
-    height: 44px;
+    width: var(--touch-target);
+    height: var(--touch-target);
     transform: translate(-50%, -50%);
+  }
+
+  /* Bare glyphs and rows, a tablet's too: the box itself a finger wide. */
+  :root:is([data-platform="ios"], [data-platform="android"])
+    :is(.activity-rail-item, .tree-tool) {
+    width: var(--touch-target);
+    height: var(--touch-target);
+  }
+  :root:is([data-platform="ios"], [data-platform="android"])
+    :is(.tree-row, .context-menu-item) {
+    min-height: var(--touch-target);
   }
 }
 
