@@ -672,6 +672,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeCopying: "‘{folder}’에 복사하는 중…",
   treeCopied: { other: "항목 {n}개를 ‘{folder}’에 복사했습니다" },
   treeCopyFailed: "{name}을(를) 복사할 수 없습니다",
+  treeCopyUndoChanged:
+    "휴지통으로 옮긴 항목이 없습니다. 다음 항목이 복사된 뒤 변경되었습니다.",
   outlineCollapse: "접기",
   outlineExpand: "펼치기",
   outlineExpandAll: "모두 펼치기",

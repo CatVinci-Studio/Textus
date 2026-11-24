@@ -704,6 +704,8 @@ type /name in a conversation to use one.
     other: "Copied {n} items to “{folder}”",
   },
   treeCopyFailed: "Couldn't copy {name}",
+  treeCopyUndoChanged:
+    "Nothing was moved to the Trash: these changed after they were copied.",
   outlineCollapse: "Collapse",
   outlineExpand: "Expand",
   outlineExpandAll: "Expand All",

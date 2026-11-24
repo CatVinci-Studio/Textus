@@ -734,6 +734,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     other: "{n} itens copiados para “{folder}”",
   },
   treeCopyFailed: "Não foi possível copiar {name}",
+  treeCopyUndoChanged:
+    "Nada foi movido para a lixeira: estes itens mudaram depois de copiados.",
   outlineCollapse: "Recolher",
   outlineExpand: "Expandir",
   outlineExpandAll: "Expandir tudo",

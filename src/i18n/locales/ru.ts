@@ -753,6 +753,8 @@ export default {
     other: "{n} элемента скопированы в «{folder}»",
   },
   treeCopyFailed: "Не удалось скопировать {name}",
+  treeCopyUndoChanged:
+    "Ничего не перемещено в корзину: эти объекты изменились после копирования.",
   outlineCollapse: "Свернуть",
   outlineExpand: "Развернуть",
   outlineExpandAll: "Развернуть все",

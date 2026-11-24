@@ -1,6 +1,3 @@
-import { farEntries } from "../platform/far-files";
-import { emitPluginEvent } from "../plugins/app-bridge";
-import { ENTRY_TRASHED_EVENT, sendAppEvent } from "../utils/events";
 import { fill } from "../i18n/fill";
 import {
   useCallback,
@@ -8,7 +5,7 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import { fs } from "../platform/ipc";
-import { canTrashFiles, isMobileApp } from "../platform/capabilities";
+import { isMobileApp } from "../platform/capabilities";
 import { nativeFiles } from "../platform/native-files";
 
 import { basename, parentDir } from "../utils/path";
@@ -23,7 +20,12 @@ import {
   showPrompt,
 } from "../engine/controls/app-dialog";
 import type { Strings } from "../i18n/strings";
-import { failureText, type TreeDraft } from "./tree-shared";
+import {
+  failureText,
+  trashable,
+  trashFromTree,
+  type TreeDraft,
+} from "./tree-shared";
 import { updateLinksAfterMove } from "./move-links";
 import { linkingDocument, linkToFile } from "./link-to-file";
 import { pathItems } from "../clipboard/copy-path";
@@ -43,10 +45,6 @@ type TreeMenu = {
 
 /** The tree's menus: the one open, and a row's context menu - open, new
  *  document or folder, rename, move to Trash. */
-/** Whether `path` goes to a Trash; one in a phone's or a remote folder is
- *  deleted for good. */
-const trashable = (path: string) => canTrashFiles && !farEntries(path);
-
 export function useRowMenu(
   root: string,
   linkBase: string,
@@ -101,11 +99,7 @@ export function useRowMenu(
       );
       if (!ok) return;
       try {
-        await fs.trashEntry(path, root);
-        reload(parentDir(path) ?? root);
-        // Its open tabs let it go (useDocumentActions).
-        sendAppEvent(ENTRY_TRASHED_EVENT, path);
-        emitPluginEvent("fileDelete", { path });
+        await trashFromTree(path, root, reload);
       } catch (err) {
         await showMessage(failureText(t, err, name));
       }
@@ -125,10 +119,7 @@ export function useRowMenu(
       selection.clear();
       for (const { path } of outermost(rows)) {
         try {
-          await fs.trashEntry(path, root);
-          reload(parentDir(path) ?? root);
-          sendAppEvent(ENTRY_TRASHED_EVENT, path);
-          emitPluginEvent("fileDelete", { path });
+          await trashFromTree(path, root, reload);
         } catch (err) {
           await showMessage(failureText(t, err, basename(path)));
           return;

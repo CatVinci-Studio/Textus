@@ -29,6 +29,9 @@ import { TreeRowsInSight } from "./TreeRowsInSight";
 import type { FileOpenHow } from "./tree-shared";
 import { FileIcon, FolderEntryIcon } from "../engine/controls/file-icons";
 
+/** How long something dragged rests on a folded folder before it opens. */
+const OPEN_UNDER_DRAG_MS = 500;
+
 interface DirNodeProps {
   path: string;
   depth: number;
@@ -161,16 +164,26 @@ export const DirNode = memo(function DirNode({
 
   // Rows that must be drawn: the open document's, and the way to it.
   const onWay = onTheWay(activePath, tree.reveal);
+  // Something dragged would go in here: the folder with all its rows lit as
+  // one, and a folded one opens if the pointer stays.
+  const dropping = depth > 0 && tree.dropInto === path;
+  useEffect(() => {
+    if (!dropping || open) return;
+    const timer = window.setTimeout(() => setOpen(true), OPEN_UNDER_DRAG_MS);
+    return () => window.clearTimeout(timer);
+  }, [dropping, open]);
 
   return (
-    <div className="dir-node">
+    <div
+      className={`dir-node${dropping ? " tx-drop-into" : ""}`}
+      data-drop-dir={depth > 0 ? path : undefined}
+    >
       {depth > 0 && (
         <FolderRow
           path={path}
           depth={depth}
           open={open}
           ignored={ignored}
-          dropping={tree.dropInto === path}
           onToggle={() => setOpen(!open)}
         />
       )}
@@ -322,21 +335,19 @@ function FolderRow({
   depth,
   open,
   ignored,
-  dropping,
   onToggle,
 }: {
   path: string;
   depth: number;
   open: boolean;
   ignored: boolean;
-  dropping: boolean;
   onToggle: () => void;
 }) {
   const tree = useTreeRowActions();
   const picked = useRowPicked(path);
   return (
     <div
-      className={`tree-row${dropping ? " tx-drop-into" : ""}${picked ? " tree-row-picked" : ""}${ignored ? " tree-row-ignored" : ""}`}
+      className={`tree-row${picked ? " tree-row-picked" : ""}${ignored ? " tree-row-ignored" : ""}`}
       role="treeitem"
       aria-level={depth}
       aria-expanded={open}

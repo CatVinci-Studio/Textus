@@ -636,6 +636,7 @@ export default {
   treeCopying: "正在複製到「{folder}」…",
   treeCopied: { other: "已將 {n} 個項目複製到「{folder}」" },
   treeCopyFailed: "無法複製 {name}",
+  treeCopyUndoChanged: "沒有移到垃圾桶：以下項目在複製後已被修改。",
   outlineCollapse: "收合",
   outlineExpand: "展開",
   outlineExpandAll: "全部展開",

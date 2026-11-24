@@ -684,6 +684,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   treeCopying: "「{folder}」にコピーしています…",
   treeCopied: { other: "{n} 個の項目を「{folder}」にコピーしました" },
   treeCopyFailed: "{name} をコピーできませんでした",
+  treeCopyUndoChanged:
+    "ゴミ箱には何も移動していません。次の項目はコピー後に変更されています。",
   outlineCollapse: "折りたたむ",
   outlineExpand: "展開",
   outlineExpandAll: "すべて展開",

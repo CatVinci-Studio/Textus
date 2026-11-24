@@ -186,6 +186,12 @@
   border-radius: var(--shape-s);
 }
 
+/* A folder something dragged would go into: its row and all its rows, lit
+   as one block. */
+.dir-node.tx-drop-into {
+  border-radius: var(--shape-s);
+}
+
 /* The rows of a big folder not drawn yet: their room, so the scroll bar
    tells the folder's length. */
 .tree-rows-more {

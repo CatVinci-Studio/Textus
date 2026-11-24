@@ -3,14 +3,22 @@
 const WAIT_MS = 2000;
 
 /** Scrolls the row of `path` into view in the tree `tree` once it is
- *  drawn, as its folder reads its entries again after a change. */
-export function scrollRowIntoView(tree: HTMLElement | null, path: string) {
+ *  drawn, as its folder reads its entries again after a change; `focus`
+ *  gives it the keyboard too. */
+export function scrollRowIntoView(
+  tree: HTMLElement | null,
+  path: string,
+  focus = false,
+) {
   if (!tree) return;
   const find = () =>
     [...tree.querySelectorAll<HTMLElement>("[data-path]")].find(
       (el) => el.dataset.path === path,
     );
-  const show = (row: HTMLElement) => row.scrollIntoView({ block: "nearest" });
+  const show = (row: HTMLElement) => {
+    row.scrollIntoView({ block: "nearest" });
+    if (focus) row.focus({ preventScroll: true });
+  };
   const now = find();
   if (now) return show(now);
   const watch = new MutationObserver(() => {

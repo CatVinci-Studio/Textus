@@ -10,6 +10,11 @@ import type { Strings } from "../i18n/strings";
 import { isInside, parentDir } from "../utils/path";
 import { explainError } from "../utils/error-explain";
 import { errorCode } from "../utils/error-text";
+import { fs } from "../platform/ipc";
+import { canTrashFiles } from "../platform/capabilities";
+import { farEntries } from "../platform/far-files";
+import { emitPluginEvent } from "../plugins/app-bridge";
+import { ENTRY_TRASHED_EVENT, sendAppEvent } from "../utils/events";
 
 // What the file tree and its rows share.
 
@@ -116,6 +121,23 @@ export function dropDirAt(
     .elementFromPoint(x, y)
     ?.closest<HTMLElement>("[data-drop-dir]");
   return el && tree.contains(el) ? (el.dataset.dropDir ?? null) : null;
+}
+
+/** Whether `path` goes to a Trash; one in a phone's or a remote folder is
+ *  deleted for good. */
+export const trashable = (path: string) => canTrashFiles && !farEntries(path);
+
+/** `path` to the Trash from the tree: its folder read again, its open tabs
+ *  let go (useDocumentActions), plugins told. */
+export async function trashFromTree(
+  path: string,
+  root: string,
+  reload: (...dirs: string[]) => void,
+): Promise<void> {
+  await fs.trashEntry(path, root);
+  reload(parentDir(path) ?? root);
+  sendAppEvent(ENTRY_TRASHED_EVENT, path);
+  emitPluginEvent("fileDelete", { path });
 }
 
 /** The backend's refusal in the user's words. */

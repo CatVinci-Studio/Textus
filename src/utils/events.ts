@@ -36,6 +36,11 @@ export const EDIT_ACTION_EVENT = "textus:edit-action";
 /// commands don't reach off macOS.
 export const SOURCE_EDIT_EVENT = "textus:source-edit";
 
+/// On the focused element, detail "undo", "redo" or "select-all", before the
+/// document is asked: a part of the window with an undo of its own (the file
+/// tree's last drop) cancels it when it took the edit.
+export const FOCUSED_EDIT_EVENT = "textus:focused-edit";
+
 /// detail: what to do with the writer's tracked changes in the document on screen.
 export const TRACK_CHANGES_EVENT = "textus:track-changes";
 export type TrackChangesAction = "toggle" | "accept-all" | "reject-all";

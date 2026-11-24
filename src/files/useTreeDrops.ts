@@ -35,7 +35,8 @@ export function useTreeDrops(input: {
   );
   const fromSystem = useTreeFileDrop(treeRef, folder, reload, (path, isDir) => {
     selection.only({ path, isDir });
-    scrollRowIntoView(treeRef.current, path);
+    // The keyboard on it: Edit › Undo then takes the drop back.
+    scrollRowIntoView(treeRef.current, path, true);
   });
   return {
     drag,

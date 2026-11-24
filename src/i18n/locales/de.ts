@@ -720,6 +720,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     other: "{n} Elemente nach „{folder}“ kopiert",
   },
   treeCopyFailed: "{name} konnte nicht kopiert werden",
+  treeCopyUndoChanged:
+    "Nichts wurde in den Papierkorb gelegt: Diese Objekte wurden nach dem Kopieren geändert.",
   outlineCollapse: "Einklappen",
   outlineExpand: "Ausklappen",
   outlineExpandAll: "Alle aufklappen",

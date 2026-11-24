@@ -754,6 +754,8 @@ utiliser une.
     other: "{n} éléments copiés dans «\u00a0{folder}\u00a0»",
   },
   treeCopyFailed: "Impossible de copier {name}",
+  treeCopyUndoChanged:
+    "Rien n'a été mis à la corbeille : ces éléments ont changé après la copie.",
   outlineCollapse: "Replier",
   outlineExpand: "Déplier",
   outlineExpandAll: "Tout déplier",

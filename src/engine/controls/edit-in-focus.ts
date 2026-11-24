@@ -1,6 +1,7 @@
 import { editIpc } from "../../platform/ipc-app";
 import {
   EDIT_ACTION_EVENT,
+  FOCUSED_EDIT_EVENT,
   SOURCE_EDIT_EVENT,
   sendAppEvent,
 } from "../../utils/events";
@@ -40,6 +41,17 @@ export function editInFocus(action: FocusedEdit): void {
     return;
   }
   if (focused instanceof HTMLElement && focused.closest('[aria-modal="true"]'))
+    return;
+  if (
+    focused instanceof HTMLElement &&
+    !focused.dispatchEvent(
+      new CustomEvent(FOCUSED_EDIT_EVENT, {
+        detail: action,
+        bubbles: true,
+        cancelable: true,
+      }),
+    )
+  )
     return;
   sendAppEvent(EDIT_ACTION_EVENT, action);
 }

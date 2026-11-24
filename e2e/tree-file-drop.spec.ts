@@ -67,7 +67,7 @@ test("files from a file manager let go on a folder of the tree are copied in, af
   await emit(page, "tauri://drag-over", { position: assets });
   // The folder under the pointer lit, as for a row dragged onto it.
   await expect(
-    page.locator(".tree-row.tx-drop-into", { hasText: "assets" }),
+    page.locator(".dir-node.tx-drop-into > .tree-row", { hasText: "assets" }),
   ).toBeVisible();
   await expect(page.locator(".file-drop-room")).toHaveCount(0);
   await emit(page, "tauri://drag-drop", { paths, position: assets });
@@ -75,7 +75,7 @@ test("files from a file manager let go on a folder of the tree are copied in, af
   await expect(dialog).toContainText("Copy 2 items to “assets”?");
   await expect(dialog).toContainText("tickets.pdf");
   await expect(dialog).toContainText("notes.md");
-  await expect(page.locator(".tree-row.tx-drop-into")).toHaveCount(0);
+  await expect(page.locator(".tx-drop-into")).toHaveCount(0);
   // Cancelled: nothing copied, nothing opened.
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(dialog).toHaveCount(0);
@@ -204,4 +204,135 @@ test("what can't be copied is said by name, and the rest still copy", async ({
   await expect(
     page.locator(".tree-row-picked", { hasText: "todo.md" }),
   ).toBeVisible();
+});
+
+test("the folder a drop goes into is lit whole, its rows with it, and a folded one opens under the pointer", async ({
+  page,
+}) => {
+  await openFolder(page);
+  const lit = page.locator(".tx-drop-into");
+  const paths = ["/downloads/todo.md"];
+  await emit(page, "tauri://drag-enter", {
+    paths,
+    position: await centre(page, "assets"),
+  });
+  await emit(page, "tauri://drag-over", {
+    position: await centre(page, "assets"),
+  });
+  await expect(lit).toHaveCount(1);
+  await expect(lit.locator("> .tree-row")).toHaveText("assets");
+  // Resting on the folded folder opens it, as a file manager's does.
+  const boat = page.locator(".tree-row", { hasText: "boat.png" });
+  await expect(boat).toBeVisible();
+  // Over a row inside it: still that folder, its row and its rows as one.
+  await emit(page, "tauri://drag-over", {
+    position: await centre(page, "boat.png"),
+  });
+  await expect(lit).toHaveCount(1);
+  await expect(lit.locator(".tree-row")).toHaveText(["assets", "boat.png"]);
+  // Over a row of the open folder: the whole tree is lit instead.
+  await emit(page, "tauri://drag-over", {
+    position: await centre(page, "log.md"),
+  });
+  await expect(page.locator(".tree-body.tx-drop-into")).toHaveCount(1);
+  await expect(page.locator(".dir-node.tx-drop-into")).toHaveCount(0);
+  await emit(page, "tauri://drag-leave", {});
+  await expect(lit).toHaveCount(0);
+
+  // A row of the tree dragged there lights the same block.
+  const from = (await page
+    .locator(".tree-row", { hasText: "log.md" })
+    .boundingBox())!;
+  const to = await centre(page, "boat.png");
+  await page.mouse.move(from.x + 20, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps: 8 });
+  await expect(lit.locator(".tree-row")).toHaveText(["assets", "boat.png"]);
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  await expect(lit).toHaveCount(0);
+});
+
+test("a drop's copies go to the Trash with Undo, and nothing that was there before", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = {
+      "/trip/log.md": "# Trip\n",
+      "/trip/todo.md": "# Mine\n",
+      "/downloads/todo.md": "# Todo\n",
+      "/downloads/photos/cover.png": "",
+    };
+    w.__devPickFolder = "/trip";
+  });
+  await openApp(page, { settings: { language: "en", confirmTreeCopy: false } });
+  await emit(page, "menu-open-folder");
+  const trashed = () =>
+    page.evaluate(
+      () =>
+        (window as unknown as { __devTrashed?: string[] }).__devTrashed ?? [],
+    );
+  await systemDrop(
+    page,
+    ["/downloads/todo.md", "/downloads/photos"],
+    await centre(page, "log.md"),
+  );
+  const copy = page.locator(".tree-row", { hasText: "todo 2.md" });
+  await expect(copy).toBeVisible();
+  await expect(page.locator(".tree-row", { hasText: "photos" })).toBeVisible();
+  // The first copy has the keyboard: the key undoes the drop.
+  await expect(copy).toBeFocused();
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect.poll(trashed).toEqual(["/trip/todo 2.md", "/trip/photos"]);
+  await expect(copy).toHaveCount(0);
+  await expect(page.locator(".tree-row", { hasText: "photos" })).toHaveCount(0);
+  const files = await devFiles(page);
+  expect(files).toContain("/trip/todo.md");
+  expect(files).toContain("/downloads/todo.md");
+  // Once: the key again takes nothing else (the next drop's undo, below,
+  // is the third thing trashed).
+  await page.locator(".tree-row", { hasText: "todo.md" }).first().focus();
+  await page.keyboard.press("ControlOrMeta+z");
+
+  // The notice's Undo does the same.
+  await systemDrop(page, ["/downloads/todo.md"], await centre(page, "log.md"));
+  const notice = page.locator(".notice", { hasText: "Copied 1 item" });
+  await expect(notice).toBeVisible();
+  await notice.getByRole("button", { name: "Undo" }).click();
+  await expect.poll(trashed).toHaveLength(3);
+  expect((await trashed())[2]).toBe("/trip/todo 2.md");
+});
+
+test("a copy changed since the drop is not undone", async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = {
+      "/trip/log.md": "# Trip\n",
+      "/downloads/todo.md": "# Todo\n",
+    };
+    w.__devPickFolder = "/trip";
+  });
+  await openApp(page, { settings: { language: "en", confirmTreeCopy: false } });
+  await emit(page, "menu-open-folder");
+  await systemDrop(page, ["/downloads/todo.md"], await centre(page, "log.md"));
+  const copy = page.locator(".tree-row", { hasText: "todo.md" });
+  await expect(copy).toBeFocused();
+  // Written to since (here as a save would).
+  await page.evaluate(() => {
+    const w = window as unknown as {
+      __devFs: Record<string, string>;
+      __devFsTimes: Record<string, number>;
+    };
+    w.__devFs["/trip/todo.md"] = "# Todo\n\nMore.\n";
+    w.__devFsTimes["/trip/todo.md"] =
+      (w.__devFsTimes["/trip/todo.md"] ?? 1) + 1;
+  });
+  await emit(page, "menu-undo");
+  const message = page.getByRole("alertdialog");
+  await expect(message).toContainText(
+    "Nothing was moved to the Trash: these changed after they were copied.",
+  );
+  await expect(message).toContainText("todo.md");
+  expect(await devFiles(page)).toContain("/trip/todo.md");
 });

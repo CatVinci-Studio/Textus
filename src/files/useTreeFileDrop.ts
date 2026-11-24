@@ -23,6 +23,8 @@ import { useLatest } from "../utils/hooks/useLatest";
 import { dropDirAt } from "./tree-shared";
 import type { DraggedFile } from "../engine/controls/document-drop";
 import { copyQuestion, setTreeFileDrop } from "./tree-file-drop";
+import { stampOf, type CopiedEntry } from "./tree-copy-undo";
+import { useTreeCopyUndo } from "./useTreeCopyUndo";
 
 /**
  * Files and folders from a file manager let go on the tree, with a folder
@@ -30,7 +32,8 @@ import { copyQuestion, setTreeFileDrop } from "./tree-file-drop";
  * on the drop, after asking (Settings › General, or the dialog's Don't Ask
  * Again), copied into it one after another - never moved, never over a
  * name there. What fails is said by name once the rest are in. The first
- * copy is then picked and shown (`show`). Returns the folder lit.
+ * copy is then picked and shown (`show`), and the drop can be undone
+ * (useTreeCopyUndo). Returns the folder lit.
  */
 export function useTreeFileDrop(
   treeRef: RefObject<HTMLDivElement | null>,
@@ -42,7 +45,8 @@ export function useTreeFileDrop(
 ): string | null {
   const { settings, setSettings, t } = useSettings();
   const [into, setInto] = useState<string | null>(null);
-  const latest = useLatest({ settings, setSettings, t, reload, show });
+  const copies = useTreeCopyUndo(treeRef, folder, reload);
+  const latest = useLatest({ settings, setSettings, t, reload, show, copies });
 
   useEffect(() => {
     // A plugin's folder takes no copies from the disk: what is let go on
@@ -53,6 +57,7 @@ export function useTreeFileDrop(
       const where = { folder: folderName(dir) };
       const progress = startProgress(fill(t.treeCopying, where));
       const failed: string[] = [];
+      const made: CopiedEntry[] = [];
       let copied = 0;
       for (const [i, { path, isDir }] of files.entries()) {
         reportProgress(progress, {
@@ -60,13 +65,15 @@ export function useTreeFileDrop(
           message: basename(path),
         });
         try {
-          const made = await fs.copyIntoFolder(path, dir);
+          const copy = await fs.copyIntoFolder(path, dir);
+          const stamp = await stampOf(copy, isDir).catch(() => null);
+          if (stamp !== null) made.push({ path: copy, isDir, stamp });
           reload(dir);
           // A folder is no file a plugin made; the tree and search hear of
           // it as of one moved in.
-          if (isDir) sendAppEvent(FILE_WRITTEN_EVENT, made);
-          else announceFileCreated(made);
-          if (copied++ === 0) show(made, isDir);
+          if (isDir) sendAppEvent(FILE_WRITTEN_EVENT, copy);
+          else announceFileCreated(copy);
+          if (copied++ === 0) show(copy, isDir);
         } catch (err) {
           failed.push(
             `${fill(t.treeCopyFailed, { name: basename(path) })}: ${explainError(err, t)}`,
@@ -75,7 +82,11 @@ export function useTreeFileDrop(
       }
       endProgress(progress);
       const lang = latest.current.settings.language;
-      if (copied) showNotice(fill(plural(t.treeCopied, copied, lang), where));
+      const undo = latest.current.copies.remember(made);
+      if (copied)
+        showNotice(fill(plural(t.treeCopied, copied, lang), where), {
+          action: undo,
+        });
       if (failed.length)
         await showMessage(failed.join("\n"), { tone: "error" });
     };

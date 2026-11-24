@@ -748,6 +748,8 @@ para usar una.
     other: "{n} elementos copiados a «{folder}»",
   },
   treeCopyFailed: "No se pudo copiar {name}",
+  treeCopyUndoChanged:
+    "No se movió nada a la papelera: estos elementos cambiaron después de copiarse.",
   outlineCollapse: "Contraer",
   outlineExpand: "Expandir",
   outlineExpandAll: "Expandir todo",
