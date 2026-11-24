@@ -12,6 +12,7 @@ import {
   type Reveal,
   type RevealState,
 } from "./reveal-state";
+import { NOWHERE } from "./pointer-hold";
 
 const schema = new Schema({
   nodes: {
@@ -152,5 +153,49 @@ describe("applyReveal", () => {
     const tr = state.tr;
     const next = applyReveal(tr, prev, state, state.apply(tr), switched);
     expect(next.set.find()).toHaveLength(0);
+  });
+});
+
+describe("a document just opened", () => {
+  // The caret a fresh document opens with was placed by no one: the block
+  // it sits in is drawn, not revealed as if held.
+  it("draws the block the opening caret sits in", () => {
+    const state = start();
+    const prev = revealAll(state, reveal, undefined, NOWHERE);
+    expect(prev.drawnAt).toBe(NOWHERE);
+    // $x$ shares the first paragraph with the opening caret.
+    expect(prev.set.find(4, 7)).toHaveLength(2);
+  });
+
+  it("reveals the source once the caret moves in, and draws it again out", () => {
+    let state = start();
+    let prev = revealAll(state, reveal, undefined, NOWHERE);
+    drawn = 0;
+    // Into $x$: the click that asks for the source.
+    ({ state, prev } = step(
+      state,
+      prev,
+      state.tr.setSelection(TextSelection.create(state.doc, 4)),
+    ));
+    expect(drawn).toBe(1);
+    expect(prev.set.find(4, 7)).toHaveLength(0);
+    // Out of it: the drawing comes back.
+    ({ prev } = step(
+      state,
+      prev,
+      state.tr.setSelection(TextSelection.create(state.doc, 9)),
+    ));
+    expect(drawn).toBe(2);
+    expect(prev.set.find(4, 7)).toHaveLength(2);
+  });
+
+  it("keeps the block drawn through an edit elsewhere", () => {
+    const state = start();
+    let prev = revealAll(state, reveal, undefined, NOWHERE);
+    drawn = 0;
+    const one = state.doc.child(0).nodeSize + 1;
+    ({ prev } = step(state, prev, state.tr.insertText("!", one + 1)));
+    expect(drawn).toBe(0);
+    expect(prev.set.find(4, 7)).toHaveLength(2);
   });
 });

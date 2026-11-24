@@ -4,7 +4,7 @@ import { zoomButton } from "./diagram-zoom";
 import { addBlockFold } from "./fold/block-fold";
 import { currentStrings } from "../i18n/current";
 import { drawWhileNear } from "./lazy/draw-when-visible";
-import { keepReadable } from "./mermaid-blocks";
+import { keepReadable, mermaidKey } from "./mermaid-blocks";
 
 /**
  * A drawn diagram under its hidden source: the block that folds to a line,
@@ -18,6 +18,8 @@ export function diagramWidget(
   at: {
     /** What its fold is kept under. */
     fold: string;
+    /** The diagram's source: a strip keeps its scale, the rest fits. */
+    source: string;
   },
 ): HTMLElement {
   // The block, which folds to a line; the drawing's box inside it
@@ -38,7 +40,7 @@ export function diagramWidget(
     view.dom,
     () => {
       container.innerHTML = svg;
-      keepReadable(container);
+      keepReadable(container, at.source);
       container.append(zoomButton(container));
     },
     () => container.replaceChildren(),
@@ -52,9 +54,13 @@ export function diagramWidget(
     if (end === undefined) return;
     const block = view.state.doc.resolve(end).nodeBefore;
     if (block?.type.name !== "code_block") return;
-    const tr = view.state.tr.setSelection(
-      TextSelection.create(view.state.doc, end - block.nodeSize + 1),
-    );
+    const tr = view.state.tr
+      .setSelection(
+        TextSelection.create(view.state.doc, end - block.nodeSize + 1),
+      )
+      // The click asks for the source even when the caret doesn't move —
+      // a document just opened with its caret already in this block.
+      .setMeta(mermaidKey, "reveal");
     view.dispatch(tr);
     view.focus();
   });

@@ -1,14 +1,39 @@
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
+import { PluginKey } from "@milkdown/kit/prose/state";
 import { DIAGRAM_LANGUAGES } from "./diagram-languages";
 import type { DrawnDiagram } from "./diagram-engine";
 
-/** The smallest a diagram is scaled down to fit the column; one wider than
- *  that keeps this scale and scrolls, so a long timeline stays readable. */
+/** The mermaid preview plugin's key. Its transactions carry what to draw:
+ *  "rerender" for a finished render, "reveal" for a click that put the caret
+ *  in a source block. Here so the widget can say it without a cycle through
+ *  the plugin. */
+export const mermaidKey = new PluginKey("mermaid-preview");
+
+/** The smallest a strip diagram is scaled down to fit the column; one wider
+ *  than that keeps this scale and scrolls, so a long timeline stays readable. */
 const MIN_SCALE = 0.65;
 
+/** The diagrams laid out as one long strip (a timeline, a Gantt chart):
+ *  their type keyword leads the source, with nothing before it but `%%`
+ *  comment lines. Their SVG carries no class to tell them by. */
+const STRIP = /^(gantt|timeline)(\s|$)/;
+
+function isStrip(source: string): boolean {
+  for (const line of source.split("\n")) {
+    const head = line.trim();
+    if (!head || head.startsWith("%%")) continue;
+    return STRIP.test(head);
+  }
+  return false;
+}
+
 /** `container`'s drawing given the least width it can be read at, from its
- *  viewBox. One laid out for the column, as a chart is, is never held. */
-export function keepReadable(container: HTMLElement) {
+ *  viewBox. A strip keeps this scale and scrolls; anything else — an ER's
+ *  entities, a flowchart's nodes — is a closed layout that must be seen
+ *  whole, so it fits the column and its zoom button shows it large. One
+ *  laid out for the column, as a chart is, is never held. */
+export function keepReadable(container: HTMLElement, source = "") {
+  if (!isStrip(source)) return;
   const svg = container.querySelector("svg");
   const width = svg?.viewBox?.baseVal?.width;
   if (!svg || !width) return;

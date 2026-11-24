@@ -29,7 +29,7 @@ export function revealSelection(state: EditorState): {
 
 const noRevealKey = new PluginKey<boolean>("no-reveal");
 // Before every position, so no range is ever touched.
-const NOWHERE = { from: -2, to: -2 };
+export const NOWHERE = { from: -2, to: -2 };
 
 /** A view that is only read (the split view's preview): every syntax drawn,
  *  none shown as source wherever its selection lands. */

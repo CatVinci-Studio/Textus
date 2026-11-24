@@ -1,5 +1,5 @@
 import { onAppearance } from "../engine/tokens/appearance";
-import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
+import { Plugin } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
@@ -16,12 +16,14 @@ import { pausesFeatures } from "./large-doc";
 import { viewsWaitForScreen } from "./lazy/lazy-rules";
 import { registerDrawAll, stopDrawing } from "./lazy/draw-when-visible";
 import { appearanceIsDark } from "../engine/tokens/appearance";
+import { NOWHERE } from "./pointer-hold";
 import { diagramRenderer, mermaidTheme } from "./diagram-engine";
 import {
   collectMermaidBlocks,
   drawingKey,
   isCodeBlock,
   isMermaid,
+  mermaidKey,
   type Drawn,
 } from "./mermaid-blocks";
 import { diagramErrorWidget, diagramWidget } from "./mermaid-widget";
@@ -31,7 +33,6 @@ import {
 } from "./pending-diagram";
 import type { DiagramEngine } from "../prefs/SettingsContext";
 
-const mermaidKey = new PluginKey("mermaid-preview");
 const DEBOUNCE_MS = 500;
 /** How far the column's width must move before drawings are laid out again,
  *  and how long it must then hold still: a panel sliding open redraws once. */
@@ -99,6 +100,7 @@ export function createMermaidPreviewPlugin(options: {
           (view: EditorView, getPos: () => number | undefined) =>
             diagramWidget(view, getPos, svg, {
               fold: `${options.path() ?? ""}\ndiagram:${fnv1a(code).toString(36)}`,
+              source: node.textContent,
             }),
           // ProseMirror reuses a widget's DOM while its key is unchanged, so the
           // source is part of the key; the position isn't, or typing above a diagram
@@ -125,11 +127,18 @@ export function createMermaidPreviewPlugin(options: {
     return new Plugin<RevealState>({
       key: mermaidKey,
       state: {
-        init: (_config, state) => revealAll(state, reveal),
+        // A document just opened: its caret was placed by no one, so the
+        // first block is drawn, not revealed as if held.
+        init: (_config, state) => revealAll(state, reveal, undefined, NOWHERE),
         apply(tr, prev, oldState, newState) {
-          // A finished render has new SVG to show whatever the caret did.
-          if (tr.getMeta(mermaidKey) === "rerender")
-            return revealAll(newState, reveal);
+          const meta = tr.getMeta(mermaidKey);
+          // A finished render has new SVG to show whatever the caret did:
+          // drawn for the selection its drawings still stand for.
+          if (meta === "rerender")
+            return revealAll(newState, reveal, undefined, prev.drawnAt);
+          // A click placed the caret in a source block: draw for it, even
+          // when the caret didn't move to get there.
+          if (meta === "reveal") return revealAll(newState, reveal);
           return applyReveal(tr, prev, oldState, newState, reveal);
         },
       },
