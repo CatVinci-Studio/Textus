@@ -14,7 +14,10 @@ import {
   sendAppEvent,
 } from "../../utils/events";
 import { menuIpc, windowIpc } from "../../platform/ipc";
-import { editInFocus } from "../../engine/controls/edit-in-focus";
+import {
+  editInFocus,
+  typingOutsideDocument,
+} from "../../engine/controls/edit-in-focus";
 import { hasNativeMenuBar } from "../../platform/capabilities";
 import {
   nativeMenuChecks,
@@ -249,9 +252,11 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         sendAppEvent(SHOW_REPLACE_EVENT),
       ),
       listenToThisWindow("menu-find-next", () => sendAppEvent(FIND_NEXT_EVENT)),
-      listenToThisWindow("menu-insert-link", () =>
-        sendAppEvent(INSERT_LINK_EVENT),
-      ),
+      // Format's items act on the document, not a field typed in elsewhere
+      // (a Mac's menu takes their keys from it too).
+      listenToThisWindow("menu-insert-link", () => {
+        if (!typingOutsideDocument()) sendAppEvent(INSERT_LINK_EVENT);
+      }),
       listenToThisWindow("menu-close-tab", () =>
         h().requestCloseTab(h().activeTabId),
       ),
@@ -262,10 +267,12 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
         // numbers up, the heading it sends is that island's key.
         const island = islandKeyOf(event.payload, h().shortcuts);
         if (island && pickIsland(island)) return;
+        if (typingOutsideDocument()) return;
         afterComposition(() => sendAppEvent(INSERT_BLOCK_EVENT, event.payload));
       }),
       listenToThisWindow<string>("menu-toggle-mark", (event) => {
-        sendAppEvent(TOGGLE_MARK_EVENT, event.payload);
+        if (!typingOutsideDocument())
+          sendAppEvent(TOGGLE_MARK_EVENT, event.payload);
       }),
       listenToThisWindow("menu-help-community", () => h().openCommunity()),
       listenToThisWindow("menu-help-tutorials", () => h().openTutorials()),

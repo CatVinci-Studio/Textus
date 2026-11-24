@@ -1,6 +1,6 @@
 import { DEFAULT_SETTINGS, type Settings } from "./settings-types";
 
-/** What "Use the classic look" sets: how Textus looked before 1.4. */
+/** What "Use the look of earlier versions" sets: how Textus looked before 1.4. */
 type Look = NonNullable<Settings["lookBeforeClassic"]>;
 
 const LOOK_KEYS = [

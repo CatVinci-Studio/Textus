@@ -1,4 +1,5 @@
 import {
+  useContext,
   useEffect,
   useRef,
   useState,
@@ -26,7 +27,8 @@ import {
 } from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
 import { IconButton } from "../../engine/controls/IconButton";
-import { CloseIcon } from "../../engine/controls/icons";
+import { CloseIcon, PlusIcon } from "../../engine/controls/icons";
+import { TabRowsShown } from "./tab-rows";
 import type { Strings } from "../../i18n/strings";
 import { chatTitle, chatTitles } from "../../ai/chat/chat-title";
 
@@ -132,7 +134,8 @@ function agentIslandMenu(
   ];
 }
 
-/** Inside the island: History at the top right (a new conversation is the tab row's +), and its menu on a
+/** Inside the island: History at the top right (New Conversation too where
+ *  no row of tabs has a +), and its menu on a
  *  right-click on its paper (not on a message, a control or a selection,
  *  which keep their own). */
 export function AgentIslandTools({
@@ -143,6 +146,7 @@ export function AgentIslandTools({
   onNew: () => void;
 }) {
   const panel = useAgentPanel();
+  const rows = useContext(TabRowsShown);
   const ref = useRef<HTMLDivElement>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   useEffect(() => {
@@ -167,7 +171,19 @@ export function AgentIslandTools({
   }, []);
   return (
     <div className="agent-island-tools" ref={ref}>
-      {/* New conversation is the tab row's +. */}
+      {/* New conversation is the tab row's +, while there is a row. */}
+      {!rows && (
+        <IconButton
+          className="tx-icon-button inline-chat-header-button"
+          label={t.chatNewConversation}
+          onClick={() => {
+            panel.setTab("chat");
+            onNew();
+          }}
+        >
+          <PlusIcon />
+        </IconButton>
+      )}
       <ChatHistoryMenu
         buttonClassName="tx-icon-button inline-chat-header-button"
         onReopen={(entry) => void reopenConversation(entry, t)}

@@ -21,6 +21,7 @@ import { lazyComponent } from "../../lazy/lazy-component";
 import { canOpenFolder } from "../../platform/capabilities";
 import { isPhoneLayout } from "../../platform/phone-layout";
 import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
+import { SHOW_OUTLINE_EVENT, sendAppEvent } from "../../utils/events";
 import type { Strings } from "../../i18n/strings";
 import type { OpenFolder } from "../useOpenFolder";
 import type { FileOpenHow } from "../../files/tree-shared";
@@ -73,6 +74,8 @@ export interface SidebarTabDef {
   /** Not on a phone: its way in there is a menu (Outline the document's ⋯,
    *  Settings ☰) or Settings (Plugins). */
   offPhone?: boolean;
+  /** On a phone, what its key opens instead (the outline's menu). */
+  phoneWayIn?: () => void;
 }
 
 function FilesPanel({
@@ -123,6 +126,7 @@ const BUILT_IN: SidebarTabDef[] = [
       <Outline content={activeContent} tabId={activeTabId} />
     ),
     offPhone: true,
+    phoneWayIn: () => sendAppEvent(SHOW_OUTLINE_EVENT),
   },
   {
     id: "search",
@@ -259,6 +263,11 @@ export function orderTabs<T extends { id: string }>(
  *  dragged), those not shown (hidden from the rail) kept where they were. */
 export function railOrder(shown: readonly string[]): string[] {
   return inOrder(railTabs(), (tab) => tab.id, shown).map((tab) => tab.id);
+}
+
+/** What a tab's key opens on a phone where the tab isn't there, if any. */
+export function phoneWayIn(id: string): (() => void) | undefined {
+  return BUILT_IN.find((tab) => tab.id === id)?.phoneWayIn;
 }
 
 /** The tab with this id, or Files for one no longer there. */

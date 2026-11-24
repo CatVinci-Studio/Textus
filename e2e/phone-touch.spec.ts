@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { emit, openApp, PHONE, TABLET } from "./helpers";
+import { emit, openApp, pasteMarkdown, PHONE, TABLET } from "./helpers";
 
 // A phone turned on its side, and what a finger reaches on a phone and a
 // touch tablet.
@@ -209,6 +209,18 @@ test.describe("a phone's bar buttons", () => {
 
 test.describe("a phone's document menu", () => {
   test.use(PHONE);
+
+  test("opens the outline's menu on the outline's key, not the sidebar", async ({
+    page,
+  }) => {
+    await openApp(page, {
+      settings: { language: "en", shortcuts: { showOutline: "mod+shift+u" } },
+    });
+    await pasteMarkdown(page, "# One\n\n## Two\n");
+    await page.keyboard.press("ControlOrMeta+Shift+u");
+    await expect(page.getByRole("menu", { name: "Outline" })).toBeVisible();
+    await expect(page.locator(".activity-rail")).toBeHidden();
+  });
 
   test("is the desktop's menu under ⋯, its rows a fingertip tall, the outline too", async ({
     page,

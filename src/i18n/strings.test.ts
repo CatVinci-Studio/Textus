@@ -207,3 +207,13 @@ describe.each(LANGS)("%s's names for its own places", (lang) => {
       expect(s.menuRevealInTree).toContain(s.treeTab);
     });
 });
+
+// Layout's Classic and the switch for the earlier look are two things.
+describe.each(LANGS)("%s's window layout", (lang) => {
+  it("names the earlier look's switch apart from the Classic layout", () => {
+    const s = LOCALES[lang].default as Record<string, string>;
+    expect(s.classicLookLabel.toLowerCase()).not.toContain(
+      s.layoutClassic.toLowerCase().slice(0, 5),
+    );
+  });
+});

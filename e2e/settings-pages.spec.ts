@@ -248,7 +248,7 @@ test("Layout switched in Settings lays the islands out again at once", async ({
     ((await sidebar.boundingBox())!.x + (await sidebar.boundingBox())!.width);
   expect(await gap()).toBeGreaterThan(4);
   await page.getByRole("combobox", { name: "布局" }).click();
-  await page.getByRole("option", { name: "平铺" }).click();
+  await page.getByRole("option", { name: "经典" }).click();
   // Flush against the sidebar, with no island gap left over.
   await expect.poll(gap).toBeLessThanOrEqual(1);
 });
@@ -267,7 +267,7 @@ test("the classic look turns on in one switch, and off gives back the look befor
   await titleRow.click();
   await classic.click();
   await expect(classic).toBeChecked();
-  await expect(layout).toContainText("平铺");
+  await expect(layout).toContainText("经典");
   // The rail itself still shows while the sidebar is open.
   await expect(rail).not.toBeChecked();
   await expect(titleRow).toBeChecked();

@@ -1076,7 +1076,7 @@ export default {
   plainFrameLabel: "窗口底色与文档相同",
   classicLookLabel: "使用旧版本样式",
   layoutIslands: "浮动岛",
-  layoutClassic: "平铺",
+  layoutClassic: "经典",
   activityRailLabel: "显示图标栏",
   menuBarLabel: "显示菜单栏",
   titleRowLabel: "标题栏单独一行显示",

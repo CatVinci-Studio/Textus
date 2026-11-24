@@ -5,7 +5,12 @@ import { Presence } from "../engine/motion/usePresence";
 import { MoreIcon } from "../engine/controls/icons";
 import { Tooltip } from "../engine/controls/Tooltip";
 import { emitMenuEvent } from "../platform/menu-events";
-import { sendAppEvent, TOGGLE_FIND_REPLACE_EVENT } from "../utils/events";
+import {
+  sendAppEvent,
+  SHOW_OUTLINE_EVENT,
+  TOGGLE_FIND_REPLACE_EVENT,
+} from "../utils/events";
+import { useWindowEvent } from "../utils/hooks/useWindowEvent";
 import { OutlineMenu } from "./OutlineMenu";
 
 /**
@@ -32,17 +37,16 @@ export function DocumentMenu({
     anchor: HTMLElement | null;
   } | null>(null);
   const button = useRef<HTMLElement | null>(null);
+  const showOutline = () => {
+    const el = button.current;
+    const box = el?.getBoundingClientRect();
+    if (box) setOutlineAt({ x: box.right, y: box.bottom + 4, anchor: el });
+  };
+  // The outline's key (a phone's keyboard) opens it here too.
+  useWindowEvent(SHOW_OUTLINE_EVENT, showOutline);
   const more = useMenuButton(
     () => [
-      {
-        label: t.outlineTab,
-        onSelect: () => {
-          const el = button.current;
-          const box = el?.getBoundingClientRect();
-          if (box)
-            setOutlineAt({ x: box.right, y: box.bottom + 4, anchor: el });
-        },
-      },
+      { label: t.outlineTab, onSelect: showOutline },
       {
         label: t.menuFindReplace,
         onSelect: () => sendAppEvent(TOGGLE_FIND_REPLACE_EVENT),

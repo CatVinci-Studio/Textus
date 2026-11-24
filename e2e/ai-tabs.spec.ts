@@ -718,3 +718,21 @@ test("a folder picked for the AI wins over the sidebar's", async ({ page }) => {
   });
   await expect.poll(lastRoot).toBe("/research");
 });
+
+test("with no row of tabs (Zen), the AI's island keeps a + of its own for a new conversation", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page);
+  await aiButton(page).click();
+  const own = page
+    .locator(".ai-tab:visible .agent-island-tools")
+    .getByRole("button", { name: "新对话" });
+  // The row's + is there: no second one.
+  await expect(own).toHaveCount(0);
+  await emit(page, "menu-toggle-zen-mode");
+  await expect(page.locator(".tab-bar-add:visible")).toHaveCount(0);
+  await expect(own).toBeVisible();
+  await emit(page, "menu-toggle-zen-mode");
+  await expect(own).toHaveCount(0);
+});

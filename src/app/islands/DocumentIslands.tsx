@@ -45,6 +45,7 @@ import {
   tabPinned,
 } from "../../document/pinned";
 import { useTabsInBar } from "./tabs-in-bar";
+import { TabRowsShown } from "./tab-rows";
 import { pullTab } from "./tab-pull";
 import { addFromTabRow, isConversationTab, newConversation } from "./ai-tabs";
 import { useDocumentsApart } from "./useDocumentsApart";
@@ -328,25 +329,27 @@ export function DocumentIslands({
             t={t}
           />
         }
-        <DocumentViews
-          tabs={tabs}
-          activeTabId={activeTabId}
-          shownIn={shownIn}
-          styleOf={body}
-          onActivate={onActivate}
-          onChange={onChange}
-          typewriter={typewriter}
-          tour={tour}
-          // On every island's document in front; a phone's always, at its
-          // foot, over the keyboard while typing (format-bar.css).
-          above={(tab) =>
-            (formatBar || phone) &&
-            formatsShown(tab) && (
-              <FormatBar t={t} tabId={tab.id} side={formatBar ?? "top"} />
-            )
-          }
-          t={t}
-        />
+        <TabRowsShown.Provider value={tabsInBar}>
+          <DocumentViews
+            tabs={tabs}
+            activeTabId={activeTabId}
+            shownIn={shownIn}
+            styleOf={body}
+            onActivate={onActivate}
+            onChange={onChange}
+            typewriter={typewriter}
+            tour={tour}
+            // On every island's document in front; a phone's always, at its
+            // foot, over the keyboard while typing (format-bar.css).
+            above={(tab) =>
+              (formatBar || phone) &&
+              formatsShown(tab) && (
+                <FormatBar t={t} tabId={tab.id} side={formatBar ?? "top"} />
+              )
+            }
+            t={t}
+          />
+        </TabRowsShown.Provider>
       </>
     );
   };

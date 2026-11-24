@@ -1078,7 +1078,7 @@ export default {
   plainFrameLabel: "視窗底色與文件相同",
   classicLookLabel: "使用舊版樣式",
   layoutIslands: "浮動島",
-  layoutClassic: "平鋪",
+  layoutClassic: "經典",
   activityRailLabel: "顯示圖示列",
   menuBarLabel: "顯示選單列",
   titleRowLabel: "標題列獨立一行顯示",
