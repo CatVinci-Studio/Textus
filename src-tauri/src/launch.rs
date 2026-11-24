@@ -117,7 +117,7 @@ pub(crate) fn queue_windows_to_open(app: &tauri::AppHandle, windows: Vec<WindowS
     }
     // Each other one in a window of its own, where it was.
     for session in windows {
-        let label = format!("window-{}", crate::editor_windows::next_window_id());
+        let label = crate::editor_windows::new_window_label();
         let frame = session.frame;
         PENDING_SESSIONS
             .lock()
@@ -132,6 +132,12 @@ pub(crate) fn queue_windows_to_open(app: &tauri::AppHandle, windows: Vec<WindowS
 /// The session each window opened for one was built for, by the window's label.
 #[cfg(desktop)]
 static PENDING_SESSIONS: Mutex<Vec<(String, WindowSession)>> = Mutex::new(Vec::new());
+
+/// A window destroyed: a session its page never took goes with it.
+#[cfg(desktop)]
+pub(crate) fn window_gone(label: &str) {
+    take_for(&PENDING_SESSIONS, label);
+}
 
 /// A folder handed over (dropped on the Dock icon, Open With in Finder)
 /// opens as a window's folder, as Open Folder does; the rest as documents.
@@ -305,7 +311,7 @@ pub(crate) fn take_pending_open_folder(window: tauri::Window) -> Option<String> 
 /// A new window with `path` as its folder.
 #[cfg(desktop)]
 pub(crate) fn open_folder_window(app: &tauri::AppHandle, path: &str) {
-    let label = format!("window-{}", crate::editor_windows::next_window_id());
+    let label = crate::editor_windows::new_window_label();
     PENDING_OPEN_FOLDERS
         .lock()
         .unwrap_or_else(|e| e.into_inner())
@@ -446,5 +452,13 @@ mod folder_tests {
             ["/a.md"]
         );
         assert!(take_for(&PENDING_SESSIONS, "window-s1").is_none());
+        // A window destroyed before its page took its session: none kept.
+        keep("window-s3", "/c.md");
+        window_gone("window-s3");
+        assert!(!PENDING_SESSIONS
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|(label, _)| label == "window-s3"));
     }
 }

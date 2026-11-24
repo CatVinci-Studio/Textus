@@ -218,6 +218,22 @@ fn with_kept_frame(
     }
 }
 
+/// `frame` kept as the window `label`'s; whether that changed anything.
+#[cfg(desktop)]
+fn set_frame(
+    map: &mut HashMap<String, WindowSession>,
+    label: &str,
+    frame: Option<crate::window_frame::Kept>,
+) -> bool {
+    match map.get_mut(label) {
+        Some(window) if window.frame != frame => {
+            window.frame = frame;
+            true
+        }
+        _ => false,
+    }
+}
+
 /// A closing window's frame, kept with its documents: the session file then
 /// has it if this is the last window, which the next launch brings back.
 #[cfg(desktop)]
@@ -229,13 +245,9 @@ pub fn keep_frame(
 ) {
     let merged = {
         let mut map = state.0.lock().unwrap();
-        let Some(window) = map.get_mut(label) else {
-            return;
-        };
-        if window.frame == frame {
+        if !set_frame(&mut map, label, frame) {
             return;
         }
-        window.frame = frame;
         merge_windows(&map)
     };
     write_session(app, &merged);
@@ -258,10 +270,7 @@ pub fn keep_open_frames(app: &AppHandle, state: &SessionTabsState) {
         let mut map = state.0.lock().unwrap();
         let mut changed = false;
         for (label, frame) in frames {
-            if let Some(window) = map.get_mut(&label) {
-                changed |= window.frame != Some(frame);
-                window.frame = Some(frame);
-            }
+            changed |= set_frame(&mut map, &label, Some(frame));
         }
         changed.then(|| merge_windows(&map))
     };

@@ -133,6 +133,8 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
                 cli::app::window_gone(app, window.label());
                 #[cfg(desktop)]
                 commands::fs::watch::window_gone(app, window.label());
+                #[cfg(desktop)]
+                launch::window_gone(window.label());
                 // File > Quit closes every window so dirty editors can cancel; macOS would
                 // otherwise stay alive windowless, so exit once the final window is gone.
                 if no_other_windows && commands::session::app_quitting() {
@@ -161,9 +163,9 @@ fn remember_editor_frame(
             commands::prefs::note_bounds(window);
         }
         tauri::WindowEvent::CloseRequested { .. } if !commands::session::app_quitting() => {
-            commands::prefs::remember_editor_window(app, window);
+            let frame = commands::prefs::closing_frame(window);
+            commands::prefs::remember_editor_window(app, frame);
             if let Some(state) = app.try_state::<SessionTabsState>() {
-                let frame = commands::prefs::closing_frame(window);
                 commands::session::keep_frame(app, window.label(), frame, &state);
             }
         }

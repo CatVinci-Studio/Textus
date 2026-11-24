@@ -2,7 +2,7 @@
 //! on close. Settings Rust needs early come from settings.json instead.
 
 use crate::settings::Stores;
-use crate::window_frame::{self, Kept, Live, Mode};
+use crate::window_frame::{self, Kept, Live};
 use serde_json::{json, Map, Value};
 use std::collections::BTreeMap;
 use std::sync::Mutex;
@@ -100,13 +100,7 @@ fn read_live(window: &tauri::Window) -> Option<Live> {
     } else {
         None
     };
-    let mode = if window.is_fullscreen().ok()? {
-        Mode::Fullscreen
-    } else if window.is_maximized().ok()? {
-        Mode::Maximized
-    } else {
-        Mode::Normal
-    };
+    let mode = window_frame::mode_of(window.is_fullscreen().ok()?, window.is_maximized().ok()?);
     Some(Live {
         frame: Kept {
             size: (size.width.round(), size.height.round()),
@@ -123,9 +117,10 @@ pub fn closing_frame(window: &tauri::Window) -> Option<Kept> {
     window_frame::on_close(&live, normal_bounds_of(window.label()))
 }
 
-/// Records `window`'s frame for the next window a launch opens.
-pub fn remember_editor_window(app: &AppHandle, window: &tauri::Window) {
-    let Some(kept) = closing_frame(window) else {
+/// Records a closing window's frame (`closing_frame`) for the next window
+/// a launch opens.
+pub fn remember_editor_window(app: &AppHandle, frame: Option<Kept>) {
+    let Some(kept) = frame else {
         return;
     };
     keep(app, "editorWindowSize", json!([kept.size.0, kept.size.1]));
@@ -139,7 +134,7 @@ pub fn remember_editor_window(app: &AppHandle, window: &tauri::Window) {
 /// next launch, and each window's frame with its documents.
 pub fn remember_open_windows(app: &AppHandle) {
     if let Some(window) = crate::editor_windows::last_editor(app) {
-        remember_editor_window(app, &window);
+        remember_editor_window(app, closing_frame(&window));
     }
     if let Some(state) = app.try_state::<crate::commands::session::SessionTabsState>() {
         crate::commands::session::keep_open_frames(app, &state);

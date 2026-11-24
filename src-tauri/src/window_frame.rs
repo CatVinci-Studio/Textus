@@ -77,6 +77,20 @@ pub struct Kept {
     pub mode: Mode,
 }
 
+/// How a window was left, as the system reads it. macOS calls a window
+/// zoomed (maximized) whenever it fills the screen, sized by hand too, and
+/// the bounds it would go back to are then stale: there its real frame is
+/// kept, as a normal window's.
+pub fn mode_of(fullscreen: bool, maximized: bool) -> Mode {
+    if fullscreen {
+        Mode::Fullscreen
+    } else if maximized && !cfg!(target_os = "macos") {
+        Mode::Maximized
+    } else {
+        Mode::Normal
+    }
+}
+
 /// What a window's bounds and state read now.
 pub struct Live {
     pub frame: Kept,
@@ -140,6 +154,18 @@ mod tests {
         width: 2560.0,
         height: 1415.0,
     };
+
+    #[test]
+    fn a_window_filling_a_mac_screen_keeps_its_own_frame() {
+        assert_eq!(mode_of(true, true), Mode::Fullscreen);
+        let filled = if cfg!(target_os = "macos") {
+            Mode::Normal
+        } else {
+            Mode::Maximized
+        };
+        assert_eq!(mode_of(false, true), filled);
+        assert_eq!(mode_of(false, false), Mode::Normal);
+    }
 
     #[test]
     fn opens_where_the_last_window_closed() {

@@ -13,20 +13,21 @@ pub(crate) fn next_window_id() -> u32 {
     WINDOW_COUNTER.fetch_add(1, Ordering::Relaxed)
 }
 
+/// A new editor window's label.
+#[cfg(desktop)]
+pub(crate) fn new_window_label() -> String {
+    format!("window-{}", next_window_id())
+}
+
 /// Editor windows by when the user was last in them, latest first: what comes
 /// from outside any window (the tray, a menu with none focused) goes to the
 /// first, and a dropped tab to the frontmost of the windows under it.
-#[cfg(desktop)]
-fn is_editor(label: &str) -> bool {
-    crate::windows::is_editor_window(label)
-}
-
 #[cfg(desktop)]
 static RECENT: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
 
 #[cfg(desktop)]
 pub(crate) fn note_focused(label: &str) {
-    if is_editor(label) {
+    if crate::windows::is_editor_window(label) {
         let mut recent = RECENT.lock().unwrap_or_else(|e| e.into_inner());
         recent.retain(|l| l != label);
         recent.insert(0, label.to_string());
@@ -49,7 +50,7 @@ pub(crate) fn focus_rank(label: &str) -> usize {
 pub(crate) fn last_editor(app: &tauri::AppHandle) -> Option<tauri::Window> {
     app.windows()
         .into_iter()
-        .filter(|(label, _)| is_editor(label))
+        .filter(|(label, _)| crate::windows::is_editor_window(label))
         .min_by_key(|(label, _)| focus_rank(label))
         .map(|(_, window)| window)
 }
@@ -402,7 +403,7 @@ fn screens(app: &tauri::AppHandle) -> Vec<window_frame::Screen> {
 
 #[cfg(desktop)]
 pub(crate) fn open_new_window(app: &tauri::AppHandle) -> tauri::Result<()> {
-    build_window(app, &format!("window-{}", next_window_id()), None)
+    build_window(app, &new_window_label(), None)
 }
 
 /// The Dock icon, Open Textus in the tray, or a relaunch while in the background:
@@ -422,8 +423,8 @@ pub(crate) fn reopen_without_windows(app: &tauri::AppHandle) {
         Vec::new()
     };
     if windows.is_empty() {
-        let label = format!("window-{}", next_window_id());
-        let _ = build_window_as_left(app, &label, commands::prefs::read_editor_frame(app));
+        let frame = commands::prefs::read_editor_frame(app);
+        let _ = build_window_as_left(app, &new_window_label(), frame);
     } else {
         queue_windows_to_open(app, windows);
     }
