@@ -4,7 +4,10 @@ import { tabInUse, windowLayout } from "../engine/layout/store";
 import { paneById } from "../engine/layout/tree";
 import { useEffect, useRef } from "react";
 import { onFlush } from "../storage/pending-writes";
-import { isMobileApp, pinchFromTouches } from "../platform/capabilities";
+import {
+  caretStaysWhereTextWas,
+  pinchFromTouches,
+} from "../platform/capabilities";
 import { listenToTouchPinch, type PinchAt } from "./touch-pinch";
 import {
   blockAt,
@@ -254,7 +257,7 @@ export function useZoom(
       if (!tab) return;
       zoomTo(tab);
       previewText = null;
-      if (isMobileApp) caretAgain(tab);
+      if (caretStaysWhereTextWas) caretAgain(tab);
     };
 
     const zoomTo = (tab: HTMLElement) => {

@@ -273,7 +273,21 @@ test.describe("a pinch on an Android phone", () => {
   }) => {
     test.skip(browserName !== "chromium", "touches sent by CDP");
     await openApp(page);
-    const box = (await page.locator(".ProseMirror:visible").boundingBox())!;
+    const editor = page.locator(".ProseMirror:visible");
+    await editor.tap();
+    await page.keyboard.type("hello");
+    // The caret set again is iOS's fix alone: here it would cut into a
+    // keyboard's composing word.
+    await page.evaluate(() => {
+      const w = window as unknown as { setAgain: number };
+      w.setAgain = 0;
+      const set = Selection.prototype.setBaseAndExtent;
+      Selection.prototype.setBaseAndExtent = function (...args) {
+        w.setAgain++;
+        return set.apply(this, args);
+      };
+    });
+    const box = (await editor.boundingBox())!;
     const x = box.x + box.width / 2;
     const y = box.y + 120;
     // No gesture events in Android's web view: the touches themselves.
@@ -300,5 +314,10 @@ test.describe("a pinch on an Android phone", () => {
       touchPoints: [],
     });
     await expect.poll(() => zoomOf(page, 0)).toBe(2);
+    expect(
+      await page.evaluate(
+        () => (window as unknown as { setAgain: number }).setAgain,
+      ),
+    ).toBe(0);
   });
 });
