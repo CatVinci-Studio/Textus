@@ -250,6 +250,9 @@ function MenuRow({
       aria-checked={item.checked}
       aria-current={item.current ? "location" : undefined}
       data-depth={item.depth}
+      style={
+        item.depth ? ({ "--depth": item.depth } as CSSProperties) : undefined
+      }
       ref={
         reveal && item.checked && !item.toggle
           ? (el) => el?.scrollIntoView?.({ block: "nearest" })
