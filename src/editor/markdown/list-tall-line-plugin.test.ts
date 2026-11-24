@@ -46,6 +46,8 @@ describe("a list item whose first line holds maths or a picture", () => {
         "1. numbered $y$",
         "- [ ] task $z$",
         "- bold **$b$** inside",
+        "- embed ![[pic.png]] picture",
+        "- note ![[other note]] embed",
         "- first plain",
         "",
         "  second $w$",
@@ -54,7 +56,14 @@ describe("a list item whose first line holds maths or a picture", () => {
     const tall = marked(view)
       .filter(([, on]) => on)
       .map(([text]) => text.split(" ")[0]);
-    expect(tall).toEqual(["with", "nested", "numbered", "task", "bold"]);
+    expect(tall).toEqual([
+      "with",
+      "nested",
+      "numbered",
+      "task",
+      "bold",
+      "embed",
+    ]);
     expect(marked(view).find(([t]) => t === "nested plain")?.[1]).toBe(false);
     expect(marked(view).find(([t]) => t === "first plain")?.[1]).toBe(false);
   });

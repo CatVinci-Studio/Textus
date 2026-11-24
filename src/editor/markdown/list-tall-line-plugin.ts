@@ -3,6 +3,7 @@ import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration, type DecorationSet } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { decorateAll, redecorateChanged } from "../changed-ranges";
+import { parseEmbed } from "../images/obsidian-embed";
 
 /** On a list item whose first line can stand taller than its text
  *  (editor-lists-tables.css puts its marker on that line's baseline). Set
@@ -11,7 +12,13 @@ import { decorateAll, redecorateChanged } from "../changed-ranges";
  *  block drawn. */
 export const TALL_LINE_ATTR = "data-tall-line";
 
-const TALL = new Set(["math_inline", "image"]);
+/** The nodes drawn taller than text: an embed only when it names a picture,
+ *  which its widget then shows. */
+const TALL: Record<string, (node: ProseNode) => boolean> = {
+  math_inline: () => true,
+  image: () => true,
+  obsidian_embed: (node) => !!parseEmbed(node.textContent)?.isImage,
+};
 
 /** Whether `item`'s first block is a paragraph holding inline maths or a
  *  picture. */
@@ -21,7 +28,7 @@ function hasTallFirstLine(item: ProseNode): boolean {
   let tall = false;
   // At any depth: bold, italic and links are nodes here, around them.
   first.descendants((node) => {
-    if (TALL.has(node.type.name)) tall = true;
+    if (TALL[node.type.name]?.(node)) tall = true;
     return !tall;
   });
   return tall;
