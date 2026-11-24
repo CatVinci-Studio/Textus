@@ -19,11 +19,23 @@ describe("the file tree's picked rows", () => {
 
   it("Shift picks from the row last clicked, either way", () => {
     const s = new TreeSelection();
-    s.clickedPlain("/p/d");
+    s.clickedPlain(rows[3]!);
     s.pick("range", "/p/b", rows, null);
     expect(picked(s)).toEqual(["/p/b", "/p/c", "/p/d"]);
-    s.clickedPlain("/p/a");
+    s.clickedPlain(rows[0]!);
     expect(picked(s)).toEqual([]);
+  });
+
+  it("New makes things in the folder last clicked, or the clicked file's", () => {
+    const s = new TreeSelection();
+    expect(s.newEntryDir("/p", null)).toBe("/p");
+    expect(s.newEntryDir("/p", "/p/notes/a.md")).toBe("/p/notes");
+    s.clickedPlain({ path: "/p/notes/drafts", isDir: true });
+    expect(s.newEntryDir("/p", "/p/a.md")).toBe("/p/notes/drafts");
+    s.clickedPlain({ path: "/p/notes/b.md", isDir: false });
+    expect(s.newEntryDir("/p", null)).toBe("/p/notes");
+    // The tree moved elsewhere: not a folder outside it.
+    expect(s.newEntryDir("/q", "/elsewhere/c.md")).toBe("/q");
   });
 
   it("a group is two or more, the row asked about among them", () => {

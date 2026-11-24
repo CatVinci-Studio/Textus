@@ -68,6 +68,12 @@ fn write_via_temp(target: &Path, contents: &[u8], secret: bool) -> std::io::Resu
     };
     let target = real.as_path();
     let tmp = tmp_path(target);
+    // A file replaced (a save) is not news to the file tree; a new one is,
+    // to the other windows' trees.
+    #[cfg(desktop)]
+    if permissions.is_some() {
+        crate::commands::fs::watch::note_own_write(target);
+    }
     let result = (|| {
         let mut options = std::fs::OpenOptions::new();
         options.write(true).create_new(true);

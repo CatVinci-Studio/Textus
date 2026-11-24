@@ -37,6 +37,7 @@ const labelsFor = (path: string, isDir: boolean) => {
       rename: (p: string) => void renamed.push(p),
       treeRef: { current: null },
       transfer: async () => false,
+      onCollapseAll: noop,
     }),
   );
   act(() => result.current.openRowMenu({ x: 0, y: 0 }, path, isDir));
@@ -74,6 +75,13 @@ describe("a tree row's menu", () => {
     expect(folder).toContain(en.treeRenameItem);
     expect(folder).not.toContain(en.docDelete);
     expect(folder).not.toContain(en.treeTrash);
+  });
+
+  it("the root's menu folds every folder; a row's does not offer it", () => {
+    expect(labelsFor("/proj", true).labels).toContain(en.treeCollapseAll);
+    expect(labelsFor("/proj/sub", true).labels).not.toContain(
+      en.treeCollapseAll,
+    );
   });
 
   it("a file's Insert Link goes into the saved document in use, offered only then", () => {

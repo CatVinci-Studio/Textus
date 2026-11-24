@@ -57,9 +57,11 @@ export function useRowMenu(input: {
   treeRef: RefObject<HTMLDivElement | null>;
   /** Moves or copies rows into a folder (useTreeTransfer). */
   transfer: TreeTransfer["transfer"];
+  /** The root's menu: every folder folds. */
+  onCollapseAll: () => void;
 }) {
   const { root, linkBase, t, onFileSelect, setDraft, onEnter } = input;
-  const { selection, rename } = input;
+  const { selection, rename, onCollapseAll } = input;
   const [menu, setMenu] = useState<TreeMenu>(null);
   const { askTrash } = useTreeTrash(input);
   const clip = useTreeClipboard({
@@ -140,6 +142,11 @@ export function useRowMenu(input: {
       const clipboard = clipboardItems(t, clip, self, dir);
       if (clipboard.length) items.push("separator", ...clipboard);
       items.push("separator", ...pathItems(t, path, root));
+      if (path === root)
+        items.push("separator", {
+          label: t.treeCollapseAll,
+          onSelect: onCollapseAll,
+        });
       if (path !== root)
         items.push({
           label: t.treeRenameItem,
@@ -188,6 +195,7 @@ export function useRowMenu(input: {
       onFileSelect,
       onEnter,
       clip,
+      onCollapseAll,
     ],
   );
   const onRowMenu = useCallback(

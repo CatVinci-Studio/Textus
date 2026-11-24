@@ -618,6 +618,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeSort: "Ordenar",
   treeSortName: "Por nome",
   treeShowHidden: "Mostrar arquivos ocultos",
+  treeCollapseAll: "Recolher tudo",
   treeSortModified: "Por data de modificação",
   treeRenameItem: "Renomear…",
   treeRename: "Renomear",

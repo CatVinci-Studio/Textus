@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { fs } from "../platform/ipc";
 import { announceFileCreated } from "../utils/events";
+import { isInside, parentDir } from "../utils/path";
 
 import type { Strings } from "../i18n/strings";
 import { failureText, type TreeDraft } from "./tree-shared";
@@ -29,7 +30,15 @@ export function useNewEntry(
             ? await fs.createDocument(draft.dir, name)
             : await fs.createFolder(draft.dir, name);
         setDraft(null);
-        reload(draft.dir);
+        // A name with slashes made folders on the way: they open too.
+        const dirs = [];
+        for (
+          let d = parentDir(made);
+          d && isInside(d, draft.dir);
+          d = parentDir(d)
+        )
+          dirs.push(d);
+        reload(draft.dir, ...dirs);
         const isDir = draft.kind === "folder";
         const stamp = await stampOf(made, isDir).catch(() => null);
         if (stamp !== null)

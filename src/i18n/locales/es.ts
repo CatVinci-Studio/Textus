@@ -628,6 +628,7 @@ para usar una.
   treeSort: "Ordenar",
   treeSortName: "Por nombre",
   treeShowHidden: "Mostrar archivos ocultos",
+  treeCollapseAll: "Contraer todo",
   treeSortModified: "Por fecha de modificación",
   treeRenameItem: "Cambiar nombre…",
   treeRename: "Cambiar nombre",

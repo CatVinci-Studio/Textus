@@ -175,6 +175,9 @@ tauri-plugin-deep-link = "2"
 # A picture an accepted AI picture replaced goes to the system's Trash or
 # Recycle Bin when the user says so (commands/images.rs) - never deleted.
 trash = "5"
+# The file tree follows its open folders as other apps change them
+# (commands/fs/watch.rs).
+notify = "9"
 # A notification's id, which its click names (src/schedule/notify/): random,
 # so a textus:// link from a web page can't name one. In the tree through tauri.
 

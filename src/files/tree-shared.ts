@@ -6,6 +6,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import type { SearchScope } from "./file-search";
+import type { OpenFolders } from "./useDiskWatch";
 import type { Strings } from "../i18n/strings";
 import { isInside, parentDir } from "../utils/path";
 import { explainError } from "../utils/error-explain";
@@ -34,9 +35,13 @@ export interface TreeShared {
   /** Bumped per folder when something else changed it (a plugin's write):
    *  it reads its entries again if open, and stays as it is. */
   stale: Record<string, number>;
-  /** Bumped when the window comes back to the front: every open folder is
-   *  read again, as another app may have changed it. */
+  /** Bumped when every open folder must be read again: the disk watch
+   *  lost track, or, where nothing watches, the window came to the front. */
   refreshed: number;
+  /** Where each open folder says so, for the disk watch to follow. */
+  openFolders: OpenFolders;
+  /** Bumped by Collapse All: every folder below the root folds. */
+  collapsed: number;
   dropInto: string | null;
   /** A right-click (a computer's, or an iPad's trackpad). */
   onRowMenu:

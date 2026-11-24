@@ -121,6 +121,11 @@ export const fs = {
    *  refused when something is there now or it left the Trash. */
   putBack: (place: string, path: string): Promise<void> =>
     command("tree_put_back", place, path),
+  /** Follows `dirs`, the tree's open folders, as other apps change them,
+   *  in place of those followed before. False where nothing watches: a
+   *  phone, or a folder past the system's limit. */
+  watchFolders: (dirs: string[]): Promise<boolean> =>
+    desktopQueryCommand("tree_watch", false, dirs),
   /** File > Open Folder…'s picker. Rejects with "TOO_BROAD" for the home
    *  folder or a drive root. A phone's is the system's folder picker. */
   pickOpenFolder: (): Promise<string | null> =>

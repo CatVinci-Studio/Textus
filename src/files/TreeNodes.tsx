@@ -3,7 +3,7 @@ import { currentStrings } from "../i18n/current";
 // The file tree's folders: each reads and lists its entries, drawing a
 // row for each (TreeRows.tsx).
 
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { type DirEntryInfo } from "../platform/bindings/files";
 import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
@@ -16,7 +16,7 @@ import {
 } from "./folder-documents";
 import { localeOf } from "../i18n/langs";
 import { compareEntries, nameCollator } from "../utils/name-order";
-import { useTree } from "./tree-shared";
+import { useTree, type TreeShared } from "./tree-shared";
 import { isWithin } from "../utils/path";
 import { DraftRow } from "./DraftRow";
 import { FileNode, FolderRow } from "./TreeRows";
@@ -92,27 +92,22 @@ function useShownEntries(
   }, [entries, collator, showHidden, scope, sort, folderDocuments]);
 }
 
-export const DirNode = memo(function DirNode({
-  path,
-  depth,
-  ignored = false,
-  activePath,
-  onFileSelect,
-}: DirNodeProps) {
-  const tree = useTree();
+/** Whether a folder is open, and what is being named in it. The root is
+ *  always open; a folder opens on the way to the open document, a folder
+ *  asked to be shown, or something made or being named in or below it, and
+ *  folds with Collapse All. Its being open is told to the disk watch. */
+function useFolderOpen(
+  tree: TreeShared,
+  path: string,
+  depth: number,
+  activePath: string | null,
+) {
   const version = tree.versions[path] ?? 0;
-  const listing = `${version}:${tree.stale[path] ?? 0}:${tree.refreshed}`;
   // The root is always open, and so is a folder on the way down to the open
   // document.
   const [open, setOpen] = useState(
     depth === 0 || (activePath !== null && isInside(activePath, path)),
   );
-  const [loaded, setLoaded] = useState<{
-    listing: string;
-    entries: DirEntryInfo[];
-    /** Why it couldn't be read, in the UI's language. */
-    failed?: string;
-  } | null>(null);
   // A document opened further down shows where it is, and so does a folder
   // asked to be shown (a plugin's showFolder): the folders on the way open,
   // the rest stay as they were.
@@ -126,11 +121,51 @@ export const DirNode = memo(function DirNode({
   // Something was made in it or moved into it, or is being named in it:
   // show it.
   const drafting = tree.draft?.dir === path ? tree.draft.kind : null;
+  const draftBelow = !!tree.draft && isInside(tree.draft.dir, path);
   useEffect(() => {
-    if (version > 0 || drafting) setOpen(true);
-  }, [version, drafting]);
+    if (version > 0 || drafting || draftBelow) setOpen(true);
+  }, [version, drafting, draftBelow]);
+  // Collapse All folds it; a folder drawn after keeps its own state.
+  const collapsedSeen = useRef(tree.collapsed);
+  useEffect(() => {
+    if (collapsedSeen.current === tree.collapsed) return;
+    collapsedSeen.current = tree.collapsed;
+    if (depth > 0) setOpen(false);
+  }, [tree.collapsed, depth]);
+  const { openFolders } = tree;
+  useEffect(
+    () => (open ? openFolders.add(path) : undefined),
+    [open, path, openFolders],
+  );
+  return [open, setOpen, drafting] as const;
+}
+
+export const DirNode = memo(function DirNode({
+  path,
+  depth,
+  ignored = false,
+  activePath,
+  onFileSelect,
+}: DirNodeProps) {
+  const tree = useTree();
+  const version = tree.versions[path] ?? 0;
+  const listing = `${version}:${tree.stale[path] ?? 0}:${tree.refreshed}`;
+  const [open, setOpen, drafting] = useFolderOpen(
+    tree,
+    path,
+    depth,
+    activePath,
+  );
+  const [loaded, setLoaded] = useState<{
+    listing: string;
+    entries: DirEntryInfo[];
+    /** Why it couldn't be read, in the UI's language. */
+    failed?: string;
+  } | null>(null);
 
   useEffect(() => {
+    // Folded, it is not watched: read again when it next opens.
+    if (!open && loaded?.listing) setLoaded({ ...loaded, listing: "" });
     if (!open || loaded?.listing === listing) return;
     let cancelled = false;
     fs.listDir(path).then(
@@ -157,7 +192,7 @@ export const DirNode = memo(function DirNode({
   const sorted = useShownEntries(loaded?.entries ?? null, tree);
 
   // Rows that must be drawn: the open document's, and the way to it.
-  const onWay = onTheWay(activePath, tree.reveal);
+  const onWay = onTheWay(activePath, tree.reveal, tree.draft?.dir);
   // Something dragged would go in here: the folder with all its rows lit as
   // one, and a folded one opens if the pointer stays.
   const dropping = depth > 0 && tree.dropInto === path;
@@ -165,7 +200,7 @@ export const DirNode = memo(function DirNode({
     if (!dropping || open) return;
     const timer = window.setTimeout(() => setOpen(true), OPEN_UNDER_DRAG_MS);
     return () => window.clearTimeout(timer);
-  }, [dropping, open]);
+  }, [dropping, open, setOpen]);
 
   return (
     <div

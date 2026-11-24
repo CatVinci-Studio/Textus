@@ -41,12 +41,35 @@ async fn existing_dir(dir: &str) -> Result<PathBuf, String> {
     Ok(dir)
 }
 
-/// Creates an empty Markdown document in `dir`. Returns its path.
+/// A typed name that may name folders on the way (`2026/March/plan`):
+/// those folders and the last name, each one name that can't walk out.
+fn typed_path(name: &str) -> Result<(Vec<&str>, &str), String> {
+    let mut parts = name
+        .trim()
+        .split(|c| c == '/' || (cfg!(windows) && c == '\\'))
+        .map(crate::ids::typed_name)
+        .collect::<Result<Vec<_>, _>>()?;
+    let last = parts.pop().ok_or_else(|| crate::errors::error("badName"))?;
+    Ok((parts, last))
+}
+
+/// `dir`, then the folders on the way, made where missing.
+async fn way_down(dir: &str, folders: &[&str]) -> Result<PathBuf, String> {
+    let dir = folders
+        .iter()
+        .fold(existing_dir(dir).await?, |d, f| d.join(f));
+    fs::create_dir_all(&dir).await.map_err(|e| e.to_string())?;
+    Ok(dir)
+}
+
+/// Creates an empty Markdown document in `dir`, and the folders on the way
+/// a name with slashes gives. Returns its path.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn tree_create_document(dir: String, name: String) -> Result<String, String> {
-    let dir = existing_dir(&dir).await?;
-    let path = dir.join(document_name(crate::ids::typed_name(&name)?));
+    let (folders, name) = typed_path(&name)?;
+    let dir = way_down(&dir, &folders).await?;
+    let path = dir.join(document_name(name));
     fs::OpenOptions::new()
         .write(true)
         .create_new(true)
@@ -59,12 +82,14 @@ pub async fn tree_create_document(dir: String, name: String) -> Result<String, S
     Ok(path.to_string_lossy().to_string())
 }
 
-/// Creates a folder in `dir`. Returns its path.
+/// Creates a folder in `dir`, and the folders on the way a name with
+/// slashes gives. Returns its path.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn tree_create_folder(dir: String, name: String) -> Result<String, String> {
-    let dir = existing_dir(&dir).await?;
-    let path = dir.join(crate::ids::typed_name(&name)?);
+    let (folders, name) = typed_path(&name)?;
+    let dir = way_down(&dir, &folders).await?;
+    let path = dir.join(name);
     fs::create_dir(&path).await.map_err(|e| match e.kind() {
         std::io::ErrorKind::AlreadyExists => crate::errors::error("exists"),
         _ => e.to_string(),
@@ -376,6 +401,30 @@ mod tests {
         );
         assert!(move_target(a, Path::new("/w"), Some("a")).is_err());
         assert!(move_target(a, Path::new("/w/b"), Some("../x")).is_err());
+    }
+
+    #[tokio::test]
+    async fn a_name_with_slashes_makes_the_folders_on_the_way() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().to_string_lossy().to_string();
+        let doc = tree_create_document(root.clone(), "2026/March/plan".into())
+            .await
+            .unwrap();
+        assert_eq!(Path::new(&doc), dir.path().join("2026/March/plan.md"));
+        // An existing folder on the way is used, not refused.
+        let sub = tree_create_folder(root.clone(), "2026/April".into())
+            .await
+            .unwrap();
+        assert!(Path::new(&sub).is_dir());
+        for bad in ["../out", "a/../../out", "/abs", "a//b", "a/", " / "] {
+            assert!(
+                tree_create_document(root.clone(), bad.into())
+                    .await
+                    .is_err(),
+                "{bad}"
+            );
+        }
+        assert!(!dir.path().parent().unwrap().join("out.md").exists());
     }
 
     #[tokio::test]

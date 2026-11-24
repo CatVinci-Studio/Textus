@@ -11,7 +11,7 @@ import { useLatestCallback } from "../utils/hooks/useLatest";
 import { createSubscribers } from "../utils/store";
 import { drawHeldRows, useTreeKeys } from "../engine/controls/useTreeKeys";
 import { isMacPlatform } from "../platform/os";
-import { isInside } from "../utils/path";
+import { isInside, isWithin, parentDir } from "../utils/path";
 
 /** What a click with a modifier does to the tree's selection. */
 type PickHow = "toggle" | "range";
@@ -41,10 +41,10 @@ function pickHow(e: {
 export class TreeSelection {
   private rows: readonly TreeRow[] = [];
   /** Where a Shift-click's range starts: the row last clicked. */
-  private anchor: string | null = null;
+  private anchor: TreeRow | null = null;
 
   get anchorPath(): string | null {
-    return this.anchor;
+    return this.anchor?.path ?? null;
   }
   private readonly listeners = createSubscribers();
 
@@ -58,8 +58,8 @@ export class TreeSelection {
 
   /** A plain click: the row is where the next range starts, and nothing
    *  stays picked. */
-  clickedPlain(path: string): void {
-    this.anchor = path;
+  clickedPlain(row: TreeRow): void {
+    this.anchor = row;
     this.set([]);
   }
 
@@ -87,10 +87,10 @@ export class TreeSelection {
           ? now.filter((row) => row.path !== path)
           : [...now, shown[to]!],
       );
-      this.anchor = path;
+      this.anchor = shown[to]!;
       return;
     }
-    const from = at(this.anchor ?? start);
+    const from = at(this.anchor?.path ?? start);
     const [a, b] =
       from === -1 ? [to, to] : [Math.min(from, to), Math.max(from, to)];
     this.set(shown.slice(a, b + 1));
@@ -104,9 +104,9 @@ export class TreeSelection {
    *  range from where it started, which is `from` unless it is already
    *  picked. */
   extend(from: string, to: string, shown: readonly TreeRow[]): void {
-    if (!this.has(from)) this.anchor = from;
     const at = (p: string | null) => shown.findIndex((row) => row.path === p);
-    const [a, b] = [at(this.anchor), at(to)];
+    if (!this.has(from)) this.anchor = shown[at(from)] ?? null;
+    const [a, b] = [at(this.anchorPath), at(to)];
     if (a === -1 || b === -1) return;
     this.set(shown.slice(Math.min(a, b), Math.max(a, b) + 1));
   }
@@ -124,8 +124,19 @@ export class TreeSelection {
   /** `row` alone picked, and where the next range starts: what was just
    *  made (copied in), shown as the one row in hand. */
   only(row: TreeRow): void {
-    this.anchor = row.path;
+    this.anchor = row;
     this.set([row]);
+  }
+
+  /** Where New makes a document or folder: the folder last clicked, or
+   *  the folder of the file last clicked; else the open document's folder;
+   *  else the root. */
+  newEntryDir(root: string, open: string | null): string {
+    const row = this.anchor;
+    const dir = row && (row.isDir ? row.path : parentDir(row.path));
+    if (dir && isWithin(dir, root)) return dir;
+    const openDir = open && parentDir(open);
+    return openDir && isWithin(openDir, root) ? openDir : root;
   }
 
   /** The picked rows, if `path` is one of two or more; else none. */
@@ -159,7 +170,11 @@ export function useTreeSelection(root: string, activePath: string | null) {
   const onRowPick = useLatestCallback((e: ReactMouseEvent, path: string) => {
     const how = pickHow(e);
     if (!how) {
-      selection.clickedPlain(path);
+      // A folder's row is the one that folds.
+      const isDir = (e.currentTarget as HTMLElement).hasAttribute(
+        "aria-expanded",
+      );
+      selection.clickedPlain({ path, isDir });
       return false;
     }
     const tree = treeRef.current;

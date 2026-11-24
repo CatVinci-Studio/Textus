@@ -600,6 +600,7 @@ type /name in a conversation to use one.
   treeSort: "Sort",
   treeSortName: "By name",
   treeShowHidden: "Show Hidden Files",
+  treeCollapseAll: "Collapse All",
   treeSortModified: "By date modified",
   treeRenameItem: "Rename…",
   treeRename: "Rename",

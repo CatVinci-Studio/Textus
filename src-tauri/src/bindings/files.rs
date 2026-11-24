@@ -35,6 +35,7 @@ pub(super) fn group() -> Group {
                 crate::commands::tree_ops::tree_rename_entry,
                 crate::commands::tree_ops::tree_trash_entry,
                 crate::commands::tree_ops::tree_put_back,
+                crate::commands::fs::watch::tree_watch,
                 crate::commands::vault::resolve_vault_image,
                 crate::commands::vault::resolve_note_link,
                 crate::commands::link_root::document_link_root,
