@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp, sourceOf } from "./helpers";
+import { devPaths, emit, openApp, openTreeFolder, sourceOf } from "./helpers";
 
 /*
  * Files and folders dragged from a file manager onto the sidebar's file
@@ -11,19 +11,13 @@ import { emit, openApp, sourceOf } from "./helpers";
 const DOC = "# Trip\n\nFirst day.\n";
 
 async function openFolder(page: Page) {
-  await page.addInitScript((doc) => {
-    const w = window as unknown as Record<string, unknown>;
-    w.__devFs = {
-      "/trip/log.md": doc,
-      "/trip/assets/boat.png": "",
-      "/downloads/tickets.pdf": "%PDF",
-      "/downloads/notes.md": "# Notes\n",
-      "/downloads/todo.md": "# Todo\n",
-    };
-    w.__devPickFolder = "/trip";
-  }, DOC);
-  await openApp(page, { settings: { language: "en" } });
-  await emit(page, "menu-open-folder");
+  await openTreeFolder(page, "/trip", {
+    "/trip/log.md": DOC,
+    "/trip/assets/boat.png": "",
+    "/downloads/tickets.pdf": "%PDF",
+    "/downloads/notes.md": "# Notes\n",
+    "/downloads/todo.md": "# Todo\n",
+  });
   await page.locator(".tree-row", { hasText: "log.md" }).dblclick();
   await expect(
     page.locator('[data-active-tab="true"] .ProseMirror'),
@@ -42,6 +36,8 @@ async function systemDrop(
   await emit(page, "tauri://drag-drop", { paths, position: at });
 }
 
+const devFiles = devPaths;
+
 const centre = async (page: Page, name: string) => {
   const box = (await page
     .locator(".tree-row", { hasText: name })
@@ -49,13 +45,6 @@ const centre = async (page: Page, name: string) => {
     .boundingBox())!;
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 };
-
-const devFiles = (page: Page) =>
-  page.evaluate(() =>
-    Object.keys(
-      (window as unknown as { __devFs: Record<string, string> }).__devFs,
-    ),
-  );
 
 test("files from a file manager let go on a folder of the tree are copied in, after asking", async ({
   page,

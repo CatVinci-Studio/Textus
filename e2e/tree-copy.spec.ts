@@ -1,34 +1,21 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { devPaths, openTreeFolder, treeRowAt } from "./helpers";
+
+const openFolder = (page: Page) =>
+  openTreeFolder(page, "/proj", {
+    "/proj/plan.md": "# Plan\n",
+    "/proj/notes/n.md": "# N\n",
+  });
+
+const row = (page: Page, name: string) => treeRowAt(page, `/proj/${name}`);
+
+const files = devPaths;
 
 /*
  * Files copied and moved within the tree (as on Windows and Linux): Cut,
  * Copy and Paste, Duplicate, a drag with Ctrl held, and a name already
  * taken where they go.
  */
-
-async function openFolder(page: Page) {
-  await page.addInitScript(() => {
-    const w = window as unknown as Record<string, unknown>;
-    w.__devFs = {
-      "/proj/plan.md": "# Plan\n",
-      "/proj/notes/n.md": "# N\n",
-    };
-    w.__devPickFolder = "/proj";
-  });
-  await openApp(page, { settings: { language: "en" } });
-  await emit(page, "menu-open-folder");
-}
-
-const row = (page: Page, name: string) =>
-  page.locator(`.tree-row[data-path="/proj/${name}"]`);
-
-const files = (page: Page) =>
-  page.evaluate(() =>
-    Object.keys(
-      (window as unknown as { __devFs: Record<string, string> }).__devFs,
-    ).sort(),
-  );
 
 test("Copy and Paste into a folder, Duplicate beside, each undone", async ({
   page,

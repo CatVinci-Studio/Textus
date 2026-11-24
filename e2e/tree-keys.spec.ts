@@ -1,35 +1,23 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { devPaths, openTreeFolder, treeRow } from "./helpers";
+
+const openFolder = (page: Page, more: Record<string, string> = {}) =>
+  openTreeFolder(page, "/proj", {
+    "/proj/alpha.md": "# Alpha\n",
+    "/proj/beta.md": "# Beta\n",
+    "/proj/notes/n.md": "# N\n",
+    ...more,
+  });
+
+const row = treeRow;
+
+const files = devPaths;
 
 /*
  * The file tree's keys (as on Windows and Linux): F2 renames in the row,
  * Delete moves to the Trash, Enter opens, typing finds a row; and a new
  * entry or a rename whose name is taken says so under the field.
  */
-
-async function openFolder(page: Page) {
-  await page.addInitScript(() => {
-    const w = window as unknown as Record<string, unknown>;
-    w.__devFs = {
-      "/proj/alpha.md": "# Alpha\n",
-      "/proj/beta.md": "# Beta\n",
-      "/proj/notes/n.md": "# N\n",
-    };
-    w.__devPickFolder = "/proj";
-  });
-  await openApp(page, { settings: { language: "en" } });
-  await emit(page, "menu-open-folder");
-}
-
-const row = (page: Page, name: string) =>
-  page.locator(".tree-row", { hasText: name });
-
-const files = (page: Page) =>
-  page.evaluate(() =>
-    Object.keys(
-      (window as unknown as { __devFs: Record<string, string> }).__devFs,
-    ),
-  );
 
 test("F2 renames in the row: a taken name is said there, Escape gives up, Enter renames", async ({
   page,
@@ -57,6 +45,26 @@ test("F2 renames in the row: a taken name is said there, Escape gives up, Enter 
   // And back with Undo.
   await page.keyboard.press("ControlOrMeta+z");
   await expect.poll(() => files(page)).toContain("/proj/alpha.md");
+});
+
+test("what a folder's name field says shows over the folder rows that stay at the top", async ({
+  page,
+}) => {
+  await openFolder(page, { "/proj/zoo/z.md": "# Z\n" });
+  await row(page, "notes").click();
+  await page.keyboard.press("F2");
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.type("zoo");
+  await page.keyboard.press("Enter");
+  const problem = page.getByRole("alert");
+  await expect(problem).toContainText("zoo");
+  const box = (await problem.boundingBox())!;
+  const onTop = await page.evaluate(
+    ({ x, y }) =>
+      !!document.elementFromPoint(x, y)?.closest(".tree-name-problem"),
+    { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+  );
+  expect(onTop).toBe(true);
 });
 
 test("a rename left by clicking into the document is made, and the document keeps the keyboard", async ({

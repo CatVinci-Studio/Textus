@@ -1,29 +1,18 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp } from "./helpers";
+import { devDisk, openTreeFolder, treeRow } from "./helpers";
+
+const openFolder = (page: Page, fs: Record<string, string>) =>
+  openTreeFolder(page, "/proj", fs);
+
+const row = treeRow;
+
+const disk = devDisk;
 
 /*
  * The file tree's own undo: a move, its link updates, a rename and a
  * delete are taken back with the Undo key while the tree has the keyboard,
  * and done again with Redo.
  */
-
-async function openFolder(page: Page, fs: Record<string, string>) {
-  await page.addInitScript((fs) => {
-    const w = window as unknown as Record<string, unknown>;
-    w.__devFs = fs;
-    w.__devPickFolder = "/proj";
-  }, fs);
-  await openApp(page, { settings: { language: "en" } });
-  await emit(page, "menu-open-folder");
-}
-
-const row = (page: Page, name: string) =>
-  page.locator(".tree-row", { hasText: name });
-
-const disk = (page: Page) =>
-  page.evaluate(
-    () => (window as unknown as { __devFs: Record<string, string> }).__devFs,
-  );
 
 async function drag(page: Page, name: string, onto: string) {
   const from = (await row(page, name).boundingBox())!;
