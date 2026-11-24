@@ -51,6 +51,8 @@ const { DRAFT, closeConversation, liveConversation, setLiveConversation } =
   await import("../conversation-scope");
 const { normaliseSettings } = await import("../../../prefs/SettingsContext");
 const { setWindowTabs } = await import("../../../engine/layout/store");
+const { openConversationTab, setConversationOpener } =
+  await import("../conversation-tabs");
 const { IpcError, AI_CANCELLED } = await import("../../../platform/ipc");
 const { addAgents } = await import("../../../plugins/contributions/agents");
 const { aiState } = await import("../../../plugins/ai-state");
@@ -384,5 +386,12 @@ describe("the window's conversations", () => {
     expect(conversationFor("c9", null)).toBe(model);
     setWindowTabs(() => [{ id: "doc" }]);
     expect(conversationFor("c9", null)).not.toBe(model);
+  });
+
+  it("a Quick Ask carried on where no tab can take it is not kept", () => {
+    setConversationOpener(() => false);
+    expect(openConversationTab("q1", reply("问"))).toBe(false);
+    setConversationOpener(null);
+    expect(conversationFor("q1", null).snapshot().history).toEqual([]);
   });
 });

@@ -102,22 +102,24 @@ function watch() {
   if (watching) return;
   watching = true;
   const closed = () => {
-    const shown = inAiTabs();
     for (const model of [...models]) {
       const { scope, id } = model;
-      if (!scope) {
-        if (model === draft) continue;
-        if (shown.has(id)) tabbed.add(model);
-        else if (tabbed.has(model)) drop(model);
-        continue;
-      }
+      if (!scope) continue;
       if (openConversations(scope).includes(id)) continue;
       if (liveConversation(scope) !== id) drop(model);
     }
   };
+  const untabbed = () => {
+    const shown = inAiTabs();
+    for (const model of [...models]) {
+      if (model.scope || model === draft) continue;
+      if (shown.has(model.id)) tabbed.add(model);
+      else if (tabbed.has(model)) drop(model);
+    }
+  };
   onOpenConversations(closed);
   onLiveConversation(closed);
-  subscribeSplit(closed);
+  subscribeSplit(untabbed);
 }
 
 /** Conversation `id`, restored for a tab that never came: it goes. */

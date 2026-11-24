@@ -6,6 +6,7 @@ import {
   generatedImageFailure,
   generatedImageUrl,
   loadGeneratedImage,
+  redrawGeneratedImage,
   rememberSaved,
   savedSrc,
   generatedIdsIn,
@@ -26,6 +27,7 @@ import {
 const backend = vi.hoisted(() => ({
   generatedImage: vi.fn(),
   discardGeneratedImage: vi.fn(() => Promise.resolve()),
+  redrawGeneratedImage: vi.fn(() => Promise.resolve()),
 }));
 vi.mock("../../platform/ipc", () => ({ ai: backend }));
 
@@ -207,5 +209,22 @@ describe("an accepted picture", () => {
     expect(await loadGeneratedImage("s2")).toBe(true);
     expect(backend.generatedImage).not.toHaveBeenCalled();
     expect(generatedImageFailure("s2")).toBeNull();
+  });
+
+  it("drawn again after an undo, is fetched anew and saved anew", async () => {
+    const png = {
+      mime: "image/png",
+      dataBase64: "iVBORw0KGgo=",
+      ext: "png",
+      width: 1,
+      height: 1,
+    };
+    backend.generatedImage.mockResolvedValueOnce(png);
+    await loadGeneratedImage("s3");
+    rememberSaved("s3", "images/s3.png");
+    backend.generatedImage.mockResolvedValueOnce(png);
+    expect(await redrawGeneratedImage("s3", "again")).toBe(true);
+    expect(savedSrc("s3")).toBeUndefined();
+    expect(generatedImageData("s3")?.dataBase64).toBe("iVBORw0KGgo=");
   });
 });

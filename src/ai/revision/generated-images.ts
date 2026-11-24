@@ -182,6 +182,8 @@ export async function redrawGeneratedImage(
   const url = loaded.get(id)?.url;
   if (url?.startsWith("blob:")) URL.revokeObjectURL(url);
   loaded.delete(id);
+  // Not the saved file any more: accepted, it is saved anew.
+  saved.delete(id);
   failed.delete(id);
   subscribers.publish();
   return loadGeneratedImage(id);

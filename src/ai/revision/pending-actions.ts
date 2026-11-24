@@ -276,9 +276,10 @@ export function makePendingActions(env: PendingEnv) {
       const preview = (
         pendingEditKey.getState(view.state)?.previews ?? []
       ).find((p) => p.callId === callId);
-      // A rejected picture leaves nothing behind.
+      // A rejected picture leaves nothing behind; a saved one replaced
+      // still shows on its card.
       for (const id of generatedIdsIn(preview?.proposal.text ?? ""))
-        discardGeneratedImage(id);
+        if (status !== "replaced" || !savedSrc(id)) discardGeneratedImage(id);
       // A draft that never reached the list: only its streamed text is here.
       if (!preview) dropAnimation(callId);
       settle(view, [callId], () =>
