@@ -3,12 +3,12 @@
 Textus draws its interface with the system's web engine, so the oldest
 engine a user may have is the oldest one the frontend has to work in.
 
-| Platform                           | Engine              | Oldest supported                             |
-| ---------------------------------- | ------------------- | -------------------------------------------- |
-| Windows 10 and 11                  | WebView2 (Chromium) | Chromium 105                                 |
-| macOS 11 and later                 | WKWebView           | the installed Safari's; the build assumes 16 |
-| iPhone and iPad (iOS 16 and later) | WKWebView           | Safari 16                                    |
-| Linux                              | WebKitGTK           | what the distribution ships                  |
+| Platform                             | Engine              | Oldest supported                             |
+| ------------------------------------ | ------------------- | -------------------------------------------- |
+| Windows 10 and 11                    | WebView2 (Chromium) | Chromium 105                                 |
+| macOS 11 and later                   | WKWebView           | the installed Safari's; the build assumes 16 |
+| iPhone and iPad (iOS 16.4 and later) | WKWebView           | Safari 16.4                                  |
+| Linux                                | WebKitGTK           | what the distribution ships                  |
 
 ## Why Chromium 105 on Windows
 
