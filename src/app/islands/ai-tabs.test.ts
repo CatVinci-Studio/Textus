@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { addFromTabRow, isConversationTab } from "./ai-tabs";
+import { addFromTabRow } from "./ai-tabs";
+import { isConversationTab } from "../../document/doc-tabs";
 
 const aiTab = (conversation?: string) => ({
   view: {

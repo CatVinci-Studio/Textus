@@ -16,6 +16,7 @@ import {
   canUseWindows,
 } from "../../platform/capabilities";
 import {
+  isConversationTab,
   showsStartPage,
   tabIsDirty,
   tabTitle,
@@ -47,7 +48,7 @@ import {
 import { useTabsInBar } from "./tabs-in-bar";
 import { TabRowsShown } from "./tab-rows";
 import { pullTab } from "./tab-pull";
-import { addFromTabRow, isConversationTab, newConversation } from "./ai-tabs";
+import { addFromTabRow, newConversation } from "./ai-tabs";
 import { useDocumentsApart } from "./useDocumentsApart";
 import type { ContextMenuItem } from "../../engine/controls/ContextMenu";
 import { contributedContextItems } from "../../registry/context-menu-items";
