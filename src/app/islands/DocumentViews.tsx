@@ -6,10 +6,9 @@ import { userHasActed } from "./user-input";
 import { PageTabContent } from "../tabs/page-tabs";
 import { useDocumentInFront } from "../tabs/useDocumentInFront";
 import { EditorPane } from "../../document-view/EditorPane";
-import { lazyModule } from "../../lazy/lazy-module";
+import { SourceTabView } from "./SourceTabView";
 import { lazyComponent } from "../../lazy/lazy-component";
 import { startPageModule } from "../start-page-module";
-import { DocSourceEditor } from "../../editor/modes/lazy-doc-source-editor";
 import { showsStartPage, tabTitle, type DocTab } from "../../document/doc-tabs";
 import { tabReadOnly } from "../../document/read-only";
 import type { Strings } from "../../i18n/strings";
@@ -31,10 +30,6 @@ setPreviewExtras(() =>
 );
 
 const StartPage = lazyComponent(startPageModule, (m) => m.StartPage);
-const SplitView = lazyComponent(
-  lazyModule("split-view", () => import("../../editor/modes/SplitView")),
-  (m) => m.SplitView,
-);
 
 /**
  * `tabs` in the order they opened, whatever order the tab row puts them in.
@@ -172,27 +167,12 @@ export function DocumentViews({
                 shown={tab.id === activeTabId || !!pane}
                 kind="source-view"
               >
-                <Suspense fallback={null}>
-                  {tab.splitView ? (
-                    <SplitView
-                      tabId={tab.id}
-                      content={tab.content}
-                      filePath={tab.path}
-                      typewriter={typewriter}
-                      onChange={(markdown) => onChange(tab.id, markdown)}
-                      readOnly={tabReadOnly(tab)}
-                    />
-                  ) : (
-                    <DocSourceEditor
-                      tabId={tab.id}
-                      value={tab.content}
-                      docPath={tab.path}
-                      typewriter={typewriter}
-                      onChange={(markdown) => onChange(tab.id, markdown)}
-                      readOnly={tabReadOnly(tab)}
-                    />
-                  )}
-                </Suspense>
+                <SourceTabView
+                  tab={tab}
+                  isActive={tab.id === inFront}
+                  typewriter={typewriter}
+                  onChange={onChange}
+                />
               </KeptWhileHidden>
             ) : (
               <EditorKept

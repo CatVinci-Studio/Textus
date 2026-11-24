@@ -556,6 +556,99 @@ test("a plugin reads the document in front as a save would write it", async ({
     .toBe(file);
 });
 
+test("a plugin reads the document and hears it change in Source Mode and Source and Preview", async ({
+  page,
+}) => {
+  const manifest = {
+    id: "example.reader",
+    name: "Reader",
+    version: "0.1.0",
+    publisher: "example",
+    engines: { textus: ">=1.3.12" },
+    main: "host.js",
+    activationEvents: ["onStartupFinished"],
+    permissions: ["editor.read"],
+  };
+  // Each change it hears, with the path and text it then reads.
+  const host = `exports.activate = function (ctx) {
+    var seen = [];
+    textus.editor.onDidChange(async function () {
+      seen.push({ path: await textus.editor.getPath(), text: await textus.editor.getText() });
+      await ctx.storage.global.set("seen", seen);
+    });
+  };`;
+  await page.addInitScript(
+    ({ manifest, host }) => {
+      if (window.top !== window) return;
+      const w = window as unknown as Record<string, unknown>;
+      w.__devPlugins = [
+        {
+          id: manifest.id,
+          dir: `/plugins/${manifest.id}`,
+          manifest: JSON.stringify(manifest),
+          dev: false,
+          files: { "host.js": host },
+        },
+      ];
+      w.__devFs = { "/work/slides.md": "# Slides\n" };
+      w.__devPluginState = {
+        allOn: true,
+        plugins: {
+          [manifest.id]: { enabled: true, granted: manifest.permissions },
+        },
+      };
+    },
+    { manifest, host },
+  );
+  await openApp(page, { settings: { language: "en" } });
+  await openPath(page, "/work/slides.md");
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toContainText("Slides");
+  const lastSeen = () =>
+    page.evaluate(() => {
+      const stores = (window as unknown as Record<string, unknown>)
+        .__devPluginStore as
+        Record<string, { kv: Record<string, unknown> }> | undefined;
+      const seen = stores?.["example.reader|global|"]?.kv.seen as
+        { path: string | null; text: string | null }[] | undefined;
+      return seen?.at(-1) ?? null;
+    });
+  const source = page.locator('[data-active-tab="true"] .cm-content');
+  for (const [toggle, typed] of [
+    ["menu-toggle-source-mode", "one"],
+    ["menu-toggle-split-view", "two"],
+  ]) {
+    await emit(page, toggle);
+    await source.click();
+    await page.keyboard.press("ControlOrMeta+End");
+    await page.keyboard.type(typed);
+    await expect.poll(lastSeen).toEqual({
+      path: "/work/slides.md",
+      text: expect.stringContaining(typed),
+    });
+  }
+  // Changed in place as an open document, as files.process does.
+  await page.evaluate(async (url) => {
+    const open = (await import(/* @vite-ignore */ url)).openDocumentAt(
+      "/work/slides.md",
+    );
+    open.replaceText(`${open.text()}\n\nmore`, open.revision());
+  }, "/src/registry/open-documents.ts");
+  await expect(source).toContainText("more");
+  // Back in the rendered view, it alone answers.
+  await emit(page, "menu-toggle-split-view");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(editor).toContainText("more");
+  await editor.click();
+  await page.keyboard.press("ControlOrMeta+End");
+  await page.keyboard.type(" three");
+  await expect.poll(lastSeen).toEqual({
+    path: "/work/slides.md",
+    text: expect.stringMatching(/one[\s\S]*two[\s\S]*more three/),
+  });
+});
+
 test("Git marks the blocks changed since the last commit in the margin", async ({
   page,
 }) => {
