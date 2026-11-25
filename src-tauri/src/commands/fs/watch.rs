@@ -104,15 +104,17 @@ pub(crate) fn note_own_write(path: &Path) {
 }
 
 /// Whether the `index`th path of an event of `kind` can be one the app
-/// wrote: made or written over, never taken away (removed, renamed from).
+/// wrote: made or written over, never taken away.
 fn as_written(kind: &EventKind, index: usize, path: &Path) -> bool {
     match kind {
         EventKind::Create(_) => true,
         EventKind::Modify(ModifyKind::Name(RenameMode::To)) => true,
         EventKind::Modify(ModifyKind::Name(RenameMode::Both)) => index == 1,
-        // FSEvents doesn't say which side of a rename a path was: the side
-        // a write renamed into place is still there.
-        EventKind::Modify(ModifyKind::Name(RenameMode::Any)) => path.exists(),
+        // FSEvents doesn't say which side of a rename a path was, and
+        // Windows reports the file a save renamed over as removed: either
+        // way, a path still there was written over, not taken away.
+        EventKind::Modify(ModifyKind::Name(RenameMode::Any | RenameMode::From))
+        | EventKind::Remove(_) => path.exists(),
         EventKind::Modify(ModifyKind::Name(_)) => false,
         EventKind::Modify(_) => true,
         _ => false,
