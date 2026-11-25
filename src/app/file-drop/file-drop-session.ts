@@ -30,11 +30,6 @@ import { droppedMarkdown } from "./dropped-markdown";
 
 type Size = { width: number; height: number };
 
-/** Coming onto the documents, the edge crossed to get there splits only
- *  once the pointer has been in a body or rested on it this long: passing
- *  over it, the islands made room and took it back, a flash in each. */
-const ENTERING_EDGE_MS = 350;
-
 export interface FileDropWiring {
   /** Opens `path` where it was let go; `first`: the first of the drop.
    *  Settled once it has opened, or failed to. */
@@ -86,39 +81,13 @@ function placeAt(
   const target = dropTargetAt(x, y, geometry, "file", held);
   if (!target) return null;
   if (target.zone !== "center") return { place: "edge", target, slot: null };
-  return bodyPlace(target, geometry);
-}
-
-/** A document's body as the place: a tab opening there stands at the end
- *  of its island's row. */
-function bodyPlace(target: DropTarget, geometry: DropGeometry) {
   const pane = paneOf(windowLayout(), target.tabId);
   const row = geometry.bars.find((b) => b.pane === pane)?.row;
   return {
-    place: "body" as const,
+    place: "body",
     target,
     slot: row && pane ? { pane, x: row.right } : null,
   };
-}
-
-/** The edge (x, y) is on, taken as the body of the island under it. */
-function bodyUnder(
-  edge: DropTarget,
-  geometry: DropGeometry,
-  x: number,
-  y: number,
-) {
-  const pane = geometry.panes.find(
-    (p) =>
-      p.tabId &&
-      x >= p.rect.left &&
-      x <= p.rect.right &&
-      y >= p.rect.top &&
-      y <= p.rect.bottom,
-  );
-  const tabId = pane?.tabId ?? edge.tabId;
-  const rect = pane?.rect ?? edge.rect;
-  return bodyPlace({ zone: "center", tabId, rect }, geometry);
 }
 
 /**
@@ -141,13 +110,10 @@ export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
     y: number;
     shift: boolean;
   } | null = null;
-  /** Off the documents at the last move. */
-  let away = true;
-  /** When the pointer came on from off them, while the edges don't split
-   *  yet (ENTERING_EDGE_MS); null once they do. */
-  let enteredAt: number | null = null;
-  /** Asks again once a rested edge may split. */
-  let wake: ReturnType<typeof setTimeout> | undefined;
+  /** The pointer has been on a document since it came onto them: until
+   *  then the edge it crossed to get there shows nothing. Passing over it,
+   *  the islands made room and took it back, a flash in each. */
+  let inside = false;
 
   const plan = (
     files: readonly DraggedFile[],
@@ -157,24 +123,8 @@ export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
   ) => {
     geometry ??= dropGeometry();
     let at = placeAt(x, y, geometry, aimed);
-    clearTimeout(wake);
-    if (!at) {
-      away = true;
-      enteredAt = null;
-    } else {
-      if (away) enteredAt = Date.now();
-      away = false;
-      if (at.place !== "edge") enteredAt = null;
-      else if (enteredAt !== null) {
-        const left = enteredAt + ENTERING_EDGE_MS - Date.now();
-        if (left > 0) {
-          at = bodyUnder(at.target, geometry, x, y);
-          wake = setTimeout(() => {
-            if (last) drop.over(last.files, last.x, last.y, last.shift);
-          }, left);
-        } else enteredAt = null;
-      }
-    }
+    if (at?.place === "edge" && !inside) at = null;
+    inside = !!at;
     aimed = at?.place === "bar" ? null : (at?.target ?? null);
     if (!at) return null;
     const doc: FileDropTarget | null =
@@ -236,9 +186,7 @@ export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
     geometry = null;
     aimed = null;
     last = null;
-    away = true;
-    enteredAt = null;
-    clearTimeout(wake);
+    inside = false;
     sizes.clear();
   };
 
@@ -278,6 +226,8 @@ export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
       reset();
     },
     drop(files, x, y, shift) {
+      // Let go on an edge, it splits there, passed over or not.
+      inside = true;
       const now = plan(files, x, y, shift);
       setIncomingTab(null);
       if (!now) {

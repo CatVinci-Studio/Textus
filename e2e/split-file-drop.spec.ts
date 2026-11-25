@@ -4,7 +4,7 @@ import { emit, openApp } from "./helpers";
 /*
  * A note dragged from the sidebar onto a window split in two: on its way
  * in it crosses the documents' outer edge, which splits off a third island
- * only when the pointer rests there.
+ * only once the pointer has been on a document.
  */
 
 async function splitWindow(page: Page) {
@@ -103,7 +103,7 @@ test("a note dragged in across the outer edge to an island's body leaves both is
   ).toBeVisible();
 });
 
-test("resting on the outer edge it came in by, a note splits off there", async ({
+test("into an island and back out to the outer edge, a note splits off there", async ({
   page,
 }) => {
   await splitWindow(page);
@@ -111,35 +111,9 @@ test("resting on the outer edge it came in by, a note splits off there", async (
   const y = left.y + left.height / 2;
   await dragRow(page, "third.md", [
     { x: left.x - 30, y },
+    { x: left.x + left.width / 2, y },
     { x: left.x + 8, y },
   ]);
-  // Real time: the edge it came in by splits once rested on for 350 ms.
-  await page.waitForTimeout(500);
-  await page.mouse.move(left.x + 9, y);
   await page.mouse.up();
   await expect(page.locator("section.island")).toHaveCount(3);
-});
-
-test("from the outer edge on into an island's body, the tab room stands at the row's end", async ({
-  page,
-}) => {
-  await splitWindow(page);
-  const left = (await page.locator("section.island").first().boundingBox())!;
-  const y = left.y + left.height / 2;
-  await dragRow(page, "third.md", [
-    { x: left.x - 30, y },
-    { x: left.x + 8, y },
-  ]);
-  // Real time: the edge it came in by splits once rested on for 350 ms.
-  await page.waitForTimeout(500);
-  await page.mouse.move(left.x + left.width / 2, y, { steps: 8 });
-  const room = page.locator(".tab-pill-preview");
-  await expect(room).toBeVisible();
-  const own = (await page
-    .locator('[role="tab"]', { hasText: "left" })
-    .boundingBox())!;
-  await expect
-    .poll(async () => (await room.boundingBox())!.x)
-    .toBeGreaterThan(own.x);
-  await page.mouse.up();
 });

@@ -97,7 +97,7 @@ describe("files let go on a document", () => {
       isDir: false,
       fromSystem: true,
     }));
-    expect(drop.drop(files, 10, 10, false)).toBe(true);
+    expect(drop.drop(files, 100, 10, false)).toBe(true);
     await flush();
     // The second waits for the first, however long it takes to read.
     expect(opened).toEqual([["/d/a.md", true]]);
@@ -121,7 +121,7 @@ describe("files let go on a document", () => {
       opened.push(path);
       return Promise.resolve();
     });
-    drop.drop([{ path: "/d/data.csv", isDir: false }], 10, 10, false);
+    drop.drop([{ path: "/d/data.csv", isDir: false }], 100, 10, false);
     await vi.waitFor(() => expect(doc.filled).toEqual([[]]));
     await flush();
     expect(opened).toEqual(["/d/data.csv"]);
@@ -136,7 +136,6 @@ describe("a note dragged onto the documents", () => {
   });
 
   it("passes over the edge it comes in by without the islands making room", () => {
-    vi.useFakeTimers();
     const drop = session(() => Promise.resolve());
     drop.over(note, -5, 10, false);
     drop.over(note, 10, 10, false);
@@ -146,18 +145,5 @@ describe("a note dragged onto the documents", () => {
     drop.over(note, 10, 10, false);
     expect(split.shown).toEqual(["left"]);
     drop.leave();
-    vi.useRealTimers();
-  });
-
-  it("splits on the edge it came in by once it rests there", () => {
-    vi.useFakeTimers();
-    const drop = session(() => Promise.resolve());
-    drop.over(note, -5, 10, false);
-    drop.over(note, 10, 10, false);
-    expect(split.shown).toEqual([]);
-    vi.advanceTimersByTime(400);
-    expect(split.shown).toEqual(["left"]);
-    drop.leave();
-    vi.useRealTimers();
   });
 });
