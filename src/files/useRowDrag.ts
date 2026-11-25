@@ -5,16 +5,14 @@ import {
   type RefObject,
 } from "react";
 import { documentDrop, setDragging } from "../engine/controls/document-drop";
-import { isMacPlatform } from "../platform/os";
-import { isWithin } from "../utils/path";
-import { canMoveInto, dropDirAt } from "./tree-shared";
+import { canTakeInto, dropDirAt } from "./tree-shared";
 import { dragGhost } from "../engine/drag/ghost";
 import { trackDrag } from "../engine/drag/pointer-drag";
 import { holdToDrag } from "../engine/drag/hold-drag";
 import { useLatest } from "../utils/hooks/useLatest";
 import { edgeScroll } from "../engine/drag/edge-scroll";
 import { canDragFilesOut } from "../platform/capabilities";
-import { dragOut, LEAVE_AFTER_MS, outsideWindow } from "./drag-out";
+import { copyKey, dragOut, LEAVE_AFTER_MS, outsideWindow } from "./drag-out";
 import { isFarUrl } from "../platform/far-files";
 import { outermost, type TreeSelection } from "./tree-selection";
 import type { TreeTransfer } from "./useTreeTransfer";
@@ -71,9 +69,6 @@ function heldKey(key: keyof typeof HELD, changed: (held: boolean) => void) {
   return state;
 }
 
-/** The key that makes a drag a copy, as each system's file manager has it. */
-const copyKey = () => (isMacPlatform() ? "Alt" : "Control");
-
 /** A row dragged onto a folder moves into it, or with ⌥ (Ctrl elsewhere)
  *  held is copied there; files dragged over the
  *  documents go into one or open there (file-drop-session.ts); Esc or a cancelled pointer drops nothing.
@@ -99,13 +94,7 @@ export function useRowDrag(
       const unhold = holdSelection();
       const group = selection.groupOf(path);
       const moving = outermost(selection.rowsFor(path, isDir));
-      // A copy may go beside itself; neither goes into itself.
-      const fits = (dir: string) =>
-        moving.every((row) =>
-          copy?.held
-            ? !(row.isDir && isWithin(dir, row.path))
-            : canMoveInto(row.path, row.isDir, dir),
-        );
+      const fits = (dir: string) => canTakeInto(moving, dir, !!copy?.held);
       // Files, not folders, go into the documents or open there.
       const files = moving.every((row) => !row.isDir)
         ? moving.map((row) => ({ path: row.path, isDir: false }))
@@ -169,7 +158,7 @@ export function useRowDrag(
             leaving ??= window.setTimeout(() => {
               tracked?.cancel();
               unhold();
-              void dragOut(moving.map((row) => row.path));
+              void dragOut(moving);
             }, LEAVE_AFTER_MS);
             return;
           }

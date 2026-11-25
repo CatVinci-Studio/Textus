@@ -695,7 +695,11 @@ export function installDevTauriShim(): void {
       return Promise.reject(new Error("Not a directory"));
     // `__devDragShift`: Shift held while a file manager's drag is over the window.
     if (cmd === "drag_modifiers")
-      return Promise.resolve({ shift: !!w.__devDragShift });
+      return Promise.resolve({
+        shift: !!w.__devDragShift,
+        alt: false,
+        ctrl: false,
+      });
     // `__devPictureSizes`: a picture's size by path, as its header gives it.
     if (cmd === "picture_size")
       return Promise.resolve(

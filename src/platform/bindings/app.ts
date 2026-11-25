@@ -378,6 +378,9 @@ export type DetachedTab_Serialize = {
 /**  Read by the file drags in src/app/file-drop/finder-drag.ts. */
 export type DragModifiers = {
 	shift: boolean,
+	/**  Option on a Mac. */
+	alt: boolean,
+	ctrl: boolean,
 };
 
 /**

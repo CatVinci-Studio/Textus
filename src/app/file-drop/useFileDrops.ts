@@ -14,12 +14,18 @@ import { watchFilesFromApps } from "../files-from-apps";
 import { isFolder } from "../window-file-events";
 import type { OpenOptions } from "../useFileOpening";
 import { fileDropOnDocuments } from "./file-drop-session";
-import { watchSystemDrags } from "./finder-drag";
-import { treeFileDrop } from "../../files/tree-file-drop";
+import { watchSystemDrags, type DragHeld } from "./finder-drag";
+import { treeFileDrop, type RowsBack } from "../../files/tree-file-drop";
 
-/** The tree's own rows, out with the system's drag and come back. */
-const ownRows = (files: readonly DraggedFile[]) =>
-  files.length > 0 && files.every((file) => !file.fromSystem);
+/** The tree's own rows, out with the system's drag and come back, and
+ *  whether the copy key is held; undefined for a file manager's. */
+const rowsBack = (
+  files: readonly DraggedFile[],
+  held: DragHeld,
+): RowsBack | undefined =>
+  files.length > 0 && files.every((file) => !file.fromSystem)
+    ? { copy: held.copy }
+    : undefined;
 
 interface FileDropInput {
   openFile: (path: string, open?: OpenOptions) => Promise<void>;
@@ -74,32 +80,33 @@ export function useFileDrops(input: FileDropInput): void {
     if (filesDropAsContents || isMobileApp) return () => setDocumentDrop(null);
     const stop = watchSystemDrags(
       {
-        // Over the file tree with a folder open, copied in there
-        // (useTreeFileDrop); else over the documents. The tree's own rows,
-        // brought back, only ever go to the documents.
-        over: (files, at, shift) => {
-          const tree = ownRows(files) ? null : treeFileDrop();
-          if (tree?.over(at.x, at.y)) documentDrop()?.leave();
+        // Over the file tree, copied in there with a folder open, or the
+        // tree's own rows brought back moved or copied there
+        // (useTreeFileDrop); else over the documents.
+        over: (files, at, held) => {
+          const back = rowsBack(files, held);
+          if (treeFileDrop()?.over(files, at.x, at.y, back))
+            documentDrop()?.leave();
           else {
             treeFileDrop()?.leave();
-            documentDrop()?.over(files, at.x, at.y, shift);
+            documentDrop()?.over(files, at.x, at.y, held.shift);
           }
         },
         leave: () => {
           treeFileDrop()?.leave();
           documentDrop()?.leave();
         },
-        drop: (files, at, shift) => {
-          if (ownRows(files)) {
-            treeFileDrop()?.leave();
-            documentDrop()?.drop(files, at.x, at.y, shift);
-            return;
-          }
-          if (treeFileDrop()?.drop(files, at.x, at.y)) {
+        drop: (files, at, held) => {
+          const back = rowsBack(files, held);
+          if (treeFileDrop()?.drop(files, at.x, at.y, back)) {
             documentDrop()?.leave();
             return;
           }
-          if (documentDrop()?.drop(files, at.x, at.y, shift)) return;
+          if (back) {
+            documentDrop()?.drop(files, at.x, at.y, held.shift);
+            return;
+          }
+          if (documentDrop()?.drop(files, at.x, at.y, held.shift)) return;
           // Off the documents (the window's bar, the sidebar with no
           // folder open): opened, one after another, so the tabs keep the
           // order dropped.

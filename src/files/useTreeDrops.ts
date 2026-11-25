@@ -9,7 +9,8 @@ import type { TreeTransfer } from "./useTreeTransfer";
 /**
  * What is dragged onto the tree: its own rows, moved or copied
  * (useRowDrag), and
- * files from a file manager with a folder open, copied in
+ * files from a file manager with a folder open, copied in, and its own
+ * rows brought back from outside the window, moved or copied
  * (useTreeFileDrop), the first copy picked and its row shown. `into`: the
  * folder lit under either. A drop can be taken back (useFileUndo).
  */
@@ -42,6 +43,7 @@ export function useTreeDrops(input: {
       scrollRowIntoView(treeRef.current, path, true);
     },
     input.fileUndo.record,
+    input.transfer,
   );
   return {
     drag,

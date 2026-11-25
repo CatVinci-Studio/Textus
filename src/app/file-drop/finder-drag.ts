@@ -3,9 +3,18 @@ import { windowIpc } from "../../platform/ipc";
 import { isWindowsPlatform } from "../../platform/os";
 import type { DraggedFile } from "../../engine/controls/document-drop";
 import { dropPointInPage } from "../dropped-files";
-import { isDraggingOut } from "../../files/drag-out";
+import { copyKey, rowsOut } from "../../files/drag-out";
 
 type Point = { x: number; y: number };
+
+/** The keys held over the drag: Shift opens; the copy key (Option, Ctrl
+ *  elsewhere) copies the tree's own rows brought back. */
+export interface DragHeld {
+  shift: boolean;
+  copy: boolean;
+}
+
+const NONE: DragHeld = { shift: false, copy: false };
 
 /** What the system's drag events carry: the paths on entering and on the
  *  drop, the pointer (physical pixels on Windows) throughout. */
@@ -15,16 +24,16 @@ interface DragPayload {
 }
 
 interface SystemDrag {
-  over(files: readonly DraggedFile[], at: Point, shift: boolean): void;
+  over(files: readonly DraggedFile[], at: Point, held: DragHeld): void;
   leave(): void;
-  drop(files: readonly DraggedFile[], at: Point, shift: boolean): void;
+  drop(files: readonly DraggedFile[], at: Point, held: DragHeld): void;
 }
 
 /**
  * Files dragged over the window from a file manager, through Tauri's drag
  * events: the paths come on entering, which of them are folders soon
- * after. The page hears no keys meanwhile, so Shift is asked of the system
- * (`drag_modifiers`), at most once a frame, and again on the drop. Each
+ * after. The page hears no keys meanwhile, so the keys are asked of the
+ * system (`drag_modifiers`), at most once a frame, and again on the drop. Each
  * answer is dropped if the drag has moved on by then.
  */
 export function watchSystemDrags(
@@ -38,27 +47,33 @@ export function watchSystemDrags(
   const point = (p: Point) =>
     dropPointInPage(p, isWindowsPlatform(), window.devicePixelRatio);
   // The tree's own rows, dragged out and back, are no file manager's:
-  // told as the drag comes in, before its drop ends the drag out.
-  let own = false;
-  const filesOf = (paths: string[]) =>
-    Promise.all(
-      paths.filter(Boolean).map(async (path) => ({
-        path,
-        isDir: await isFolder(path),
-        fromSystem: !own,
-      })),
-    );
-  const shift = () =>
+  // told as the drag comes in, before its drop ends the drag out, and
+  // taken as they went out.
+  let own: readonly DraggedFile[] | null = null;
+  const filesOf = (paths: string[]): Promise<DraggedFile[]> =>
+    own
+      ? Promise.resolve(own.map((row) => ({ ...row, fromSystem: false })))
+      : Promise.all(
+          paths.filter(Boolean).map(async (path) => ({
+            path,
+            isDir: await isFolder(path),
+            fromSystem: true,
+          })),
+        );
+  const keys = () =>
     windowIpc.dragModifiers().then(
-      (m) => !!m?.shift,
-      () => false,
+      (m): DragHeld =>
+        m
+          ? { shift: m.shift, copy: copyKey() === "Alt" ? m.alt : m.ctrl }
+          : NONE,
+      () => NONE,
     );
   const show = () => {
     if (frame) return;
     const asked = drag;
     frame = requestAnimationFrame(() => {
       frame = 0;
-      void Promise.all([files, shift()]).then(([now, held]) => {
+      void Promise.all([files, keys()]).then(([now, held]) => {
         if (asked === drag) to.over(now, at, held);
       });
     });
@@ -66,7 +81,7 @@ export function watchSystemDrags(
   const listeners = [
     listenToThisWebview<DragPayload>("tauri://drag-enter", (e) => {
       drag++;
-      own = isDraggingOut();
+      own = rowsOut();
       files = filesOf(e.payload.paths ?? []);
       at = point(e.payload.position);
       show();
@@ -83,7 +98,7 @@ export function watchSystemDrags(
       drag++;
       const dropped = filesOf(e.payload.paths ?? []);
       const where = point(e.payload.position);
-      void Promise.all([dropped, shift()]).then(([now, held]) =>
+      void Promise.all([dropped, keys()]).then(([now, held]) =>
         to.drop(now, where, held),
       );
     }),
