@@ -88,7 +88,7 @@ fn watch_plan<'a>(
 }
 
 /// What the app wrote lately, when, and the window whose save it was: only
-/// that window's tree takes it as its own; `None`, no window's tree.
+/// that window's tree takes it as its own; `None`, every window's tree.
 static OWN_WRITES: Mutex<Vec<(PathBuf, Instant, Option<String>)>> = Mutex::new(Vec::new());
 
 /// `path` with its folder canonical, as the system reports changes in it.

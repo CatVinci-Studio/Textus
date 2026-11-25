@@ -93,6 +93,13 @@ it("takes the rows brought back as they went out, and tells the copy key held: O
   out.keys = { shift: false, alt: true, ctrl: false };
   event("drag-drop", ["/real/notes"]);
   expect((await dropped()).held).toEqual({ shift: false, copy: true });
+  // A drag out whose end was never heard: a file manager's next drag, of
+  // other files, is its own, never the rows gone out.
+  event("drag-enter", ["/downloads/notes.md"]);
+  event("drag-drop", ["/downloads/notes.md"]);
+  expect((await dropped()).files).toEqual([
+    { path: "/downloads/notes.md", isDir: false, fromSystem: true },
+  ]);
   out.end(true);
   await going;
 });

@@ -3,6 +3,7 @@ import { windowIpc } from "../../platform/ipc";
 import { isWindowsPlatform } from "../../platform/os";
 import type { DraggedFile } from "../../engine/controls/document-drop";
 import { dropPointInPage } from "../dropped-files";
+import { folderName } from "../../utils/path";
 import { copyKey, rowsOut } from "../../files/drag-out";
 
 type Point = { x: number; y: number };
@@ -15,6 +16,21 @@ export interface DragHeld {
 }
 
 const NONE: DragHeld = { shift: false, copy: false };
+
+/** `rows` when the system's drag carries them (by name: it may name a
+ *  folder by where a link leads); else null, as for a drag out whose end
+ *  was never heard. */
+function sameNames(
+  rows: readonly DraggedFile[] | null,
+  paths: readonly string[],
+): readonly DraggedFile[] | null {
+  const names = (all: readonly string[]) =>
+    all.map(folderName).sort().join("\n");
+  return rows &&
+    names(rows.map((row) => row.path)) === names(paths.filter(Boolean))
+    ? rows
+    : null;
+}
 
 /** What the system's drag events carry: the paths on entering and on the
  *  drop, the pointer (physical pixels on Windows) throughout. */
@@ -81,7 +97,7 @@ export function watchSystemDrags(
   const listeners = [
     listenToThisWebview<DragPayload>("tauri://drag-enter", (e) => {
       drag++;
-      own = rowsOut();
+      own = sameNames(rowsOut(), e.payload.paths ?? []);
       files = filesOf(e.payload.paths ?? []);
       at = point(e.payload.position);
       show();
