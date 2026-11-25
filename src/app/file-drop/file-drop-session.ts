@@ -110,6 +110,10 @@ export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
     y: number;
     shift: boolean;
   } | null = null;
+  /** The pointer has been on a document since it came onto them: until
+   *  then the edge it crossed to get there shows nothing. Passing over it,
+   *  the islands made room and took it back, a flash in each. */
+  let inside = false;
 
   const plan = (
     files: readonly DraggedFile[],
@@ -118,7 +122,9 @@ export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
     shift: boolean,
   ) => {
     geometry ??= dropGeometry();
-    const at = placeAt(x, y, geometry, aimed);
+    let at = placeAt(x, y, geometry, aimed);
+    if (at?.place === "edge" && !inside) at = null;
+    inside = !!at;
     aimed = at?.place === "bar" ? null : (at?.target ?? null);
     if (!at) return null;
     const doc: FileDropTarget | null =
@@ -180,6 +186,7 @@ export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
     geometry = null;
     aimed = null;
     last = null;
+    inside = false;
     sizes.clear();
   };
 
@@ -219,6 +226,8 @@ export function fileDropOnDocuments(wiring: FileDropWiring): DocumentDrop {
       reset();
     },
     drop(files, x, y, shift) {
+      // Let go on an edge, it splits there, passed over or not.
+      inside = true;
       const now = plan(files, x, y, shift);
       setIncomingTab(null);
       if (!now) {
