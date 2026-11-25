@@ -224,7 +224,9 @@ export function useFileOpening(opts: {
         importedFrom: undefined,
         view: undefined,
         // Text that isn't Markdown (YAML, a web page) shows as plain text,
-        // read-only unless a plugin's textFiles takes its type.
+        // whatever the window's view, read-only unless a plugin's textFiles
+        // takes its type.
+        ...(textFileOf(path) && { sourceMode: true, splitView: false }),
         ...(!asDocument && textFileOf(path)?.claimed === false
           ? { readOnly: true }
           : {}),

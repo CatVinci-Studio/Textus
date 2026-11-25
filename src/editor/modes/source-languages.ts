@@ -50,11 +50,14 @@ function description(added: AddedLanguage): LanguageDescription {
   return found;
 }
 
-/** The language a fence's info string names: CodeMirror's own first, then
- *  one a plugin added. */
+/** The language a fence's info string names: CodeMirror's own by that
+ *  name, then one a plugin added, then CodeMirror's found in the words
+ *  (which would take "bibtex" for its "tex"). */
 export function fenceLanguage(info: string): LanguageDescription | null {
-  const own = LanguageDescription.matchLanguageName(languages, info, true);
+  const name = info.trim().split(/\s/)[0] ?? "";
+  const own = LanguageDescription.matchLanguageName(languages, name, false);
   if (own) return own;
-  const added = addedLanguage(info.trim().split(/\s/)[0] ?? "");
-  return added && description(added);
+  const added = addedLanguage(name);
+  if (added) return description(added);
+  return LanguageDescription.matchLanguageName(languages, info, true);
 }
