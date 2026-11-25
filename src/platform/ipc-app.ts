@@ -30,9 +30,14 @@ export const windowIpc = {
       null,
     ) as Promise<DetachedTabDoc | null>,
   listWindowBounds: () => desktopQueryCommand("list_window_bounds", []),
-  /** Whether Shift is held while the system drags files over the window,
-   *  when the page hears no keys. */
-  dragModifiers: () => desktopQueryCommand("drag_modifiers", { shift: false }),
+  /** Whether Shift, Alt (Option) or Ctrl is held while the system drags
+   *  files over the window, when the page hears no keys. */
+  dragModifiers: () =>
+    desktopQueryCommand("drag_modifiers", {
+      shift: false,
+      alt: false,
+      ctrl: false,
+    }),
   moveTabToNewWindow: ({ tab }: FloatingDragArgs) =>
     desktopActionCommand("move_tab_to_new_window", tab),
   /** `rowHeight`: how far down a window its tab row reaches, for a drop -

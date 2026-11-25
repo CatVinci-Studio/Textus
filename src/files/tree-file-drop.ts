@@ -4,19 +4,37 @@ import type { Lang, Strings } from "../i18n/strings";
 import { basename, folderName } from "../utils/path";
 import type { DraggedFile } from "../engine/controls/document-drop";
 
-/** Files from a file manager dragged over the window, as the file tree
- *  takes them: the folder under the pointer lit, and let go there, copied
- *  in. Set by the tree while a folder is open; the window's drag events
- *  (useFileDrops) ask it before the documents. */
+/** The tree's own rows, dragged out of the window and brought back: moved
+ *  as a row dragged within the tree is, or with the copy key copied. */
+export interface RowsBack {
+  copy: boolean;
+}
+
+/** Files dragged over the window from a file manager, or the tree's own
+ *  rows brought back, as the file tree takes them: the folder under the
+ *  pointer lit, and let go there, copied in (or moved, `RowsBack`). Set by
+ *  the tree; the window's drag events (useFileDrops) ask it before the
+ *  documents. */
 export interface TreeFileDrop {
-  /** The pointer is at (x, y): lights the folder it would go into; false
-   *  off the tree. */
-  over(x: number, y: number): boolean;
+  /** The pointer is at (x, y): lights the folder `files` would go into;
+   *  false off the tree, or where it takes none. */
+  over(
+    files: readonly DraggedFile[],
+    x: number,
+    y: number,
+    back?: RowsBack,
+  ): boolean;
   /** The drag left the tree, or was given up. */
   leave(): void;
   /** `files` let go at (x, y): copied into the folder there (asked first,
-   *  unless the user said not to); false off the tree. */
-  drop(files: readonly DraggedFile[], x: number, y: number): boolean;
+   *  unless the user said not to), or the rows brought back moved or
+   *  copied there; false off the tree, or where it takes none. */
+  drop(
+    files: readonly DraggedFile[],
+    x: number,
+    y: number,
+    back?: RowsBack,
+  ): boolean;
 }
 
 let current: TreeFileDrop | null = null;

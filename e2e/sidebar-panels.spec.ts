@@ -98,6 +98,35 @@ test("the plugins offered come by category, a computer-only one marked so", asyn
   ).toHaveCount(0);
 });
 
+for (const menuBarShown of [false, true])
+  test(`the sidebar stepping aside keeps the row of tabs as it was drawn (menu bar ${menuBarShown ? "shown" : "hidden"})`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1200, height: 760 });
+    await openApp(page, { settings: { menuBarShown } });
+    await pasteMarkdown(page, "# 第三章");
+    const sidebar = page.locator(".sidebar");
+    await emit(page, "menu-toggle-sidebar");
+    await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
+    const parts = [".island-row", ".tab-bar", ".tab-pill"];
+    await page.evaluate((parts) => {
+      (window as unknown as { __drawn: Element[] }).__drawn = parts.map(
+        (part) => document.querySelector(part)!,
+      );
+    }, parts);
+    await page.setViewportSize({ width: 480, height: 760 });
+    await expect(sidebar).toHaveClass(/sidebar-collapsed/);
+    await settled(page);
+    const kept = await page.evaluate(
+      (parts) =>
+        (window as unknown as { __drawn: Element[] }).__drawn.map(
+          (el, i) => el.isConnected && document.querySelector(parts[i]!) === el,
+        ),
+      parts,
+    );
+    expect(kept).toEqual([true, true, true]);
+  });
+
 test("too narrow for the islands at their least, the sidebar steps aside, then the AI folds; they come back in turn", async ({
   page,
 }) => {

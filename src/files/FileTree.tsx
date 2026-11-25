@@ -32,6 +32,7 @@ import { isWithin } from "../utils/path";
 import type { FileOpenHow } from "./tree-shared";
 import { useTreeView } from "./useTreeData";
 import { useRowMenu } from "./useRowMenu";
+import { collapseAllItem } from "./useTreeCommands";
 import { useTreeEdits } from "./useTreeEdits";
 import { RenameProvider } from "./useRename";
 import { TreeSelectionContext, useTreeSelection } from "./tree-selection";
@@ -200,7 +201,7 @@ export function FileTree({
           },
         },
         "separator",
-        { label: t.treeCollapseAll, onSelect: view.collapseAll },
+        collapseAllItem(t, view.collapseAll),
       ],
     });
   };

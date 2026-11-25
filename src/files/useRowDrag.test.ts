@@ -3,7 +3,7 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { TreeSelection } from "./tree-selection";
 import { useRowDrag } from "./useRowDrag";
-import { isDraggingOut, LEAVE_AFTER_MS } from "./drag-out";
+import { LEAVE_AFTER_MS, rowsOut } from "./drag-out";
 
 const ipc = vi.hoisted(() => ({
   out: null as null | ((took: boolean) => void),
@@ -100,13 +100,13 @@ it("hands the picked rows to the system's drag once the mouse leaves the window"
   // The folder carries what is inside it; the drag in the page is over.
   expect(ipc.dragOut).toHaveBeenCalledWith(["/proj/b.md", "/proj/notes"]);
   expect(result.current.drag).toBeNull();
-  expect(isDraggingOut()).toBe(true);
+  expect(rowsOut()).not.toBeNull();
   // The release the system's drag takes moves nothing.
   act(() => pointer("pointerup", -100, 20));
   expect(ipc.transfer).not.toHaveBeenCalled();
 
   await act(async () => ipc.out?.(true));
-  expect(isDraggingOut()).toBe(false);
+  expect(rowsOut()).toBeNull();
 });
 
 it("keeps a pen's drag in the window, where it can drop", () => {
@@ -121,7 +121,7 @@ it("lets go of a drag out whose end never came at the next press", () => {
   act(() => pointer("pointermove", -100, 20));
   act(() => vi.advanceTimersByTime(LEAVE_AFTER_MS));
   vi.useRealTimers();
-  expect(isDraggingOut()).toBe(true);
+  expect(rowsOut()).not.toBeNull();
   act(() => pointer("pointerdown", 20, 20));
-  expect(isDraggingOut()).toBe(false);
+  expect(rowsOut()).toBeNull();
 });

@@ -76,7 +76,7 @@ function setTabIndex(el: HTMLElement, value: "0" | "-1") {
   if (el.getAttribute("tabindex") !== value) el.setAttribute("tabindex", value);
 }
 
-function level(el: HTMLElement): number {
+export function rowLevel(el: HTMLElement): number {
   return Number(el.getAttribute("aria-level")) || 1;
 }
 
@@ -213,7 +213,7 @@ export function useTreeKeys<T extends HTMLElement>() {
           else if (
             expanded === "true" &&
             items[at + 1] &&
-            level(items[at + 1]) > level(item)
+            rowLevel(items[at + 1]) > rowLevel(item)
           )
             next = items[at + 1];
           break;
@@ -223,7 +223,7 @@ export function useTreeKeys<T extends HTMLElement>() {
             next = items
               .slice(0, at)
               .reverse()
-              .find((el) => level(el) < level(item));
+              .find((el) => rowLevel(el) < rowLevel(item));
           break;
         case "Enter":
         case " ":

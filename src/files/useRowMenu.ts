@@ -22,7 +22,7 @@ import type { FileOpenHow } from "./tree-shared";
 import { type TreeRow, type TreeSelection } from "./tree-selection";
 import type { FileUndo } from "./useFileUndo";
 import { useTreeTrash } from "./useTreeTrash";
-import { useTreeCommands } from "./useTreeCommands";
+import { collapseAllItem, useTreeCommands } from "./useTreeCommands";
 import { useTreeClipboard } from "./useTreeClipboard";
 import { clipboardItems, groupMenuItems } from "./tree-menu-items";
 import type { TreeTransfer } from "./useTreeTransfer";
@@ -78,6 +78,7 @@ export function useRowMenu(input: {
     trash: (rows) => void askTrash(rows),
     clip,
     undo: input.fileUndo.act,
+    collapseAll: onCollapseAll,
   });
 
   const openGroupMenu = useCallback(
@@ -142,10 +143,7 @@ export function useRowMenu(input: {
       if (clipboard.length) items.push("separator", ...clipboard);
       items.push("separator", ...pathItems(t, path, root));
       if (path === root)
-        items.push("separator", {
-          label: t.treeCollapseAll,
-          onSelect: onCollapseAll,
-        });
+        items.push("separator", collapseAllItem(t, onCollapseAll));
       if (path !== root)
         items.push({
           label: t.treeRenameItem,

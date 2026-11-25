@@ -9,7 +9,7 @@ import type { SearchScope } from "./file-search";
 import type { OpenFolders } from "./useDiskWatch";
 import type { Trashing } from "./file-undo";
 import type { Strings } from "../i18n/strings";
-import { isInside, parentDir } from "../utils/path";
+import { isInside, isWithin, parentDir } from "../utils/path";
 import { explainError } from "../utils/error-explain";
 import { errorCode } from "../utils/error-text";
 import { fs } from "../platform/ipc";
@@ -114,6 +114,19 @@ export function canMoveInto(
   if (isDir && (into === path || isInside(into, path))) return false;
   return true;
 }
+
+/** Whether rows can go into `dir`: a copy may go beside itself, neither
+ *  into itself. */
+export const canTakeInto = (
+  rows: readonly { path: string; isDir: boolean }[],
+  dir: string,
+  copy: boolean,
+) =>
+  rows.every((row) =>
+    copy
+      ? !(row.isDir && isWithin(dir, row.path))
+      : canMoveInto(row.path, row.isDir, dir),
+  );
 
 /** The folder something let go at (x, y) over the tree `tree` goes into:
  *  a folder's row, a file's row's folder, the tree's own on its blank;

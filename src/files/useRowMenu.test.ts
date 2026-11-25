@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { formatCombo } from "../utils/shortcuts";
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import en from "../i18n/locales/en";
@@ -82,8 +83,10 @@ describe("a tree row's menu", () => {
     expect(folder).not.toContain(en.treeTrash);
   });
 
-  it("the root's menu folds every folder; a row's does not offer it", () => {
-    expect(labelsFor("/proj", true).labels).toContain(en.treeCollapseAll);
+  it("the root's menu folds every folder, its keys shown; a row's does not offer it", () => {
+    expect(labelsFor("/proj", true).item(en.treeCollapseAll)?.accel).toBe(
+      formatCombo("mod+arrowleft"),
+    );
     expect(labelsFor("/proj/sub", true).labels).not.toContain(
       en.treeCollapseAll,
     );
