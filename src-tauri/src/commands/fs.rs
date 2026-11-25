@@ -361,6 +361,7 @@ pub(super) async fn migrate_images(
 #[cfg_attr(test, specta::specta)]
 pub async fn write_text_file(
     app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
     path: String,
     contents: String,
 ) -> Result<(), String> {
@@ -373,7 +374,8 @@ pub async fn write_text_file(
                 .map_err(|e| e.to_string())?;
         }
     }
-    crate::atomic::write(Path::new(&path), contents)
+    let by = Some(window.label().to_string());
+    crate::atomic::write_by(Path::new(&path), contents, by)
         .await
         .map_err(|e| e.to_string())
 }
@@ -384,6 +386,7 @@ pub async fn write_text_file(
 #[cfg_attr(test, specta::specta)]
 pub async fn write_base64_file(
     app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
     path: String,
     data: String,
 ) -> Result<(), String> {
@@ -393,7 +396,8 @@ pub async fn write_base64_file(
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(data.as_bytes())
         .map_err(|e| e.to_string())?;
-    crate::atomic::write(Path::new(&path), bytes)
+    let by = Some(window.label().to_string());
+    crate::atomic::write_by(Path::new(&path), bytes, by)
         .await
         .map_err(|e| e.to_string())
 }

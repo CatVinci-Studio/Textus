@@ -87,20 +87,23 @@ fn watch_plan<'a>(
         .collect()
 }
 
-static OWN_WRITES: Mutex<Vec<(PathBuf, Instant)>> = Mutex::new(Vec::new());
+/// What the app wrote lately, when, and the window whose save it was: only
+/// that window's tree takes it as its own; `None`, no window's tree.
+static OWN_WRITES: Mutex<Vec<(PathBuf, Instant, Option<String>)>> = Mutex::new(Vec::new());
 
 /// `path` with its folder canonical, as the system reports changes in it.
 fn canonical(path: &Path) -> PathBuf {
     crate::atomic::real_path(path).unwrap_or_else(|| path.to_path_buf())
 }
 
-/// The app is about to write over `path`: its change is not news to the tree.
-pub(crate) fn note_own_write(path: &Path) {
+/// The app is about to write over `path`, for the window labelled `by` or
+/// for none: its change is not news to that window's tree, or to any.
+pub(crate) fn note_own_write(path: &Path, by: Option<&str>) {
     let path = canonical(path);
     let now = Instant::now();
     let mut own = OWN_WRITES.lock().unwrap_or_else(|e| e.into_inner());
-    own.retain(|(_, at)| now.duration_since(*at) < OWN_FOR);
-    own.push((path, now));
+    own.retain(|(_, at, _)| now.duration_since(*at) < OWN_FOR);
+    own.push((path, now, by.map(str::to_string)));
 }
 
 /// Whether the `index`th path of an event of `kind` can be one the app
@@ -121,10 +124,12 @@ fn as_written(kind: &EventKind, index: usize, path: &Path) -> bool {
     }
 }
 
-fn is_own_write(path: &Path) -> bool {
+/// Whether the window labelled `window` wrote `path` lately.
+fn is_own_write(path: &Path, window: &str) -> bool {
     let own = OWN_WRITES.lock().unwrap_or_else(|e| e.into_inner());
-    own.iter()
-        .any(|(p, at)| p == path && at.elapsed() < OWN_FOR)
+    own.iter().any(|(p, at, by)| {
+        p == path && at.elapsed() < OWN_FOR && by.as_deref().is_none_or(|by| by == window)
+    })
 }
 
 /// What one event changed: the watched folders it touched, or `None` when
@@ -196,15 +201,20 @@ async fn coalesce(
     }
 }
 
-/// A watcher whose changes, gathered, go to `send`, and the folders it
-/// watches, which the caller fills.
-fn watcher(send: impl FnMut(DirsChanged) + Send + 'static) -> notify::Result<WindowWatch> {
+/// The window labelled `window`'s watcher, whose changes, gathered, go to
+/// `send`, and the folders it watches, which the caller fills.
+fn watcher(
+    window: &str,
+    send: impl FnMut(DirsChanged) + Send + 'static,
+) -> notify::Result<WindowWatch> {
     let (tx, rx) = mpsc::unbounded_channel();
     let watcher = notify::recommended_watcher(move |event| {
         let _ = tx.send(event);
     })?;
     let known = Known::default();
-    tauri::async_runtime::spawn(coalesce(rx, known.clone(), is_own_write, send));
+    let window = window.to_string();
+    let own = move |path: &Path| is_own_write(path, &window);
+    tauri::async_runtime::spawn(coalesce(rx, known.clone(), own, send));
     Ok(WindowWatch {
         watcher,
         known,
@@ -240,7 +250,7 @@ pub async fn tree_watch(
     }
     if !watches.by_window.contains_key(label) {
         let (app, to) = (window.app_handle().clone(), label.to_string());
-        let watch = watcher(move |changed| {
+        let watch = watcher(label, move |changed| {
             let _ = app.emit_to(
                 tauri::EventTarget::webview_window(to.as_str()),
                 EVENT,

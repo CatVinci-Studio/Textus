@@ -145,7 +145,7 @@ async fn a_real_folder_reports_files_made_renamed_and_removed() {
     let dir = tempfile::tempdir().unwrap();
     let given = dir.path().to_string_lossy().to_string();
     let (out, sent) = std_mpsc::channel();
-    let mut watch = watcher(move |c| {
+    let mut watch = watcher("main", move |c| {
         let _ = out.send(c);
     })
     .unwrap();
@@ -178,6 +178,23 @@ async fn a_real_folder_reports_files_made_renamed_and_removed() {
     // Taken away by another app just after: news, however new the write.
     std::fs::remove_file(&own).unwrap();
     assert_eq!(next(), expect);
+
+    // Saved from another window: news to this one's tree; from this one, not.
+    let theirs = dir.path().join("theirs.md");
+    std::fs::write(&theirs, "# Theirs").unwrap();
+    assert_eq!(next(), expect);
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    while sent.try_recv().is_ok() {}
+    crate::atomic::write_by(&theirs, "# Theirs, again", Some("other".into()))
+        .await
+        .unwrap();
+    assert_eq!(next(), expect);
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    while sent.try_recv().is_ok() {}
+    crate::atomic::write_by(&theirs, "# Theirs, mine now", Some("main".into()))
+        .await
+        .unwrap();
+    assert!(sent.recv_timeout(Duration::from_secs(1)).is_err());
 
     // The tree reading the folder is not a change: no loop.
     for entry in std::fs::read_dir(dir.path()).unwrap() {
@@ -290,7 +307,7 @@ async fn a_folder_watched_whole_reports_its_open_folders_alone() {
     let given = dir.path().to_string_lossy().to_string();
     let open_given = open.to_string_lossy().to_string();
     let (out, sent) = std_mpsc::channel();
-    let mut watch = watcher(move |c| {
+    let mut watch = watcher("main", move |c| {
         let _ = out.send(c);
     })
     .unwrap();
@@ -308,4 +325,17 @@ async fn a_folder_watched_whole_reports_its_open_folders_alone() {
         dirs.extend(sent.recv_timeout(Duration::from_secs(10)).unwrap().dirs);
     }
     assert!(!dirs.iter().any(|d| d.ends_with("folded")), "{dirs:?}");
+}
+
+#[test]
+fn a_save_is_its_own_window_s_alone_and_one_for_no_window_is_every_window_s() {
+    let dir = tempfile::tempdir().unwrap();
+    let (saved, written) = (dir.path().join("saved.md"), dir.path().join("written.md"));
+    note_own_write(&saved, Some("a"));
+    note_own_write(&written, None);
+    let (saved, written) = (canonical(&saved), canonical(&written));
+    assert!(is_own_write(&saved, "a"));
+    assert!(!is_own_write(&saved, "b"));
+    assert!(is_own_write(&written, "a"));
+    assert!(is_own_write(&written, "b"));
 }
