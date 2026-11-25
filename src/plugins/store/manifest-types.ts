@@ -130,6 +130,13 @@ export interface FolderDocumentContribution {
   documents: string[];
 }
 
+/** A file type opened as plain text in the source editor, editable,
+ *  coloured as `language` (a fence's name: CodeMirror's or a plugin's). */
+export interface TextFileContribution {
+  extensions: string[];
+  language: string | null;
+}
+
 /** A code language coloured from a grammar file of the plugin's
  *  (editor/code/code-grammar.ts), named in a fence by its id or an alias. */
 export interface CodeLanguageContribution {
@@ -273,6 +280,7 @@ export interface Contributes {
   customEditors: CustomEditorContribution[];
   documentTypes: DocumentTypeContribution[];
   folderDocuments: FolderDocumentContribution[];
+  textFiles: TextFileContribution[];
   fileIconThemes: FileIconThemeContribution[];
   settings: SettingContribution[];
   /** A page of its own in Settings, a webview. */

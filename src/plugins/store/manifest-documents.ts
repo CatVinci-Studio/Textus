@@ -2,6 +2,7 @@ import type {
   CodeLanguageContribution,
   DocumentTypeContribution,
   FolderDocumentContribution,
+  TextFileContribution,
 } from "./manifest-types";
 import { ManifestError, list, object, text, type Json } from "./manifest-json";
 import { TEXT_DOCUMENT_EXTENSIONS } from "../../platform/bindings/files";
@@ -24,18 +25,7 @@ export function parseDocumentTypes(c: Json): DocumentTypeContribution[] {
   return list(c.documentTypes, "contributes.documentTypes").map((x, i) => {
     const at = `contributes.documentTypes[${i}]`;
     const o = object(x, at);
-    const extensions = list(o.extensions, `${at}.extensions`).map((e, j) => {
-      const ext = text(e, `${at}.extensions[${j}]`)
-        .replace(/^\./, "")
-        .toLowerCase();
-      if (!EXTENSION.test(ext))
-        throw new ManifestError(`${at}.extensions[${j}] isn't an extension.`);
-      if (OWN.includes(ext))
-        throw new ManifestError(`${at}.extensions[${j}] is Textus's own.`);
-      return ext;
-    });
-    if (!extensions.length)
-      throw new ManifestError(`${at}.extensions is empty.`);
+    const extensions = extensionsOf(o.extensions, `${at}.extensions`);
     const keep = o.keep === undefined ? {} : object(o.keep, `${at}.keep`);
     const blockStarts = list(keep.blockStarts, `${at}.keep.blockStarts`).map(
       (s, j) => text(s, `${at}.keep.blockStarts[${j}]`),
@@ -48,6 +38,39 @@ export function parseDocumentTypes(c: Json): DocumentTypeContribution[] {
         blockStarts.length || braces || jsx
           ? { blockStarts, braces, jsx }
           : null,
+    };
+  });
+}
+
+/** An extension in `list`, without its dot, that isn't Textus's own. */
+function extensionsOf(value: unknown, at: string): string[] {
+  const extensions = list(value, at).map((e, j) => {
+    const ext = text(e, `${at}[${j}]`).replace(/^\./, "").toLowerCase();
+    if (!EXTENSION.test(ext))
+      throw new ManifestError(`${at}[${j}] isn't an extension.`);
+    if (OWN.includes(ext))
+      throw new ManifestError(`${at}[${j}] is Textus's own.`);
+    return ext;
+  });
+  if (!extensions.length) throw new ManifestError(`${at} is empty.`);
+  return extensions;
+}
+
+/** `contributes.textFiles`: extensions opened as plain text to edit in the
+ *  source editor, coloured as the fence language named. */
+export function parseTextFiles(c: Json): TextFileContribution[] {
+  return list(c.textFiles, "contributes.textFiles").map((x, i) => {
+    const at = `contributes.textFiles[${i}]`;
+    const o = object(x, at);
+    const language =
+      o.language === undefined
+        ? null
+        : text(o.language, `${at}.language`).toLowerCase();
+    if (language !== null && !LANGUAGE_NAME.test(language))
+      throw new ManifestError(`${at}.language isn't a fence's language.`);
+    return {
+      extensions: extensionsOf(o.extensions, `${at}.extensions`),
+      language,
     };
   });
 }

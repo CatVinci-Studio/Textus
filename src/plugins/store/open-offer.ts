@@ -24,21 +24,24 @@ import { explainError } from "../../utils/error-explain";
  * offered then and there, to install or turn on and open the file with.
  */
 
-/** The official plugin in the catalog whose custom editor opens `path`. */
+/** The official plugin in the catalog whose custom editor opens `path`,
+ *  or that edits it as text. */
 function catalogEditorFor(
   path: string,
   items: CatalogItem[],
 ): CatalogItem | null {
   const name = basename(path);
+  const ext = name.slice(name.lastIndexOf(".") + 1).toLowerCase();
   return (
     items.find(
-      (item) =>
-        item.official &&
-        item.manifest.contributes.customEditors.some(
+      ({ official, manifest: { contributes } }) =>
+        official &&
+        (contributes.customEditors.some(
           (editor) =>
             editor.priority === "default" &&
             editor.filenamePatterns.some((p) => matchesFilename(p, name)),
-        ),
+        ) ||
+          contributes.textFiles.some((type) => type.extensions.includes(ext))),
     ) ?? null
   );
 }

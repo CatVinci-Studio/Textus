@@ -20,6 +20,7 @@ import {
   WebPagePane,
 } from "../../plugins/views/plugin-views";
 import { setPreviewExtras } from "../../editor/preview-extras";
+import { textFileOf } from "../../files/document-name";
 
 // Every preview draws what plugins draw (a chart, a board, their inline
 // syntax), as documents do.
@@ -162,7 +163,7 @@ export function DocumentViews({
               <Suspense fallback={null}>
                 <StartPage t={t} />
               </Suspense>
-            ) : tab.sourceMode ? (
+            ) : tab.sourceMode || textFileOf(tab.path) ? (
               <KeptWhileHidden
                 shown={tab.id === activeTabId || !!pane}
                 kind="source-view"

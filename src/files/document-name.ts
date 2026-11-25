@@ -42,3 +42,23 @@ export function documentTypeOf(name: string | null): DocumentType | null {
 /** Whether a file name is a document's, listed before every other file. */
 export const isDocumentName = (name: string): boolean =>
   documentTypeOf(name) !== null;
+
+/** A text file that isn't a document, shown as plain text in the source
+ *  editor: editable and coloured as `language` when a running plugin's
+ *  `textFiles` claims its extension, otherwise read-only and coloured by
+ *  its name. Null for a document. */
+export interface TextFileType {
+  language: string | null;
+  claimed: boolean;
+}
+
+export function textFileOf(path: string | null): TextFileType | null {
+  if (!path || isDocumentName(path)) return null;
+  const file = basename(path);
+  const ext = file.slice(file.lastIndexOf(".") + 1).toLowerCase();
+  for (const record of runningPlugins(pluginsSnapshot()))
+    for (const type of record.manifest.contributes.textFiles)
+      if (type.extensions.includes(ext))
+        return { language: type.language, claimed: true };
+  return { language: null, claimed: false };
+}
