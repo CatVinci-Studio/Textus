@@ -1018,6 +1018,8 @@ export default {
   diagramEngineHint:
     "Pele 画图更快，但排版和 GitHub、Mermaid 不完全一样，标签里的 HTML 等少数写法不支持；它画不了的图会自动交给 Mermaid。",
   codeLineNumbersLabel: "代码块显示行号",
+  codeEnterTwiceLeavesLabel: "代码块中连按两次 Enter 跳出",
+  codeEnterTwiceLeavesHint: "关掉后，在最后一行按 ↓ 跳出。",
   firstLineIndentLabel: "首行缩进",
   emptyLineHint: "输入 / 插入内容",
   colorSwatchesLabel: "颜色代码前的色块",

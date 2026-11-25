@@ -251,8 +251,10 @@ export function parseContributes(raw: unknown, id: string): Contributes {
       const o = object(x, at);
       const where =
         o.where === undefined ? "any" : text(o.where, `${at}.where`);
-      if (where !== "math" && where !== "text" && where !== "any")
-        throw new ManifestError(`${at}.where must be "math", "text" or "any".`);
+      if (!["math", "text", "any", "code"].includes(where))
+        throw new ManifestError(
+          `${at}.where must be "math", "text", "any" or "code".`,
+        );
       const pattern = text(o.pattern, `${at}.pattern`);
       // As it is compiled: unicode, at the caret's end.
       try {

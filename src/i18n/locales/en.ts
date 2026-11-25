@@ -1119,6 +1119,9 @@ type /name in a conversation to use one.
   diagramEngineHint:
     "Pele is faster, but lays diagrams out differently from GitHub and Mermaid and skips a few features, such as HTML in labels; Mermaid draws whatever Pele can't.",
   codeLineNumbersLabel: "Line numbers in code blocks",
+  codeEnterTwiceLeavesLabel: "Press Enter twice to leave a code block",
+  codeEnterTwiceLeavesHint:
+    "When off, press Down on the last line to leave it.",
   firstLineIndentLabel: "First-line indent",
   emptyLineHint: "Type / to insert",
   colorSwatchesLabel: "Swatches before colour codes",

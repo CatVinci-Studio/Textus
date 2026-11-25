@@ -269,6 +269,7 @@ describe("a plugin's manifest", () => {
         completions: [
           { id: "catvinci.example.tex", where: "math", pattern: "\\\\[a-z]*" },
           { id: "catvinci.example.any", pattern: "@\\w*", title: "%dates%" },
+          { id: "catvinci.example.py", where: "code", pattern: "\\w+" },
         ],
       },
     });
@@ -280,6 +281,7 @@ describe("a plugin's manifest", () => {
         pattern: "@\\w*",
         title: "%dates%",
       },
+      { id: "catvinci.example.py", where: "code", pattern: "\\w+" },
     ]);
     const bad = (c: object) => () =>
       parseManifest({ ...base, contributes: { completions: [c] } });
@@ -287,7 +289,7 @@ describe("a plugin's manifest", () => {
       /not a regular expression/,
     );
     expect(
-      bad({ id: "catvinci.example.x", where: "code", pattern: "a" }),
+      bad({ id: "catvinci.example.x", where: "table", pattern: "a" }),
     ).toThrow(/where/);
     expect(bad({ id: "other.x", pattern: "a" })).toThrow(/must start with/);
   });

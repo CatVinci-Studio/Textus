@@ -1072,6 +1072,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   diagramEngineHint:
     "Pele는 더 빠르게 그리지만 배치가 GitHub·Mermaid와 다르고, 레이블 속 HTML 등 일부 기능은 지원하지 않습니다. Pele가 그리지 못하는 다이어그램은 Mermaid가 그립니다.",
   codeLineNumbersLabel: "코드 블록에 줄 번호 표시",
+  codeEnterTwiceLeavesLabel: "Enter를 두 번 눌러 코드 블록 나가기",
+  codeEnterTwiceLeavesHint: "끄면 마지막 줄에서 ↓를 눌러 나갑니다.",
   firstLineIndentLabel: "첫 줄 들여쓰기",
   emptyLineHint: "/를 입력해 삽입",
   colorSwatchesLabel: "색상 코드 앞 색상 견본",

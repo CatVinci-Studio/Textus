@@ -18,6 +18,7 @@ import {
 import type {
   CompletionAnswer,
   CompletionContext,
+  CompletionPlace,
   CompletionSource,
   PanelItem,
 } from "./sources";
@@ -40,6 +41,8 @@ export interface CaretContext {
   /** After it, to the end of its block, as far. */
   after: string;
   inMath: boolean;
+  /** In a code block: its language, "" for none. */
+  language?: string;
   /** The caret's position in the editor's own terms. */
   caret: number;
 }
@@ -60,6 +63,9 @@ export interface CompletionHost {
   coords(pos: number): { left: number; top: number; bottom: number };
   focus(): void;
 }
+
+const placeOf = (context: CaretContext): CompletionPlace =>
+  context.language !== undefined ? "code" : context.inMath ? "math" : "text";
 
 /** Sources seen answering a list they filter themselves: asked again on
  *  every key, the ask before called off. */
@@ -274,7 +280,7 @@ export function completionSession(host: CompletionHost): CompletionSession {
     const sources = host.sources();
     const context = sources.length ? host.context() : null;
     const matches = context
-      ? matchSources(sources, context.text, context.inMath)
+      ? matchSources(sources, context.text, placeOf(context))
       : [];
     if (!context || !matches.length) {
       close();
@@ -285,6 +291,7 @@ export function completionSession(host: CompletionHost): CompletionSession {
       text: context.text,
       after: context.after,
       inMath: context.inMath,
+      ...(context.language === undefined ? {} : { language: context.language }),
       path: host.path(),
     };
     for (const match of matches) {

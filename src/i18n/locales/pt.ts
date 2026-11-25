@@ -1177,6 +1177,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   diagramEngineHint:
     "O Pele desenha mais rápido, mas organiza os diagramas de forma diferente do GitHub e do Mermaid e não suporta alguns recursos, como HTML nos rótulos; o Mermaid desenha o que o Pele não consegue.",
   codeLineNumbersLabel: "Números de linha nos blocos de código",
+  codeEnterTwiceLeavesLabel:
+    "Pressionar Enter duas vezes sai do bloco de código",
+  codeEnterTwiceLeavesHint:
+    "Desativado: pressione ↓ na última linha para sair.",
   firstLineIndentLabel: "Recuo da primeira linha",
   emptyLineHint: "Digite / para inserir",
   colorSwatchesLabel: "Amostras antes dos códigos de cor",

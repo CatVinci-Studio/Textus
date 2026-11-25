@@ -78,7 +78,13 @@ export function withEditorInput(editor: Editor, env: CoreEnv): Editor {
       // The block keys: after the inline ones above (enclosures, autopairs,
       // headings, callouts), ahead of the preset keymaps, which Milkdown adds
       // last. The order is pinned in editor-extensions.test.ts.
-      .use(editing(blockKeysPlugin))
+      .use(
+        editing(
+          blockKeysPlugin({
+            codeEnterTwiceLeaves: () => settings.current.codeEnterTwiceLeaves,
+          }),
+        ),
+      )
       .use(editing(tabExtendPlugin))
       .use(editing(tabStaysPlugin))
       .use(editing(moveBlockPlugin))

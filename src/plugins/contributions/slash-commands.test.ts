@@ -25,7 +25,7 @@ const item = (label: string, keywords?: string) => ({
 
 /** What the panel's / group lists for `text` before the caret. */
 function labels(text: string): string[] {
-  const match = matchSources(completionSources(), text, false).find(
+  const match = matchSources(completionSources(), text, "text").find(
     (m) => m.source.id === "textus.slash",
   );
   if (!match) return [];
@@ -49,7 +49,7 @@ it("finds an item by its name, its English name, or a Chinese name in pinyin", (
 });
 
 it("replaces only the / word, not the space before it", () => {
-  const match = matchSources(completionSources(), "see /tab", false).find(
+  const match = matchSources(completionSources(), "see /tab", "text").find(
     (m) => m.source.id === "textus.slash",
   );
   expect(match?.match).toBe("/tab");

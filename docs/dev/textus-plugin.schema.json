@@ -605,8 +605,8 @@
                 "description": "Starts with the plugin's id and a dot."
               },
               "where": {
-                "enum": ["math", "text", "any"],
-                "description": "In a formula, in the text, or both (the default)."
+                "enum": ["math", "text", "any", "code"],
+                "description": "In a formula, in the text, or both (the default); \"code\" (API 1.11): in a code block only, which no other value reaches."
               },
               "pattern": {
                 "type": "string",
