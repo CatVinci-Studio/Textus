@@ -618,9 +618,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   treeSort: "Ordenar",
   treeSortName: "Por nome",
   treeShowHidden: "Mostrar arquivos ocultos",
+  treeCollapseAll: "Recolher tudo",
   treeSortModified: "Por data de modificação",
   treeRenameItem: "Renomear…",
-  treeRename: "Renomear",
   treeRenamePrompt: "Novo nome",
   treeUpdateLinksConfirm:
     "Atualizar os links para e de “{name}” para que continuem funcionando?",
@@ -671,6 +671,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   errorAgentRefused: "O agente recusou.",
   errorAgentStopped: "O agente parou.",
   errorAlreadyThere: "Ele já está nessa pasta.",
+  errorGoneFromTrash: "Já não está na lixeira.",
   errorNotFolder: "Isso não é uma pasta.",
   errorTrashShownFolder:
     "A pasta que a árvore mostra não pode ir para a lixeira.",
@@ -734,6 +735,27 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     other: "{n} itens copiados para “{folder}”",
   },
   treeCopyFailed: "Não foi possível copiar {name}",
+  treeUndoChanged: "Nada foi desfeito: estes itens mudaram desde então.",
+  treeUndoGone:
+    "Nada foi desfeito: estes itens já não estão onde foram colocados.",
+  treeUndoTaken:
+    "Nada foi desfeito: agora há outra coisa onde estes itens estavam.",
+  treeMoved: {
+    one: "{n} item movido para “{folder}”",
+    many: "{n} itens movidos para “{folder}”",
+    other: "{n} itens movidos para “{folder}”",
+  },
+  treeTrashed: {
+    one: "{n} item movido para a lixeira",
+    many: "{n} itens movidos para a lixeira",
+    other: "{n} itens movidos para a lixeira",
+  },
+  treeCopyName: "{name} cópia",
+  treeDuplicate: "Duplicar",
+  treeNameClash:
+    "“{name}” já está em “{folder}”. Substituir (o que está lá vai para a lixeira) ou manter os dois?",
+  treeReplace: "Substituir",
+  treeKeepBoth: "Manter os dois",
   outlineCollapse: "Recolher",
   outlineExpand: "Expandir",
   outlineExpandAll: "Expandir tudo",
@@ -1479,6 +1501,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   autoSuggestFilenameLabel: "Sugerir um nome ao salvar um arquivo novo",
   confirmTreeCopyLabel:
     "Perguntar antes de copiar arquivos soltos na árvore de arquivos",
+  confirmTreeTrashLabel:
+    "Perguntar antes de mover arquivos da árvore de arquivos para a lixeira",
   autosaveLabel: "Salvar automaticamente",
   settingsFileLabel: "Arquivo de ajustes",
   settingsFileSummary:

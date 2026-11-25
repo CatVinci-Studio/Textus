@@ -11,7 +11,7 @@ import {
   settled,
   sourceOf,
 } from "./helpers";
-import { hasPlugin } from "./plugin-helpers";
+import { hasPlugin, openPath } from "./plugin-helpers";
 
 // Sidebar panels: the plugin list opens a plugin's page in a tab of its
 // own; the sidebar steps aside for the islands and widens by its edge.
@@ -200,6 +200,59 @@ test("the folder's tools coming on hover move none of the tree's rows", async ({
   await row.hover();
   await expect(page.locator(".tree-tool").first()).toBeVisible();
   expect((await row.boundingBox())!.y).toBe(before);
+});
+
+test("scrolled into, the folders' rows stay at the top until their rows go by; folded there, it stays in sight", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const fs: Record<string, string> = { "/proj/z.md": "# Z\n" };
+    for (let i = 10; i < 50; i++) {
+      fs[`/proj/notes/inner/i${i}.md`] = "# I\n";
+      fs[`/proj/notes/n${i}.md`] = "# N\n";
+      fs[`/proj/r${i}.md`] = "# R\n";
+    }
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = fs;
+    w.__devPickFolder = "/proj";
+  });
+  await page.setViewportSize({ width: 1200, height: 600 });
+  await openApp(page);
+  await emit(page, "menu-open-folder");
+  const row = (name: string) =>
+    page.locator(".tree-row", { has: page.getByText(name, { exact: true }) });
+  await row("notes").click();
+  await row("inner").click();
+  await expect(row("i49.md")).toBeAttached();
+  const scroller = page.locator(".sidebar-body");
+  const top = async (name: string) =>
+    (await row(name).boundingBox())!.y - (await scroller.boundingBox())!.y;
+  const height = (await row("notes").boundingBox())!.height;
+
+  await scroller.evaluate((el) => (el.scrollTop = 600));
+  await expect.poll(() => top("notes")).toBeCloseTo(0, 0);
+  expect(await top("inner")).toBeCloseTo(height, 0);
+  // Past inner's last row, inner goes up with it; notes stays.
+  const pastInner = await row("n10.md").evaluate(
+    (el, h) =>
+      el.getBoundingClientRect().top -
+      el.closest(".sidebar-body")!.getBoundingClientRect().top +
+      el.closest(".sidebar-body")!.scrollTop -
+      h / 2,
+    height,
+  );
+  await scroller.evaluate((el, y) => (el.scrollTop = y), pastInner);
+  await expect.poll(() => top("inner")).toBeLessThan(0);
+  expect(await top("notes")).toBeCloseTo(0, 0);
+
+  // Folded from the top, notes stays in sight.
+  await scroller.evaluate((el) => (el.scrollTop = 600));
+  await expect.poll(() => top("notes")).toBeCloseTo(0, 0);
+  await row("notes").click();
+  await expect(row("inner")).toHaveCount(0);
+  const folded = await top("notes");
+  expect(folded).toBeGreaterThanOrEqual(-1);
+  expect(folded).toBeLessThan((await scroller.boundingBox())!.height);
 });
 
 test("a file closed at once opens again at once", async ({ page }) => {
@@ -594,4 +647,106 @@ test("the sidebar stepping aside and back leaves the rows of tabs in place, not 
   );
   expect(kept).toEqual(before.map(() => true));
   await expect(rows).toHaveCount(before.length);
+});
+
+test("Collapse All holds as a folder opens again, things made in the folders below it before", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/proj/a.md": "# A\n", "/proj/notes/deep/d.md": "# D\n" };
+    w.__devPickFolder = "/proj";
+  });
+  await openApp(page, { settings: { language: "en" } });
+  await emit(page, "menu-open-folder");
+  const row = (name: string) =>
+    page.locator(".tree-row", { hasText: new RegExp(`^${name}$`) });
+  await row("notes").click();
+  await row("deep").click();
+  await page.locator(".tree-toolbar").hover();
+  await page.getByRole("button", { name: "New Folder", exact: true }).click();
+  await page.locator(".tree-draft-input").fill("inner");
+  await page.locator(".tree-draft-input").press("Enter");
+  await expect(row("inner")).toBeVisible();
+
+  await page.getByRole("button", { name: "Sort" }).click();
+  await page.getByRole("menuitem", { name: "Collapse All" }).click();
+  await expect(row("deep")).toHaveCount(0);
+  await row("notes").click();
+  await expect(row("deep")).toHaveAttribute("aria-expanded", "false");
+});
+
+test("New makes things in the folder last clicked, folders on the way too; Collapse All folds every folder", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = {
+      "/proj/a.md": "# A\n",
+      "/proj/notes/n.md": "# N\n",
+      "/proj/notes/deep/d.md": "# D\n",
+    };
+    w.__devPickFolder = "/proj";
+  });
+  await openApp(page, { settings: { language: "en" } });
+  await emit(page, "menu-open-folder");
+  const row = (name: string) =>
+    page.locator(".tree-row", { hasText: new RegExp(`^${name}$`) });
+  const files = () =>
+    page.evaluate(() =>
+      Object.keys(
+        (window as unknown as { __devFs: Record<string, string> }).__devFs,
+      ),
+    );
+  const make = async (tool: string, name: string) => {
+    // The folder's tools show while the pointer is over it.
+    await page.locator(".tree-toolbar").hover();
+    await page.getByRole("button", { name: tool, exact: true }).click();
+    const input = page.locator(".tree-draft-input");
+    await input.fill(name);
+    await input.press("Enter");
+  };
+
+  // A folder clicked: in it. A file clicked: in its folder.
+  await row("notes").click();
+  await make("New File", "fresh");
+  await expect.poll(files).toContain("/proj/notes/fresh.md");
+  await row("deep").click();
+  await row("d.md").click();
+  await make("New Folder", "inner");
+  await expect.poll(files).toContain("/proj/notes/deep/inner/.keep");
+
+  // The document in front is elsewhere: nothing but New opens the way.
+  await openPath(page, "/proj/a.md");
+  await expect(page.locator(".tab-pill", { hasText: "a.md" })).toBeVisible();
+
+  // Collapse All, from the Sort menu: no folder below the root stays open.
+  await page.getByRole("button", { name: "Sort" }).click();
+  await page.getByRole("menuitem", { name: "Collapse All" }).click();
+  await expect(row("notes")).toHaveAttribute("aria-expanded", "false");
+  await expect(row("n.md")).toHaveCount(0);
+  await expect(row("a.md")).toBeVisible();
+
+  // New again: the folders on the way to the one last clicked open for it.
+  await make("New File", "later");
+  await expect.poll(files).toContain("/proj/notes/deep/later.md");
+  await expect(row("notes")).toHaveAttribute("aria-expanded", "true");
+
+  // Slashes in the name make the folders on the way, shown open.
+  await make("New Folder", "week/days");
+  await expect.poll(files).toContain("/proj/notes/deep/week/days/.keep");
+  await expect(row("week")).toHaveAttribute("aria-expanded", "true");
+  await expect(row("days")).toBeVisible();
+
+  // The folder last clicked gone (moved elsewhere): New goes to the top.
+  await page.evaluate(() => {
+    const fs = (window as unknown as { __devFs: Record<string, string> })
+      .__devFs;
+    for (const f of Object.keys(fs))
+      if (f.startsWith("/proj/notes/deep/")) delete fs[f];
+  });
+  await emit(page, "tree-dirs-changed", { dirs: ["/proj/notes"], all: false });
+  await expect(row("deep")).toHaveCount(0);
+  await make("New File", "top");
+  await expect.poll(files).toContain("/proj/top.md");
 });

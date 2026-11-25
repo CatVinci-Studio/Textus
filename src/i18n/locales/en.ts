@@ -600,9 +600,9 @@ type /name in a conversation to use one.
   treeSort: "Sort",
   treeSortName: "By name",
   treeShowHidden: "Show Hidden Files",
+  treeCollapseAll: "Collapse All",
   treeSortModified: "By date modified",
   treeRenameItem: "Rename…",
-  treeRename: "Rename",
   treeRenamePrompt: "New name",
   treeUpdateLinksConfirm:
     "Update the links to and from “{name}” so they keep working?",
@@ -651,6 +651,7 @@ type /name in a conversation to use one.
   errorAgentRefused: "The agent turned that down.",
   errorAgentStopped: "The agent stopped.",
   errorAlreadyThere: "It is already in that folder.",
+  errorGoneFromTrash: "It is no longer in the Trash.",
   errorNotFolder: "That isn't a folder.",
   errorTrashShownFolder:
     "The folder the tree shows can't be moved to the Trash.",
@@ -704,6 +705,23 @@ type /name in a conversation to use one.
     other: "Copied {n} items to “{folder}”",
   },
   treeCopyFailed: "Couldn't copy {name}",
+  treeUndoChanged: "Nothing was undone: these changed since.",
+  treeUndoGone: "Nothing was undone: these are no longer where they were put.",
+  treeUndoTaken: "Nothing was undone: something else is now where these were.",
+  treeMoved: {
+    one: "Moved {n} item to “{folder}”",
+    other: "Moved {n} items to “{folder}”",
+  },
+  treeTrashed: {
+    one: "Moved {n} item to the Trash",
+    other: "Moved {n} items to the Trash",
+  },
+  treeCopyName: "{name} copy",
+  treeDuplicate: "Duplicate",
+  treeNameClash:
+    "“{name}” is already in “{folder}”. Replace it (the one there goes to the Trash), or keep both?",
+  treeReplace: "Replace",
+  treeKeepBoth: "Keep Both",
   outlineCollapse: "Collapse",
   outlineExpand: "Expand",
   outlineExpandAll: "Expand All",
@@ -1424,6 +1442,8 @@ type /name in a conversation to use one.
   startPageRecentFiles: "Recent Files",
   autoSuggestFilenameLabel: "Suggest a filename when saving a new file",
   confirmTreeCopyLabel: "Ask before copying files dropped onto the file tree",
+  confirmTreeTrashLabel:
+    "Ask before moving files in the file tree to the Trash",
   autosaveLabel: "Save automatically",
   settingsFileLabel: "Settings file",
   settingsFileSummary: "Import or export the app’s settings and AI history",

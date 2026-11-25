@@ -85,11 +85,35 @@ jobs:
             --title "$PRODUCT_NAME $RELEASE_TAG" --notes "" \
             $([[ "$RELEASE_TAG" == *-* ]] && echo --prerelease)
 
-  # The full suite, once, on the tagged commit: pull requests into main run
-  # only the quick checks (ci.yml). A rebuild of an older tag by hand skips
-  # it, as its commit's suite ran when it was tagged.
-  ci:
+  # The pull request that bumped the version ran the full suite on the tree
+  # this tag points at, and main's own run passed on the commit: then the
+  # suite need not run again (scripts/ci-tested.mjs). Anything else, an
+  # error included, leaves `passed` unset and the suite runs.
+  ci-tested:
     if: github.event_name == 'push'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      passed: ${{ steps.runs.outputs.passed }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - id: runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/ci-tested.mjs --repo "$GITHUB_REPOSITORY" --ref "$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+
+  # Otherwise the full suite, once, on the tagged commit: pull requests
+  # into main run only the quick checks (ci.yml). A rebuild of an older tag
+  # by hand skips it, as its commit's suite ran when it was tagged.
+  ci:
+    needs: ci-tested
+    if: ${{ !cancelled() && github.event_name == 'push' && needs.ci-tested.outputs.passed != 'true' }}
     uses: ./.github/workflows/ci.yml
     with:
       full: true

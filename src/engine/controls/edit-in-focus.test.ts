@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { EDIT_ACTION_EVENT } from "../../utils/events";
+import { EDIT_ACTION_EVENT, FOCUSED_EDIT_EVENT } from "../../utils/events";
 import { editInFocus, typingOutsideDocument } from "./edit-in-focus";
 
 describe("editInFocus", () => {
@@ -65,6 +65,24 @@ describe("editInFocus", () => {
     editInFocus("undo");
     expect(seen).toEqual([]);
     expect(document.execCommand).not.toHaveBeenCalled();
+  });
+
+  it("lets the focused part's own undo go first, the document's after", () => {
+    const tree = document.createElement("div");
+    const row = document.createElement("div");
+    row.tabIndex = 0;
+    tree.append(row);
+    document.body.append(tree);
+    row.focus();
+    let held = true;
+    tree.addEventListener(FOCUSED_EDIT_EVENT, (e) => {
+      if (held) e.preventDefault();
+      held = false;
+    });
+    editInFocus("undo");
+    expect(seen).toEqual([]);
+    editInFocus("undo");
+    expect(seen).toEqual(["undo"]);
   });
 });
 

@@ -19,20 +19,31 @@ vi.mock("../platform/capabilities", async (real) => ({
   },
 }));
 
+const renamed: string[] = [];
+
 const labelsFor = (path: string, isDir: boolean) => {
   const noop = () => {};
   const { result } = renderHook(() =>
-    useRowMenu(
-      "/proj",
-      "/proj",
-      en,
-      noop,
-      noop,
-      noop,
-      noop,
-      null,
-      new TreeSelection(),
-    ),
+    useRowMenu({
+      root: "/proj",
+      linkBase: "/proj",
+      t: en,
+      reload: noop,
+      onFileSelect: noop,
+      setDraft: noop,
+      onEnter: null,
+      selection: new TreeSelection(),
+      fileUndo: {
+        record: () => undefined,
+        show: noop,
+        rowBeside: () => null,
+        act: { undo: () => false, redo: () => false },
+      },
+      rename: (p: string) => void renamed.push(p),
+      treeRef: { current: null },
+      transfer: async () => false,
+      onCollapseAll: noop,
+    }),
   );
   act(() => result.current.openRowMenu({ x: 0, y: 0 }, path, isDir));
   const items = result.current.menu?.items ?? [];
@@ -71,6 +82,13 @@ describe("a tree row's menu", () => {
     expect(folder).not.toContain(en.treeTrash);
   });
 
+  it("the root's menu folds every folder; a row's does not offer it", () => {
+    expect(labelsFor("/proj", true).labels).toContain(en.treeCollapseAll);
+    expect(labelsFor("/proj/sub", true).labels).not.toContain(
+      en.treeCollapseAll,
+    );
+  });
+
   it("a file's Insert Link goes into the saved document in use, offered only then", () => {
     const insertLink = (path: string, isDir = false) =>
       labelsFor(path, isDir).item(en.treeInsertLink);
@@ -84,4 +102,10 @@ describe("a tree row's menu", () => {
     // Not a link to itself.
     expect(insertLink("/proj/a.md")?.disabled).toBe(true);
   });
+});
+
+it("Rename makes the row's name a field, not a dialog", () => {
+  renamed.length = 0;
+  labelsFor("/proj/a.md", false).item(en.treeRenameItem)!.onSelect();
+  expect(renamed).toEqual(["/proj/a.md"]);
 });

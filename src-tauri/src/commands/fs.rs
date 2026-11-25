@@ -3,9 +3,12 @@ use std::path::{Component, Path, PathBuf};
 use tokio::fs;
 
 pub(crate) mod copy_into;
+pub(crate) mod drag_out;
 pub(crate) mod dropped;
 mod pictures;
 mod secrets;
+#[cfg(desktop)]
+pub(crate) mod watch;
 pub(crate) use pictures::*;
 use secrets::not_a_secret;
 

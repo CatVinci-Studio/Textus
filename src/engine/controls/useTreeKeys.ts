@@ -7,7 +7,7 @@ const MORE = "[data-more-rows]";
 
 /** The rows on screen, top to bottom: a folded folder's are not mounted, a
  *  hidden tree (the file tree behind search results) has none. */
-function visibleItems(root: HTMLElement): HTMLElement[] {
+export function visibleItems(root: HTMLElement): HTMLElement[] {
   return Array.from(root.querySelectorAll<HTMLElement>(ITEM)).filter(
     (el) => el.getClientRects().length > 0,
   );
@@ -23,6 +23,55 @@ function firstShown(
   return undefined;
 }
 
+/**
+ * Every row of the tree `root` drawn that a big folder held back, between
+ * the rows `from` and `to` (either way round), or all of them: a range or
+ * Select All then reads them on the page. A drawn folder's rows may hold
+ * another folder's marker, drawn in turn.
+ */
+export function drawHeldRows(
+  root: HTMLElement,
+  from: Element | null = null,
+  to: Element | null = null,
+): void {
+  const [first, last] =
+    from &&
+    to &&
+    from.compareDocumentPosition(to) & Node.DOCUMENT_POSITION_PRECEDING
+      ? [to, from]
+      : [from, to];
+  const between = (marker: Element) =>
+    (!first ||
+      first.compareDocumentPosition(marker) &
+        Node.DOCUMENT_POSITION_FOLLOWING) &&
+    (!last ||
+      last.compareDocumentPosition(marker) & Node.DOCUMENT_POSITION_PRECEDING);
+  for (let i = 0; i < 64; i++) {
+    const held = [...root.querySelectorAll(MORE)].filter(between);
+    if (!held.length) return;
+    for (const marker of held) marker.dispatchEvent(new Event(DRAW_ALL_ROWS));
+  }
+}
+
+/** How long a pause ends what is typed to find a row by its name. */
+const TYPED_FOR_MS = 1000;
+
+/** The row after `at` (or at it, typing on) whose text starts with
+ *  `typed`, going round to the top. */
+function rowNamed(
+  items: readonly HTMLElement[],
+  at: number,
+  typed: string,
+): HTMLElement | undefined {
+  const start = typed.length === 1 ? at + 1 : Math.max(at, 0);
+  for (let i = 0; i < items.length; i++) {
+    const el = items[(start + i) % items.length]!;
+    const name = (el.textContent ?? "").trim().toLocaleLowerCase();
+    if (name.startsWith(typed)) return el;
+  }
+  return undefined;
+}
+
 function setTabIndex(el: HTMLElement, value: "0" | "-1") {
   if (el.getAttribute("tabindex") !== value) el.setAttribute("tabindex", value);
 }
@@ -31,13 +80,16 @@ function level(el: HTMLElement): number {
   return Number(el.getAttribute("aria-level")) || 1;
 }
 
-/** The tree's element (its `ref`) and keyboard handling for it, per the WAI-ARIA tree pattern: one row is in
- *  the tab order, arrows move and fold, Enter and Space click. A row folds
- *  through its `data-tree-toggle` element, else its own click. */
+/** The tree's element (its `ref`) and keyboard handling for it, per the
+ *  WAI-ARIA tree pattern: one row is in the tab order, arrows move and
+ *  fold, Enter and Space click, and typing goes to the next row whose name
+ *  starts with what was typed. A row folds through its `data-tree-toggle`
+ *  element, else its own click. */
 export function useTreeKeys<T extends HTMLElement>() {
   const ref = useRef<T>(null);
   const current = useRef<HTMLElement | null>(null);
   const tabbable = useRef<HTMLElement | null>(null);
+  const typed = useRef({ text: "", at: 0 });
 
   // Keeps exactly one row tabbable as rows come and go, for the cost of
   // the rows that came: a big tree changes often.
@@ -112,6 +164,20 @@ export function useTreeKeys<T extends HTMLElement>() {
       const toggle = () =>
         (item.querySelector<HTMLElement>("[data-tree-toggle]") ?? item).click();
       let next: HTMLElement | undefined;
+      // A letter, or a space within a name being typed, finds a row.
+      const now = Date.now();
+      const typing =
+        now - typed.current.at < TYPED_FOR_MS && typed.current.text;
+      if (e.key.length === 1 && (e.key !== " " || typing)) {
+        const text =
+          (typing ? typed.current.text : "") + e.key.toLocaleLowerCase();
+        typed.current = { text, at: now };
+        e.preventDefault();
+        // One letter pressed again steps through the rows it starts.
+        const same = [...text].every((c) => c === text[0]);
+        rowNamed(items, at, same ? text[0]! : text)?.focus();
+        return;
+      }
       switch (e.key) {
         case "ArrowDown":
           next = items[at + 1];

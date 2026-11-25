@@ -1,14 +1,10 @@
-import { farEntries } from "../platform/far-files";
-import { emitPluginEvent } from "../plugins/app-bridge";
-import { ENTRY_TRASHED_EVENT, sendAppEvent } from "../utils/events";
-import { fill } from "../i18n/fill";
 import {
   useCallback,
   useState,
   type MouseEvent as ReactMouseEvent,
+  type RefObject,
 } from "react";
-import { fs } from "../platform/ipc";
-import { canTrashFiles, isMobileApp } from "../platform/capabilities";
+import { isMobileApp } from "../platform/capabilities";
 import { nativeFiles } from "../platform/native-files";
 
 import { basename, parentDir } from "../utils/path";
@@ -17,20 +13,19 @@ import {
   contributedContextItems,
   lateContextItems,
 } from "../registry/context-menu-items";
-import {
-  showConfirm,
-  showMessage,
-  showPrompt,
-} from "../engine/controls/app-dialog";
 import type { Strings } from "../i18n/strings";
-import { failureText, type TreeDraft } from "./tree-shared";
-import { updateLinksAfterMove } from "./move-links";
+import { trashable, type TreeDraft } from "./tree-shared";
 import { linkingDocument, linkToFile } from "./link-to-file";
 import { pathItems } from "../clipboard/copy-path";
 import { heldByFinger } from "../utils/gesture";
 import type { FileOpenHow } from "./tree-shared";
-import { counted } from "../i18n/current";
-import { outermost, type TreeRow, type TreeSelection } from "./tree-selection";
+import { type TreeRow, type TreeSelection } from "./tree-selection";
+import type { FileUndo } from "./useFileUndo";
+import { useTreeTrash } from "./useTreeTrash";
+import { useTreeCommands } from "./useTreeCommands";
+import { useTreeClipboard } from "./useTreeClipboard";
+import { clipboardItems, groupMenuItems } from "./tree-menu-items";
+import type { TreeTransfer } from "./useTreeTransfer";
 
 /** A row's right-click menu, while it is open. */
 type TreeMenu = {
@@ -42,124 +37,61 @@ type TreeMenu = {
 } | null;
 
 /** The tree's menus: the one open, and a row's context menu - open, new
- *  document or folder, rename, move to Trash. */
-/** Whether `path` goes to a Trash; one in a phone's or a remote folder is
- *  deleted for good. */
-const trashable = (path: string) => canTrashFiles && !farEntries(path);
-
-export function useRowMenu(
-  root: string,
-  linkBase: string,
-  t: Strings,
-  reload: (...dirs: string[]) => void,
-  onFileSelect: (path: string, how?: FileOpenHow) => void,
-  onEntryMoved: (from: string, to: string) => void,
-  setDraft: (draft: TreeDraft) => void,
-  /** The tree narrowed to a folder inside it. */
-  /** Null with a folder opened: the tree shows it whole. */
-  onEnter: ((path: string) => void) | null,
+ *  document or folder, cut, copy, paste, duplicate, rename, move to Trash -
+ *  or that of several rows picked together; and the tree's keys for them. */
+export function useRowMenu(input: {
+  root: string;
+  linkBase: string;
+  t: Strings;
+  reload: (...dirs: string[]) => void;
+  onFileSelect: (path: string, how?: FileOpenHow) => void;
+  setDraft: (draft: TreeDraft) => void;
+  /** The tree narrowed to a folder inside it; null with a folder opened:
+   *  the tree shows it whole. */
+  onEnter: ((path: string) => void) | null;
   /** The rows picked together, which a right-click on one of them acts on. */
-  selection: TreeSelection,
-) {
+  selection: TreeSelection;
+  fileUndo: FileUndo;
+  /** The row's name made a field to type a new one in. */
+  rename: (path: string) => void;
+  treeRef: RefObject<HTMLDivElement | null>;
+  /** Moves or copies rows into a folder (useTreeTransfer). */
+  transfer: TreeTransfer["transfer"];
+  /** The root's menu: every folder folds. */
+  onCollapseAll: () => void;
+}) {
+  const { root, linkBase, t, onFileSelect, setDraft, onEnter } = input;
+  const { selection, rename, onCollapseAll } = input;
   const [menu, setMenu] = useState<TreeMenu>(null);
-  const rename = useCallback(
-    async (path: string) => {
-      const name = await showPrompt(t.treeRenamePrompt, basename(path), {
-        okLabel: t.treeRename,
-        cancelLabel: t.cancel,
-      });
-      if (!name?.trim() || name.trim() === basename(path)) return;
-      try {
-        const to = await fs.renameEntry(path, name);
-        reload(parentDir(path) ?? root);
-        // Open documents follow, as for a move.
-        onEntryMoved(path, to);
-        void updateLinksAfterMove(path, to, linkBase, t);
-      } catch (err) {
-        await showMessage(failureText(t, err, name.trim()));
-      }
-    },
-    [root, linkBase, t, reload, onEntryMoved],
-  );
-  const trash = useCallback(
-    async (path: string, isDir: boolean) => {
-      const name = basename(path);
-      // Without a Trash (Android, a remote folder) the document is deleted
-      // for good.
-      const hasTrash = trashable(path);
-      const ok = await showConfirm(
-        !hasTrash
-          ? fill(t.docDeleteConfirm, { name })
-          : fill(isDir ? t.treeTrashFolderConfirm : t.treeTrashConfirm, {
-              name,
-            }),
-        {
-          okLabel: !hasTrash ? t.docDeleteOk : t.treeTrash,
-          cancelLabel: t.cancel,
-          danger: true,
-        },
-      );
-      if (!ok) return;
-      try {
-        await fs.trashEntry(path, root);
-        reload(parentDir(path) ?? root);
-        // Its open tabs let it go (useDocumentActions).
-        sendAppEvent(ENTRY_TRASHED_EVENT, path);
-        emitPluginEvent("fileDelete", { path });
-      } catch (err) {
-        await showMessage(failureText(t, err, name));
-      }
-    },
-    [root, t, reload],
-  );
+  const { askTrash } = useTreeTrash(input);
+  const clip = useTreeClipboard({
+    treeRef: input.treeRef,
+    transfer: input.transfer,
+    rowsAt: (el) =>
+      selection.rowsFor(el.dataset.path!, el.hasAttribute("aria-expanded")),
+  });
+  const onCommandKey = useTreeCommands({
+    treeRef: input.treeRef,
+    selection,
+    rename,
+    open: (path) => onFileSelect(path),
+    trash: (rows) => void askTrash(rows),
+    clip,
+    undo: input.fileUndo.act,
+  });
 
-  /** Several rows to the Trash at once, after one question; a row inside a
-   *  picked folder goes with it. */
-  const trashMany = useCallback(
-    async (rows: readonly TreeRow[]) => {
-      const ok = await showConfirm(
-        counted(t.treeTrashManyConfirm, rows.length),
-        { okLabel: t.treeTrash, cancelLabel: t.cancel, danger: true },
-      );
-      if (!ok) return;
-      selection.clear();
-      for (const { path } of outermost(rows)) {
-        try {
-          await fs.trashEntry(path, root);
-          reload(parentDir(path) ?? root);
-          sendAppEvent(ENTRY_TRASHED_EVENT, path);
-          emitPluginEvent("fileDelete", { path });
-        } catch (err) {
-          await showMessage(failureText(t, err, basename(path)));
-          return;
-        }
-      }
-    },
-    [root, t, reload, selection],
-  );
-
-  /** The menu of several rows picked together: open its documents, or
-   *  move them all to the Trash. */
   const openGroupMenu = useCallback(
     (at: { x: number; y: number }, rows: readonly TreeRow[]) => {
-      const files = rows.filter((row) => !row.isDir).map((row) => row.path);
-      const items: (ContextMenuItem | "separator")[] = [];
-      if (files.length)
-        items.push(
-          {
-            label: t.treeOpen,
-            onSelect: () => files.forEach((path) => onFileSelect(path)),
-          },
-          "separator",
-        );
-      items.push({
-        label: t.treeTrash,
-        onSelect: () => void trashMany(rows),
-        danger: true,
+      const items = groupMenuItems({
+        t,
+        rows,
+        open: (path) => onFileSelect(path),
+        clip,
+        trash: (rows) => void askTrash(rows),
       });
       setMenu({ ...at, items });
     },
-    [t, onFileSelect, trashMany],
+    [t, onFileSelect, askTrash, clip],
   );
 
   const openRowMenu = useCallback(
@@ -205,18 +137,26 @@ export function useRowMenu(
           onSelect: () => setDraft({ dir, kind: "folder" }),
         },
       );
+      const self = path === root ? [] : [{ path, isDir }];
+      const clipboard = clipboardItems(t, clip, self, dir);
+      if (clipboard.length) items.push("separator", ...clipboard);
       items.push("separator", ...pathItems(t, path, root));
+      if (path === root)
+        items.push("separator", {
+          label: t.treeCollapseAll,
+          onSelect: onCollapseAll,
+        });
       if (path !== root)
         items.push({
           label: t.treeRenameItem,
-          onSelect: () => void rename(path),
+          onSelect: () => rename(path),
         });
       // Without a Trash only documents are deleted: a folder's would be gone
       // for good.
       if (path !== root && (trashable(path) || !isDir))
         items.push({
           label: trashable(path) ? t.treeTrash : t.docDelete,
-          onSelect: () => void trash(path, isDir),
+          onSelect: () => void askTrash([{ path, isDir }]),
           danger: true,
         });
       const added = contributedContextItems("file/context", {
@@ -244,7 +184,18 @@ export function useRowMenu(
         },
       );
     },
-    [root, linkBase, t, setDraft, rename, trash, onFileSelect, onEnter],
+    [
+      root,
+      linkBase,
+      t,
+      setDraft,
+      rename,
+      askTrash,
+      onFileSelect,
+      onEnter,
+      clip,
+      onCollapseAll,
+    ],
   );
   const onRowMenu = useCallback(
     (e: ReactMouseEvent, path: string, isDir: boolean) => {
@@ -260,5 +211,5 @@ export function useRowMenu(
     },
     [openRowMenu, openGroupMenu, selection],
   );
-  return { menu, setMenu, onRowMenu, openRowMenu };
+  return { menu, setMenu, onRowMenu, openRowMenu, onCommandKey };
 }

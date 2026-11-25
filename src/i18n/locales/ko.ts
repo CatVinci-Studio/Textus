@@ -575,9 +575,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeSort: "정렬",
   treeSortName: "이름순",
   treeShowHidden: "숨김 파일 표시",
+  treeCollapseAll: "모두 접기",
   treeSortModified: "수정한 날짜순",
   treeRenameItem: "이름 바꾸기…",
-  treeRename: "이름 바꾸기",
   treeRenamePrompt: "새 이름",
   treeUpdateLinksConfirm:
     "“{name}”(으)로 가는 링크와 그 안의 링크가 계속 작동하도록 업데이트할까요?",
@@ -625,6 +625,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   errorAgentRefused: "에이전트가 이 요청을 거절했습니다.",
   errorAgentStopped: "에이전트가 중지되었습니다.",
   errorAlreadyThere: "이미 그 폴더에 있습니다.",
+  errorGoneFromTrash: "더 이상 휴지통에 없습니다.",
   errorNotFolder: "폴더가 아닙니다.",
   errorTrashShownFolder:
     "파일 트리에 표시된 폴더는 휴지통으로 옮길 수 없습니다.",
@@ -672,6 +673,20 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   treeCopying: "‘{folder}’에 복사하는 중…",
   treeCopied: { other: "항목 {n}개를 ‘{folder}’에 복사했습니다" },
   treeCopyFailed: "{name}을(를) 복사할 수 없습니다",
+  treeUndoChanged:
+    "아무것도 실행 취소하지 않았습니다. 다음 항목이 그 뒤 변경되었습니다.",
+  treeUndoGone:
+    "아무것도 실행 취소하지 않았습니다. 다음 항목이 옮긴 곳에 더 이상 없습니다.",
+  treeUndoTaken:
+    "아무것도 실행 취소하지 않았습니다. 다음 항목이 있던 자리에 지금 다른 것이 있습니다.",
+  treeMoved: { other: "항목 {n}개를 ‘{folder}’(으)로 옮겼습니다" },
+  treeTrashed: { other: "항목 {n}개를 휴지통으로 옮겼습니다" },
+  treeCopyName: "{name} 복사본",
+  treeDuplicate: "복제",
+  treeNameClash:
+    "‘{name}’이(가) 이미 ‘{folder}’에 있습니다. 대치할까요(있던 항목은 휴지통으로 갑니다), 아니면 둘 다 유지할까요?",
+  treeReplace: "대치",
+  treeKeepBoth: "둘 다 유지",
   outlineCollapse: "접기",
   outlineExpand: "펼치기",
   outlineExpandAll: "모두 펼치기",
@@ -1374,6 +1389,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   startPageRecentFiles: "최근 파일",
   autoSuggestFilenameLabel: "새 파일을 저장할 때 파일 이름 제안",
   confirmTreeCopyLabel: "파일 트리에 놓은 파일을 복사하기 전에 묻기",
+  confirmTreeTrashLabel: "파일 트리의 파일을 휴지통으로 옮기기 전에 묻기",
   autosaveLabel: "자동 저장",
   settingsFileLabel: "설정 파일",
   settingsFileSummary: "앱 설정과 AI 기록을 가져오거나 내보냅니다",

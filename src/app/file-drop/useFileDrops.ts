@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import {
   documentDrop,
   setDocumentDrop,
+  type DraggedFile,
 } from "../../engine/controls/document-drop";
 import { showMessage } from "../../engine/controls/app-dialog";
 import { filesDropAsContents, isMobileApp } from "../../platform/capabilities";
@@ -15,6 +16,10 @@ import type { OpenOptions } from "../useFileOpening";
 import { fileDropOnDocuments } from "./file-drop-session";
 import { watchSystemDrags } from "./finder-drag";
 import { treeFileDrop } from "../../files/tree-file-drop";
+
+/** The tree's own rows, out with the system's drag and come back. */
+const ownRows = (files: readonly DraggedFile[]) =>
+  files.length > 0 && files.every((file) => !file.fromSystem);
 
 interface FileDropInput {
   openFile: (path: string, open?: OpenOptions) => Promise<void>;
@@ -70,16 +75,26 @@ export function useFileDrops(input: FileDropInput): void {
     const stop = watchSystemDrags(
       {
         // Over the file tree with a folder open, copied in there
-        // (useTreeFileDrop); else over the documents.
+        // (useTreeFileDrop); else over the documents. The tree's own rows,
+        // brought back, only ever go to the documents.
         over: (files, at, shift) => {
-          if (treeFileDrop()?.over(at.x, at.y)) documentDrop()?.leave();
-          else documentDrop()?.over(files, at.x, at.y, shift);
+          const tree = ownRows(files) ? null : treeFileDrop();
+          if (tree?.over(at.x, at.y)) documentDrop()?.leave();
+          else {
+            treeFileDrop()?.leave();
+            documentDrop()?.over(files, at.x, at.y, shift);
+          }
         },
         leave: () => {
           treeFileDrop()?.leave();
           documentDrop()?.leave();
         },
         drop: (files, at, shift) => {
+          if (ownRows(files)) {
+            treeFileDrop()?.leave();
+            documentDrop()?.drop(files, at.x, at.y, shift);
+            return;
+          }
           if (treeFileDrop()?.drop(files, at.x, at.y)) {
             documentDrop()?.leave();
             return;

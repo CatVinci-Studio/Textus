@@ -389,6 +389,10 @@ describe("files dropped on the file tree", () => {
     expect(normaliseSettings({ confirmTreeCopy: false }).confirmTreeCopy).toBe(
       false,
     );
+    expect(normaliseSettings({}).confirmTreeTrash).toBe(true);
+    expect(
+      normaliseSettings({ confirmTreeTrash: false }).confirmTreeTrash,
+    ).toBe(false);
   });
 });
 

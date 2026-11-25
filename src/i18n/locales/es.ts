@@ -628,9 +628,9 @@ para usar una.
   treeSort: "Ordenar",
   treeSortName: "Por nombre",
   treeShowHidden: "Mostrar archivos ocultos",
+  treeCollapseAll: "Contraer todo",
   treeSortModified: "Por fecha de modificación",
   treeRenameItem: "Cambiar nombre…",
-  treeRename: "Cambiar nombre",
   treeRenamePrompt: "Nombre nuevo",
   treeUpdateLinksConfirm:
     "¿Actualizar los enlaces hacia y desde «{name}» para que sigan funcionando?",
@@ -684,6 +684,7 @@ para usar una.
   errorAgentRefused: "El agente lo rechazó.",
   errorAgentStopped: "El agente se detuvo.",
   errorAlreadyThere: "Ya está en esa carpeta.",
+  errorGoneFromTrash: "Ya no está en la papelera.",
   errorNotFolder: "No es una carpeta.",
   errorTrashShownFolder:
     "La carpeta que muestra el árbol no se puede mover a la papelera.",
@@ -748,6 +749,28 @@ para usar una.
     other: "{n} elementos copiados a «{folder}»",
   },
   treeCopyFailed: "No se pudo copiar {name}",
+  treeUndoChanged:
+    "No se deshizo nada: estos elementos cambiaron desde entonces.",
+  treeUndoGone:
+    "No se deshizo nada: estos elementos ya no están donde se pusieron.",
+  treeUndoTaken:
+    "No se deshizo nada: ahora hay otra cosa donde estaban estos elementos.",
+  treeMoved: {
+    one: "{n} elemento movido a «{folder}»",
+    many: "{n} elementos movidos a «{folder}»",
+    other: "{n} elementos movidos a «{folder}»",
+  },
+  treeTrashed: {
+    one: "{n} elemento movido a la papelera",
+    many: "{n} elementos movidos a la papelera",
+    other: "{n} elementos movidos a la papelera",
+  },
+  treeCopyName: "{name} copia",
+  treeDuplicate: "Duplicar",
+  treeNameClash:
+    "«{name}» ya está en «{folder}». ¿Reemplazarlo (el que hay va a la papelera) o conservar ambos?",
+  treeReplace: "Reemplazar",
+  treeKeepBoth: "Conservar ambos",
   outlineCollapse: "Contraer",
   outlineExpand: "Expandir",
   outlineExpandAll: "Expandir todo",
@@ -1496,6 +1519,8 @@ para usar una.
   autoSuggestFilenameLabel: "Sugerir un nombre al guardar un archivo nuevo",
   confirmTreeCopyLabel:
     "Preguntar antes de copiar archivos soltados en el árbol de archivos",
+  confirmTreeTrashLabel:
+    "Preguntar antes de mover archivos del árbol de archivos a la papelera",
   autosaveLabel: "Guardar automáticamente",
   settingsFileLabel: "Archivo de ajustes",
   settingsFileSummary:

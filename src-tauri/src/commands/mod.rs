@@ -41,6 +41,8 @@ pub mod system_info;
 pub mod theme_gallery;
 pub mod themes;
 pub mod traffic_lights;
+pub mod trash_place;
+pub mod tree_create;
 pub mod tree_ops;
 pub mod undo_files;
 #[cfg(desktop)]

@@ -6,10 +6,17 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import type { SearchScope } from "./file-search";
+import type { OpenFolders } from "./useDiskWatch";
+import type { Trashing } from "./file-undo";
 import type { Strings } from "../i18n/strings";
 import { isInside, parentDir } from "../utils/path";
 import { explainError } from "../utils/error-explain";
 import { errorCode } from "../utils/error-text";
+import { fs } from "../platform/ipc";
+import { canTrashFiles } from "../platform/capabilities";
+import { farEntries } from "../platform/far-files";
+import { emitPluginEvent } from "../plugins/app-bridge";
+import { ENTRY_TRASHED_EVENT, sendAppEvent } from "../utils/events";
 
 // What the file tree and its rows share.
 
@@ -29,9 +36,15 @@ export interface TreeShared {
   /** Bumped per folder when something else changed it (a plugin's write):
    *  it reads its entries again if open, and stays as it is. */
   stale: Record<string, number>;
-  /** Bumped when the window comes back to the front: every open folder is
-   *  read again, as another app may have changed it. */
+  /** Bumped when every open folder must be read again: the disk watch
+   *  lost track, or, where nothing watches, the window came to the front. */
   refreshed: number;
+  /** Where each open folder says so, for the disk watch to follow. */
+  openFolders: OpenFolders;
+  /** A new one at each Collapse All, every folder below the root folding:
+   *  the folders' `versions` then, below which a folder drawn later
+   *  stays folded. */
+  collapsed: Readonly<Record<string, number>>;
   dropInto: string | null;
   /** A right-click (a computer's, or an iPad's trackpad). */
   onRowMenu:
@@ -51,8 +64,10 @@ export interface TreeShared {
   onRowPick: ((e: ReactMouseEvent, path: string) => boolean) | null;
   /** A new document or folder being named in place, in `dir`. */
   draft: TreeDraft | null;
-  /** Its name, or null when it was given up. */
-  finishDraft: (name: string | null) => void;
+  /** Its name, or null when it was given up; answers why the name can't
+   *  be (a taken one), else null. `byKey`: ended with a key, the keyboard
+   *  staying in the tree. */
+  finishDraft: (name: string | null, byKey: boolean) => Promise<string | null>;
   /** An empty folder's one button: a new document named in place there,
    *  with its label. Null where documents aren't made here. */
   newDocument: { label: string; start: () => void } | null;
@@ -116,6 +131,28 @@ export function dropDirAt(
     .elementFromPoint(x, y)
     ?.closest<HTMLElement>("[data-drop-dir]");
   return el && tree.contains(el) ? (el.dataset.dropDir ?? null) : null;
+}
+
+/** Whether `path` goes to a Trash; one in a phone's or a remote folder is
+ *  deleted for good. */
+export const trashable = (path: string) => canTrashFiles && !farEntries(path);
+
+/** `paths` to the Trash from the tree, in turn up to one that fails: their
+ *  folders read again, their open tabs let go (useDocumentActions),
+ *  plugins told. */
+export async function trashFromTree(
+  paths: readonly string[],
+  root: string,
+  reload: (...dirs: string[]) => void,
+): Promise<Trashing> {
+  const done = await fs.trashEntries(paths, root);
+  const went = paths.slice(0, done.places.length);
+  if (went.length) reload(...went.map((path) => parentDir(path) ?? root));
+  for (const path of went) {
+    sendAppEvent(ENTRY_TRASHED_EVENT, path);
+    emitPluginEvent("fileDelete", { path });
+  }
+  return done;
 }
 
 /** The backend's refusal in the user's words. */

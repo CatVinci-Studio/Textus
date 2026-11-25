@@ -71,11 +71,17 @@ forward (`scripts/updater-manifest.mjs beta`).
 ## Desktop release
 
 A test build and a release run the same workflow; they differ in the
-version and the notes. Both are tagged on `main`.
+version and the notes. Both are tagged on `main`, and one command cuts
+either:
 
-### A test build (`vX.Y.Z-rc.N`)
+```sh
+npm run release -- X.Y.Z-rc.N        # a test build
+npm run release -- X.Y.Z             # a release
+npm run release -- X.Y.Z --ios       # a release, and the iOS app from the same commit
+npm run release -- X.Y.Z --dry-run   # print what it would change, change nothing
+```
 
-Before either kind, in the release's pull request:
+Before either, on `main`:
 
 - **Plugins.** If the official plugins changed, merge their pull request
   first, then point CI at it: `node scripts/pin-plugins.mjs` (textus-plugins'
@@ -87,63 +93,72 @@ Before either kind, in the release's pull request:
 - **Speed.** When the release touches the editor, large documents or plugin
   loading, run the benchmarks on the same machine as last time and compare.
 
-1. In the release's pull request to `main`, set the version to
-   `X.Y.Z-rc.N` in `package.json`, `src-tauri/Cargo.toml` and
-   `src-tauri/tauri.conf.json`, then run `npm install --package-lock-only`
-   and `cargo check` (in `src-tauri/`) so `package-lock.json` (both of its
-   version fields) and `Cargo.lock` follow. `node scripts/check-versions.mjs`
-   (part of `npm run check`) fails until all five files agree. A pull
-   request that changes the version runs the full CI suite on every
-   platform by itself.
-2. Once it is merged, tag that exact commit on `main`:
+### What `npm run release` does
 
-   ```sh
-   git fetch origin
-   node scripts/check-versions.mjs --tag vX.Y.Z-rc.N   # on a checkout of origin/main
-   git tag -a vX.Y.Z-rc.N origin/main -m "Textus X.Y.Z-rc.N"
-   git push origin vX.Y.Z-rc.N
-   ```
+`scripts/release.mjs` starts from a clean checkout of `origin/main` and
+takes each step in turn, printing every command that changes something:
 
-Release notes aren't required for a pre-release: the fragments stay in
-`docs/releases/next/` until the stable release collects them.
+1. **Bump.** On a new branch `release/X.Y.Z`, it sets the version in
+   `package.json`, `package-lock.json` (both fields), `src-tauri/Cargo.toml`,
+   `src-tauri/Cargo.lock` and `src-tauri/tauri.conf.json`, the five files
+   `scripts/check-versions.mjs` compares. Only the version lines change, so
+   CI takes the pull request as a bump and runs the full suite on every
+   platform.
+2. **Notes (a release only).** It runs
+   `node scripts/release-notes.mjs build X.Y.Z`, which adds every fragment in
+   `docs/releases/next/` to `docs/releases/X.Y.Z.md` (creating it in the
+   outline of [TEMPLATE.md](../releases/TEMPLATE.md)) and deletes the
+   fragments, then **stops** and prints the file's path. Edit it: write the
+   summary sentence, merge bullets that describe one change, order each
+   section. The notes are the GitHub release's text and the updater's. Then
+   carry on with `npm run release -- X.Y.Z --resume`; it refuses while
+   fragments are left or the summary is unwritten, and while anything
+   besides the version files and `docs/releases/` has changed. A test build
+   needs no notes: its fragments wait for the release.
+3. **Pull request.** It commits `Textus X.Y.Z`, pushes the branch and opens
+   the pull request `Textus X.Y.Z`.
+4. **CI.** It waits for the pull request's CI run and stops unless the run
+   passed. Fix a real failure on the branch; rerun a flaky job alone
+   (`gh run rerun <run> --failed`); then `--resume`. `ios` and `android`
+   can fail without failing the run, so look at the run whole while it
+   waits, `e2e-webkit` and `ios` included: this run is the one the tag
+   relies on.
+5. **Merge.** It squash-merges the pull request (only if its head is still
+   the commit CI passed), and waits for `main`'s own CI run on the merged
+   commit.
+6. **Tag.** It checks the version files at the merged commit
+   (`check-versions.mjs --tag`, as the workflow's preflight does), tags
+   that commit `vX.Y.Z` (annotated) and pushes the tag. With `--ios` it
+   also tags and pushes `ios-vX.Y.Z` on the same commit
+   ([ios-release.md](ios-release.md)); iOS ships stable versions only.
 
-### A release (`vX.Y.Z`)
+Where a release stands comes from git and GitHub (the branch, the pull
+request, the tags), not from a file, so after any stop - the notes, a
+failed CI, a closed terminal - `npm run release -- X.Y.Z --resume` (with
+`--ios` if wanted) carries on from the step it reached. Without `--resume`
+it refuses to touch a release already under way. If `main` moved on while
+the pull request was open, the script says so: the merge then holds a tree
+CI didn't test, and the tag's run tests it.
 
-1. On `main`, set the version to `X.Y.Z` as in step 1 above, and collect
-   the release notes: `node scripts/release-notes.mjs build X.Y.Z` adds
-   every fragment in `docs/releases/next/` to `docs/releases/X.Y.Z.md`
-   (creating it in the outline of [TEMPLATE.md](../releases/TEMPLATE.md)
-   if it doesn't exist), each bullet at the end of its section, oldest
-   first, and deletes the fragments. Then edit the file: write the summary
-   sentence, merge bullets that describe one change, order each section.
-   The release workflow refuses a stable tag without the notes, and
-   `check-versions.mjs --tag` (step 3, and the workflow's preflight) a
-   stable tag with fragments left over or the summary unwritten; the notes
-   are the GitHub release's text and the updater's.
-2. The pull request (`Textus X.Y.Z`) runs the full suite; squash-merge it
-   once that passed.
-3. Check the merged commit on `main` and tag it:
-
-   ```sh
-   git fetch origin
-   node scripts/check-versions.mjs --tag vX.Y.Z   # on a checkout of origin/main
-   git tag -a vX.Y.Z origin/main -m "Textus X.Y.Z"
-   git push origin vX.Y.Z
-   ```
-
-   Tag only after the merge has landed: a tag pushed before it points at the
-   old commit, and the workflow's preflight stops it.
-
-4. `release.yml` runs, as for every tag (below).
+By hand, the same steps are: the bump and notes in a pull request to
+`main`, squash-merged once its CI passed, then on that merged commit
+`node scripts/check-versions.mjs --tag vX.Y.Z`,
+`git tag -a vX.Y.Z <commit> -m "Textus X.Y.Z"` and
+`git push origin vX.Y.Z`. Tag only after the merge has landed: a tag
+pushed before it points at the old commit, and the workflow's preflight
+stops it.
 
 ### What the workflow does
 
-1. `release.yml` checks that the tag matches the version files and runs
-   the full CI suite on the tagged commit (`ci.yml`, every job on every
-   platform); the builds start only once it passed. The pull request that
-   set the version ran the same suite, so this run should hold no surprise -
-   look at it whole, `e2e-webkit` and `ios` included, which the builds don't
-   wait for. A flaky job is rerun alone (`gh run rerun <run> --failed`); a
+1. `release.yml` checks that the tag matches the version files and, for a
+   release, that its notes are written. Then it asks GitHub whether the
+   tagged commit was already tested (`scripts/ci-tested.mjs`): `main`'s own
+   CI run on the commit passed, and a full-suite run (the version bump's
+   pull request) passed on exactly the commit's tree. If so, the builds
+   start at once; if not - `main` moved on before the merge, the run isn't
+   found, GitHub didn't answer - it runs the full CI suite on the tagged
+   commit (`ci.yml`, every job on every platform) and the builds wait for
+   it. A flaky job there is rerun alone (`gh run rerun <run> --failed`); a
    real failure is fixed on `main` and the unpublished tag moved to the new
    commit. Run `npm run test:perf` once and compare its numbers with the
    last release's: a reference, not a gate. Then it builds,

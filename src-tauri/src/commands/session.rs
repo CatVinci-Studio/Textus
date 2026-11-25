@@ -26,6 +26,12 @@ pub struct WindowSession {
     /// in front. Never written to the session file.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub opened: Vec<String>,
+    /// Where the window was and how it was left. Rust's alone: kept as the
+    /// window closes (`keep_frame`), never sent by the page.
+    #[cfg(desktop)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, specta(skip))]
+    pub frame: Option<crate::window_frame::Kept>,
 }
 
 impl WindowSession {
@@ -189,6 +195,7 @@ pub fn update_window_session(
 ) {
     let merged = {
         let mut map = state.0.lock().unwrap();
+        let session = with_kept_frame(&map, window.label(), session);
         if map.get(window.label()) == Some(&session) {
             return;
         }
@@ -196,6 +203,80 @@ pub fn update_window_session(
         merge_windows(&map)
     };
     write_session(&app, &merged);
+}
+
+/// `session` as the page sent it, with the frame Rust kept for the window.
+#[cfg(desktop)]
+fn with_kept_frame(
+    map: &HashMap<String, WindowSession>,
+    label: &str,
+    session: WindowSession,
+) -> WindowSession {
+    WindowSession {
+        frame: map.get(label).and_then(|kept| kept.frame),
+        ..session
+    }
+}
+
+/// `frame` kept as the window `label`'s; whether that changed anything.
+#[cfg(desktop)]
+fn set_frame(
+    map: &mut HashMap<String, WindowSession>,
+    label: &str,
+    frame: Option<crate::window_frame::Kept>,
+) -> bool {
+    match map.get_mut(label) {
+        Some(window) if window.frame != frame => {
+            window.frame = frame;
+            true
+        }
+        _ => false,
+    }
+}
+
+/// A closing window's frame, kept with its documents: the session file then
+/// has it if this is the last window, which the next launch brings back.
+#[cfg(desktop)]
+pub fn keep_frame(
+    app: &AppHandle,
+    label: &str,
+    frame: Option<crate::window_frame::Kept>,
+    state: &SessionTabsState,
+) {
+    let merged = {
+        let mut map = state.0.lock().unwrap();
+        if !set_frame(&mut map, label, frame) {
+            return;
+        }
+        merge_windows(&map)
+    };
+    write_session(app, &merged);
+}
+
+/// Every open window's frame read now, kept with its documents: as the app
+/// quits, before any window closes. Read with the map unlocked, since a
+/// window's state is read on the main thread, which may be waiting for it.
+#[cfg(desktop)]
+pub fn keep_open_frames(app: &AppHandle, state: &SessionTabsState) {
+    let labels: Vec<String> = state.0.lock().unwrap().keys().cloned().collect();
+    let frames: Vec<_> = labels
+        .into_iter()
+        .filter_map(|label| {
+            let window = app.get_window(&label)?;
+            Some((label, crate::commands::prefs::closing_frame(&window)?))
+        })
+        .collect();
+    let merged = {
+        let mut map = state.0.lock().unwrap();
+        let mut changed = false;
+        for (label, frame) in frames {
+            changed |= set_frame(&mut map, &label, Some(frame));
+        }
+        changed.then(|| merge_windows(&map))
+    };
+    if let Some(windows) = merged {
+        write_session(app, &windows);
+    }
 }
 
 /// Captures the complete session before File > Quit starts closing windows.
@@ -352,6 +433,27 @@ mod tests {
         };
         map.insert("main".into(), main.clone());
         assert_eq!(merge_windows(&map), vec![main, of(&["three.md"])]);
+    }
+
+    #[test]
+    fn each_window_s_frame_survives_the_page_s_updates_and_the_file() {
+        let frame = crate::window_frame::Kept {
+            size: (1000.0, 700.0),
+            position: Some((40.0, 60.0)),
+            mode: crate::window_frame::Mode::Maximized,
+        };
+        let mut map = windows(&[("main", &["one.md"]), ("window-2", &["two.md"])]);
+        map.get_mut("window-2").unwrap().frame = Some(frame);
+        // The page never sends a frame; the one Rust kept stays.
+        let sent = of(&["two.md", "three.md"]);
+        let session = with_kept_frame(&map, "window-2", sent);
+        assert_eq!(session.frame, Some(frame));
+        map.insert("window-2".into(), session);
+        let written = serde_json::to_string(&merge_windows(&map)).unwrap();
+        let read = parse_session(&written);
+        assert_eq!(read[0].frame, None);
+        assert_eq!(read[1].frame, Some(frame));
+        assert!(readable_session(&written));
     }
 
     #[test]

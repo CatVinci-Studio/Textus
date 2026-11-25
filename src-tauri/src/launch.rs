@@ -73,9 +73,14 @@ pub(crate) fn window_restores(app: &tauri::AppHandle, label: &str) -> bool {
     let detached = app
         .try_state::<crate::tab_drag::PendingDetachedTabs>()
         .is_some_and(|pending| pending.0.lock().unwrap().contains_key(label));
+    let own = PENDING_SESSIONS
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .iter()
+        .any(|(window, _)| window == label);
     let help = PENDING_SHOW_HELP.lock().unwrap().is_some();
     let drafts = label == "main" && crate::commands::drafts::drafts_waiting(app);
-    queued || launching || detached || help || drafts
+    queued || own || launching || detached || help || drafts
 }
 
 /// A phone's one page always has its last documents to look for.
@@ -101,17 +106,37 @@ pub(crate) fn queue_windows_to_open(app: &tauri::AppHandle, windows: Vec<WindowS
     if windows.is_empty() {
         return;
     }
-    let ui_ready = UI_READY.load(Ordering::Relaxed);
-    let count = windows.len();
-    app.state::<PendingOpenPaths>()
-        .0
-        .lock()
-        .unwrap()
-        .extend(windows);
-    let extra_windows = if ui_ready { count } else { count - 1 };
-    for _ in 0..extra_windows {
-        let _ = crate::editor_windows::open_new_window(app);
+    let mut windows = windows.into_iter();
+    // Launching: the first window, built already where this one was, drains the queue.
+    if !UI_READY.load(Ordering::Relaxed) {
+        app.state::<PendingOpenPaths>()
+            .0
+            .lock()
+            .unwrap()
+            .extend(windows.next());
     }
+    // Each other one in a window of its own, where it was.
+    for session in windows {
+        let label = crate::editor_windows::new_window_label();
+        let frame = session.frame;
+        PENDING_SESSIONS
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .push((label.clone(), session));
+        if crate::editor_windows::build_window_as_left(app, &label, frame).is_err() {
+            take_for(&PENDING_SESSIONS, &label);
+        }
+    }
+}
+
+/// The session each window opened for one was built for, by the window's label.
+#[cfg(desktop)]
+static PENDING_SESSIONS: Mutex<Vec<(String, WindowSession)>> = Mutex::new(Vec::new());
+
+/// A window destroyed: a session its page never took goes with it.
+#[cfg(desktop)]
+pub(crate) fn window_gone(label: &str) {
+    take_for(&PENDING_SESSIONS, label);
 }
 
 /// A folder handed over (dropped on the Dock icon, Open With in Finder)
@@ -263,14 +288,17 @@ pub(crate) fn take_pending_menu_event() -> Option<&'static str> {
 #[cfg(desktop)]
 static PENDING_OPEN_FOLDERS: Mutex<Vec<(String, String)>> = Mutex::new(Vec::new());
 
-/// The folder kept for the window `label`, once.
+/// What was kept for the window `label`, once.
 #[cfg(desktop)]
-fn take_folder_for(label: &str) -> Option<String> {
-    let mut pending = PENDING_OPEN_FOLDERS
-        .lock()
-        .unwrap_or_else(|e| e.into_inner());
+fn take_for<T>(pending: &Mutex<Vec<(String, T)>>, label: &str) -> Option<T> {
+    let mut pending = pending.lock().unwrap_or_else(|e| e.into_inner());
     let at = pending.iter().position(|(window, _)| window == label)?;
     Some(pending.remove(at).1)
+}
+
+#[cfg(desktop)]
+fn take_folder_for(label: &str) -> Option<String> {
+    take_for(&PENDING_OPEN_FOLDERS, label)
 }
 
 #[cfg(desktop)]
@@ -283,7 +311,7 @@ pub(crate) fn take_pending_open_folder(window: tauri::Window) -> Option<String> 
 /// A new window with `path` as its folder.
 #[cfg(desktop)]
 pub(crate) fn open_folder_window(app: &tauri::AppHandle, path: &str) {
-    let label = format!("window-{}", crate::editor_windows::next_window_id());
+    let label = crate::editor_windows::new_window_label();
     PENDING_OPEN_FOLDERS
         .lock()
         .unwrap_or_else(|e| e.into_inner())
@@ -325,8 +353,17 @@ pub(crate) async fn open_folder_in_new_window(app: tauri::AppHandle, path: Strin
 /// islands and folder), or files the system handed over.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub(crate) fn take_pending_window(pending: State<PendingOpenPaths>) -> Option<WindowSession> {
+pub(crate) fn take_pending_window(
+    window: tauri::Window,
+    pending: State<PendingOpenPaths>,
+) -> Option<WindowSession> {
     UI_READY.store(true, Ordering::Relaxed);
+    #[cfg(desktop)]
+    if let Some(session) = take_for(&PENDING_SESSIONS, window.label()) {
+        return Some(session);
+    }
+    #[cfg(not(desktop))]
+    let _ = window;
     let mut windows = pending.0.lock().unwrap();
     (!windows.is_empty()).then(|| windows.remove(0))
 }
@@ -395,5 +432,33 @@ mod folder_tests {
         assert_eq!(take_folder_for("window-other"), None);
         assert_eq!(take_folder_for("window-t1").as_deref(), Some("/a"));
         assert_eq!(take_folder_for("window-t1"), None);
+    }
+
+    #[test]
+    fn each_restored_window_takes_the_session_built_for_it() {
+        let keep = |label: &str, path: &str| {
+            PENDING_SESSIONS.lock().unwrap().push((
+                label.to_string(),
+                WindowSession::of_paths(vec![path.into()]),
+            ))
+        };
+        keep("window-s1", "/a.md");
+        keep("window-s2", "/b.md");
+        // Mounted out of order, each still gets its own documents.
+        let b = take_for(&PENDING_SESSIONS, "window-s2").unwrap();
+        assert_eq!(b.paths, ["/b.md"]);
+        assert_eq!(
+            take_for(&PENDING_SESSIONS, "window-s1").unwrap().paths,
+            ["/a.md"]
+        );
+        assert!(take_for(&PENDING_SESSIONS, "window-s1").is_none());
+        // A window destroyed before its page took its session: none kept.
+        keep("window-s3", "/c.md");
+        window_gone("window-s3");
+        assert!(!PENDING_SESSIONS
+            .lock()
+            .unwrap()
+            .iter()
+            .any(|(label, _)| label == "window-s3"));
     }
 }

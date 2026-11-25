@@ -630,9 +630,9 @@ export default {
   treeSort: "Сортировка",
   treeSortName: "По имени",
   treeShowHidden: "Показывать скрытые файлы",
+  treeCollapseAll: "Свернуть все",
   treeSortModified: "По дате изменения",
   treeRenameItem: "Переименовать…",
-  treeRename: "Переименовать",
   treeRenamePrompt: "Новое имя",
   treeUpdateLinksConfirm:
     "Обновить ссылки на «{name}» и из него, чтобы они продолжали работать?",
@@ -684,6 +684,7 @@ export default {
   errorAgentRefused: "Агент отказал.",
   errorAgentStopped: "Агент остановлен.",
   errorAlreadyThere: "Он уже в этой папке.",
+  errorGoneFromTrash: "Его больше нет в корзине.",
   errorNotFolder: "Это не папка.",
   errorTrashShownFolder:
     "Папку, которую показывает дерево, нельзя переместить в корзину.",
@@ -753,6 +754,29 @@ export default {
     other: "{n} элемента скопированы в «{folder}»",
   },
   treeCopyFailed: "Не удалось скопировать {name}",
+  treeUndoChanged: "Ничего не отменено: эти объекты с тех пор изменились.",
+  treeUndoGone:
+    "Ничего не отменено: этих объектов больше нет там, куда их поместили.",
+  treeUndoTaken:
+    "Ничего не отменено: на прежнем месте этих объектов теперь что-то другое.",
+  treeMoved: {
+    one: "{n} элемент перемещён в «{folder}»",
+    few: "{n} элемента перемещены в «{folder}»",
+    many: "{n} элементов перемещены в «{folder}»",
+    other: "{n} элемента перемещены в «{folder}»",
+  },
+  treeTrashed: {
+    one: "{n} элемент перемещён в корзину",
+    few: "{n} элемента перемещены в корзину",
+    many: "{n} элементов перемещены в корзину",
+    other: "{n} элемента перемещены в корзину",
+  },
+  treeCopyName: "{name} копия",
+  treeDuplicate: "Дублировать",
+  treeNameClash:
+    "«{name}» уже есть в «{folder}». Заменить (прежний попадёт в корзину) или оставить оба?",
+  treeReplace: "Заменить",
+  treeKeepBoth: "Оставить оба",
   outlineCollapse: "Свернуть",
   outlineExpand: "Развернуть",
   outlineExpandAll: "Развернуть все",
@@ -1507,6 +1531,8 @@ export default {
   autoSuggestFilenameLabel: "Предлагать имя при сохранении нового файла",
   confirmTreeCopyLabel:
     "Спрашивать перед копированием файлов, перетащенных в дерево файлов",
+  confirmTreeTrashLabel:
+    "Спрашивать перед перемещением файлов из дерева файлов в корзину",
   autosaveLabel: "Сохранять автоматически",
   settingsFileLabel: "Файл настроек",
   settingsFileSummary: "Импорт и экспорт настроек приложения и истории ИИ",

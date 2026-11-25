@@ -68,7 +68,7 @@ pub async fn move_tab_to_new_window(
     pending: State<'_, PendingDetachedTabs>,
     tab: DetachedTab,
 ) -> Result<(), String> {
-    let label = format!("window-{}", crate::editor_windows::next_window_id());
+    let label = crate::editor_windows::new_window_label();
     pending.0.lock().unwrap().insert(label.clone(), tab);
     crate::editor_windows::build_small_window(&app, &label, None).map_err(|e| {
         pending.0.lock().unwrap().remove(&label);
@@ -297,7 +297,7 @@ pub fn start_floating_tab_drag(
                     );
                 }
                 None => {
-                    let label = format!("window-{}", crate::editor_windows::next_window_id());
+                    let label = crate::editor_windows::new_window_label();
                     app.state::<PendingDetachedTabs>()
                         .0
                         .lock()
@@ -332,7 +332,7 @@ struct DragTick {
 /// Global cursor position (logical points, top-left origin) and left-button
 /// state via CoreGraphics, which needs no Accessibility consent.
 #[cfg(target_os = "macos")]
-mod mouse {
+pub(crate) mod mouse {
     #[repr(C)]
     struct CGPoint {
         x: f64,
@@ -367,7 +367,7 @@ mod mouse {
 /// The same on Windows: the cursor in physical pixels, divided by the scale
 /// of the display it is on, so it compares with windows' logical bounds.
 #[cfg(windows)]
-mod mouse {
+pub(crate) mod mouse {
     use windows::Win32::Foundation::POINT;
     use windows::Win32::Graphics::Gdi::{MonitorFromPoint, MONITOR_DEFAULTTONEAREST};
     use windows::Win32::UI::HiDpi::{GetDpiForMonitor, MDT_EFFECTIVE_DPI};

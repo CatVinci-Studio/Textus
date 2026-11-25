@@ -20,8 +20,9 @@ name: CI
 #                  request; here only the browsers' cache is refreshed.
 #   before release the full suite on every platform: native on Linux, macOS
 #                  and Windows, e2e, the iOS simulator. It runs on the pull
-#                  request that bumps the version, and release.yml calls it
-#                  on the tagged commit.
+#                  request that bumps the version; release.yml calls it on
+#                  the tagged commit unless that run passed on the same
+#                  tree (scripts/ci-tested.mjs).
 #
 # `check`'s save round trip (src/document-view/save-roundtrip*.test.ts)
 # runs only when the change can reach saving: the editor, src/document*/,

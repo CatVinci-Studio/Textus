@@ -630,9 +630,9 @@ utiliser une.
   treeSort: "Trier",
   treeSortName: "Par nom",
   treeShowHidden: "Afficher les fichiers masqués",
+  treeCollapseAll: "Tout réduire",
   treeSortModified: "Par date de modification",
   treeRenameItem: "Renommer…",
-  treeRename: "Renommer",
   treeRenamePrompt: "Nouveau nom",
   treeUpdateLinksConfirm:
     "Mettre à jour les liens vers et depuis « {name} » pour qu’ils continuent de fonctionner ?",
@@ -686,6 +686,7 @@ utiliser une.
   errorAgentRefused: "L’agent a refusé.",
   errorAgentStopped: "L’agent s’est arrêté.",
   errorAlreadyThere: "Il est déjà dans ce dossier.",
+  errorGoneFromTrash: "Il n'est plus dans la corbeille.",
   errorNotFolder: "Ce n'est pas un dossier.",
   errorTrashShownFolder:
     "Le dossier affiché par l'arborescence ne peut pas aller à la corbeille.",
@@ -754,6 +755,27 @@ utiliser une.
     other: "{n} éléments copiés dans «\u00a0{folder}\u00a0»",
   },
   treeCopyFailed: "Impossible de copier {name}",
+  treeUndoChanged: "Rien n'a été annulé : ces éléments ont changé depuis.",
+  treeUndoGone:
+    "Rien n'a été annulé : ces éléments ne sont plus là où ils ont été mis.",
+  treeUndoTaken:
+    "Rien n'a été annulé : autre chose occupe maintenant la place de ces éléments.",
+  treeMoved: {
+    one: "{n} élément déplacé dans «\u00a0{folder}\u00a0»",
+    many: "{n} éléments déplacés dans «\u00a0{folder}\u00a0»",
+    other: "{n} éléments déplacés dans «\u00a0{folder}\u00a0»",
+  },
+  treeTrashed: {
+    one: "{n} élément mis à la corbeille",
+    many: "{n} éléments mis à la corbeille",
+    other: "{n} éléments mis à la corbeille",
+  },
+  treeCopyName: "{name} copie",
+  treeDuplicate: "Dupliquer",
+  treeNameClash:
+    "«\u00a0{name}\u00a0» est déjà dans «\u00a0{folder}\u00a0». Le remplacer (celui qui s’y trouve va à la corbeille) ou garder les deux\u00a0?",
+  treeReplace: "Remplacer",
+  treeKeepBoth: "Garder les deux",
   outlineCollapse: "Replier",
   outlineExpand: "Déplier",
   outlineExpandAll: "Tout déplier",
@@ -1507,6 +1529,8 @@ utiliser une.
     "Suggérer un nom de fichier au premier enregistrement",
   confirmTreeCopyLabel:
     "Demander avant de copier les fichiers déposés dans l'arborescence",
+  confirmTreeTrashLabel:
+    "Demander avant de mettre à la corbeille des fichiers de l'arborescence",
   autosaveLabel: "Enregistrer automatiquement",
   settingsFileLabel: "Fichier de réglages",
   settingsFileSummary:

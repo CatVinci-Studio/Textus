@@ -9,6 +9,8 @@ import {
   hasUrlScheme,
   isDrivePath,
   isInside,
+  isWithin,
+  movedTo,
   onTheWay,
   joinPath,
   parentDir,
@@ -175,5 +177,24 @@ describe("joinPath and folderName", () => {
     expect(folderName("/Users/me/Notes/")).toBe("Notes");
     expect(folderName("C:\\Work")).toBe("Work");
     expect(folderName("/")).toBe("/");
+  });
+});
+
+describe("one path however its separators are written", () => {
+  it("is within itself and its folder, a Windows path in either slash", () => {
+    expect(isWithin("C:\\p\\notes/plan.md", "C:\\p\\notes\\plan.md")).toBe(
+      true,
+    );
+    expect(isWithin("C:/p/notes", "C:\\p\\notes")).toBe(true);
+    expect(isWithin("/p/notes", "/p/notesX")).toBe(false);
+  });
+
+  it("follows a move, in the new place's spelling", () => {
+    expect(movedTo("/p/a/b.md", "/p/a", "/p/z")).toBe("/p/z/b.md");
+    expect(movedTo("/p/a", "/p/a", "/p/z")).toBe("/p/z");
+    expect(movedTo("C:\\p\\a\\b\\c.md", "C:\\p\\a", "C:\\q")).toBe(
+      "C:\\q\\b\\c.md",
+    );
+    expect(movedTo("/p/ab.md", "/p/a", "/p/z")).toBeNull();
   });
 });
