@@ -94,9 +94,8 @@ function verticalTarget(
 }
 
 /** Cmd+Arrow on a Mac, and Home or End: the line's ends, or (up and down)
- *  the block's or document's. WebKit's own Cmd+Right ran past a code
- *  line's end into the next, and an unhandled Home or End put a box (the
- *  key's private-use character) into a code block. */
+ *  the block's or document's. WebKit's own leaves a code line, and its
+ *  Home or End can type the key's private-use character. */
 function toLineOrBlockEdge(view: EditorView, event: KeyboardEvent): boolean {
   const { selection, doc } = stateWithLiveSelection(view);
   const backward = ["ArrowLeft", "ArrowUp", "Home"].includes(event.key);
