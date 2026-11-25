@@ -188,9 +188,13 @@ test("a text file no plugin opens shows read-only, not as Markdown to rewrite", 
   // No catalog: no plugin to offer for it.
   await mockInvoke(page, { plugin_catalog: [], plugin_catalog_cached: [] });
   await openPath(page, "/work/all.base");
-  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  // Its own text in the source view, never the Markdown editor.
+  const editor = page.locator('[data-active-tab="true"] .cm-content');
   await expect(editor).toContainText("views");
-  await expect(editor).toHaveAttribute("contenteditable", "false");
+  await expect(editor).toHaveAttribute("aria-readonly", "true");
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toHaveCount(0);
 });
 
 test("a plugin's code language is coloured in the editor and source mode, by any of its names, and offered in the language menu", async ({

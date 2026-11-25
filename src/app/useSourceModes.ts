@@ -14,6 +14,7 @@ import {
   viewModeOf,
 } from "../editor/modes/view-mode";
 import { keepReadOnly, tabReadOnly } from "../document/read-only";
+import { textFileOf } from "../files/document-name";
 import { useSettings } from "../prefs/SettingsContext";
 import { focusTab } from "./islands/useIslandNumbers";
 /** View › Mode's four. */
@@ -35,8 +36,10 @@ export function useSourceModes(tabState: TabState) {
   // Every tab of this window to the view all documents are in.
   useEffect(() => {
     for (const tab of liveTabs()) {
-      // A plugin's tab has no Markdown to show as source.
-      if (tab.view || viewModeOf(tab) === mode) continue;
+      // A plugin's tab has no Markdown to show as source; a text file is
+      // always shown as its source.
+      if (tab.view || textFileOf(tab.path) || viewModeOf(tab) === mode)
+        continue;
       const front = tab.id === activeTabId;
       if (mode === "rich") {
         // The view being left records its caret; the one entered places it.

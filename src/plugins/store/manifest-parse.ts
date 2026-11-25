@@ -13,6 +13,7 @@ import { ManifestError, list, object, text } from "./manifest-json";
 import {
   parseCodeLanguages,
   parseDocumentTypes,
+  parseTextFiles,
   parseFolderDocuments,
 } from "./manifest-documents";
 import { parseFileIconThemes } from "./manifest-icon-themes";
@@ -415,6 +416,7 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     customEditors,
     documentTypes: parseDocumentTypes(c),
     folderDocuments: parseFolderDocuments(c),
+    textFiles: parseTextFiles(c),
     codeLanguages: parseCodeLanguages(c, BUILT_IN_BLOCKS),
     fileIconThemes: parseFileIconThemes(c),
     settings,

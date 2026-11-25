@@ -11,6 +11,7 @@ import { placesSaved } from "../document/last-places";
 import { takeDiskText } from "../document/useExternalChangeReload";
 import { migrateDraftImages } from "../editor/images/image-migration";
 import { basename } from "../utils/path";
+import { isDocumentName } from "../files/document-name";
 import {
   readDocText,
   fileExists,
@@ -276,7 +277,8 @@ async function beforeSave(
   text: string,
   trigger: "manual" | "auto",
 ): Promise<{ text: string; inEditor: boolean } | null> {
-  if (!hasWillSave()) return null;
+  // Plugins change Markdown on save; a plain text file is kept as typed.
+  if (!hasWillSave() || !isDocumentName(path)) return null;
   const changed = await runWillSave(path, text, trigger);
   if (changed === text) return null;
   const doc = openDocumentAt(path);

@@ -401,6 +401,27 @@
             }
           }
         },
+        "textFiles": {
+          "type": "array",
+          "description": "From 1.4.8: file types opened as plain text in the source editor, editable, coloured as a code language.",
+          "items": {
+            "type": "object",
+            "required": ["extensions"],
+            "properties": {
+              "extensions": {
+                "type": "array",
+                "items": { "type": "string" },
+                "minItems": 1,
+                "description": "Extensions without the dot: \"tex\". Textus's own (md, markdown, mdx, txt, text) can't be taken."
+              },
+              "language": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9+#._-]{0,31}$",
+                "description": "The code language it is coloured as, by a fence's name: one Textus colours (\"latex\", \"yaml\") or a plugin's codeLanguages id. Left out, plain text."
+              }
+            }
+          }
+        },
         "codeLanguages": {
           "type": "array",
           "description": "From 1.4.7: code languages coloured from a grammar file of the plugin, in the editor, source mode and exports. Textus's own languages win over a plugin's.",

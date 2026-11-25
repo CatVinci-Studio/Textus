@@ -85,6 +85,9 @@ export interface SourceEditorProps {
   /** More of CodeMirror's, read once as it mounts: a document's source
    *  completes link paths (see DocSourceEditor). */
   extensions?: Extension[];
+  /** A plain text file's language in place of Markdown's, read once: no
+   *  Markdown help then (escapes, Bold and Italic, the Format menu). */
+  syntax?: Extension;
 }
 
 /**
@@ -102,6 +105,7 @@ export function SourceEditor({
   onPaste,
   tabId,
   extensions: more = [],
+  syntax,
 }: SourceEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -114,6 +118,7 @@ export function SourceEditor({
     onScroll,
     tabId,
     more,
+    syntax,
   });
   latest.current = {
     value,
@@ -123,6 +128,7 @@ export function SourceEditor({
     onScroll,
     tabId,
     more,
+    syntax,
   };
   // The extension is built once; it reads the current handler through here.
   const pasteRef = useRef(onPaste);
@@ -147,6 +153,7 @@ export function SourceEditor({
       latest.current.onChange(text);
       return text;
     };
+    const plain = latest.current.syntax;
     const extensions: Extension[] = [
       // Source mode edits as plain text does, with colours: no line or
       // word highlights, multiple carets, auto-indent or code keys.
@@ -166,15 +173,21 @@ export function SourceEditor({
       // Markdown, as in the rendered view.
       sourceKeys,
       keymap.of([
-        { key: "Mod-b", run: (v) => formatSource(v, "bold") },
-        { key: "Mod-i", run: (v) => formatSource(v, "italic") },
+        ...(plain
+          ? []
+          : [
+              { key: "Mod-b", run: (v: EditorView) => formatSource(v, "bold") },
+              {
+                key: "Mod-i",
+                run: (v: EditorView) => formatSource(v, "italic"),
+              },
+            ]),
         { key: "Tab", run: sourceTab, shift: indentLess },
         ...standardKeymap,
         ...historyKeymap,
       ]),
       sourceFind,
-      sourceHighlighting(),
-      sourceEscapes(),
+      plain ?? [sourceHighlighting(), sourceEscapes()],
       // A caller's paste handler (a document's source stores pictures);
       // anything it leaves alone is CodeMirror's own.
       EditorView.domEventHandlers({
@@ -244,7 +257,7 @@ export function SourceEditor({
         edit(action);
     };
     host.addEventListener(SOURCE_EDIT_EVENT, onEdit);
-    const stopFormat = followFormatMenu(view);
+    const stopFormat = plain ? () => {} : followFormatMenu(view);
     const scroller = view.scrollDOM;
     // Where it is read, taken as it scrolls: once out of sight a view
     // reads as scrolled to the top.
