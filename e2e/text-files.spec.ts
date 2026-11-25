@@ -15,7 +15,9 @@ async function withTexFiles(page: Page, plugin: boolean) {
     version: "1.0.0",
     publisher: "local",
     engines: { textus: ">=1.4.0" },
-    permissions: [],
+    main: "host.js",
+    activationEvents: ["onStartupFinished"],
+    permissions: ["editor.read", "files.write"],
     contributes: {
       textFiles: [
         { extensions: ["tex"], language: "latex" },
@@ -24,6 +26,16 @@ async function withTexFiles(page: Page, plugin: boolean) {
       codeLanguages: [{ id: "bibtex", path: "bibtex.json" }],
     },
   };
+  // A Markdown tool's habits: it rewrites on save and underlines every
+  // block. Neither may reach a text file.
+  const host = `exports.activate = function () {
+    textus.files.onWillSave(function (e) { return e.text.split("**").join("__"); });
+    textus.editor.registerDiagnostics("all", {
+      check: function (blocks) {
+        return blocks.map(function (b) { return { block: b.id, severity: "warning", message: "Markdown rule" }; });
+      },
+    });
+  };`;
   const grammar = {
     rules: [
       { token: "keyword", match: "@[a-z]+" },
@@ -31,7 +43,7 @@ async function withTexFiles(page: Page, plugin: boolean) {
     ],
   };
   await page.addInitScript(
-    ({ manifest, grammar, plugin, files }) => {
+    ({ manifest, grammar, host, plugin, files }) => {
       if (window.top !== window) return;
       const w = window as unknown as Record<string, unknown>;
       w.__devFs = files;
@@ -42,19 +54,29 @@ async function withTexFiles(page: Page, plugin: boolean) {
           dir: `/plugins/${manifest.id}`,
           manifest: JSON.stringify(manifest),
           dev: false,
-          files: { "bibtex.json": JSON.stringify(grammar) },
+          files: { "bibtex.json": JSON.stringify(grammar), "host.js": host },
         },
       ];
       w.__devPluginState = {
         allOn: true,
-        plugins: { [manifest.id]: { enabled: true, granted: [] } },
+        plugins: {
+          [manifest.id]: {
+            enabled: true,
+            granted: ["editor.read", "files.write"],
+          },
+        },
       };
     },
     {
       manifest,
       grammar,
+      host,
       plugin,
-      files: { "/work/paper.tex": TEX, "/work/refs.bib": BIB },
+      files: {
+        "/work/paper.tex": TEX,
+        "/work/refs.bib": BIB,
+        "/work/notes.md": "Some notes.\n",
+      },
     },
   );
   await openApp(page);
@@ -82,6 +104,11 @@ test("a type a plugin takes is edited as text, coloured, and saved exactly as ty
   page,
 }) => {
   await withTexFiles(page, true);
+  // The plugin is at work on a document.
+  await openPath(page, "/work/notes.md");
+  await expect(
+    page.locator('[data-active-tab="true"] .plugin-issue'),
+  ).not.toHaveCount(0);
   await openPath(page, "/work/refs.bib");
   await expect(source(page)).toBeVisible();
   // Coloured from the plugin's grammar.
@@ -99,4 +126,7 @@ test("a type a plugin takes is edited as text, coloured, and saved exactly as ty
   await expect
     .poll(async () => (await devDisk(page))["/work/paper.tex"])
     .toBe(`${TEX}!`);
+  await expect(
+    page.locator('[data-active-tab="true"] .plugin-issue'),
+  ).toHaveCount(0);
 });
