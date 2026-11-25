@@ -87,22 +87,41 @@
   --tree-row-h: max(26px, calc(1.35em + 4px));
 }
 
+/* The folder's name and tools stay at the top too, over everything, so
+   scrolled down the tree still says whose rows these are. --tree-top is
+   its height: the folders' rows stay below it. */
+:root:not([data-window-chrome="mobile"]) .tree-main {
+  --tree-top: calc(var(--icon-button-s) + 4px);
+}
+
+:root:not([data-window-chrome="mobile"]) .tree-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 11;
+  height: var(--tree-top);
+  margin-bottom: 0;
+  padding-bottom: 4px;
+  background: var(--ui-frame-fill) fixed;
+}
+
 .file-tree .tree-row {
   min-height: var(--tree-row-h);
 }
 
 :root:not([data-window-chrome="mobile"]) .tree-head-sticky {
   position: sticky;
-  top: calc((var(--depth) - 1) * var(--tree-row-h));
+  top: calc(var(--tree-top, 0px) + (var(--depth) - 1) * var(--tree-row-h));
   z-index: calc(10 - var(--depth));
   background: var(--ui-frame-fill) fixed;
 }
 
-/* Shown by the keyboard or a reveal: below the folders' rows that stay
-   above it (at most --tree-sticky-levels, TreeNodes' STICKY_LEVELS). */
+/* Shown by the keyboard or a reveal: below the tools and the folders'
+   rows that stay above it (at most --tree-sticky-levels, TreeNodes'
+   STICKY_LEVELS). */
 :root:not([data-window-chrome="mobile"]) .file-tree .tree-row {
   scroll-margin-top: calc(
-    min(var(--depth, 1) - 1, var(--tree-sticky-levels)) * var(--tree-row-h)
+    var(--tree-top, 0px) + min(var(--depth, 1) - 1, var(--tree-sticky-levels)) *
+      var(--tree-row-h)
   );
 }
 
