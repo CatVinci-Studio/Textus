@@ -1,4 +1,4 @@
-import { basename } from "../utils/path";
+import { basename, extname } from "../utils/path";
 import {
   BUILT_IN_KEEP,
   type VerbatimRules,
@@ -54,8 +54,7 @@ export interface TextFileType {
 
 export function textFileOf(path: string | null): TextFileType | null {
   if (!path || isDocumentName(path)) return null;
-  const file = basename(path);
-  const ext = file.slice(file.lastIndexOf(".") + 1).toLowerCase();
+  const ext = extname(path).slice(1).toLowerCase();
   for (const record of runningPlugins(pluginsSnapshot()))
     for (const type of record.manifest.contributes.textFiles)
       if (type.extensions.includes(ext))

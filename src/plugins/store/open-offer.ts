@@ -1,7 +1,7 @@
 import { askForRequirements } from "./requirements";
 import { canSwitch } from "./lifecycle";
 import { WIKILINK_SOURCE } from "../../utils/note-link";
-import { basename } from "../../utils/path";
+import { basename, extname } from "../../utils/path";
 import type { Strings } from "../../i18n/strings";
 import { showMessage } from "../../engine/controls/app-dialog";
 import {
@@ -31,7 +31,7 @@ function catalogEditorFor(
   items: CatalogItem[],
 ): CatalogItem | null {
   const name = basename(path);
-  const ext = name.slice(name.lastIndexOf(".") + 1).toLowerCase();
+  const ext = extname(name).slice(1).toLowerCase();
   return (
     items.find(
       ({ official, manifest: { contributes } }) =>
