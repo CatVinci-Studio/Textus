@@ -6,11 +6,23 @@ const doc = vi.hoisted(() => ({
   filled: [] as string[][],
 }));
 const plugin = vi.hoisted(() => ({ claims: new Set<string>() }));
+/** The zone under the pointer, by x: off the documents left of 0, on the
+ *  left edge up to 20, the body after. */
+const zoneAt = (x: number) =>
+  x < 0 ? null : x < 20 ? "left" : ("center" as const);
 
 vi.mock("../../engine/layout/drop-zones", () => ({
-  dropGeometry: () => ({ bars: [] }),
+  dropGeometry: () => ({
+    bars: [],
+    panes: [
+      { tabId: "t1", rect: { left: 0, right: 500, top: 0, bottom: 500 } },
+    ],
+  }),
   barDropAt: () => null,
-  dropTargetAt: () => ({ zone: "center", tabId: "t1", rect: {} }),
+  dropTargetAt: (x: number) => {
+    const zone = zoneAt(x);
+    return zone && { zone, tabId: "t1", rect: {} };
+  },
 }));
 vi.mock("../../engine/layout/store", () => ({
   paneOf: () => "p1",
@@ -20,8 +32,15 @@ vi.mock("../../engine/layout/store", () => ({
 vi.mock("../../engine/controls/tabs/incoming-tab", () => ({
   setIncomingTab: () => {},
 }));
+const split = vi.hoisted(() => ({ shown: [] as string[] }));
 vi.mock("../islands/split-drop", () => ({
-  arrivalPreview: () => ({ clear() {}, show() {}, take: () => null }),
+  arrivalPreview: () => ({
+    clear() {},
+    // Only a split: a body with no tab row shows "center".
+    show: (_x: number, _y: number, target: { zone: string }) =>
+      target.zone !== "center" && split.shown.push(target.zone),
+    take: () => null,
+  }),
 }));
 vi.mock("../../platform/ipc", () => ({
   fs: { pictureSize: () => Promise.resolve(null) },
@@ -106,5 +125,39 @@ describe("files let go on a document", () => {
     await vi.waitFor(() => expect(doc.filled).toEqual([[]]));
     await flush();
     expect(opened).toEqual(["/d/data.csv"]);
+  });
+});
+
+describe("a note dragged onto the documents", () => {
+  const note = [{ path: "/d/a.md", isDir: false }];
+  beforeEach(() => {
+    split.shown = [];
+    doc.target = null;
+  });
+
+  it("passes over the edge it comes in by without the islands making room", () => {
+    vi.useFakeTimers();
+    const drop = session(() => Promise.resolve());
+    drop.over(note, -5, 10, false);
+    drop.over(note, 10, 10, false);
+    drop.over(note, 100, 10, false);
+    expect(split.shown).toEqual([]);
+    // Back on the edge from the body, it splits.
+    drop.over(note, 10, 10, false);
+    expect(split.shown).toEqual(["left"]);
+    drop.leave();
+    vi.useRealTimers();
+  });
+
+  it("splits on the edge it came in by once it rests there", () => {
+    vi.useFakeTimers();
+    const drop = session(() => Promise.resolve());
+    drop.over(note, -5, 10, false);
+    drop.over(note, 10, 10, false);
+    expect(split.shown).toEqual([]);
+    vi.advanceTimersByTime(400);
+    expect(split.shown).toEqual(["left"]);
+    drop.leave();
+    vi.useRealTimers();
   });
 });
