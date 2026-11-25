@@ -94,6 +94,12 @@ export function showDocImage(
   stillWanted: () => boolean = () => true,
 ): void {
   img.decoding = "async";
+  // Never send our origin as the referrer: image hosts that guard against
+  // hotlinking (they serve a browser that opened the picture directly, an
+  // empty referrer, but 403 a page of another origin) refused every picture
+  // the app showed. Observed on Chinese CDNs; the empty referrer is what
+  // browsers and other editors send.
+  img.referrerPolicy = "no-referrer";
   // Loaded only as it comes near the screen (set before the src, or it
   // loads at once): a short note can hold many large photos.
   img.loading = "lazy";
@@ -112,6 +118,10 @@ export function showDocImage(
       })
       .catch(() => {});
   } else {
+    // The attribute may already hold a URL that failed with the old
+    // referrer (a raw <img> is drawn with its src first): drop it, so the
+    // policy takes effect on the load this assignment starts.
+    img.removeAttribute("src");
     img.src = resolveImageSrc(src, doc);
   }
   img.dataset.docSrc = src;
