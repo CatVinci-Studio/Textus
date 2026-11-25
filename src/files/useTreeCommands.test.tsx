@@ -64,9 +64,16 @@ function setup() {
         undo: () => steps.left && did.push("undo") > 0,
         redo: () => steps.left && did.push("redo") > 0,
       },
+      collapseAll: () => did.push("collapse all"),
     });
     const row = (e: DirEntryInfo) => (
-      <div key={e.path} role="treeitem" tabIndex={-1} data-path={e.path}>
+      <div
+        key={e.path}
+        role="treeitem"
+        tabIndex={-1}
+        data-path={e.path}
+        aria-level={e.path.startsWith("/b/") ? 2 : 1}
+      >
         {e.name}
       </div>
     );
@@ -202,4 +209,15 @@ it("Edit › Undo and Redo take back the tree's file operations once; with none,
   steps.left = false;
   expect(menu("undo")).toBe(true);
   expect(did).toHaveLength(4);
+});
+
+it("⌘← (Ctrl+←) collapses every folder, the keyboard kept on the top row the row is under", () => {
+  const { did, at } = setup();
+  act(() => at("/b/f2.md").focus());
+  fireEvent.keyDown(at("/b/f2.md"), { key: "ArrowLeft", ctrlKey: true });
+  expect(did).toEqual(["collapse all"]);
+  expect(document.activeElement).toBe(at("/a/f199.md"));
+  os.mac = true;
+  fireEvent.keyDown(at("/a/f199.md"), { key: "ArrowLeft", metaKey: true });
+  expect(did).toEqual(["collapse all", "collapse all"]);
 });

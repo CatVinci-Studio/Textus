@@ -3,12 +3,17 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type RefObject,
 } from "react";
-import { drawHeldRows, visibleItems } from "../engine/controls/useTreeKeys";
+import {
+  drawHeldRows,
+  rowLevel,
+  visibleItems,
+} from "../engine/controls/useTreeKeys";
 import { hasNativeMenuBar } from "../platform/capabilities";
 import { isMacPlatform } from "../platform/os";
 import { FOCUSED_EDIT_EVENT } from "../utils/events";
 import { useLatest } from "../utils/hooks/useLatest";
-import { comboFromEvent } from "../utils/shortcuts";
+import { comboFromEvent, formatCombo } from "../utils/shortcuts";
+import type { Strings } from "../i18n/strings";
 import {
   rowOfEvent,
   shownRows,
@@ -31,10 +36,22 @@ type TreeCommand =
   | "paste"
   | "duplicate"
   | "undo"
-  | "redo";
+  | "redo"
+  | "collapseAll";
+
+/** Collapse All's keys, as VS Code's lists have them (⌘← or Ctrl+←). */
+const COLLAPSE_ALL_KEYS = "mod+arrowleft";
+
+/** Collapse All in a menu, its keys shown. */
+export const collapseAllItem = (t: Strings, onSelect: () => void) => ({
+  label: t.treeCollapseAll,
+  accel: formatCombo(COLLAPSE_ALL_KEYS),
+  onSelect,
+});
 
 const EVERYWHERE: Record<string, TreeCommand> = {
   f2: "rename",
+  [COLLAPSE_ALL_KEYS]: "collapseAll",
   "mod+a": "selectAll",
   "shift+arrowup": "extendUp",
   "shift+arrowdown": "extendDown",
@@ -80,7 +97,7 @@ const KEYS: Record<"mac" | "other", Record<string, TreeCommand>> = {
 /**
  * The tree's keys for its rows, from one table: rename, open, move to the
  * Trash, cut, copy, paste and duplicate (the picked rows, if the row is one
- * of them), select all, Shift with an arrow to pick a range, and undo and
+ * of them), collapse all, select all, Shift with an arrow to pick a range, and undo and
  * redo the tree's file operations. The Edit menu's Undo, Redo and Select
  * All come through FOCUSED_EDIT_EVENT. Returns the tree's keydown, true
  * when a key was one of them.
@@ -97,12 +114,14 @@ export function useTreeCommands(input: {
   /** Takes back or does again the tree's last file operation; false when
    *  there is none. */
   undo: FileUndo["act"];
+  /** Every folder below the root folds. */
+  collapseAll: () => void;
 }) {
   const latest = useLatest(input);
 
   /** False when the command had nothing to do, the key left to others. */
   const run = (command: TreeCommand, row: HTMLElement): boolean | void => {
-    const { treeRef, selection, rename, open, trash, clip, undo } =
+    const { treeRef, selection, rename, open, trash, clip, undo, collapseAll } =
       latest.current;
     const tree = treeRef.current;
     if (!tree) return;
@@ -134,6 +153,16 @@ export function useTreeCommands(input: {
         // Rows a big folder held back are rows too.
         drawHeldRows(tree);
         return selection.selectAll(shownRows(tree));
+      case "collapseAll": {
+        // The keyboard stays on the top folder the row is in, which stays.
+        const rows = visibleItems(tree);
+        rows
+          .slice(0, rows.indexOf(row) + 1)
+          .reverse()
+          .find((el) => rowLevel(el) === 1)
+          ?.focus();
+        return collapseAll();
+      }
       case "extendUp":
       case "extendDown": {
         const rows = visibleItems(tree);
