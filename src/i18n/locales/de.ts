@@ -1152,6 +1152,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   diagramEngineHint:
     "Pele zeichnet schneller, ordnet Diagramme aber anders an als GitHub und Mermaid und kennt einige Funktionen nicht, etwa HTML in Beschriftungen; was Pele nicht zeichnen kann, zeichnet Mermaid.",
   codeLineNumbersLabel: "Zeilennummern in Codeblöcken",
+  codeEnterTwiceLeavesLabel: "Zweimal Enter verlässt einen Codeblock",
+  codeEnterTwiceLeavesHint:
+    "Wenn aus: in der letzten Zeile ↓ drücken, um ihn zu verlassen.",
   firstLineIndentLabel: "Erste Zeile einrücken",
   emptyLineHint: "/ tippen, um einzufügen",
   colorSwatchesLabel: "Farbfelder vor Farbcodes",

@@ -64,6 +64,9 @@ export interface Settings {
   /** Line numbers beside each code block, whose lines then scroll sideways
    *  instead of wrapping. */
   codeLineNumbers: boolean;
+  /** Enter on a code block's empty last line leaves the block; off, it
+   *  is a new line, and Mod+Enter or Down leaves it. */
+  codeEnterTwiceLeaves: boolean;
   /** Where a small square of the colour shows before a colour code. */
   colorSwatches: ColorSwatchMode;
   /** What `~text~` is: a subscript after a letter or digit (`H~2~O`), a
@@ -338,6 +341,7 @@ export const DEFAULT_SETTINGS: Settings = {
   enableMermaid: true,
   diagramEngine: "mermaid",
   codeLineNumbers: false,
+  codeEnterTwiceLeaves: true,
   colorSwatches: "off",
   singleTilde: "subscript",
   singleNewline: "join",

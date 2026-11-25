@@ -1,5 +1,5 @@
 import { rankList, type PreparedList } from "../../utils/list-filter";
-import type { CompletionSource, PanelItem } from "./sources";
+import type { CompletionPlace, CompletionSource, PanelItem } from "./sources";
 
 /**
  * What the panel shows, worked out from what is typed: which sources match
@@ -34,11 +34,11 @@ function compareMatches(a: SourceMatch, b: SourceMatch): number {
 export function matchSources(
   sources: readonly CompletionSource[],
   text: string,
-  inMath: boolean,
+  place: CompletionPlace,
 ): SourceMatch[] {
   const found: SourceMatch[] = [];
   for (const source of sources) {
-    if (source.where !== "any" && (source.where === "math") !== inMath)
+    if (source.where === "any" ? place === "code" : source.where !== place)
       continue;
     const m = source.pattern.exec(text);
     if (!m || !m[0]) continue;

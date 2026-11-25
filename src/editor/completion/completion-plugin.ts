@@ -30,10 +30,10 @@ function contextAt(view: EditorView): CaretContext | null {
   if ($from.parent !== $to.parent) return null;
   const parent = $to.parent;
   const inMath = MATH_NODES.has(parent.type.name);
-  // Code is typed as it is: "/usr" or "a :b" there are no commands.
-  const typed =
-    (parent.isTextblock && !parent.type.spec.code) ||
-    SOURCE_NODES.has(parent.type.name);
+  // Code is typed as it is: "/usr" or "a :b" there are no commands, only
+  // what a plugin offers for code.
+  const code = parent.type.name === "code_block";
+  const typed = parent.isTextblock || SOURCE_NODES.has(parent.type.name);
   if (!inMath && !typed) return null;
   const at = $to.parentOffset;
   return {
@@ -50,6 +50,7 @@ function contextAt(view: EditorView): CaretContext | null {
       "￼",
     ),
     inMath,
+    ...(code ? { language: String(parent.attrs.language ?? "") } : {}),
     caret: $to.pos,
   };
 }

@@ -1020,6 +1020,8 @@ export default {
   diagramEngineHint:
     "Pele 繪圖更快，但版面配置與 GitHub、Mermaid 不盡相同，也不支援標籤中的 HTML 等少數功能；Pele 畫不了的圖會自動改由 Mermaid 繪製。",
   codeLineNumbersLabel: "程式碼區塊顯示行號",
+  codeEnterTwiceLeavesLabel: "程式碼區塊中連按兩次 Enter 跳出",
+  codeEnterTwiceLeavesHint: "關閉後，在最後一行按 ↓ 跳出。",
   firstLineIndentLabel: "首行縮排",
   emptyLineHint: "輸入 / 插入內容",
   colorSwatchesLabel: "顏色代碼前的色塊",
