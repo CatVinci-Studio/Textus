@@ -223,6 +223,32 @@ fn only_what_makes_or_writes_a_file_can_be_the_apps_own() {
     assert_eq!(touched(&written, &known(), own), Some(Vec::new()));
 }
 
+/// Windows reports the file a save renamed over as removed: while the file
+/// is still there, it was the app's own write; once gone, it is news.
+#[test]
+fn an_own_file_reported_removed_but_still_there_was_written_over() {
+    let dir = tempfile::tempdir().unwrap();
+    let real = dir.path().to_path_buf();
+    let known = HashMap::from([(real.clone(), "/link/notes".to_string())]);
+    let file = real.join("own.md");
+    std::fs::write(&file, "# Own").unwrap();
+    let name = file.to_string_lossy().to_string();
+    let own = |_: &Path| true;
+    for kind in [
+        EventKind::Remove(RemoveKind::File),
+        EventKind::Modify(ModifyKind::Name(RenameMode::From)),
+    ] {
+        let replaced = event(kind, &[&name]);
+        assert_eq!(touched(&replaced, &known, own), Some(Vec::new()));
+        std::fs::remove_file(&file).unwrap();
+        assert_eq!(
+            touched(&replaced, &known, own),
+            Some(vec!["/link/notes".into()])
+        );
+        std::fs::write(&file, "# Own").unwrap();
+    }
+}
+
 #[test]
 fn watched_whole_only_the_topmost_open_folders_are_watched() {
     let dirs = [
