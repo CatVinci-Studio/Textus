@@ -215,11 +215,11 @@
    rather than riding after the tabs.
    The strip fills the room, not a margin: the fit reads the +'s margin as
    room it takes (tab-room.ts). */
-.tab-bar[data-touch] .tab-strip {
+:root[data-touch] .tab-bar .tab-strip {
   flex-grow: 1;
 }
 
-.tab-bar[data-touch] .tab-bar-add {
+:root[data-touch] .tab-bar .tab-bar-add {
   position: sticky;
   right: 0;
   z-index: 2;

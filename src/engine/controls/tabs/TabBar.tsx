@@ -149,7 +149,6 @@ export function TabBar({
       data-tauri-drag-region={inner ? undefined : true}
       data-pane-id={paneId}
       data-overflow={overflow || undefined}
-      data-touch={isMobileApp || undefined}
       ref={barRef}
       role="tablist"
       aria-label={labels.tabs}

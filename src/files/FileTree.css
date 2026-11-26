@@ -95,13 +95,8 @@
 }
 
 /* A tablet's tools are a finger wide (mobile/styles/base.css). */
-@media (pointer: coarse) {
-  :root:is([data-platform="ios"], [data-platform="android"]):not(
-      [data-window-chrome="mobile"]
-    )
-    .tree-main {
-    --tree-top: calc(var(--touch-target) + 4px);
-  }
+:root[data-touch]:not([data-window-chrome="mobile"]) .tree-main {
+  --tree-top: calc(var(--touch-target) + 4px);
 }
 
 :root:not([data-window-chrome="mobile"]) .tree-toolbar {

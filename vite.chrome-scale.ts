@@ -21,7 +21,7 @@ const DOCUMENT = [
   /\/export\/print\.css$/,
   /\/playground\//,
   // Interface Size's presets, written as each size draws them.
-  /\/engine\/tokens\/ui-sizes\.css$/,
+  /\/engine\/tokens\/ui-sizes(-phone)?\.css$/,
 ];
 
 /** A length worth scaling: 3px and up; hairlines stay crisp. Plugin pages

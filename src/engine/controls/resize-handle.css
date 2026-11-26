@@ -89,29 +89,23 @@
    line's width. It reaches into the panel it sizes, not over the page
    beside it (a format bar's first button), nor down over the composer's
    text. */
-@media (pointer: coarse) {
-  :root:is([data-platform="ios"], [data-platform="android"])
-    .resize-handle::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: var(--touch-target);
-  }
-  :root:is([data-platform="ios"], [data-platform="android"])
-    .resize-handle[data-edge="right"]::before {
-    right: 0;
-  }
-  :root:is([data-platform="ios"], [data-platform="android"])
-    .resize-handle[data-edge="left"]::before {
-    left: 0;
-  }
-  :root:is([data-platform="ios"], [data-platform="android"])
-    .resize-handle[data-edge="top"]::before {
-    top: auto;
-    left: 0;
-    right: 0;
-    width: auto;
-    height: var(--touch-target);
-  }
+:root[data-touch] .resize-handle::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--touch-target);
+}
+:root[data-touch] .resize-handle[data-edge="right"]::before {
+  right: 0;
+}
+:root[data-touch] .resize-handle[data-edge="left"]::before {
+  left: 0;
+}
+:root[data-touch] .resize-handle[data-edge="top"]::before {
+  top: auto;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: var(--touch-target);
 }
