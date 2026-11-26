@@ -14,7 +14,8 @@ import { PluginOutlineRows, usePluginOutline } from "./OutlineExtras";
 import "./FileTree.css";
 
 interface OutlineProps {
-  content: string;
+  /** Null when the tab in front holds no document. */
+  content: string | null;
   /** The tab whose document it lists, which scrolls to a row's heading. */
   tabId: string;
 }
@@ -27,7 +28,8 @@ function headingAnchor(tabId: string, texts: string[], index: number): string {
   return id || sourceAnchors(texts)[index];
 }
 
-export function Outline({ content, tabId }: OutlineProps) {
+export function Outline({ content: shown, tabId }: OutlineProps) {
+  const content = shown ?? "";
   const { t } = useSettings();
   const goTo = (index: number) => goToHeading(tabId, index);
   const headings = useMemo(() => {
@@ -97,9 +99,12 @@ export function Outline({ content, tabId }: OutlineProps) {
     return rows;
   }, [headings, collapsed]);
 
-  if (headings.length === 0 && extras.length === 0) {
-    return <p className="tx-list-note">{t.outlineEmpty}</p>;
-  }
+  if (headings.length === 0 && extras.length === 0)
+    return (
+      <p className="tx-pane-empty">
+        {shown === null ? t.outlineNoDocument : t.outlineNoHeadings}
+      </p>
+    );
 
   const toggle = (id: string) =>
     setCollapsed((prev) => {
