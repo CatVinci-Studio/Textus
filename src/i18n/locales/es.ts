@@ -22,6 +22,7 @@ export default {
   agentPanelPopOut: "Abrir en una ventana aparte",
   agentPanelResize: "Cambiar el tamaño del panel de IA",
   sidebarResize: "Cambiar el tamaño de la barra lateral",
+  composerResize: "Cambiar la altura del cuadro de texto",
   phonePages: "Página",
   phonePageWrite: "Escribir",
   phonePageAi: "IA",
@@ -881,7 +882,6 @@ para usar una.
   skillCategoryCheck: "Comprobar",
   skillCategoryFormat: "Formatos",
   skillCategoryCreate: "Crear",
-  pickerKeysHint: "↑↓ para moverte · Intro para elegir · Esc para cerrar",
   skillPickerAbout:
     "Escribe / para usar una habilidad: una instrucción ya preparada, como Corregir o Resumir.",
   skillPickerNoMatch: "Ninguna habilidad coincide con «{query}».",

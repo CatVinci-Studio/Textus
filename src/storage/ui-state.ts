@@ -52,6 +52,11 @@ const LOCAL: {
     decode: (raw) => Number(raw),
     encode: (value) => String(Math.round(value)),
   },
+  composerPx: {
+    key: "textus-composer-px",
+    decode: (raw) => Number(raw),
+    encode: (value) => String(Math.round(value)),
+  },
   panelWidth: {
     key: "textus-panel-width",
     decode: (raw) => Number(raw),

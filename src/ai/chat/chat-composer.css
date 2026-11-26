@@ -65,9 +65,12 @@
   margin-top: 4px;
 }
 
+/* A group's name as a menu's heading reads (ContextMenu.css). */
 .composer-picker-group-title {
   margin: 0;
   padding: 8px 8px 4px;
+  font-size: var(--text-footnote);
+  font-weight: 400;
 }
 
 /* Label and /name on one line, what it does under them. */
@@ -86,7 +89,10 @@
   min-width: 0;
 }
 
+/* As the command palette's rows: the name in the text's own weight, what
+   to type beside it and what it does under it in the muted ink. */
 .composer-picker-line .inline-chat-skill-name {
+  font-weight: 400;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -95,19 +101,9 @@
 .composer-picker-secondary {
   flex-shrink: 0;
   color: var(--ui-muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-caption);
 }
 
 .composer-picker-item .inline-chat-skill-preview {
-  font-size: var(--text-caption);
-}
-
-.composer-picker-keys {
-  flex-shrink: 0;
-  padding: 4px 12px 4px;
-  border-top: 1px solid var(--ui-border);
-  color: var(--ui-muted);
   font-size: var(--text-caption);
 }
 
@@ -143,9 +139,14 @@
      around an empty input. */
   line-height: calc(20px * var(--ui-text-scale, 1));
   padding: 4px 4px;
-  /* Grows with content up to ~6 lines; the auto-resize effect owns
+  /* Grows with content up to ~6 lines, or the height its top edge was
+     dragged to (ComposerGrip's --composer-px); the auto-resize effect owns
      overflow-y, setting it to auto only once this clamps. */
-  max-height: calc(120px * var(--ui-text-scale, 1));
+  min-height: var(--composer-px, auto);
+  max-height: max(
+    var(--composer-px, 0px),
+    calc(120px * var(--ui-text-scale, 1))
+  );
   overflow-y: hidden;
   /* Explicit: `overflow-y` alone computes the x axis to `auto`, which drew
      a full-width scrollbar under the placeholder. */
@@ -326,4 +327,20 @@
 
 .inline-chat-action {
   color: var(--ui-text);
+}
+
+/* The composer's top edge: a strip astride it that drags the box taller. */
+.inline-chat-bar {
+  position: relative;
+}
+
+/* Over the shared handle's own size (resize-handle.css). */
+.inline-chat-bar > .composer-grip {
+  top: -6px;
+  bottom: auto;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: 12px;
+  cursor: row-resize;
 }

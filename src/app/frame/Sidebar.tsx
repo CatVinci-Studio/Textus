@@ -160,7 +160,7 @@ export function Sidebar({
               <ResizeHandle
                 className="sidebar-resizer"
                 edge="right"
-                width={width.width}
+                size={width.width}
                 min={width.min}
                 max={width.max}
                 onResize={width.setWidth}

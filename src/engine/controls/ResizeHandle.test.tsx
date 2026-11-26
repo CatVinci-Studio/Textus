@@ -14,7 +14,7 @@ function renderHandle(edge: "left" | "right") {
     <ResizeHandle
       className="test-resizer"
       edge={edge}
-      width={240}
+      size={240}
       min={180}
       max={480}
       onResize={onResize}

@@ -22,6 +22,7 @@ export default {
   agentPanelPopOut: "別ウィンドウで開く",
   agentPanelResize: "AIパネルの幅を調整",
   sidebarResize: "サイドバーの幅を調整",
+  composerResize: "入力欄の高さを調整",
   phonePages: "ページ",
   phonePageWrite: "執筆",
   phonePageAi: "AI",
@@ -798,7 +799,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   skillCategoryCheck: "チェック",
   skillCategoryFormat: "文書",
   skillCategoryCreate: "作成",
-  pickerKeysHint: "↑↓ 移動 · Enter 決定 · Esc 閉じる",
   skillPickerAbout:
     "/ を入力するとスキルを使えます。「校正」や「要約」のような、用意された指示です。",
   skillPickerNoMatch: "「{query}」に一致するスキルはありません。",

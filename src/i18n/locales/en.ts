@@ -23,6 +23,7 @@ const en = {
   agentPanelPopOut: "Open in a separate window",
   agentPanelResize: "Resize the AI panel",
   sidebarResize: "Resize the sidebar",
+  composerResize: "Resize the message box",
   phonePages: "Page",
   phonePageWrite: "Write",
   phonePageAi: "AI",
@@ -825,7 +826,6 @@ type /name in a conversation to use one.
   skillCategoryCheck: "Check",
   skillCategoryFormat: "Formats",
   skillCategoryCreate: "Make",
-  pickerKeysHint: "↑↓ to move · Enter to choose · Esc to close",
   skillPickerAbout:
     "Type / to run a skill: a ready-made instruction such as Proofread or Summarize.",
   skillPickerNoMatch: "No skill matches “{query}”.",

@@ -22,6 +22,7 @@ export default {
   agentPanelPopOut: "Abrir em uma janela separada",
   agentPanelResize: "Redimensionar o painel de IA",
   sidebarResize: "Redimensionar a barra lateral",
+  composerResize: "Redimensionar a caixa de mensagem",
   phonePages: "Página",
   phonePageWrite: "Escrever",
   phonePageAi: "IA",
@@ -866,7 +867,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   skillCategoryCheck: "Verificar",
   skillCategoryFormat: "Formatos",
   skillCategoryCreate: "Criar",
-  pickerKeysHint: "↑↓ para navegar · Enter para escolher · Esc para fechar",
   skillPickerAbout:
     "Digite / para usar uma habilidade: uma instrução pronta, como Revisar ou Resumir.",
   skillPickerNoMatch: "Nenhuma habilidade corresponde a “{query}”.",

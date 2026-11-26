@@ -23,6 +23,7 @@ export default {
   agentPanelPopOut: "별도 창에서 열기",
   agentPanelResize: "AI 패널 크기 조절",
   sidebarResize: "사이드바 크기 조절",
+  composerResize: "입력창 높이 조절",
   phonePages: "페이지",
   phonePageWrite: "쓰기",
   phonePageAi: "AI",
@@ -788,7 +789,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   skillCategoryCheck: "검사",
   skillCategoryFormat: "문서 양식",
   skillCategoryCreate: "만들기",
-  pickerKeysHint: "↑↓ 이동 · Enter 선택 · Esc 닫기",
   skillPickerAbout:
     "/를 입력하면 스킬을 쓸 수 있습니다. ‘교정’이나 ‘요약’처럼 미리 준비된 지시입니다.",
   skillPickerNoMatch: "‘{query}’에 맞는 스킬이 없습니다.",

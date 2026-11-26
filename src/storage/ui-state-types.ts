@@ -8,6 +8,8 @@ export interface UiState {
   panelPx: number;
   /** The sidebar's width as last dragged, in Medium's pixels. */
   sidebarPx: number;
+  /** The AI composer's box as last dragged taller; 0 grows by its text. */
+  composerPx: number;
   /** Both as kept before 1.4.1, in the first design's pixels. */
   panelWidth: number;
   sidebarWidth: number;
