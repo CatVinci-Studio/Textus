@@ -49,6 +49,11 @@ jobs:
           set -e
           # 2 = models.dev unreachable or unreadable: fail the run, no PR.
           if [ "$status" -ge 2 ]; then exit "$status"; fi
+          # In the repository's own format, which CI checks: the script
+          # writes JSON.stringify's.
+          npx --yes "prettier@$(node -p "require('./package.json').devDependencies.prettier")" \
+            --write --log-level warn src/ai/models-snapshot.json \
+            src-tauri/crates/aicompat/data/model-capabilities.json
           echo "pins_ok=$([ "$status" -eq 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
           if git diff --quiet -- src/ai/models-snapshot.json \
             src-tauri/crates/aicompat/data/model-capabilities.json; then
