@@ -1,6 +1,14 @@
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { linkTargets, isLocal } from "./check-links.mjs";
+import {
+  codePaths,
+  isLocal,
+  linkTargets,
+  missingCodePaths,
+  namesCode,
+} from "./check-links.mjs";
 import {
   bumpsVersion,
   classify,
@@ -293,6 +301,34 @@ describe("documentation alone and the version bump", () => {
     expect(
       ["../b.md", "https://x.y", "#top", "/abs", "mailto:a@b"].map(isLocal),
     ).toEqual([true, false, false, false, false]);
+  });
+
+  it("finds the source files a doc names in code spans, outside fences", () => {
+    expect(
+      codePaths(
+        "`src/app/App.tsx` `lib.rs:42` `settings.json` `npm run x`\n```\n`gone.ts`\n```\n",
+      ),
+    ).toEqual(["src/app/App.tsx", "lib.rs"]);
+  });
+
+  it("names a doc's source file missing unless the repository has it", () => {
+    const dir = mkdtempSync(join(tmpdir(), "doc-paths-"));
+    writeFileSync(
+      join(dir, "a.md"),
+      "`editor/x/doc.ts` `doc.ts` `src/gone.ts` `kebab-case.ts` `old.rs`",
+    );
+    expect(missingCodePaths(["a.md"], ["src/editor/x/doc.ts"], dir)).toEqual([
+      "a.md: src/gone.ts",
+      "a.md: old.rs",
+    ]);
+    expect(
+      [
+        "AGENTS.md",
+        "docs/dev/a.md",
+        "docs/dev/plugins/a.md",
+        "docs/releases/1.0.0.md",
+      ].map(namesCode),
+    ).toEqual([true, true, false, false]);
   });
 });
 

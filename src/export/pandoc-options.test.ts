@@ -19,7 +19,14 @@ describe("pandocOptions", () => {
       bibliography: "/r/refs.bib",
       csl: null,
       extraArgs: ["--toc-depth=2", "-V", "lang=de"],
+      hardLineBreaks: false,
     });
     expect(pandocOptions(DEFAULT_SETTINGS, "epub").extraArgs).toEqual([]);
+  });
+
+  it("asks for Pandoc's line breaks where the editor shows them", () => {
+    expect(pandocOptions(DEFAULT_SETTINGS, "docx", true).hardLineBreaks).toBe(
+      true,
+    );
   });
 });

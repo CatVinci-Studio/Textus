@@ -16,10 +16,12 @@ export interface UiState {
   /** The sidebar tab last shown: files, outline or clipboard. */
   sidebarTab: string;
   /** Rust's (commands/prefs.rs, recents.rs): the last editor window's
-   *  inner size and place, in logical pixels, and the recent files and
-   *  folders of File › Open Recent, newest first. */
+   *  inner size and place, in logical pixels, whether it was left
+   *  maximized or full screen, and the recent files and folders of
+   *  File › Open Recent, newest first. */
   editorWindowSize: [number, number];
   editorWindowPosition: [number, number];
+  editorWindowMode: "normal" | "maximized" | "fullscreen";
   recentFiles: string[];
   recentFolders: string[];
   /** iOS: recently opened documents, newest first. */
@@ -61,6 +63,8 @@ export interface UiState {
   fileTreeHidden: string;
   /** The documents left read-only (View › Read Only), by path. */
   readOnlyPaths: string[];
+  /** Documents pinned in their row, by path (document/pinned.ts). */
+  pinnedPaths: string[];
   /** Files Textus AI left something in, by path: revisions waiting, a file
    *  it made waiting to be kept, a file it wrote straight in. */
   aiFileMarks: Record<string, AiFileMark>;

@@ -1,12 +1,11 @@
 import { fill } from "../i18n/fill";
-import { ActionSheet } from "../engine/controls/ActionSheet";
 import { Presence, PresenceDiv } from "../engine/motion/usePresence";
 import type { useModalDialog } from "../engine/controls/useModalDialog";
 import type { Strings } from "../i18n/strings";
 import { DialogActions } from "../engine/controls/DialogActions";
 
-/** The save/discard/cancel prompt: a dialog on the desktop, an action sheet
- *  on a phone. */
+/** The save/discard/cancel prompt: the app's dialog, on a phone in the
+ *  form its other alerts take (mobile/styles/chrome.css). */
 export function ClosePrompt({
   open,
   phone,
@@ -18,10 +17,10 @@ export function ClosePrompt({
   t,
 }: {
   open: boolean;
+  phone: boolean;
   /** The document closing, named in the question; none for a window. */
   name?: string | null;
-  phone: boolean;
-  /** useModalDialog's wiring for the desktop dialog. */
+  /** useModalDialog's wiring for the dialog. */
   dialogProps: ReturnType<typeof useModalDialog>;
   onSave: () => void;
   onDiscard: () => void;
@@ -33,32 +32,11 @@ export function ClosePrompt({
     : t.closePromptMessage;
   return (
     <>
-      <Presence show={open && phone}>
-        {open && phone && (
-          // The sheet runs its onClose before the chosen action; the
-          // handlers still hold the pending close they were rendered with.
-          <ActionSheet
-            title={message}
-            items={[
-              {
-                label: t.closePromptSave,
-                onSelect: onSave,
-              },
-              {
-                label: t.closePromptDiscard,
-                danger: true,
-                onSelect: onDiscard,
-              },
-            ]}
-            onClose={onCancel}
-          />
-        )}
-      </Presence>
-      <Presence show={open && !phone}>
-        {open && !phone && (
+      <Presence show={open}>
+        {open && (
           <PresenceDiv className="tx-backdrop">
             <div
-              className="close-prompt"
+              className={`close-prompt${phone ? " app-dialog" : ""}`}
               {...dialogProps}
               role="dialog"
               aria-modal="true"
@@ -68,7 +46,7 @@ export function ClosePrompt({
               <DialogActions
                 start={
                   <button
-                    className="tx-button close-prompt-discard"
+                    className="tx-button close-prompt-discard app-dialog-danger"
                     onClick={onDiscard}
                   >
                     {t.closePromptDiscard}

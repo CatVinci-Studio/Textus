@@ -1,6 +1,6 @@
 import { Channel } from "@tauri-apps/api/core";
 import type { ImageHost } from "../prefs/SettingsContext";
-import type { CustomEndpointStatus_Serialize } from "./bindings/auth";
+import type { CustomEndpointStatus } from "./bindings/auth";
 import { aiCommand, command } from "./ipc-call";
 
 /** Backend commands for signing in: AI providers, custom endpoints, picture hosts. */
@@ -10,9 +10,19 @@ interface OauthStatus {
   configured: boolean;
 }
 
-/** What custom_endpoint_status reports. The key itself never comes back
- *  (`api_key` is always null), only `has_api_key`. */
-export type CustomEndpointConfig = CustomEndpointStatus_Serialize;
+/** One endpoint as custom_endpoints_status reports it (Rust's
+ *  `CustomEndpointStatus`). The key itself never comes back, only
+ *  `has_api_key`. */
+export type CustomEndpointConfig = CustomEndpointStatus;
+
+/** What the settings page saves for an endpoint; `id` null adds one. */
+export interface CustomEndpointEdit {
+  id: string | null;
+  name: string;
+  baseUrl: string;
+  apiKey: string | null;
+  model: string;
+}
 
 /** Provider ids with an OAuth flow and their command names, looked up by
  *  provider id as the picker iterates the catalog. */
@@ -56,12 +66,16 @@ export const auth = {
   clearProviderApiKey: (provider: string) =>
     command("clear_provider_api_key", provider),
 
-  customEndpointStatus: () => command("custom_endpoint_status"),
-  setCustomEndpoint: (baseUrl: string, apiKey: string | null, model: string) =>
-    command("set_custom_endpoint", baseUrl, apiKey, model),
-  clearCustomEndpoint: () => command("clear_custom_endpoint"),
-  fetchCustomModels: (baseUrl: string, apiKey: string | null) =>
-    aiCommand("fetch_custom_models", baseUrl, apiKey),
+  customEndpointsStatus: () => command("custom_endpoints_status"),
+  /** Resolves to the endpoint's id, a new one's too. */
+  setCustomEndpoint: (e: CustomEndpointEdit) =>
+    command("set_custom_endpoint", e.id, e.name, e.baseUrl, e.apiKey, e.model),
+  clearCustomEndpoint: (id: string) => command("clear_custom_endpoint", id),
+  fetchCustomModels: (
+    id: string | null,
+    baseUrl: string,
+    apiKey: string | null,
+  ) => aiCommand("fetch_custom_models", id, baseUrl, apiKey),
 };
 
 /** Image-host tokens, kept in the provider-key store under the id Rust

@@ -144,6 +144,7 @@ var handlers = {
         text: params.text,
         match: params.match,
         inMath: params.inMath,
+        language: params.language,
         query: params.query,
         after: params.after,
         path: params.path,
@@ -263,6 +264,12 @@ var handlers = {
     var provide = pasteHandlers[params.id];
     if (!provide) return null;
     var markdown = await provide(params.text);
+    return typeof markdown === "string" ? markdown : null;
+  },
+  $provideDrop: async function (params) {
+    var provide = dropHandlers[params.id];
+    if (!provide) return null;
+    var markdown = await provide(params.file);
     return typeof markdown === "string" ? markdown : null;
   },
   $provideHover: async function (params) {

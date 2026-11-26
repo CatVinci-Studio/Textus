@@ -56,12 +56,12 @@ const SOFT_BREAK = '[data-type="hardbreak"][data-is-inline="true"]';
 it("breaks the line at a single newline in a vault without strict line breaks", async () => {
   vi.mocked(fs.folderConventions).mockResolvedValue(vault(false));
   const pane = preview("/v/a.md");
-  await waitFor(() =>
-    expect(pane()?.classList.contains("split-preview-breaks")).toBe(true),
-  );
   // The editor loads on the first preview: slow on a busy machine.
   await waitFor(
-    () => expect(pane()?.querySelector(SOFT_BREAK)).not.toBeNull(),
+    () =>
+      expect(
+        pane()?.querySelector(`[data-line-breaks] ${SOFT_BREAK}`),
+      ).not.toBeNull(),
     {
       timeout: 10_000,
     },
@@ -81,7 +81,7 @@ it("keeps one paragraph line where the vault asks for strict line breaks", async
       timeout: 10_000,
     },
   );
-  expect(pane()?.classList.contains("split-preview-breaks")).toBe(false);
+  expect(pane()?.querySelector("[data-line-breaks]")).toBeNull();
   expect(pane()?.innerHTML).not.toContain("<br>");
 });
 

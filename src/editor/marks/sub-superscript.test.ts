@@ -17,9 +17,40 @@ describe("subscript and superscript", () => {
     expect(t.markdown()).toBe(source);
   });
 
+  it("reads one tilde as a subscript after a word, else as written", async () => {
+    const source =
+      "40.30~40.45 = **64.0~64.2%**; 5~10人，20~30人; H~2~O, a~n-1~; ~a~ ~~b~~";
+    const t = await openView(source);
+    expect(tags(t.view.dom, "strong")).toEqual(["64.0~64.2%"]);
+    expect(tags(t.view.dom, "sub")).toEqual(["2", "n-1"]);
+    expect(tags(t.view.dom, "del")).toEqual(["b"]);
+    expect(t.markdown()).toBe(source);
+  });
+
+  it("reads one tilde as typed where the setting says so", async () => {
+    const source = "H~2~O and ~a~ and ~~b~~";
+    const t = await openView(source, { singleTilde: "text" });
+    expect(t.view.dom.querySelector("sub")).toBeNull();
+    expect(tags(t.view.dom, "del")).toEqual(["b"]);
+    expect(t.markdown()).toBe(source);
+  });
+
+  it("types no subscript where one tilde reads as typed", async () => {
+    const t = await openView("", { singleTilde: "text" });
+    t.type("H~2~O");
+    expect(t.view.dom.querySelector("sub")).toBeNull();
+    expect(t.markdown()).toBe("H~2~O");
+  });
+
+  it("types a subscript only of what a file would read as one", async () => {
+    const t = await openView("");
+    t.type("5~10人~ ");
+    expect(t.view.dom.querySelector("sub")).toBeNull();
+  });
+
   it("strikes out one tilde each side away from a word, as GitHub does", async () => {
     const source = "Was ~wrong~ and ~two words~; CO~2~ and H~2~O stay.";
-    const t = await openView(source);
+    const t = await openView(source, { singleTilde: "strikethrough" });
     expect(tags(t.view.dom, "del")).toEqual(["wrong", "two words"]);
     expect(tags(t.view.dom, "sub")).toEqual(["2", "2"]);
     expect(t.markdown()).toBe(source);
@@ -29,6 +60,59 @@ describe("subscript and superscript", () => {
     const t = await openView("2^10 and 3^4 are powers.");
     expect(t.view.dom.querySelector("sup")).toBeNull();
     expect(t.markdown()).toBe("2^10 and 3^4 are powers.");
+  });
+
+  it.each(["2^10和3^5", "x^2+y^2", "2^10,3^5", "e^x+e^y", "a ^ b ^ c"])(
+    "leaves powers written with carets as text: %s",
+    async (source) => {
+      const t = await openView(source);
+      expect(t.view.dom.querySelector("sup")).toBeNull();
+      expect(t.markdown()).toBe(source);
+    },
+  );
+
+  it("still reads a superscript before punctuation, a space or CJK", async () => {
+    const source = "x^2^, H^+^ and 1^st^ place; x^2^的值";
+    const t = await openView(source);
+    expect(tags(t.view.dom, "sup")).toEqual(["2", "+", "st", "2"]);
+    expect(t.markdown()).toBe(source);
+  });
+
+  it("reads an exponent or a charge glued to the next term", async () => {
+    const source = "Na^+^Cl^-^, Ca^2+^, m^2^s^-2^ and x^2^y^2^";
+    const t = await openView(source);
+    expect(tags(t.view.dom, "sup")).toEqual([
+      "+",
+      "-",
+      "2+",
+      "2",
+      "-2",
+      "2",
+      "2",
+    ]);
+    expect(t.markdown()).toBe(source);
+  });
+
+  it("keeps a typed charge glued to the next term", async () => {
+    const t = await openView("");
+    t.type("Na^+^Cl");
+    expect(tags(t.view.dom, "sup")).toEqual(["+"]);
+    expect(t.markdown()).toBe("Na^+^Cl");
+  });
+
+  it("types no superscript of a power as it is written", async () => {
+    const t = await openView("");
+    t.type("x^2+y^2 and 2^10,3^5");
+    expect(t.view.dom.querySelector("sup")).toBeNull();
+    expect(t.markdown()).toBe("x^2+y^2 and 2^10,3^5");
+  });
+
+  it("closes no power typed right before a letter or digit", async () => {
+    const t = await openView("x^2+y2");
+    t.select(6);
+    t.type("^");
+    expect(t.view.dom.querySelector("sup")).toBeNull();
+    expect(t.markdown()).toBe("x^2+y^2");
   });
 
   it("leaves a footnote reference a footnote", async () => {
@@ -79,10 +163,10 @@ describe("subscript and superscript", () => {
 
   it("escapes a typed caret that would read back as a superscript", async () => {
     const t = await openView("");
-    t.type("a^b c^d");
+    t.type("a^b c^ d");
     // The space out, by an edit that runs no input rule.
     t.view.dispatch(t.view.state.tr.delete(4, 5));
     expect(t.view.dom.querySelector("sup")).toBeNull();
-    expect(t.markdown()).toBe("a\\^bc^d");
+    expect(t.markdown()).toBe("a\\^bc^ d");
   });
 });

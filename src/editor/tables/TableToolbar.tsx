@@ -163,7 +163,6 @@ function SizePicker({
   if (phone)
     return (
       <Sheet
-        role="dialog"
         label={t.tableSize}
         className="bottom-card table-size-sheet"
         onClose={onClose}

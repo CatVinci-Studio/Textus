@@ -38,7 +38,6 @@ import { SOURCE_EDIT_EVENT } from "../../utils/events";
 import { followFormatMenu, formatSource } from "./source-format-events";
 import { sourceKeys, sourceTab } from "./source-keys";
 import { tellCopied } from "../../clipboard/copied";
-import { elasticOverscroll } from "../../engine/controls/elastic-overscroll";
 import { leaveSource, sourceLeftBy } from "../tab-left";
 import { registerTabEditor } from "../tab-editor";
 import { mayTakeKeys } from "../take-keys";
@@ -83,6 +82,12 @@ export interface SourceEditorProps {
   onPaste?: (event: ClipboardEvent, view: EditorView) => boolean;
   /** The tab it edits: a save first pulls in what was just typed. */
   tabId?: string;
+  /** More of CodeMirror's, read once as it mounts: a document's source
+   *  completes link paths (see DocSourceEditor). */
+  extensions?: Extension[];
+  /** A plain text file's language in place of Markdown's, read once: no
+   *  Markdown help then (escapes, Bold and Italic, the Format menu). */
+  syntax?: Extension;
 }
 
 /**
@@ -99,6 +104,8 @@ export function SourceEditor({
   onScroll,
   onPaste,
   tabId,
+  extensions: more = [],
+  syntax,
 }: SourceEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
@@ -110,8 +117,19 @@ export function SourceEditor({
     readOnly,
     onScroll,
     tabId,
+    more,
+    syntax,
   });
-  latest.current = { value, onChange, typewriter, readOnly, onScroll, tabId };
+  latest.current = {
+    value,
+    onChange,
+    typewriter,
+    readOnly,
+    onScroll,
+    tabId,
+    more,
+    syntax,
+  };
   // The extension is built once; it reads the current handler through here.
   const pasteRef = useRef(onPaste);
   pasteRef.current = onPaste;
@@ -135,6 +153,7 @@ export function SourceEditor({
       latest.current.onChange(text);
       return text;
     };
+    const plain = latest.current.syntax;
     const extensions: Extension[] = [
       // Source mode edits as plain text does, with colours: no line or
       // word highlights, multiple carets, auto-indent or code keys.
@@ -154,15 +173,21 @@ export function SourceEditor({
       // Markdown, as in the rendered view.
       sourceKeys,
       keymap.of([
-        { key: "Mod-b", run: (v) => formatSource(v, "bold") },
-        { key: "Mod-i", run: (v) => formatSource(v, "italic") },
+        ...(plain
+          ? []
+          : [
+              { key: "Mod-b", run: (v: EditorView) => formatSource(v, "bold") },
+              {
+                key: "Mod-i",
+                run: (v: EditorView) => formatSource(v, "italic"),
+              },
+            ]),
         { key: "Tab", run: sourceTab, shift: indentLess },
         ...standardKeymap,
         ...historyKeymap,
       ]),
       sourceFind,
-      sourceHighlighting(),
-      sourceEscapes(),
+      plain ?? [sourceHighlighting(), sourceEscapes()],
       // A caller's paste handler (a document's source stores pictures);
       // anything it leaves alone is CodeMirror's own.
       EditorView.domEventHandlers({
@@ -171,6 +196,7 @@ export function SourceEditor({
         cut: (_event, view) => (tellSelection(view, true), false),
       }),
       compartment.of(readOnlyOf(latest.current.readOnly)),
+      ...latest.current.more,
       EditorView.updateListener.of((update) => {
         if (update.docChanged || update.selectionSet) touched = true;
         if (
@@ -231,7 +257,7 @@ export function SourceEditor({
         edit(action);
     };
     host.addEventListener(SOURCE_EDIT_EVENT, onEdit);
-    const stopFormat = followFormatMenu(view);
+    const stopFormat = plain ? () => {} : followFormatMenu(view);
     const scroller = view.scrollDOM;
     // Where it is read, taken as it scrolls: once out of sight a view
     // reads as scrolled to the top.
@@ -242,8 +268,6 @@ export function SourceEditor({
       latest.current.onScroll?.(scroller);
     };
     scroller.addEventListener("scroll", onScrollEvent, { passive: true });
-    // The same give at either end as the rendered view's, on a Mac.
-    const stopElastic = elasticOverscroll(scroller, view.dom);
     return () => {
       report();
       if (tabId && touched)
@@ -255,7 +279,6 @@ export function SourceEditor({
       stopFlush?.();
       stopFocus?.();
       stopZoomPane?.();
-      stopElastic();
       stopFormat();
       host.removeEventListener(SOURCE_EDIT_EVENT, onEdit);
       scroller.removeEventListener("scroll", onScrollEvent);

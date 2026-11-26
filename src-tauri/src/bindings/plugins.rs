@@ -1,0 +1,46 @@
+use super::{builder, Group};
+use tauri_specta::collect_commands;
+
+pub(super) fn group() -> Group {
+    (
+        "plugins.ts",
+        builder().commands(collect_commands![
+            crate::plugins::state::plugins_state,
+            crate::plugins::uri::plugin_take_uris,
+            crate::plugins::export::plugin_export,
+            crate::plugins::state::plugins_set_all,
+            crate::plugins::ai::plugin_ai_status,
+            crate::plugins::ai::plugin_ai_allow,
+            crate::plugins::ai::plugin_ai_complete,
+            crate::plugins::ai::plugin_ai_stream,
+            crate::plugins::state::plugin_set,
+            crate::plugins::install::plugins_installed,
+            crate::plugins::install::plugin_install,
+            crate::plugins::install::plugin_install_files,
+            crate::plugins::dev::plugin_load_dev,
+            crate::plugins::install::plugin_uninstall,
+            crate::plugins::install::plugin_pick_package,
+            crate::plugins::scripts::plugin_open_scripts_dir,
+            crate::plugins::catalog::plugin_catalog,
+            crate::plugins::catalog::plugin_catalog_cached,
+            crate::plugins::catalog::pages::plugin_catalog_readme,
+            crate::plugins::catalog::pages::plugin_catalog_icon,
+            crate::plugins::catalog::skills::skill_catalog,
+            crate::plugins::catalog::skills::skill_install_catalog,
+            crate::plugins::catalog::plugin_install_catalog,
+            crate::plugins::dev::plugin_dev_stamp,
+            crate::plugins::ai_tools::plugin_ai_tools_set,
+            crate::plugins::ai_tools::plugin_ai_tool_result,
+            crate::menu::set_plugin_menu,
+            crate::menu::set_plugin_exports,
+            crate::background::tray::set_tray_plugin_items,
+            crate::background::tray::take_pending_plugin_command,
+            crate::mcp::mcp_status,
+            crate::mcp::mcp_restart,
+            crate::mcp::mcp_try,
+            crate::agents::agent_start,
+            crate::agents::agent_send,
+            crate::agents::agent_stop,
+        ]),
+    )
+}

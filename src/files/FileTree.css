@@ -54,20 +54,125 @@
 
 @media (any-hover: hover) {
   .tree-row:hover {
-    background: var(--ui-hover);
+    background-color: var(--ui-hover);
   }
 }
 
 .tree-row-active,
 .tree-row-picked {
-  background: var(--ui-selected);
+  background-color: var(--ui-selected);
   color: var(--ui-selected-text);
+}
+
+/* In the files: a faint line down from each enclosing folder's chevron, so
+   what sits in which folder reads at a glance. Under the row's fill, which
+   sets only its colour. */
+.file-tree .tree-row {
+  background-image: repeating-linear-gradient(
+    to right,
+    transparent 0 calc(var(--tree-step) - 1px),
+    var(--ui-frame-edge) calc(var(--tree-step) - 1px) var(--tree-step)
+  );
+  background-repeat: no-repeat;
+  background-position-x: calc(var(--tree-chevron) / 2 + 1px);
+  background-size: calc((var(--depth, 1) - 1) * var(--tree-step)) 100%;
+}
+
+/* A folder's row over its rows (TreeNodes' tree-head): scrolled into, it
+   stays at the top, under its own folders' rows, until its last row goes
+   by; an outer folder's over an inner one's pushed up beneath it. Laid on
+   the frame's paint as the sidebar is, so the rows passing under it are
+   hidden. --tree-row-h is every row's height, so the stack fits exactly. */
+.file-tree {
+  --tree-row-h: max(26px, calc(1.35em + 4px));
+}
+
+/* The folder's name and tools stay at the top too, over everything, so
+   scrolled down the tree still says whose rows these are. --tree-top is
+   its height: the folders' rows stay below it. */
+:root:not([data-window-chrome="mobile"]) .tree-main {
+  --tree-top: calc(var(--icon-button-s) + 4px);
+}
+
+/* A tablet's tools are a finger wide (mobile/styles/base.css). */
+@media (pointer: coarse) {
+  :root:is([data-platform="ios"], [data-platform="android"]):not(
+      [data-window-chrome="mobile"]
+    )
+    .tree-main {
+    --tree-top: calc(var(--touch-target) + 4px);
+  }
+}
+
+:root:not([data-window-chrome="mobile"]) .tree-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 11;
+  height: var(--tree-top);
+  margin-bottom: 0;
+  padding-bottom: 4px;
+  background: var(--ui-frame-fill) fixed;
+}
+
+.file-tree .tree-row {
+  min-height: var(--tree-row-h);
+}
+
+:root:not([data-window-chrome="mobile"]) .tree-head-sticky {
+  position: sticky;
+  top: calc(var(--tree-top, 0px) + (var(--depth) - 1) * var(--tree-row-h));
+  z-index: calc(10 - var(--depth));
+  background: var(--ui-frame-fill) fixed;
+}
+
+/* Shown by the keyboard or a reveal: below the tools and the folders'
+   rows that stay above it (at most --tree-sticky-levels, TreeNodes'
+   STICKY_LEVELS). */
+:root:not([data-window-chrome="mobile"]) .file-tree .tree-row {
+  scroll-margin-top: calc(
+    var(--tree-top, 0px) + min(var(--depth, 1) - 1, var(--tree-sticky-levels)) *
+      var(--tree-row-h)
+  );
+}
+
+/* A folder's row being renamed stays over the other rows that stay, so
+   what its name field says below it shows. */
+:root:not([data-window-chrome="mobile"]) .tree-head-sticky:focus-within {
+  z-index: 10;
+}
+
+/* In a folder lit for a drop, its rows that stay are lit too, with the
+   block's ring down their sides (and over the top of its own). */
+:root:not([data-window-chrome="mobile"]) .tx-drop-into .tree-head-sticky {
+  background:
+    linear-gradient(var(--ui-selected), var(--ui-selected)),
+    var(--ui-frame-fill) fixed;
+  box-shadow:
+    inset 1px 0 var(--ui-accent),
+    inset -1px 0 var(--ui-accent);
+}
+
+:root:not([data-window-chrome="mobile"])
+  .dir-node.tx-drop-into
+  > .tree-head-sticky {
+  border-radius: var(--shape-s) var(--shape-s) 0 0;
+  box-shadow:
+    inset 0 1px var(--ui-accent),
+    inset 1px 0 var(--ui-accent),
+    inset -1px 0 var(--ui-accent);
+}
+
+/* Rows picked together, with the keyboard elsewhere: still picked, in the
+   quieter fill. */
+.file-tree:not(:focus-within) .tree-row-picked:not(.tree-row-active) {
+  background-color: var(--ui-hover);
+  color: inherit;
 }
 
 /* Rows picked together: the open document's row looks picked only if it
    is one of them. */
 .file-tree-picking .tree-row-active:not(.tree-row-picked, :hover) {
-  background: none;
+  background-color: transparent;
   color: inherit;
 }
 
@@ -111,10 +216,11 @@
 }
 
 /* Out of the way until wanted: shown while the pointer is over the panel
-   or focus is in it, as VS Code's explorer does. Touch has no hover. */
+   or focus is in it, as VS Code's explorer does. Touch has no hover. Open
+   This Folder stays: while the tree follows the document, it says so. */
 @media (any-hover: hover) {
   /* Hidden, they take no room: the folder's name has the whole line. */
-  .file-tree:not(:hover, :focus-within) .tree-tool {
+  .file-tree:not(:hover, :focus-within) .tree-tool:not(.tree-tool-kept) {
     display: none;
   }
 }
@@ -169,6 +275,12 @@
    pointer. */
 .tree-body {
   flex: 1;
+  border-radius: var(--shape-s);
+}
+
+/* A folder something dragged would go into: its row and all its rows, lit
+   as one block. */
+.dir-node.tx-drop-into {
   border-radius: var(--shape-s);
 }
 
@@ -227,10 +339,24 @@
   background: none;
 }
 
-/* Left out by a .gitignore or as build output, as the search leaves it. */
+/* Left out by a .gitignore or as build output, as the search leaves it;
+   or cut, until it is pasted somewhere. */
 .tree-row-ignored .tree-label,
-.tree-row-ignored .tree-icon {
+.tree-row-ignored .tree-icon,
+.tree-row-cut .tree-label,
+.tree-row-cut .tree-icon {
   opacity: 0.5;
+}
+
+/* A row dragged with ⌥ (Ctrl elsewhere) held is copied: the cursor and
+   the copy under the pointer say so. */
+body.document-dragging.tree-drag-copy,
+body.document-dragging.tree-drag-copy * {
+  cursor: copy !important;
+}
+
+body.tree-drag-copy .tree-drag-ghost::before {
+  content: "+ ";
 }
 
 /* A new entry's name, typed in place: the row stays a row, the field
@@ -238,7 +364,7 @@
 .tree-row-draft,
 .tree-row-draft:hover {
   cursor: default;
-  background: none;
+  background-color: transparent;
 }
 
 .tree-draft-input {
@@ -252,6 +378,31 @@
   color: inherit;
   font: inherit;
   outline: none;
+}
+
+/* The field holds the name; why a name can't be is said just below it,
+   over the rows after, until the name changes. */
+.tree-name-field {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.tree-name-problem {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  /* Over the folders' rows that stay at the top (z-index up to 9). */
+  z-index: 11;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--ui-danger);
+  border-radius: var(--shape-xs);
+  background: var(--ui-bg);
+  color: var(--ui-danger);
+  font-size: var(--text-caption);
+  white-space: normal;
 }
 
 .tree-empty {

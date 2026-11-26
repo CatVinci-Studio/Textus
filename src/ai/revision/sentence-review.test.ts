@@ -11,6 +11,7 @@ import { diffSentences } from "./unit-diff";
 import { pendingEditKey } from "./pending-types";
 import { serializeBlocks } from "../../editor/markdown/doc-markdown";
 import { TextSelection } from "@milkdown/kit/prose/state";
+import { plainText } from "./pending-place";
 
 // Two of five sentences changed: decided sentence by sentence (a
 // paragraph most of whose sentences changed is one change).
@@ -196,5 +197,28 @@ describe("locateHunks", () => {
       return locateHunks(doc, 0, doc.content.size, hunks, (md) => md);
     });
     expect(result).toBeNull();
+  });
+
+  it("finds a bare address the model was shown as [url](url)", async () => {
+    // Right after "：" a bare URL is written `[url](url)`, which is what the
+    // model sees; the editor holds the URL alone. Not found, the whole
+    // rewrite fell back to one change.
+    const url = "https://openreview.net/forum?id=aWVG2rN4OV";
+    editor = await createTestEditor(`链接：${url}\n\n第二句。\n`);
+    const result = editor.action((ctx) => {
+      const { doc } = ctx.get(editorViewCtx).state;
+      const original = serializeBlocks(ctx, doc)
+        .map((b) => b.markdown)
+        .join("\n\n");
+      expect(original).toContain(`[${url}](${url})`);
+      const hunks = diffSentences(
+        original,
+        `链接：[OpenReview](${url})\n\n第二句改。`,
+      );
+      return locateHunks(doc, 0, doc.content.size, hunks, (md) =>
+        plainText(ctx, md),
+      )?.map((r) => doc.textBetween(r.from, r.to));
+    });
+    expect(result).toEqual([`链接：${url}`, "第二句。"]);
   });
 });

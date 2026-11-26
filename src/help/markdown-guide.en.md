@@ -19,7 +19,7 @@ Rather not remember the symbols? Use the **format bar** above the document, or r
 
 ## Writing something long
 
-**First-line indent** (Settings › Editing › Text) sets each paragraph's first line in by two characters; lists, quotes and tables are left as they are.
+**First-line indent** (Settings › Appearance › Text) sets each paragraph's first line in by two characters; lists, quotes and tables are left as they are.
 
 ### Ways of writing and modes
 
@@ -29,11 +29,11 @@ Besides the WYSIWYG editor and source mode (`Cmd+/`), Textus has three ways to w
 - **Typewriter mode**: the line you are typing stays in the middle of the window — in the editor, source mode and Source and Preview.
 - **Zen mode** (`Cmd+Shift+J`): hides everything but the document you are in and dims every paragraph except the one you are writing. The × at the top right, or the shortcut again, leaves it.
 
-All of them are in the **View** menu (**View › Mode** for the first two) and in the **View** group of **Settings › Editing › Text**. Each is one setting for all of Textus: switch it in any window and every tab of every window switches with it, the documents you open next come up in it, and Textus opens in it again next time.
+All of them are in the **View** menu (**View › Editing view** for the first two) and in the **View** group of **Settings › Editing › Document**. Each is one setting for all of Textus: switch it in any window and every tab of every window switches with it, the documents you open next come up in it, and Textus opens in it again next time.
 
-**View › Mode › Reading Mode** (also in a tab's right-click menu) keeps a document from being changed - by typing, pasting, dropping, undo, Textus AI or plugins. A padlock beside the title shows it; click it to allow changes again.
+**View › Editing view › Reading Mode** (also in a tab's right-click menu) keeps a document from being changed - by typing, pasting, dropping, undo, Textus AI or plugins. A padlock beside the title shows it; click it to allow changes again.
 
-**View › Command Palette…** (`Cmd+Shift+P`) finds anything the menus do, and every command a plugin adds, by typing a few letters of its name. It also changes the appearance (light, dark or the system's) and the editor theme, and turns Textus AI on or off. **Edit › Find & Replace…** (`Cmd+F`) searches the document, **Edit › Replace…** (`Cmd+Option+F`) opens it with the replace row, and `Cmd+G` goes to the next match.
+**View › Command Palette…** (`Cmd+Shift+P`) finds anything the menus do, and every command a plugin adds, by typing a few letters of its name. It also changes the appearance (light, dark or the system's) and the editor theme, and turns Textus AI on or off. **Edit › Find…** (`Cmd+F`) searches the document, **Edit › Replace…** (`Cmd+Option+F`) opens it with the replace row, and `Cmd+G` goes to the next match.
 
 The **Outline** panel of the sidebar lists the document's headings; click one to go there. Right-click the outline for **Expand All** and **Collapse All**, or `Option`-click (`Alt`-click) a heading's arrow to fold or unfold them all at once.
 
@@ -65,7 +65,7 @@ Hover over a table to add or remove rows and columns. Type `| Name | Age |` and 
 
 ### Code blocks
 
-Fenced code blocks with syntax highlighting (switch the language from the block's top-right corner). Enter on the empty last line leaves the block, as does Ctrl/⌘+Enter at any time; the same goes for quotes. **Copy** and **Select All** beside the language copy or select the block's code, and **Line numbers in code blocks** (Settings › Editing › Text) numbers its lines; neither shows in exports or printouts.
+Fenced code blocks with syntax highlighting (switch the language from the block's top-right corner). Enter on the empty last line leaves the block, as does Ctrl/⌘+Enter at any time; the same goes for quotes. **Copy** and **Select All** beside the language copy or select the block's code, and **Line numbers in code blocks** (Settings › Editing › Document) numbers its lines; neither shows in exports or printouts.
 
 ```python
 def fib(n: int) -> int:
@@ -127,7 +127,7 @@ sequenceDiagram
     Textus-->>You: Rendered live
 ```
 
-**Diagram engine** (Settings › Editing › Text) chooses what draws these blocks: Mermaid, the default, or Pele, which is faster but lays diagrams out its own way and leaves out a few features; a diagram Pele can't draw is drawn by Mermaid.
+**Diagram engine** (Settings › Editing › Document) chooses what draws these blocks: Mermaid, the default, or Pele, which is faster but lays diagrams out its own way and leaves out a few features; a diagram Pele can't draw is drawn by Mermaid.
 
 Their colours follow the appearance — a calm grey palette in the light, its dark one in the dark — and an imported theme or custom CSS can pick another built-in palette with `--doc-mermaid-theme: forest`.
 
@@ -159,7 +159,7 @@ To look at a picture closely, double-click it or press **Enlarge picture** in it
 
 **File › Open Folder…** opens a whole folder in the sidebar: the file tree stays there while you open documents inside it, the folder comes back with your session, and **File › Close Folder** lets the tree follow the document again. The **Search** panel (the magnifier in the activity bar, or `Cmd+Shift+O`) finds files by name and lines by their words across the folder; click a line to open the document there. Both are on the desktop only.
 
-The tree is a small file manager too. The parent folder's name above it takes you up a level. Its menu orders it by name or by date modified, and shows **All files** or **Documents only**. Right-click a folder, a file or the empty space below to make a **New Document** or a **New Folder** there, and drag a file or folder onto another folder to move it; an open document follows it to its new place. Nothing is ever replaced: a name already taken is refused.
+The tree is a small file manager too. The parent folder's name above it takes you up a level. Its menu orders it by name or by date modified, and shows **All files** or **Documents only**. Right-click a folder, a file or the empty space below to make a **New File** or a **New Folder** there, and drag a file or folder onto another folder to move it; an open document follows it to its new place. Nothing is ever replaced: a name already taken is refused.
 
 Drag files from Finder or File Explorer onto the window to open them: documents open in tabs, pictures go into the document where you let go, and a folder opens in the sidebar. **File › Copy Path** copies the full path of the document in front.
 
@@ -200,7 +200,7 @@ Each group of tabs with the page under it is an **island**. One island holds one
 - **Hold `Cmd`** (`Ctrl`) for a moment with two or more islands open: each shows a number, and `Cmd+1`… `Cmd+6` goes to that island.
 - Close an island's last tab and the island goes. The whole layout comes back when you reopen Textus.
 
-`Cmd+N` (or `Cmd+T`) opens a new tab, `Cmd+Shift+N` a new window, and **File › Reopen Closed Tab** (`Cmd+Shift+T`) brings back the documents you closed, the latest first. The **+** at the end of a row opens a new tab in that island. A middle click closes a tab; a tab's right-click menu has **Close Others**, **Close Tabs to the Left**, **Close Tabs to the Right** and **Close Saved** (tabs with unsaved changes stay open), **Copy Path** and **Show in File Tree**. When Textus reopens, each window comes back with its own tabs.
+`Cmd+N` (or `Cmd+T`) opens a new tab, `Cmd+Shift+N` a new window, and **File › Reopen Closed Tab** (`Cmd+Shift+T`) brings back the documents you closed, the latest first. The **+** at the end of a row opens a new tab in that island. A middle click closes a tab; a tab's right-click menu has **Close Others**, **Close Tabs to the Left**, **Close Tabs to the Right** and **Close Saved** (tabs with unsaved changes stay open), **Copy Path** and **Show in Files**. When Textus reopens, each window comes back with its own tabs.
 
 ## Plugins, themes and skills
 
@@ -240,11 +240,11 @@ Emoji shortcodes as on GitHub show as their emoji: :tada: (`:tada:`), :rocket: (
 
 Subscript and superscript as in Typora and Pandoc: H~2~O (`H~2~O`), x^2^ (`x^2^`); no spaces inside.
 
-Typing `(`, `[`, `{`, a quote, or a bracket from a Chinese or Japanese input method such as `（`, `【` or `「` puts its closing partner in after the caret: typing the closer steps over it, Backspace right after the opener takes both, and with text selected the pair goes around it. **Close (), [] and “”** in **Settings › Editing › Text** turns this off.
+Typing `(`, `[`, `{`, a quote, or a bracket from a Chinese or Japanese input method such as `（`, `【` or `「` puts its closing partner in after the caret: typing the closer steps over it, Backspace right after the opener takes both, and with text selected the pair goes around it. **Close (), [] and “”** in **Settings › Editing › Document** turns this off.
 
 Links look like this: [the Textus repository](https://github.com/CatVinci-Studio/Textus). Ctrl/⌘+click one to follow it: a web link opens in your browser, a link to another Markdown file opens it in a tab, and a link to `#a-heading` scrolls there. A plain click puts the caret in a link and shows its Markdown, `[text](url)`, to edit in place; move the caret away and it is a link again. Inline HTML renders too, e.g. keyboard keys <kbd>Cmd</kbd> + <kbd>S</kbd>. So do `<details>` folds, HTML tables, a few inline styles (colour, background, size, weight, alignment, underline and strikethrough) and inline `<svg>`, which shows as a picture. Scripts and other HTML stay as source. A link to a heading in another file, such as `[see](notes.md#a-heading)`, opens that file at the heading. Obsidian wikilinks (`[[Note]]`, `[[Note|text]]` and `[[Note#Heading]]`) open the same way, from the document's folder or anywhere in its vault; they and `#tags` at the start of a line are saved exactly as written.
 
-**Swatches before colour codes** (Settings › Editing › Text) puts a small square of the colour before a colour code. **In code only** draws it in inline code that is a colour, such as `#0af` or `rgb(0 128 255)`, and before the colour literals in code blocks; **Everywhere** also before one written in the text with six or eight digits, such as #ff8800, or as a colour function, such as hsl(210 100% 50%). Short codes in the text, tags like #cafe, issue numbers like #234 and links stay as they are.
+**Swatches before colour codes** (Settings › Editing › Document) puts a small square of the colour before a colour code. **In code only** draws it in inline code that is a colour, such as `#0af` or `rgb(0 128 255)`, and before the colour literals in code blocks; **Everywhere** also before one written in the text with six or eight digits, such as #ff8800, or as a colour function, such as hsl(210 100% 50%). Short codes in the text, tags like #cafe, issue numbers like #234 and links stay as they are.
 
 Inline math: mass–energy equivalence $E = mc^2$, Euler's identity $e^{i\pi} + 1 = 0$.
 

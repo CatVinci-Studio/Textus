@@ -1,3 +1,5 @@
+import { isWithin } from "../utils/path";
+
 // The documents open in this window's tabs, by path: each editor sets its
 // own, and what reads a file (a rename's link update, a plugin) reads the
 // open text over the saved one.
@@ -41,4 +43,12 @@ export function setUnsavedCheck(check: ((path: string) => boolean) | null) {
  *  changed on disk, and its tab takes the new text. */
 export function unsavedDocumentAt(path: string): OpenDocumentAccess | null {
   return unsaved(path) ? openDocumentAt(path) : null;
+}
+
+/** Whether the document at `path`, or one under it when it is a folder,
+ *  has unsaved changes. */
+export function unsavedAtOrUnder(path: string): boolean {
+  for (const open of openDocuments.keys())
+    if (isWithin(open, path) && unsaved(open)) return true;
+  return false;
 }

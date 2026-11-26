@@ -16,6 +16,10 @@ import { nativeFiles } from "../platform/native-files";
 import { toPandocMarkdown } from "./pandoc-markdown";
 import { numberedHeadings } from "./pandoc-headings";
 import { pandocOptions, type PandocSettings } from "./pandoc-options";
+import {
+  folderLineBreaks,
+  showsLineBreaks,
+} from "../editor/markdown/line-breaks-plugin";
 import { noteLinkSources, resolveNoteLinks } from "./note-links";
 import { drawPending, preparePage } from "./export-page";
 import { diagramsToImages, drawnBlocksToImages } from "./diagram-images";
@@ -314,12 +318,17 @@ export async function exportViaPandoc(
     t,
     [info.ext, info.name],
     async (picked, base) => {
-      const options = pandocOptions(settings, format);
+      const breaks = showsLineBreaks(
+        await folderLineBreaks(tab.path),
+        settings.singleNewline,
+      );
+      const options = pandocOptions(settings, format, breaks);
       // tab.content, not the file on disk - unsaved edits export too.
       const source = options.numberSections
         ? numberedHeadings(tab.content)
         : tab.content;
       const text = toPandocMarkdown(source, {
+        singleTilde: settings.singleTilde,
         alertLabels: {
           NOTE: t.alertNote,
           TIP: t.alertTip,

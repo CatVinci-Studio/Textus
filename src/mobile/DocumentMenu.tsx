@@ -1,12 +1,17 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useSettings } from "../prefs/SettingsContext";
-import { ActionSheet } from "../engine/controls/ActionSheet";
+import { useMenuButton } from "../engine/controls/useMenuButton";
 import { Presence } from "../engine/motion/usePresence";
 import { MoreIcon } from "../engine/controls/icons";
 import { Tooltip } from "../engine/controls/Tooltip";
 import { emitMenuEvent } from "../platform/menu-events";
-import { sendAppEvent, TOGGLE_FIND_REPLACE_EVENT } from "../utils/events";
-import { OutlineSheet } from "./OutlineSheet";
+import {
+  sendAppEvent,
+  SHOW_OUTLINE_EVENT,
+  TOGGLE_FIND_REPLACE_EVENT,
+} from "../utils/events";
+import { useWindowEvent } from "../utils/hooks/useWindowEvent";
+import { OutlineMenu } from "./OutlineMenu";
 
 /**
  * The document's own actions, behind a phone's ⋯: its outline, find and
@@ -26,8 +31,34 @@ export function DocumentMenu({
   tabId: string;
 }) {
   const { t } = useSettings();
-  const [open, setOpen] = useState(false);
-  const [outlineOpen, setOutlineOpen] = useState(false);
+  const [outlineAt, setOutlineAt] = useState<{
+    x: number;
+    y: number;
+    anchor: HTMLElement | null;
+  } | null>(null);
+  const button = useRef<HTMLElement | null>(null);
+  const showOutline = () => {
+    const el = button.current;
+    const box = el?.getBoundingClientRect();
+    if (box) setOutlineAt({ x: box.right, y: box.bottom + 4, anchor: el });
+  };
+  // The outline's key (a phone's keyboard) opens it here too.
+  useWindowEvent(SHOW_OUTLINE_EVENT, showOutline);
+  const more = useMenuButton(
+    () => [
+      { label: t.outlineTab, onSelect: showOutline },
+      {
+        label: t.menuFindReplace,
+        onSelect: () => sendAppEvent(TOGGLE_FIND_REPLACE_EVENT),
+      },
+      {
+        label: t.menuToggleSourceMode,
+        onSelect: () => emitMenuEvent("toggle-source-mode"),
+      },
+      { label: t.menuShare, onSelect: () => emitMenuEvent("share") },
+    ],
+    { title, alignEnd: true },
+  );
   return (
     <>
       <Tooltip text={t.docMore} description={null}>
@@ -35,39 +66,23 @@ export function DocumentMenu({
           type="button"
           className="window-bar-toggle document-menu-button"
           aria-label={t.docMore}
-          aria-haspopup="menu"
-          aria-expanded={open}
-          onClick={() => setOpen(true)}
+          {...more.button}
+          ref={(el) => {
+            more.button.ref(el);
+            button.current = el;
+          }}
         >
           <MoreIcon />
         </button>
       </Tooltip>
-      <Presence show={open}>
-        {open && (
-          <ActionSheet
-            title={title}
-            items={[
-              { label: t.outlineTab, onSelect: () => setOutlineOpen(true) },
-              {
-                label: t.menuFindReplace,
-                onSelect: () => sendAppEvent(TOGGLE_FIND_REPLACE_EVENT),
-              },
-              {
-                label: t.menuToggleSourceMode,
-                onSelect: () => emitMenuEvent("toggle-source-mode"),
-              },
-              { label: t.menuShare, onSelect: () => emitMenuEvent("share") },
-            ]}
-            onClose={() => setOpen(false)}
-          />
-        )}
-      </Presence>
-      <Presence show={outlineOpen}>
-        {outlineOpen && (
-          <OutlineSheet
+      {more.menu}
+      <Presence show={outlineAt !== null}>
+        {outlineAt && (
+          <OutlineMenu
             content={content}
             tabId={tabId}
-            onClose={() => setOutlineOpen(false)}
+            at={outlineAt}
+            onClose={() => setOutlineAt(null)}
           />
         )}
       </Presence>

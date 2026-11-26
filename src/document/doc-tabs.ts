@@ -56,6 +56,9 @@ export interface DocTab {
   /** View › Read Only: nothing may change it. Kept by path
    *  (document/read-only.ts). */
   readOnly?: boolean;
+  /** Pinned: first in its row, narrow, closed only once unpinned. Kept by
+   *  path (document/pinned.ts). */
+  pinned?: boolean;
   /** A plugin's view or custom editor shown instead of a document; a custom
    *  editor's file is its `resource`, which the plugin saves itself. */
   view?: PluginTabView;
@@ -94,11 +97,17 @@ export function namePageTabs(view: string, title: PageTitle): void {
   pageTitles.set(view, title);
 }
 
+/** Whether a tab is an AI conversation's. */
+export function isConversationTab(
+  tab: { view?: { kind: string; view: string } | null } | undefined,
+): boolean {
+  return tab?.view?.kind === "page" && tab.view.view === "ai";
+}
+
 // A tab's display name everywhere one is shown.
 /** What a tab's name leaves out, on hover: an AI tab's conversation. */
 export function tabTip(tab: DocTab, t: Strings): string | undefined {
-  if (tab.view?.kind === "page" && tab.view.view === "ai")
-    return chatTitle(tab.view.title, t);
+  if (isConversationTab(tab)) return chatTitle(tab.view?.title, t);
   // An untitled document by its first line: drafts told apart.
   if (!tab.path && !tab.view) return firstLine(tab.content);
   return undefined;

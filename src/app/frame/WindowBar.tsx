@@ -140,17 +140,13 @@ export function WindowBar({
               );
           }
         })}
-        {phone && tabSwitcher ? (
-          tabSwitcher
-        ) : (
-          <WindowTitle
-            placed={bar.rows === 1 && !bar.lead.includes("menu-bar") && !phone}
-            title={title}
-            dirty={dirty}
-            readOnly={!!menuChecks.readOnly}
-            onToggleReadOnly={onToggleReadOnly}
-          />
-        )}
+        <WindowTitle
+          placed={bar.rows === 1 && !bar.lead.includes("menu-bar") && !phone}
+          title={tabSwitcher ?? title}
+          dirty={dirty}
+          readOnly={!!menuChecks.readOnly}
+          onToggleReadOnly={onToggleReadOnly}
+        />
         <div className="window-bar-status">
           {hasStatus && (
             <Suspense fallback={null}>
@@ -185,7 +181,8 @@ function WindowTitle({
   onToggleReadOnly,
 }: {
   placed: boolean;
-  title: string;
+  /** Its name, or a phone's tab switcher in its place. */
+  title: ReactNode;
   dirty: boolean;
   readOnly: boolean;
   onToggleReadOnly: () => void;
@@ -194,7 +191,10 @@ function WindowTitle({
   const titleRef = useTitleRoom(placed);
   // The unsaved dot leads the title, as a native edited title does.
   return (
-    <span className="window-bar-title" ref={titleRef}>
+    <span
+      className={`window-bar-title${typeof title === "string" ? "" : " window-bar-title-tabs"}`}
+      ref={titleRef}
+    >
       {dirty && (
         <Tooltip text={t.unsavedIndicator}>
           <span
@@ -204,7 +204,11 @@ function WindowTitle({
           />
         </Tooltip>
       )}
-      <span className="tx-truncate window-bar-title-text">{title}</span>
+      {typeof title === "string" ? (
+        <span className="tx-truncate window-bar-title-text">{title}</span>
+      ) : (
+        title
+      )}
       {readOnly && (
         <Tooltip text={t.readOnlyLock}>
           <button

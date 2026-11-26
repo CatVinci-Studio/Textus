@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 /** Fixed-position popups close when the page moves under them, since they
- *  would point at the wrong text. A phone's action sheets are exempt. */
+ *  would point at the wrong text. A phone's, not on the text, are exempt. */
 export function usePopupDismiss({
   anyPopup,
   setMenu,
@@ -28,10 +28,17 @@ export function usePopupDismiss({
       setMenu(null);
       if (!settingsRef.current.typewriterMode) hideGrammar();
     };
-    window.addEventListener("scroll", onScroll, true);
+    // Heard from the next frame: the scroll that brought the text into view
+    // as the popup opened (a slip picked from the corner's list, the caret
+    // moved onto an underline off screen) is reported only then, and the
+    // popup was placed after it.
+    const armed = requestAnimationFrame(() =>
+      window.addEventListener("scroll", onScroll, true),
+    );
     window.addEventListener("resize", close);
     window.addEventListener("blur", close);
     return () => {
+      cancelAnimationFrame(armed);
       window.removeEventListener("scroll", onScroll, true);
       window.removeEventListener("resize", close);
       window.removeEventListener("blur", close);

@@ -72,9 +72,9 @@ const menuThenEditor = (id: string) => ({
 /** Every fixed combo. The configurable ones are the settings' defaults. */
 const KEYS: Record<string, Key> = {
   // File
-  "mod+n": { does: "New Tab", ...menuThenWindow("new-file") },
-  // No menu item carries it: the window runs New Tab.
-  "mod+t": { does: "New Tab", ...everywhere("window") },
+  "mod+n": { does: "New File", ...menuThenWindow("new-file") },
+  // No menu item carries it: the window runs New File.
+  "mod+t": { does: "New File", ...everywhere("window") },
   "mod+shift+n": { does: "New Window", ...menuThenWindow("new-window") },
   "mod+o": { does: "Open…", ...menuThenWindow("open-file") },
   "mod+s": { does: "Save", ...menuThenWindow("save-file") },
@@ -119,8 +119,8 @@ const KEYS: Record<string, Key> = {
   f6: { does: "Next region", ...everywhere("window") },
   "shift+f6": { does: "Previous region", ...everywhere("window") },
   // The editor's.
-  "mod+b": { does: "Bold", ...everywhere("editor") },
-  "mod+i": { does: "Italic", ...everywhere("editor") },
+  "mod+b": { does: "Bold", ...menuThenEditor("toggle-mark:bold") },
+  "mod+i": { does: "Italic", ...menuThenEditor("toggle-mark:italic") },
   "mod+shift+h": {
     does: "Highlight",
     ...menuThenEditor("toggle-mark:highlight"),

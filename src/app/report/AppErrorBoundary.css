@@ -27,7 +27,15 @@
   overflow-wrap: anywhere;
 }
 
-.app-error-reload {
+.app-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.app-error-reload,
+.app-error-report {
   min-height: 40px;
   padding: 0 28px;
   border: none;
@@ -36,4 +44,11 @@
   color: var(--ui-bg);
   font: inherit;
   font-weight: 600;
+}
+
+/* Second to Reload: outlined. */
+.app-error-report {
+  border: 1px solid var(--ui-border);
+  background: transparent;
+  color: var(--ui-text);
 }

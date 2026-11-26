@@ -18,8 +18,10 @@ import {
 import { Suspense } from "react";
 import { lazyModule } from "../../lazy/lazy-module";
 import { lazyComponent } from "../../lazy/lazy-component";
-import { canOpenFolder, isIOSApp } from "../../platform/capabilities";
+import { canOpenFolder } from "../../platform/capabilities";
 import { isPhoneLayout } from "../../platform/phone-layout";
+import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
+import { SHOW_OUTLINE_EVENT, sendAppEvent } from "../../utils/events";
 import type { Strings } from "../../i18n/strings";
 import type { OpenFolder } from "../useOpenFolder";
 import type { FileOpenHow } from "../../files/tree-shared";
@@ -45,6 +47,8 @@ interface SidebarTabProps {
   openFolder: OpenFolder;
   activePath: string | null;
   activeContent: string;
+  /** The tab in front is a document's (not the start page or a page). */
+  activeIsDocument: boolean;
   /** The tab in front, for a jump inside its document. */
   activeTabId: string;
   /** `beside`: in a split beside the document in front. */
@@ -69,6 +73,25 @@ export interface SidebarTabDef {
   Panel: ComponentType<SidebarTabProps>;
   /** Not among the rail's icons (Settings: the gear at its foot). */
   railFoot?: boolean;
+  /** Not on a phone: its way in there is a menu (Outline the document's ⋯,
+   *  Settings ☰) or Settings (Plugins). */
+  offPhone?: boolean;
+  /** On a phone, what its key opens instead (the outline's menu). */
+  phoneWayIn?: () => void;
+}
+
+/** A panel with nothing to show: what is so, and Open Folder (but on a
+ *  phone, whose ☰ has it). */
+function OpenFolderNote({ text, t }: { text: string; t: Strings }) {
+  const phone = usePhoneLayout();
+  return (
+    <div className="tx-pane-empty">
+      <span>{text}</span>
+      {!phone && (
+        <StartActions t={t} only={["menu-open-folder"]} primary={false} />
+      )}
+    </div>
+  );
 }
 
 function FilesPanel({
@@ -78,13 +101,14 @@ function FilesPanel({
   onOpenFile,
   onEntryMoved,
 }: SidebarTabProps) {
+  const phone = usePhoneLayout();
   if (!openFolder.treeRoot)
-    // No folder: the start page's three ways to begin, so a window with
-    // nothing open is never a dead end.
-    return (
-      <div className="sidebar-start">
-        <StartActions t={t} />
-      </div>
+    // No folder: so a window with nothing open is never a dead end. A
+    // phone's ☰ has Open Folder; the line says so.
+    return phone ? (
+      <p className="tx-list-note">{t.sidebarStartHint}</p>
+    ) : (
+      <OpenFolderNote text={t.sidebarNoFolder} t={t} />
     );
   return (
     <FileTree
@@ -112,9 +136,14 @@ const BUILT_IN: SidebarTabDef[] = [
     id: "outline",
     label: (t) => t.outlineTab,
     Icon: OutlineTabIcon,
-    Panel: ({ activeContent, activeTabId }) => (
-      <Outline content={activeContent} tabId={activeTabId} />
+    Panel: ({ activeContent, activeTabId, activeIsDocument }) => (
+      <Outline
+        content={activeIsDocument ? activeContent : null}
+        tabId={activeTabId}
+      />
     ),
+    offPhone: true,
+    phoneWayIn: () => sendAppEvent(SHOW_OUTLINE_EVENT),
   },
   {
     id: "search",
@@ -137,7 +166,7 @@ const BUILT_IN: SidebarTabDef[] = [
           onFocusHandled={onSearchFocusHandled}
         />
       ) : (
-        <div className="tx-list-note">{t.searchNoFolder}</div>
+        <OpenFolderNote text={t.searchNoFolder} t={t} />
       ),
   },
 ];
@@ -164,10 +193,8 @@ const PLUGINS_TAB: SidebarTabDef = {
       <PluginsPanel t={t} />
     </Suspense>
   ),
+  offPhone: true,
 };
-
-// A phone manages plugins in Settings; a tablet's layout is the desktop's.
-const pluginsTab = () => (isPhoneLayout() ? [] : [PLUGINS_TAB]);
 
 // Settings' pages, loaded when the gear first opens them.
 const SettingsNavPanel = lazyComponent(
@@ -190,9 +217,9 @@ const SETTINGS_TAB: SidebarTabDef = {
     </Suspense>
   ),
   railFoot: true,
+  // A phone opens Settings from ☰, as a sheet (SettingsLayer).
+  offPhone: true,
 };
-// An iPhone opens Settings from its menu, as a sheet.
-const settingsTab = () => (isIOSApp && isPhoneLayout() ? [] : [SETTINGS_TAB]);
 
 /** The first tab, Files: where the sidebar opens with nothing remembered. */
 export const DEFAULT_SIDEBAR_TAB = "tree";
@@ -218,10 +245,17 @@ export function sidebarTabs(): SidebarTabDef[] {
   ];
 }
 
-/** The tabs as the rail shows them: plugins' pinned among Textus's own. */
+/** The tabs as the rail shows them: plugins' pinned among Textus's own.
+ *  A tablet's layout is the desktop's, and so are its tabs. */
 export function railTabs(): SidebarTabDef[] {
+  const phone = isPhoneLayout();
   return orderTabs(
-    [...BUILT_IN, ...pluginsTab(), ...settingsTab(), ...addedSidebarTabs()],
+    [
+      ...[...BUILT_IN, PLUGINS_TAB, SETTINGS_TAB].filter(
+        (tab) => !(phone && tab.offPhone),
+      ),
+      ...addedSidebarTabs(),
+    ],
     loadSettings().activityRailOrder,
   );
 }
@@ -246,6 +280,11 @@ export function orderTabs<T extends { id: string }>(
  *  dragged), those not shown (hidden from the rail) kept where they were. */
 export function railOrder(shown: readonly string[]): string[] {
   return inOrder(railTabs(), (tab) => tab.id, shown).map((tab) => tab.id);
+}
+
+/** What a tab's key opens on a phone where the tab isn't there, if any. */
+export function phoneWayIn(id: string): (() => void) | undefined {
+  return BUILT_IN.find((tab) => tab.id === id)?.phoneWayIn;
 }
 
 /** The tab with this id, or Files for one no longer there. */

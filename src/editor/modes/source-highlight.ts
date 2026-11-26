@@ -3,8 +3,8 @@ import type { Extension } from "@codemirror/state";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { html } from "@codemirror/lang-html";
-import { languages } from "@codemirror/language-data";
 import { tags as t } from "@lezer/highlight";
+import { fenceLanguage } from "./source-languages";
 
 /** Fallbacks keep the colours readable when only the base theme's variables
  *  are around (the playground loads content CSS without the editor theme). */
@@ -84,14 +84,14 @@ const sourceHighlightStyle = HighlightStyle.define([
 ]);
 
 /** The Markdown language (GFM tables, strikethrough and fenced code with
- *  their own language highlighting) plus the style above. Of its editing
+ *  their own language highlighting, plugins' languages too) plus the style above. Of its editing
  *  help only Enter continuing a list or quote stays, as the rendered view
  *  does: no closing tags typed in, no pasted URL made a link. */
 export function sourceHighlighting(): Extension {
   return [
     markdown({
       base: markdownLanguage,
-      codeLanguages: languages,
+      codeLanguages: fenceLanguage,
       completeHTMLTags: false,
       pasteURLAsLink: false,
       // HTML in Markdown still coloured, its tags not closed as typed.
@@ -100,3 +100,7 @@ export function sourceHighlighting(): Extension {
     syntaxHighlighting(sourceHighlightStyle),
   ];
 }
+
+/** The same colours for a text file in another language. */
+export const codeHighlighting = (): Extension =>
+  syntaxHighlighting(sourceHighlightStyle);

@@ -6,20 +6,21 @@ import { userHasActed } from "./user-input";
 import { PageTabContent } from "../tabs/page-tabs";
 import { useDocumentInFront } from "../tabs/useDocumentInFront";
 import { EditorPane } from "../../document-view/EditorPane";
-import { lazyModule } from "../../lazy/lazy-module";
+import { SourceTabView } from "./SourceTabView";
 import { lazyComponent } from "../../lazy/lazy-component";
-import { DocSourceEditor } from "../../editor/modes/lazy-doc-source-editor";
+import { startPageModule } from "../start-page-module";
 import { showsStartPage, tabTitle, type DocTab } from "../../document/doc-tabs";
 import { tabReadOnly } from "../../document/read-only";
 import type { Strings } from "../../i18n/strings";
 import type { TourAi } from "../../utils/events";
-import type { AgentMode } from "../../prefs/SettingsContext";
+import { useSettingsIfAny, type AgentMode } from "../../prefs/SettingsContext";
 import {
   PluginListPane,
   PluginTabPane,
   WebPagePane,
 } from "../../plugins/views/plugin-views";
 import { setPreviewExtras } from "../../editor/preview-extras";
+import { textFileOf } from "../../files/document-name";
 
 // Every preview draws what plugins draw (a chart, a board, their inline
 // syntax), as documents do.
@@ -29,18 +30,7 @@ setPreviewExtras(() =>
   ),
 );
 
-// Its Markdown renderer loads when a tab first shows it, not with the window.
-// Shown only when the user chose it, so kept out of the startup chunk.
-const StartPage = lazyComponent(
-  // Loaded while the window is idle: on first use React holds a suspended
-  // page back for 300ms, a pause between closing a document and the page.
-  lazyModule("start-page", () => import("../StartPage"), { warm: true }),
-  (m) => m.StartPage,
-);
-const SplitView = lazyComponent(
-  lazyModule("split-view", () => import("../../editor/modes/SplitView")),
-  (m) => m.SplitView,
-);
+const StartPage = lazyComponent(startPageModule, (m) => m.StartPage);
 
 /**
  * `tabs` in the order they opened, whatever order the tab row puts them in.
@@ -98,6 +88,9 @@ export function DocumentViews({
   // AI tab or a page tab active.
   const inFront = useDocumentInFront();
   const listed = useOpeningOrder(tabs);
+  // Read when an editor is made (editor-core-syntax): a change remounts the
+  // documents, each with its text as it stands.
+  const singleTilde = useSettingsIfAny()?.settings.singleTilde;
   return (
     <>
       {/* A document's editor is mounted while its tab is in front (or a
@@ -170,32 +163,17 @@ export function DocumentViews({
               <Suspense fallback={null}>
                 <StartPage t={t} />
               </Suspense>
-            ) : tab.sourceMode ? (
+            ) : tab.sourceMode || textFileOf(tab.path) ? (
               <KeptWhileHidden
                 shown={tab.id === activeTabId || !!pane}
                 kind="source-view"
               >
-                <Suspense fallback={null}>
-                  {tab.splitView ? (
-                    <SplitView
-                      tabId={tab.id}
-                      content={tab.content}
-                      filePath={tab.path}
-                      typewriter={typewriter}
-                      onChange={(markdown) => onChange(tab.id, markdown)}
-                      readOnly={tabReadOnly(tab)}
-                    />
-                  ) : (
-                    <DocSourceEditor
-                      tabId={tab.id}
-                      value={tab.content}
-                      docPath={tab.path}
-                      typewriter={typewriter}
-                      onChange={(markdown) => onChange(tab.id, markdown)}
-                      readOnly={tabReadOnly(tab)}
-                    />
-                  )}
-                </Suspense>
+                <SourceTabView
+                  tab={tab}
+                  isActive={tab.id === inFront}
+                  typewriter={typewriter}
+                  onChange={onChange}
+                />
               </KeptWhileHidden>
             ) : (
               <EditorKept
@@ -209,7 +187,7 @@ export function DocumentViews({
                 }
               >
                 <EditorPane
-                  key={`${tab.id}-${tab.reloadKey}`}
+                  key={`${tab.id}-${tab.reloadKey}-${singleTilde}`}
                   tabId={tab.id}
                   filePath={tab.path}
                   docTitle={tabTitle(tab, t)}

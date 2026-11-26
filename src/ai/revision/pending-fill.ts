@@ -9,36 +9,51 @@ import {
 } from "../../editor/pending-diagram";
 import { showGeneratedImages, shownGeneratedSrc } from "./generated-images";
 import { framePendingPictures } from "./pending-picture";
+import { showProposalPictures } from "./pending-doc-pictures";
 
 /** A proposal's text put into the document as it arrives: HTML, blocks,
  *  pictures, and math once KaTeX has loaded. */
 
 /** New text into its widget, as rendered Markdown, each line its own tinted
  *  span: one box over several lines paints padding at every line end. */
-export function renderPendingHtml(span: HTMLElement, markdown: string) {
-  fillPendingHtml(span, markdown);
-  if (span.querySelector(".math-pending")) awaitKatex(span, markdown);
+export function renderPendingHtml(
+  span: HTMLElement,
+  markdown: string,
+  /** The document's path, which its pictures' srcs are relative to. */
+  docPath: string | null = null,
+) {
+  fillPendingHtml(span, markdown, docPath);
+  if (span.querySelector(".math-pending")) awaitKatex(span, markdown, docPath);
   else waitingForKatex.delete(span);
 }
 
 // Widgets showing a formula's source while KaTeX loads, redrawn once it is
 // here, since a widget kept by its key wouldn't be.
-const waitingForKatex = new Map<HTMLElement, string>();
+const waitingForKatex = new Map<
+  HTMLElement,
+  { text: string; docPath: string | null }
+>();
 
-function awaitKatex(span: HTMLElement, markdown: string) {
+function awaitKatex(span: HTMLElement, text: string, docPath: string | null) {
   if (waitingForKatex.size === 0)
     onKatexReady(() => {
-      for (const [waiting, text] of waitingForKatex)
-        if (waiting.isConnected) fillPendingHtml(waiting, text);
+      for (const [waiting, again] of waitingForKatex)
+        if (waiting.isConnected)
+          fillPendingHtml(waiting, again.text, again.docPath);
       waitingForKatex.clear();
     });
-  waitingForKatex.set(span, markdown);
+  waitingForKatex.set(span, { text, docPath });
 }
 
-function fillPendingHtml(span: HTMLElement, source: string) {
+function fillPendingHtml(
+  span: HTMLElement,
+  source: string,
+  docPath: string | null,
+) {
   fillPendingContent(span, source);
   // A picture still being made is its frame until it comes.
   framePendingPictures(span);
+  showProposalPictures(span, docPath);
 }
 
 /** A waiting picture's placeholder, as an address the document renderer's

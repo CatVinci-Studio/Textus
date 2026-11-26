@@ -1,4 +1,3 @@
-import { counted } from "../../i18n/current";
 import type { Strings } from "../../i18n/strings";
 import type { Shortcuts } from "../../prefs/SettingsContext";
 import type { FormatBarSide } from "../../prefs/settings-values";
@@ -28,6 +27,8 @@ import {
   canToggleFullscreen,
   canUseWindows,
   hasDocumentsList,
+  hasTextusAi,
+  isDesktopApp,
   isMobileApp,
 } from "../../platform/capabilities";
 /**
@@ -142,9 +143,6 @@ export interface MenuChecks {
   /** Not a check mark: a folder is open, so Close Folder has something to
    *  close. */
   folderOpen?: boolean;
-  /** Not a check mark: the document's word count, which the phone's menu
-   *  shows when its title row has no room for it. */
-  words?: number;
   /** Not a check mark: the tab in front is a page (AI, Settings), with no
    *  document to save, share or search. */
   noDocument?: boolean;
@@ -204,8 +202,13 @@ export const NO_RECENTS: RecentLists = { files: [], folders: [] };
 
 /** Entries this platform leaves out: the sponsor link on iOS, whose store
  *  rules keep payment outside the app from being linked to, and on an
- *  iPad what it can't do (windows, quitting, updating itself). */
+ *  iPad what it can't do (windows, quitting, updating itself, Textus AI)
+ *  and what About leaves to the desktop (the welcome, a problem report). */
 const LEFT_OUT: Record<string, boolean> = {
+  "toggle-agent-panel": !hasTextusAi,
+  "help-doc:agent": !hasTextusAi,
+  "help-doc:welcome": !isDesktopApp,
+  "help-report": !isDesktopApp,
   "help-sponsor": !canLinkSponsor,
   "new-window": !canUseWindows,
   "close-window": !canUseWindows,
@@ -352,26 +355,16 @@ export function menuBarSections(menu: MenuNode[]): MenuBarSection[] {
 }
 
 /**
- * The iPhone's menu: one flat list, with only what a phone needs.
+ * A phone's ☰: one flat list of the app and its files (new, open, save,
+ * plugins, Settings); the document in front has
+ * its own ⋯.
  */
 export function buildMobileMenu(
   t: Strings,
   checks: MenuChecks = {},
   plugins: readonly PluginMenuEntry[] = [],
-  /** Textus AI is offered on this install. */
-  ai = true,
 ): MenuNode[] {
-  const words = checks.words;
   return [
-    ...(words
-      ? [
-          {
-            label: counted(t.wordCount, words),
-            disabled: true,
-          },
-          "separator" as const,
-        ]
-      : []),
     ...(hasDocumentsList
       ? [
           {
@@ -384,36 +377,14 @@ export function buildMobileMenu(
     { label: t.menuOpenFile, action: { native: "open-file" } },
     // Another folder over the one open: the Files panel shows that folder.
     { label: t.menuOpenFolder, action: { native: "open-folder" } },
-    ...(
-      [
-        [t.menuSave, "save-file"],
-        [t.menuShare, "share"],
-        "separator",
-        [t.menuFindReplace, "find-replace"],
-      ] as const
-    ).map((item): MenuNode =>
-      item === "separator"
-        ? item
-        : {
-            label: item[0],
-            action: { native: item[1] },
-            disabled: checks.noDocument,
-          },
-    ),
+    // The document's own actions (Find, Share, Outline) are its ⋯'s
+    // (mobile/DocumentMenu): each command has one way in.
     {
-      label: t.menuToggleSidebar,
-      action: { native: "toggle-sidebar" },
-      checked: !!checks.sidebar,
+      label: t.menuSave,
+      action: { native: "save-file" },
+      disabled: checks.noDocument,
     },
-    ...(ai
-      ? [
-          {
-            label: t.menuTextusAi,
-            action: { native: "toggle-textus-ai" },
-            checked: checks.textusAi !== false,
-          } as MenuNode,
-        ]
-      : []),
+    // The sidebar and Textus AI are the bar's buttons, not rows here.
     "separator",
     ...pluginsMenu(t, plugins),
     { label: t.menuSettings, action: { native: "settings" } },

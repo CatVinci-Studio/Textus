@@ -1,4 +1,5 @@
 import { Plugin, Selection, TextSelection } from "@milkdown/kit/prose/state";
+import type { Node as ProseNode, ResolvedPos } from "@milkdown/kit/prose/model";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { stateWithLiveSelection } from "../live-selection";
@@ -20,6 +21,16 @@ export function visualLineBoundary(
   const caret = view.coordsAtPos(head);
   let low = direction < 0 ? $head.start(depth) : head;
   let high = direction < 0 ? head : $head.end(depth);
+  // A code line ends at its "\n", whose coordinates read as the line
+  // before's end or the next's start: the search stops at it.
+  if ($head.node(depth).type.spec.code) {
+    const start = $head.start(depth);
+    const text = $head.node(depth).textContent;
+    if (direction < 0 && head > start)
+      low = start + text.lastIndexOf("\n", head - start - 1) + 1;
+    else if (text.indexOf("\n", head - start) >= 0)
+      high = start + text.indexOf("\n", head - start);
+  }
   while (low < high) {
     const mid =
       direction < 0
@@ -68,6 +79,40 @@ function toDocumentEdge(view: EditorView, event: KeyboardEvent): boolean {
   return true;
 }
 
+/** Cmd+Up and Cmd+Down in a code block: its own first or last line, then
+ *  the document's ends. */
+function verticalTarget(
+  doc: ProseNode,
+  $head: ResolvedPos,
+  backward: boolean,
+): number {
+  if ($head.parent.type.spec.code) {
+    const edge = backward ? $head.start() : $head.end();
+    if ($head.pos !== edge) return edge;
+  }
+  return (backward ? Selection.atStart(doc) : Selection.atEnd(doc)).head;
+}
+
+/** Cmd+Arrow on a Mac, and Home or End: the line's ends, or (up and down)
+ *  the block's or document's. WebKit's own leaves a code line, and its
+ *  Home or End can type the key's private-use character. */
+function toLineOrBlockEdge(view: EditorView, event: KeyboardEvent): boolean {
+  const { selection, doc } = stateWithLiveSelection(view);
+  const backward = ["ArrowLeft", "ArrowUp", "Home"].includes(event.key);
+  const vertical = event.key === "ArrowUp" || event.key === "ArrowDown";
+  if (!vertical && !selection.$head.parent.inlineContent) return false;
+  const direction = backward ? -1 : 1;
+  const target = vertical
+    ? verticalTarget(doc, selection.$head, backward)
+    : visualLineBoundary(view, selection.head, direction);
+  const $target = doc.resolve(target);
+  const next = event.shiftKey
+    ? TextSelection.between(selection.$anchor, $target, direction)
+    : Selection.near($target, direction);
+  view.dispatch(view.state.tr.setSelection(next).scrollIntoView());
+  return true;
+}
+
 export function createMacNavigationPlugin(isMac = isMacPlatform) {
   return new Plugin({
     props: {
@@ -79,6 +124,18 @@ export function createMacNavigationPlugin(isMac = isMacPlatform) {
           !isImeKeyEvent(view, event)
         )
           return toDocumentEdge(view, event);
+        const plainHomeEnd =
+          (event.key === "Home" || event.key === "End") &&
+          !event.metaKey &&
+          !event.ctrlKey &&
+          !event.altKey;
+        if (
+          plainHomeEnd &&
+          isMac() &&
+          view.editable &&
+          !isImeKeyEvent(view, event)
+        )
+          return toLineOrBlockEdge(view, event);
         if (
           !isMac() ||
           !event.metaKey ||
@@ -93,20 +150,7 @@ export function createMacNavigationPlugin(isMac = isMacPlatform) {
         const backward = event.key === "ArrowLeft" || event.key === "ArrowUp";
         const forward = event.key === "ArrowRight" || event.key === "ArrowDown";
         if (!backward && !forward) return false;
-
-        const { selection, doc } = stateWithLiveSelection(view);
-        const direction = backward ? -1 : 1;
-        const vertical = event.key === "ArrowUp" || event.key === "ArrowDown";
-        if (!vertical && !selection.$head.parent.inlineContent) return false;
-        const target = vertical
-          ? (backward ? Selection.atStart(doc) : Selection.atEnd(doc)).head
-          : visualLineBoundary(view, selection.head, direction);
-        const $target = doc.resolve(target);
-        const next = event.shiftKey
-          ? TextSelection.between(selection.$anchor, $target, direction)
-          : Selection.near($target, direction);
-        view.dispatch(view.state.tr.setSelection(next).scrollIntoView());
-        return true;
+        return toLineOrBlockEdge(view, event);
       },
     },
   });

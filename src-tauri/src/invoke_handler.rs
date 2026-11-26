@@ -7,7 +7,7 @@ use ai::client::{ai_complete, ai_grammar_check, fetch_agent_models};
 use ai::{agent::ai_agent_message, cancel::ai_cancel, steer::ai_steer};
 use auth::claude::{claude_auth_status, claude_login, claude_logout};
 use auth::custom_endpoint::{
-    clear_custom_endpoint, custom_endpoint_status, fetch_custom_models, set_custom_endpoint,
+    clear_custom_endpoint, custom_endpoints_status, fetch_custom_models, set_custom_endpoint,
 };
 use auth::keys::{clear_provider_api_key, provider_api_key_status, set_provider_api_key};
 use auth::openai_codex::{codex_auth_status, codex_login, codex_logout};
@@ -75,6 +75,9 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         write_text_file,
         write_base64_file,
         save_pasted_image,
+        commands::fs::dropped::save_dropped_file,
+        commands::fs::copy_into::tree_copy_entry,
+        commands::fs::drag_out::start_file_drag_out,
         commands::vault::resolve_vault_image,
         commands::vault::resolve_note_link,
         commands::link_root::document_link_root,
@@ -156,7 +159,7 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         provider_api_key_status,
         clear_provider_api_key,
         set_custom_endpoint,
-        custom_endpoint_status,
+        custom_endpoints_status,
         clear_custom_endpoint,
         fetch_custom_models,
         export_save_dialog,
@@ -213,11 +216,14 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         menu::set_plugin_menu,
         #[cfg(desktop)]
         menu::set_plugin_exports,
-        commands::tree_ops::tree_create_document,
-        commands::tree_ops::tree_create_folder,
+        commands::tree_create::tree_create_document,
+        commands::tree_create::tree_create_folder,
         commands::tree_ops::tree_move_entry,
         commands::tree_ops::tree_rename_entry,
-        commands::tree_ops::tree_trash_entry,
+        commands::tree_ops::tree_trash_entries,
+        commands::tree_ops::tree_put_back,
+        #[cfg(desktop)]
+        commands::fs::watch::tree_watch,
         #[cfg(desktop)]
         commands::recents::add_recent_folder,
         #[cfg(desktop)]
@@ -250,6 +256,8 @@ pub(crate) fn handler() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Sen
         tab_drag::start_window_drag_tracking,
         #[cfg(desktop)]
         tab_drag::start_floating_tab_drag,
+        #[cfg(desktop)]
+        drag_modifiers::drag_modifiers,
         #[cfg(desktop)]
         commands::floating_window::floating_desktop_supported,
         #[cfg(desktop)]

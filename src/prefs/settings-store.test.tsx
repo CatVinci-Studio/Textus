@@ -138,6 +138,18 @@ describe("file-backed settings", () => {
     expect(loadSettings().theme).toBe("dark");
   });
 
+  it("takes a document text size picked in Settings", () => {
+    boot({ languageChosen: true });
+    render(
+      <SettingsProvider>
+        <Probe />
+      </SettingsProvider>,
+    );
+    act(() => lastSet({ docTextSize: 24 }));
+    expect(storage.settingsPatch).toHaveBeenCalledWith({ docTextSize: 24 });
+    expect(loadSettings().docTextSize).toBe(24);
+  });
+
   it("sends every keystroke at once, so a quick quit can't lose it", () => {
     // Rust coalesces the disk writes and flushes on exit; a debounce here would
     // lose the last keystrokes before Cmd+Q.
@@ -355,6 +367,32 @@ describe("language", () => {
       </SettingsProvider>,
     );
     expect(document.documentElement.lang).toBe("zh-CN");
+  });
+});
+
+describe("file icon theme", () => {
+  it("keeps a file icon theme it can't see yet, and drops one that isn't a name", () => {
+    // The plugin giving it loads after the settings: kept, not reset.
+    expect(
+      normaliseSettings({ fileIconTheme: "jane.icons#neon" }).fileIconTheme,
+    ).toBe("jane.icons#neon");
+    expect(normaliseSettings({ fileIconTheme: 3 }).fileIconTheme).toBe("");
+  });
+});
+
+describe("files dropped on the file tree", () => {
+  it("asks before copying unless the user said not to", () => {
+    expect(normaliseSettings({ language: "en" }).confirmTreeCopy).toBe(true);
+    expect(normaliseSettings({ confirmTreeCopy: "no" }).confirmTreeCopy).toBe(
+      true,
+    );
+    expect(normaliseSettings({ confirmTreeCopy: false }).confirmTreeCopy).toBe(
+      false,
+    );
+    expect(normaliseSettings({}).confirmTreeTrash).toBe(true);
+    expect(
+      normaliseSettings({ confirmTreeTrash: false }).confirmTreeTrash,
+    ).toBe(false);
   });
 });
 

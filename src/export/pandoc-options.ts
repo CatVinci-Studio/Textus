@@ -11,6 +11,8 @@ export type PandocSettings = Pick<
   | "exportBibliography"
   | "exportCsl"
   | "pandocArgs"
+  | "singleTilde"
+  | "singleNewline"
 >;
 
 /** What the export command takes for `format`; Rust's `PandocOptions` in
@@ -18,6 +20,8 @@ export type PandocSettings = Pick<
 export function pandocOptions(
   settings: PandocSettings,
   format: string,
+  /** One newline in a paragraph breaks the line (line-breaks-plugin). */
+  hardLineBreaks = false,
 ): PandocOptions_Deserialize {
   const args = settings.pandocArgs as Partial<Record<string, string[]>>;
   return {
@@ -26,5 +30,6 @@ export function pandocOptions(
     bibliography: settings.exportBibliography || null,
     csl: settings.exportCsl || null,
     extraArgs: [...(args.all ?? []), ...(args[format] ?? [])],
+    hardLineBreaks,
   };
 }

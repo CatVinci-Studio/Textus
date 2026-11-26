@@ -84,5 +84,97 @@
     "text": "Uno.\n\n![a](a.png)\n\nDos.\n\n![n](n.png)",
     "complete": true,
     "expected": "Uno.\n\n![a](a.png)\n\nDos.\n\n![n](n.png)"
+  },
+  {
+    "name": "a picture and its caption on one line: the picture stays once, apart, the caption changes",
+    "document": "One.\n\n![a](a.png)\n\n图 1 | 说明。\n\nTwo.",
+    "text": "Uno.\n\n![a](a.png)\n*图 1 | 说明。*\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)\n\n*图 1 | 说明。*\n\nDos."
+  },
+  {
+    "name": "a picture's new description is taken, its address and title stay",
+    "document": "One.\n\n![a](a.png \"T\")\n\nTwo.",
+    "text": "Uno.\n\n![b](a.png)\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n![b](a.png \"T\")\n\nDos."
+  },
+  {
+    "name": "a new description and a caption beside it, an address in brackets",
+    "document": "One.\n\n![a](<my pic.png>)\n\nTwo.",
+    "text": "Uno.\n\n![a new](<my pic.png>)\n*Fig 1*\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n![a new](<my pic.png>)\n\n*Fig 1*\n\nDos."
+  },
+  {
+    "name": "a new picture with its caption stays as the rewrite has it",
+    "document": "One.\n\n![a](a.png)\n\nTwo.",
+    "text": "Uno.\n\n![a](a.png)\n\nDos.\n\n![n](n.png)\n*new*",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)\n\nDos.\n\n![n](n.png)\n*new*"
+  },
+  {
+    "name": "a code block showing a picture's line stays whole",
+    "document": "One.\n\n![a](a.png)\n\nTwo.",
+    "text": "Uno.\n\n![a](a.png)\n\n```md\n![a](a.png)\nDos.\n```",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)\n\n```md\n![a](a.png)\nDos.\n```"
+  },
+  {
+    "name": "a tilde fence showing a picture's line stays whole",
+    "document": "One.\n\n![a](a.png)\n\nTwo.",
+    "text": "Uno.\n\n![a](a.png)\n\n~~~\nDos.\n![a](a.png)\n~~~",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)\n\n~~~\nDos.\n![a](a.png)\n~~~"
+  },
+  {
+    "name": "a $$ block with a picture's line stays whole",
+    "document": "One.\n\n![a](a.png)\n\nTwo.",
+    "text": "Uno.\n\n![a](a.png)\n\n$$\n![a](a.png)\nx\n$$",
+    "complete": true,
+    "expected": "Uno.\n\n![a](a.png)\n\n$$\n![a](a.png)\nx\n$$"
+  },
+  {
+    "name": "an HTML block around a picture stays whole",
+    "document": "One.\n\n![a](a.png)\n\nTwo.",
+    "text": "Uno.\n\n<div align=\"center\">\n![a](a.png)\n</div>\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n<div align=\"center\">\n![a](a.png)\n</div>\n\nDos."
+  },
+  {
+    "name": "an <img> with its caption under it is still put apart",
+    "document": "One.\n\n<img src=\"a.png\">\n\nTwo.",
+    "text": "Uno.\n\n<img src=\"a.png\">\n*Figure 1*\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n<img src=\"a.png\">\n\n*Figure 1*\n\nDos."
+  },
+  {
+    "name": "an <img> with an unquoted src left out goes back",
+    "document": "One.\n\n<img src=chart.png>\n\nTwo.",
+    "text": "Uno.\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n<img src=chart.png>\n\nDos."
+  },
+  {
+    "name": "an <img> without a src left out goes back",
+    "document": "One.\n\n<img alt=\"chart\">\n\nTwo.",
+    "text": "Uno.\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n<img alt=\"chart\">\n\nDos."
+  },
+  {
+    "name": "an <img> without a src kept as it was stays once",
+    "document": "One.\n\n<img alt=\"chart\">\n\nTwo.",
+    "text": "Uno.\n\n<img alt=\"chart\">\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n<img alt=\"chart\">\n\nDos."
+  },
+  {
+    "name": "an address with an unpaired < keeps it: a.png is another picture",
+    "document": "One.\n\n![a](<a.png)\n\nTwo.",
+    "text": "Uno.\n\n![new](a.png)\n\nDos.",
+    "complete": true,
+    "expected": "Uno.\n\n![a](<a.png)\n\nDos.",
+    "swapped": 1
   }
 ]

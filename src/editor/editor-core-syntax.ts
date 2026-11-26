@@ -1,5 +1,6 @@
 import { $remark } from "@milkdown/kit/utils";
-import type { Editor } from "@milkdown/kit/core";
+import { remarkGFMPlugin } from "@milkdown/kit/preset/gfm";
+import { remarkStringifyOptionsCtx, type Editor } from "@milkdown/kit/core";
 import { createRemarkVerbatim, keepFor } from "./markdown/verbatim";
 import remarkCjkFriendly from "remark-cjk-friendly";
 import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethrough";
@@ -37,7 +38,7 @@ import {
 } from "./markdown/br-hardbreak-plugin";
 import {
   remarkHighlightPlugin,
-  remarkSuperscriptPlugin,
+  remarkScriptsPlugin,
   remarkStrikethroughTildesPlugin,
   remarkEmphasisUnderscoresPlugin,
   mdSpanSchema,
@@ -74,6 +75,7 @@ import {
   remarkEmptyTaskItems,
   taskListClickPlugin,
 } from "./markdown/task-list-plugin";
+import { listTallLinePlugin } from "./markdown/list-tall-line-plugin";
 import { syntaxHighlightPlugin } from "./code/syntax-highlight-plugin";
 import { createCodeBlockView } from "./code/code-block-language-view";
 import { createCodeLineNumbersPlugin } from "./code/code-line-numbers-plugin";
@@ -100,6 +102,8 @@ import { createEmbedsPlugin } from "./embeds/embeds-plugin";
 import { createMissingLinksPlugin } from "./markdown/missing-links";
 import { resolveStrings } from "../i18n/strings";
 import type { CoreEnv } from "./editor-core-env";
+import { singleTildeCtx } from "./opened-from";
+import { createLineBreaksPlugin } from "./markdown/line-breaks-plugin";
 
 /**
  * The Markdown the editor reads and draws, in load order: CommonMark and
@@ -108,6 +112,8 @@ import type { CoreEnv } from "./editor-core-env";
  */
 export function withEditorSyntax(editor: Editor, env: CoreEnv): Editor {
   const { settings, docPath, editing } = env;
+  const singleTilde = settings.current.singleTilde;
+  const tildes = { singleTilde: singleTilde === "strikethrough" };
   return (
     editor
       // Commonmark/GFM with bold/italic/strike marks stripped: those are nodes.
@@ -147,6 +153,12 @@ export function withEditorSyntax(editor: Editor, env: CoreEnv): Editor {
       .use(createRawHtmlPreviewPlugin({ docPath: () => docPath.current }))
       .use(htmlAlignPlugin)
       .use(brToHardbreakPlugin)
+      .use(
+        createLineBreaksPlugin({
+          setting: () => settings.current.singleNewline,
+          docPath: () => docPath.current,
+        }),
+      )
       .use(remarkTableCellBreaks)
 
       .use(remarkReferenceLinksPlugin)
@@ -187,17 +199,34 @@ export function withEditorSyntax(editor: Editor, env: CoreEnv): Editor {
       // CommonMark's flanking rules reject "**" next to CJK punctuation, which
       // would break reopening bold made here. Parse side only.
       .use($remark("remark-cjk-friendly", () => remarkCjkFriendly))
+      // `~text~` reads as the setting says, fixed for this editor's life:
+      // a change remounts the documents (DocumentViews). `~~text~~` always
+      // strikes out.
+      .use(singleTildeCtx)
+      .config((ctx) => {
+        // `update`: markdown-output sets the table options there too.
+        ctx.update(remarkGFMPlugin.options.key, (options) => ({
+          ...options,
+          ...tildes,
+        }));
+        ctx.update(remarkStringifyOptionsCtx, (options) => ({
+          ...options,
+          singleTilde,
+        }));
+        ctx.set(singleTildeCtx.key, singleTilde);
+      })
       .use(
         $remark(
           "remark-cjk-friendly-gfm-strikethrough",
           () => remarkCjkFriendlyGfmStrikethrough,
+          tildes,
         ),
       )
 
       // Bold/italic/strikethrough/highlight/sub- and superscript/inline code as nodes with
       // synthesized, Typora-style delimiters.
       .use(remarkHighlightPlugin)
-      .use(remarkSuperscriptPlugin)
+      .use(remarkScriptsPlugin(singleTilde))
       .use(remarkStrikethroughTildesPlugin)
       .use(remarkEmphasisUnderscoresPlugin)
       .use(mdSpanSchema)
@@ -206,6 +235,7 @@ export function withEditorSyntax(editor: Editor, env: CoreEnv): Editor {
       .use(
         createMdSpanAutopairPlugin({
           autoClose: () => settings.current.autoCloseMarks,
+          singleTilde: () => singleTilde,
         }),
       )
       .use(
@@ -238,6 +268,7 @@ export function withEditorSyntax(editor: Editor, env: CoreEnv): Editor {
       .use(headingMarkerPlugin)
       .use(remarkEmptyTaskItems)
       .use(taskListClickPlugin)
+      .use(listTallLinePlugin)
       .use(editing(cjkTaskInputPlugin))
       .use(syntaxHighlightPlugin)
       .use(

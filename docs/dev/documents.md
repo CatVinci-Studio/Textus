@@ -45,7 +45,7 @@ Every way a file becomes a tab goes through `src/app/useFileOpening.ts`.
 
 `where` places a new tab: `"tab"` (the default) after the others,
 `"beside"` in a split next to the tab in front, `"current"` in place of the
-tab in front (plugins' tabs only, `src/plugins/usePluginWindow.ts`). A drop
+tab in front (plugins' tabs only, `src/app/usePluginWindow.ts`). A drop
 on the documents (`drop`) opens on that side of a split.
 
 Before a file is read as a document, `readDocument` asks whether it is
@@ -55,7 +55,7 @@ becomes a new, unsaved document (`document/word-import.ts`); a file that
 isn't text offers a market plugin that opens it, or the system's app.
 `asDocument` skips all of this. Reopening (Open Recent, the last session)
 goes back to the last caret, kept by path and modification time
-(`document/last-carets.ts`); a followed link's `#heading` or a plugin's
+(`document/last-places.ts`); a followed link's `#heading` or a plugin's
 place is gone to once the tab shows (`editor/tab-jump.ts`).
 
 Other ways in: **File › Open** and Open Recent (`openFileDialog`,
@@ -217,7 +217,7 @@ how much of the rule applies. The rule has two parts:
   `loading="lazy"` brings them.
 
 Either part, drawing or letting go, keeps what the reader sees where it is
-(`hold-still.ts`): WebKit has no CSS scroll anchoring.
+(`engine/controls/scroll-hold.ts`): WebKit has no CSS scroll anchoring.
 
 Whatever copies the page or measures a place in it draws first, through
 the same two calls:

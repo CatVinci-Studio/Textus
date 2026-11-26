@@ -6,8 +6,12 @@ import {
   openApp,
   pasteMarkdown,
   restedOn,
+  END,
+  selectionRead,
   settled,
+  sourceOf,
 } from "./helpers";
+import { hasPlugin, openPath } from "./plugin-helpers";
 
 // Sidebar panels: the plugin list opens a plugin's page in a tab of its
 // own; the sidebar steps aside for the islands and widens by its edge.
@@ -35,6 +39,93 @@ test("a plugin in the list opens its page in a tab named for it", async ({
     .click();
   await expect(page.locator(".tab-pill")).toHaveCount(count);
 });
+
+test("the plugins offered come by category, a computer-only one marked so", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.zotero"), "No textus-plugins checkout");
+  // As the official manifests say it from their next release.
+  await page.addInitScript(() =>
+    Object.assign(window, {
+      __devCatalogManifests: {
+        "catvinci.tags": { category: "notes" },
+        // No line: the mark stands alone.
+        "catvinci.zotero": { category: "sync", description: undefined },
+      },
+    }),
+  );
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, { settings: { language: "en", menuBarShown: false } });
+  await emit(page, "menu-manage-plugins");
+  const available = page.getByRole("region", { name: "Available" });
+  await expect(available.locator(".plugins-panel-row").first()).toBeVisible();
+  const listed = await available
+    .locator(".plugins-panel-category, .plugins-panel-row")
+    .evaluateAll((els) =>
+      els.map((el) => ({
+        id: el.getAttribute("data-plugin"),
+        text: el.textContent ?? "",
+      })),
+    );
+  // Each plugin under its category's heading, the headings in the store's
+  // order.
+  let heading = "";
+  const under: Record<string, string> = {};
+  const headings: string[] = [];
+  for (const { id, text } of listed)
+    if (id) under[id] = heading;
+    else headings.push((heading = text));
+  expect(under["catvinci.tags"]).toBe("Notes & organizing");
+  expect(under["catvinci.zotero"]).toBe("Sync & services");
+  const order = [
+    "Notes & organizing",
+    "Editing & input",
+    "Charts & diagrams",
+    "Files & viewers",
+    "Import & compatibility",
+    "Sync & services",
+    "AI",
+    "Companions",
+    "Other",
+  ];
+  expect(headings).toEqual(order.filter((h) => headings.includes(h)));
+  const mark = (id: string) =>
+    available.locator(`[data-plugin="${id}"]`).getByText("Computer only");
+  await expect(mark("catvinci.zotero")).toBeVisible();
+  await expect(mark("catvinci.tags")).toHaveCount(0);
+  await expect(
+    available.locator('[data-plugin="catvinci.zotero"] .plugins-panel-line'),
+  ).toHaveCount(0);
+});
+
+for (const menuBarShown of [false, true])
+  test(`the sidebar stepping aside keeps the row of tabs as it was drawn (menu bar ${menuBarShown ? "shown" : "hidden"})`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1200, height: 760 });
+    await openApp(page, { settings: { menuBarShown } });
+    await pasteMarkdown(page, "# 第三章");
+    const sidebar = page.locator(".sidebar");
+    await emit(page, "menu-toggle-sidebar");
+    await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
+    const parts = [".island-row", ".tab-bar", ".tab-pill"];
+    await page.evaluate((parts) => {
+      (window as unknown as { __drawn: Element[] }).__drawn = parts.map(
+        (part) => document.querySelector(part)!,
+      );
+    }, parts);
+    await page.setViewportSize({ width: 480, height: 760 });
+    await expect(sidebar).toHaveClass(/sidebar-collapsed/);
+    await settled(page);
+    const kept = await page.evaluate(
+      (parts) =>
+        (window as unknown as { __drawn: Element[] }).__drawn.map(
+          (el, i) => el.isConnected && document.querySelector(parts[i]!) === el,
+        ),
+      parts,
+    );
+    expect(kept).toEqual([true, true, true]);
+  });
 
 test("too narrow for the islands at their least, the sidebar steps aside, then the AI folds; they come back in turn", async ({
   page,
@@ -140,6 +231,90 @@ test("the folder's tools coming on hover move none of the tree's rows", async ({
   expect((await row.boundingBox())!.y).toBe(before);
 });
 
+test("following the document, Open This Folder stays in sight; the other tools wait for the pointer", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/w/a.md": "# A\n", "/w/b.md": "# B\n" };
+  });
+  await openApp(page, { settings: { language: "en" } });
+  await openPath(page, "/w/a.md");
+  await page
+    .getByRole("navigation", { name: "Activity bar" })
+    .getByRole("button", { name: "Files" })
+    .click();
+  await expect(page.locator(".tree-root-label")).toHaveText("w");
+  await page.mouse.move(900, 400);
+  const keep = page.getByRole("button", { name: "Open This Folder" });
+  await expect(keep).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sort" })).toBeHidden();
+  // Opened as the folder: no button to open it, the tools on hover alone.
+  await keep.click();
+  await page.mouse.move(900, 400);
+  await expect(page.locator(".tree-tool:visible")).toHaveCount(0);
+});
+
+test("scrolled into, the folder's name and the folders' rows stay at the top until their rows go by; folded there, it stays in sight", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const fs: Record<string, string> = { "/proj/z.md": "# Z\n" };
+    for (let i = 10; i < 50; i++) {
+      fs[`/proj/notes/inner/i${i}.md`] = "# I\n";
+      fs[`/proj/notes/n${i}.md`] = "# N\n";
+      fs[`/proj/r${i}.md`] = "# R\n";
+    }
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = fs;
+    w.__devPickFolder = "/proj";
+  });
+  await page.setViewportSize({ width: 1200, height: 600 });
+  await openApp(page);
+  await emit(page, "menu-open-folder");
+  const row = (name: string) =>
+    page.locator(".tree-row", { has: page.getByText(name, { exact: true }) });
+  await row("notes").click();
+  await row("inner").click();
+  await expect(row("i49.md")).toBeAttached();
+  const scroller = page.locator(".sidebar-body");
+  const top = async (name: string) =>
+    (await row(name).boundingBox())!.y - (await scroller.boundingBox())!.y;
+  const height = (await row("notes").boundingBox())!.height;
+  const toolbar = page.locator(".tree-toolbar");
+  const bar = (await toolbar.boundingBox())!.height;
+
+  await scroller.evaluate((el) => (el.scrollTop = 600));
+  await expect.poll(() => top("notes")).toBeCloseTo(bar, 0);
+  expect(await top("inner")).toBeCloseTo(bar + height, 0);
+  // The folder's name stays over them all.
+  expect(
+    (await toolbar.boundingBox())!.y - (await scroller.boundingBox())!.y,
+  ).toBeCloseTo(0, 0);
+  await expect(toolbar.locator(".tree-root-label")).toHaveText("proj");
+  // Past inner's last row, inner goes up with it; notes stays.
+  const pastInner = await row("n10.md").evaluate(
+    (el, h) =>
+      el.getBoundingClientRect().top -
+      el.closest(".sidebar-body")!.getBoundingClientRect().top +
+      el.closest(".sidebar-body")!.scrollTop -
+      h / 2,
+    height,
+  );
+  await scroller.evaluate((el, y) => (el.scrollTop = y), pastInner);
+  await expect.poll(() => top("inner")).toBeLessThan(bar);
+  expect(await top("notes")).toBeCloseTo(bar, 0);
+
+  // Folded from the top, notes stays in sight.
+  await scroller.evaluate((el) => (el.scrollTop = 600));
+  await expect.poll(() => top("notes")).toBeCloseTo(bar, 0);
+  await row("notes").click();
+  await expect(row("inner")).toHaveCount(0);
+  const folded = await top("notes");
+  expect(folded).toBeGreaterThanOrEqual(-1);
+  expect(folded).toBeLessThan((await scroller.boundingBox())!.height);
+});
+
 test("a file closed at once opens again at once", async ({ page }) => {
   await page.addInitScript(() => {
     const w = window as unknown as Record<string, unknown>;
@@ -159,6 +334,63 @@ test("a file closed at once opens again at once", async ({ page }) => {
   await expect(tab).toHaveCount(0);
   await row.dblclick();
   await expect(tab).toBeVisible();
+});
+
+test("a picture's path completes from the folder as it is typed; a file's menu inserts a link to it", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = {
+      "/proj/a.md": "# A\n",
+      "/proj/b.md": "# B\n",
+      "/proj/assets/pic.png": "",
+    };
+    w.__devPickFolder = "/proj";
+  });
+  await openApp(page);
+  await emit(page, "menu-open-folder");
+  const row = (name: string) => page.locator(".tree-row", { hasText: name });
+  await row("a.md").dblclick();
+  const doc = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(doc.locator("h1")).toContainText("A");
+  await doc.locator("h1").click();
+  await page.keyboard.press(END);
+  await selectionRead(page);
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("see ![](");
+  const list = page.locator(".completion-list:not([hidden])");
+  // Only images after "![".
+  await expect(list.locator(".completion-label")).toHaveText([
+    "assets/pic.png",
+  ]);
+  await page.keyboard.press("Enter");
+  await expect(list).toHaveCount(0);
+
+  await row("b.md").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "插入链接" }).click();
+  await expect(doc.locator("a")).toHaveCount(1);
+  // Its own undo step: the picture stays.
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(doc.locator("a")).toHaveCount(0);
+  expect(await sourceOf(page)).toBe("# A\n\nsee ![](assets/pic.png)");
+
+  // The same in source mode: a link lists notes first.
+  await emit(page, "menu-toggle-source-mode");
+  const source = page.locator(
+    '[data-active-tab="true"] .source-view .cm-content',
+  );
+  await source.click();
+  await page.keyboard.press("ControlOrMeta+End");
+  await page.keyboard.type(" [x](");
+  await expect(list.locator(".completion-label").first()).toHaveText("b.md");
+  await page.keyboard.press("Enter");
+  await expect(list).toHaveCount(0);
+  await row("b.md").click({ button: "right" });
+  await page.getByRole("menuitem", { name: "插入链接" }).click();
+  await expect(source).toContainText(
+    "see ![](assets/pic.png) [x](b.md)[b](b.md)",
+  );
 });
 
 test("a file dragged onto a folder moves into it; with Esc it stays; picked files go together", async ({
@@ -414,11 +646,11 @@ test.describe("on a phone", () => {
     await editor.tap();
     await page.keyboard.type("some text");
     await page.locator(".tab-switcher-button").tap();
-    await page.locator(".tab-switcher-new").tap();
+    await page.getByRole("menuitem", { name: "新建文件" }).tap();
     await expect(page.locator(".tab-switcher-count")).toHaveText("2");
-    // The sheet already up: what is tapped under the throttle is the close.
+    // The menu already up: what is tapped under the throttle is the close.
     await page.locator(".tab-switcher-button").tap();
-    await expect(page.locator(".tab-switcher-row")).toHaveCount(2);
+    await expect(page.getByRole("menuitemradio")).toHaveCount(2);
     // A slow phone: the document is built well after the tap.
     const cdp = await page
       .context()
@@ -427,7 +659,7 @@ test.describe("on a phone", () => {
     await cdp?.send("Emulation.setCPUThrottlingRate", { rate: 30 });
     // What was tapped goes (as a sidebar's row does): the document left
     // in front is not given the keys for it.
-    await page.locator(".tab-switcher-close").last().tap();
+    await page.getByRole("menuitem", { name: "关闭标签页", exact: true }).tap();
     const text = page.locator(".ProseMirror:visible p", { hasText: "some" });
     await expect(text).toBeVisible();
     // Long enough for any late focus of its own to have come.
@@ -459,4 +691,128 @@ test("a file that takes the preview tab starts with its own history, not the las
   await page.keyboard.press("ControlOrMeta+z");
   await expect(doc.locator("h1")).toContainText("Beta");
   await expect(doc).not.toContainText("Alpha");
+});
+
+test("the sidebar stepping aside and back leaves the rows of tabs in place, not drawn anew", async ({
+  page,
+}) => {
+  await open(page);
+  await pasteMarkdown(page, "# 第三章");
+  await emit(page, "menu-toggle-sidebar");
+  await page.getByRole("button", { name: "Textus AI" }).first().click();
+  await expect(page.locator("section.island")).toHaveCount(2);
+  const rows = page.locator(".tab-bar, .tab-pill[data-tab]");
+  const before = await rows.elementHandles();
+  const sidebar = page.locator(".sidebar");
+  await page.setViewportSize({ width: 780, height: 760 });
+  await expect(sidebar).toHaveClass(/sidebar-collapsed/);
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await expect(sidebar).not.toHaveClass(/sidebar-collapsed/);
+  const kept = await Promise.all(
+    before.map((el) => el.evaluate((n) => n.isConnected)),
+  );
+  expect(kept).toEqual(before.map(() => true));
+  await expect(rows).toHaveCount(before.length);
+});
+
+test("Collapse All holds as a folder opens again, things made in the folders below it before", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/proj/a.md": "# A\n", "/proj/notes/deep/d.md": "# D\n" };
+    w.__devPickFolder = "/proj";
+  });
+  await openApp(page, { settings: { language: "en" } });
+  await emit(page, "menu-open-folder");
+  const row = (name: string) =>
+    page.locator(".tree-row", { hasText: new RegExp(`^${name}$`) });
+  await row("notes").click();
+  await row("deep").click();
+  await page.locator(".tree-toolbar").hover();
+  await page.getByRole("button", { name: "New Folder", exact: true }).click();
+  await page.locator(".tree-draft-input").fill("inner");
+  await page.locator(".tree-draft-input").press("Enter");
+  await expect(row("inner")).toBeVisible();
+
+  await page.getByRole("button", { name: "Sort" }).click();
+  await page.getByRole("menuitem", { name: "Collapse All" }).click();
+  await expect(row("deep")).toHaveCount(0);
+  await row("notes").click();
+  await expect(row("deep")).toHaveAttribute("aria-expanded", "false");
+});
+
+test("New makes things in the folder last clicked, folders on the way too; Collapse All folds every folder", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = {
+      "/proj/a.md": "# A\n",
+      "/proj/notes/n.md": "# N\n",
+      "/proj/notes/deep/d.md": "# D\n",
+    };
+    w.__devPickFolder = "/proj";
+  });
+  await openApp(page, { settings: { language: "en" } });
+  await emit(page, "menu-open-folder");
+  const row = (name: string) =>
+    page.locator(".tree-row", { hasText: new RegExp(`^${name}$`) });
+  const files = () =>
+    page.evaluate(() =>
+      Object.keys(
+        (window as unknown as { __devFs: Record<string, string> }).__devFs,
+      ),
+    );
+  const make = async (tool: string, name: string) => {
+    // The folder's tools show while the pointer is over it.
+    await page.locator(".tree-toolbar").hover();
+    await page.getByRole("button", { name: tool, exact: true }).click();
+    const input = page.locator(".tree-draft-input");
+    await input.fill(name);
+    await input.press("Enter");
+  };
+
+  // A folder clicked: in it. A file clicked: in its folder.
+  await row("notes").click();
+  await make("New File", "fresh");
+  await expect.poll(files).toContain("/proj/notes/fresh.md");
+  await row("deep").click();
+  await row("d.md").click();
+  await make("New Folder", "inner");
+  await expect.poll(files).toContain("/proj/notes/deep/inner/.keep");
+
+  // The document in front is elsewhere: nothing but New opens the way.
+  await openPath(page, "/proj/a.md");
+  await expect(page.locator(".tab-pill", { hasText: "a.md" })).toBeVisible();
+
+  // Collapse All, from the Sort menu: no folder below the root stays open.
+  await page.getByRole("button", { name: "Sort" }).click();
+  await page.getByRole("menuitem", { name: "Collapse All" }).click();
+  await expect(row("notes")).toHaveAttribute("aria-expanded", "false");
+  await expect(row("n.md")).toHaveCount(0);
+  await expect(row("a.md")).toBeVisible();
+
+  // New again: the folders on the way to the one last clicked open for it.
+  await make("New File", "later");
+  await expect.poll(files).toContain("/proj/notes/deep/later.md");
+  await expect(row("notes")).toHaveAttribute("aria-expanded", "true");
+
+  // Slashes in the name make the folders on the way, shown open.
+  await make("New Folder", "week/days");
+  await expect.poll(files).toContain("/proj/notes/deep/week/days/.keep");
+  await expect(row("week")).toHaveAttribute("aria-expanded", "true");
+  await expect(row("days")).toBeVisible();
+
+  // The folder last clicked gone (moved elsewhere): New goes to the top.
+  await page.evaluate(() => {
+    const fs = (window as unknown as { __devFs: Record<string, string> })
+      .__devFs;
+    for (const f of Object.keys(fs))
+      if (f.startsWith("/proj/notes/deep/")) delete fs[f];
+  });
+  await emit(page, "tree-dirs-changed", { dirs: ["/proj/notes"], all: false });
+  await expect(row("deep")).toHaveCount(0);
+  await make("New File", "top");
+  await expect.poll(files).toContain("/proj/top.md");
 });

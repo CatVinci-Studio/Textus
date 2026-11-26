@@ -132,6 +132,26 @@ describe("colour swatches", () => {
   });
 });
 
+describe("one newline in a paragraph", () => {
+  beforeAll(installTestLocalStorage);
+  beforeEach(() => localStorage.clear());
+
+  const load = (stored: Record<string, unknown>) => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(stored));
+    return loadSettings().singleNewline;
+  };
+
+  it("joins the lines by default, as the editor always showed it", () => {
+    expect(load({ language: "en" })).toBe("join");
+  });
+
+  it("keeps a choice, and drops one it doesn't know", () => {
+    expect(load({ singleNewline: "break" })).toBe("break");
+    expect(load({ singleNewline: "join" })).toBe("join");
+    expect(load({ singleNewline: true })).toBe("join");
+  });
+});
+
 describe("separate writing and Agent models", () => {
   beforeAll(installTestLocalStorage);
   beforeEach(() => localStorage.clear());
@@ -261,5 +281,26 @@ describe("a setting of the wrong kind", () => {
     );
     expect(settings.proxyHost).toBe(DEFAULT_SETTINGS.proxyHost);
     expect(settings.zoom).toBe(DEFAULT_SETTINGS.zoom);
+  });
+});
+
+describe("the document's text size", () => {
+  beforeAll(installTestLocalStorage);
+  beforeEach(() => localStorage.clear());
+
+  const load = (stored: Record<string, unknown>) => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(stored));
+    return loadSettings().docTextSize;
+  };
+
+  it("keeps a size in px from one launch to the next, or the theme's", () => {
+    expect(load({ docTextSize: 28 })).toBe(28);
+    expect(load({ docTextSize: 12 })).toBe(12);
+    expect(load({ docTextSize: "auto" })).toBe("auto");
+  });
+
+  it("drops a size it doesn't offer", () => {
+    expect(load({ docTextSize: 99 })).toBe("auto");
+    expect(load({ docTextSize: "big" })).toBe("auto");
   });
 });

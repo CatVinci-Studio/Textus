@@ -26,6 +26,7 @@
       "editor.edit",
       "codeBlock.setSource",
       "editor.registerPasteHandler",
+      "editor.registerDropHandler",
       "editor.insertText",
       "editor.replaceSelection",
       "setSource"
@@ -143,6 +144,14 @@
     "permission": "git.commit",
     "calls": [
       "git.commit"
+    ]
+  },
+  {
+    "permission": "git.sync",
+    "calls": [
+      "git.fetch",
+      "git.push",
+      "git.pull"
     ]
   },
   {

@@ -11,6 +11,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { SettingsProvider, useSettings } from "../../prefs/SettingsContext";
 import { themes } from "../../platform/ipc";
 import { ReplyThemes } from "./ReplyThemes";
+import { onCreateRequest, takeCreateRequest } from "./create-request";
 
 vi.mock("../../platform/ipc", () => ({
   themes: {
@@ -29,6 +30,7 @@ const labels = {
   themeInUse: "In use",
   themeFallbackName: "Theme",
   showCode: "Show code",
+  themeToWorkshop: "Keep editing in the workshop",
 };
 
 function Current() {
@@ -102,4 +104,23 @@ it("offers nothing under a reply without a theme", () => {
     </SettingsProvider>,
   );
   expect(screen.queryByRole("button")).toBeNull();
+});
+
+it("opens the theme workshop on a reply's theme once it is installed", async () => {
+  render(
+    <SettingsProvider>
+      <ReplyThemes text={reply} labels={labels} />
+      <Current />
+    </SettingsProvider>,
+  );
+  const toWorkshop = { name: "Keep editing in the workshop" };
+  expect(screen.queryByRole("button", toWorkshop)).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Use this theme" }));
+  const button = await screen.findByRole("button", toWorkshop);
+  const id = screen.getByTestId("current").textContent!.split("|")[0];
+  const taken: unknown[] = [];
+  const stop = onCreateRequest(() => taken.push(takeCreateRequest()));
+  fireEvent.click(button);
+  stop();
+  expect(taken).toEqual([{ text: "", kind: "theme", start: id }]);
 });

@@ -111,14 +111,29 @@ describe("linkTarget", () => {
     for (const url of [
       "javascript:alert(1)",
       "JavaScript:alert(1)",
-      "file:///etc/passwd",
-      "file:///C:/Windows/System32/calc.exe",
+      "file://server/share/a.md",
       "data:text/html,<script>alert(1)</script>",
       "ms-settings:privacy",
       "vscode://file/x",
       "tauri://localhost/",
     ])
       expect(linkTarget(url, "/home/me/index.md"), url).toBeNull();
+  });
+});
+
+describe("a file: URL", () => {
+  it("leads where the path it names does: a note opens, a file is shown", () => {
+    for (const [url, path] of [
+      ["file:///etc/passwd", "/etc/passwd"],
+      ["file:///C:/Windows/System32/calc.exe", "C:/Windows/System32/calc.exe"],
+    ])
+      expect(linkTarget(url, "/home/me/index.md")).toEqual(
+        linkTarget(path, "/home/me/index.md"),
+      );
+    expect(linkTarget("file:///D:/notes/a%20b.md#Part", null)).toMatchObject({
+      kind: "document",
+      anchor: "Part",
+    });
   });
 });
 

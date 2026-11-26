@@ -102,9 +102,27 @@ export function isInside(path: string, dir: string): boolean {
   return inner.startsWith(outer.endsWith("/") ? outer : `${outer}/`);
 }
 
-/** Whether `path` is folder `dir` itself or lies somewhere below it. */
+/** Whether `path` is folder `dir` itself or lies somewhere below it,
+ *  however its separators are written. */
 export function isWithin(path: string, dir: string): boolean {
-  return path === dir || isInside(path, dir);
+  return samePath(path, dir) || isInside(path, dir);
+}
+
+/** Whether `a` and `b` name one path: separators and "." and ".." aside. */
+function samePath(a: string, b: string): boolean {
+  if (a === b) return true;
+  if (a.startsWith("content://") || b.startsWith("content://")) return false;
+  const walkedA = walked(a);
+  return walkedA !== null && walkedA === walked(b);
+}
+
+/** `path` after `from` (itself or a folder holding it) moved to `to`;
+ *  null when it isn't within `from`. */
+export function movedTo(path: string, from: string, to: string): string | null {
+  if (samePath(path, from)) return to;
+  if (!isInside(path, from)) return null;
+  const rest = slashed(path).slice(slashed(from).replace(/\/+$/, "").length);
+  return rest.split("/").filter(Boolean).reduce(joinPath, to);
 }
 
 /** An Android picked folder's entry: under the same picked tree, its
@@ -181,6 +199,35 @@ export function linkPath(path: string): string {
 // which reads the drive letter as a one-letter scheme.
 export function isDrivePath(path: string): boolean {
   return /^[a-z]:[\\/]/i.test(path);
+}
+
+/** The local path a `file:` URL names (`file:///D:/a b.png` → `D:/a b.png`,
+ *  `file:///Users/x.png` → `/Users/x.png`), or null: not a file: URL, or
+ *  one naming another machine (`file://host/…`, `file:////host/…`, a
+ *  `\\host` share), which is never read. */
+export function fileUrlPath(src: string): string | null {
+  const url = /^file:(?:\/\/(?:localhost)?)?(.*)$/i.exec(src.trim());
+  if (!url) return null;
+  const rest = url[1];
+  const named = isDrivePath(rest)
+    ? rest
+    : /^\/[^/\\]/.test(rest)
+      ? rest.slice(1)
+      : null;
+  if (named === null) return null;
+  const path = decodeUrlPath(named);
+  if (isDrivePath(path)) return path;
+  return /^[/\\]/.test(path) ? null : `/${path}`;
+}
+
+/** `link` with a `file:` URL written as the plain path it names, anchor
+ *  kept, so it is followed like that path; any other link as it is. */
+export function fileUrlAsLink(link: string): string {
+  const hash = link.indexOf("#");
+  const path = fileUrlPath(hash < 0 ? link : link.slice(0, hash));
+  return path === null
+    ? link
+    : linkPath(path) + (hash < 0 ? "" : link.slice(hash));
 }
 
 // Whether a link or image src starts with a URL scheme (http:, data:,

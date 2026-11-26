@@ -58,7 +58,12 @@ export function definitionsIn(doc: ProseNode): string[] {
 
 /** The labels `doc` defines, as normalLabel reads them. */
 export function definedLabels(doc: ProseNode): Set<string> {
-  const labels = definitionsIn(doc).map((source) => readDefinition(source));
+  return labelsOf(definitionsIn(doc));
+}
+
+/** The labels the definitions `sources` define, as normalLabel reads them. */
+function labelsOf(sources: readonly string[]): Set<string> {
+  const labels = sources.map((source) => readDefinition(source));
   return new Set(
     labels.flatMap((found) => (found ? [normalLabel(found.label)] : [])),
   );
@@ -157,6 +162,8 @@ function linkReveal(
   label: (text: string) => LabelPart[],
   docPath: () => string | null,
   defined: () => Set<string>,
+  /** The document's definitions' sources: where a reference leads. */
+  definitions: () => string[],
 ): Reveal {
   return {
     match: isLink,
@@ -165,7 +172,8 @@ function linkReveal(
     decorate(node, pos, touches) {
       const text = node.textContent;
       const end = pos + node.nodeSize;
-      const href = linkHref(text);
+      // A reference's address is its definition's, shown on hover too.
+      const href = linkHref(text, definitions);
       const shown = touches(pos, end);
       // The class marks the link whose source shows, for tests.
       const out = [
@@ -369,23 +377,30 @@ function typeBesideDecodedLink(view: EditorView, event: InputEvent): boolean {
 export function createLinkRevealPlugin(docPath: () => string | null) {
   return $prose((ctx) => {
     let defined = new Set<string>();
+    let definitions: string[] = [];
+    // A new set whenever a definition changes, its address too: the reveal
+    // draws its links again by it (config).
+    const track = (doc: ProseNode) => {
+      const now = definitionsIn(doc);
+      if (now.join("\n") === definitions.join("\n")) return;
+      definitions = now;
+      defined = labelsOf(now);
+    };
     const reveal = linkReveal(
       cachedLabels((markdown) => ctx.get(remarkCtx).parse(markdown)),
       docPath,
       () => defined,
+      () => definitions,
     );
     return new Plugin<RevealState>({
       key,
       state: {
         init: (_config, state) => {
-          defined = definedLabels(state.doc);
+          track(state.doc);
           return revealAll(state, reveal);
         },
         apply: (tr, prev, oldState, newState) => {
-          if (tr.docChanged && touchesDefinition(tr)) {
-            const now = definedLabels(newState.doc);
-            if ([...now].join("\n") !== [...defined].join("\n")) defined = now;
-          }
+          if (tr.docChanged && touchesDefinition(tr)) track(newState.doc);
           return applyReveal(tr, prev, oldState, newState, reveal);
         },
       },

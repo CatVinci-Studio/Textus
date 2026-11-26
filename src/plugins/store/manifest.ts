@@ -31,6 +31,7 @@ type PlainPermission =
   | "agents"
   | "appearance"
   | "git.commit"
+  | "git.sync"
   | "ssh";
 export type PluginPlatform = "desktop" | "ios";
 
@@ -56,6 +57,7 @@ export function isPermission(value: unknown): value is Permission {
 }
 
 import { REQUIRED_SETTINGS } from "./manifest-types";
+import { readCategory } from "./plugin-categories";
 import type { PluginManifest, RequiredSetting } from "./manifest-types";
 
 const ID = /^[a-z0-9][a-z0-9-]{0,63}\.[a-z0-9][a-z0-9-]{0,63}$/;
@@ -100,7 +102,10 @@ export function parseManifest(raw: string | unknown): PluginManifest {
       reason: text(need.reason, `requires[${i}].reason`, true) || undefined,
     };
   });
-  // Background code, or Textus kept running in the background: the desktop's.
+  // Background code, or Textus kept running in the background: the
+  // desktop's, unless platforms says otherwise. Background code can't run
+  // anywhere else; a plugin that only asks to keep Textus running works
+  // without it where there is no tray, and naming ios says so.
   const inBackground =
     !!background || requires.some((r) => r.setting === "runInBackground");
   // An agent is a program on the computer: the desktop's too.
@@ -117,7 +122,7 @@ export function parseManifest(raw: string | unknown): PluginManifest {
             );
           return p as PluginPlatform;
         });
-  if (inBackground && platforms.includes("ios"))
+  if (background && platforms.includes("ios"))
     throw new ManifestError(
       "The background is the desktop's only: platforms can't name ios.",
     );
@@ -135,6 +140,8 @@ export function parseManifest(raw: string | unknown): PluginManifest {
         ),
       );
     }
+  if (m.needsTextusAi !== undefined && typeof m.needsTextusAi !== "boolean")
+    throw new ManifestError("needsTextusAi is true or false.");
   const contributes = parseContributes(m.contributes, id);
   if (contributes.embeds.length && !permissions.includes("files.read"))
     throw new ManifestError("contributes.embeds needs files.read.");
@@ -159,6 +166,8 @@ export function parseManifest(raw: string | unknown): PluginManifest {
     ),
     permissions,
     requires,
+    needsTextusAi: m.needsTextusAi === true,
+    category: readCategory(text(m.category, "category", true)),
     contributes,
     l10n,
   };

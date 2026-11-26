@@ -17,6 +17,11 @@
   min-height: 0;
   overflow: hidden;
 }
+/* Launching with documents to open: held back until they have (first-tab.ts),
+   the sheets under them shown. Kept laid out and focusable for the caret. */
+:root[data-restoring] .split-pane {
+  opacity: 0;
+}
 
 /* The line between them, down the middle of the gap it lies in; its hit
    area a few px wider either side. */

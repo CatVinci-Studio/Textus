@@ -51,6 +51,23 @@ describe("paginateDocument", () => {
     expect(blocks[0].getBoundingClientRect().top).toBe(10);
   });
 
+  it("fills the last page with a spacer no theme can size, below floats", () => {
+    const { root } = stack([30]);
+    // Where the content ends: the tail, unstubbed, is measured there.
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({
+      top: 30,
+      bottom: 30,
+      height: 0,
+    } as DOMRect);
+    paginateDocument(document, root, 100, 10);
+    const tail = document.body.lastElementChild as HTMLElement;
+    expect(tail.className).toBe("textus-page-spacer");
+    expect(tail.style.height).toBe("70px");
+    expect(tail.style.margin).toBe("0px");
+    expect(tail.style.clear).toBe("both");
+    vi.restoreAllMocks();
+  });
+
   it("leaves a block taller than a page where it is", () => {
     const { root } = stack([300]);
     expect(paginateDocument(document, root, 100, 10)).toBe(0);

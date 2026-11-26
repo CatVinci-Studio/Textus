@@ -123,6 +123,19 @@ export const PANDOC_ARGS_FORMATS = [
 export type PandocArgsFormat = (typeof PANDOC_ARGS_FORMATS)[number];
 
 export const COLOR_SWATCH_MODES = ["off", "code", "everywhere"] as const;
+/** What one tilde each side, `~text~`, means: GitHub strikes it out,
+ *  Pandoc and Typora read `H~2~O` as a subscript; `~~text~~` always
+ *  strikes out. */
+export const SINGLE_TILDE_MODES = [
+  "subscript",
+  "strikethrough",
+  "text",
+] as const;
+export type SingleTildeMode = (typeof SINGLE_TILDE_MODES)[number];
+/** What one newline inside a paragraph is: CommonMark and Pandoc join the
+ *  lines, GitHub's comments and Obsidian break the line. */
+export const SINGLE_NEWLINE_MODES = ["join", "break"] as const;
+export type SingleNewlineMode = (typeof SINGLE_NEWLINE_MODES)[number];
 export type ColorSwatchMode = (typeof COLOR_SWATCH_MODES)[number];
 
 /// In the order the menus list them, the default first.
@@ -167,6 +180,8 @@ export interface UserThemeMeta {
   /// update. Rust reads only `id`, `hasDark` and, to count an uninstall,
   /// `gallery` (commands/themes.rs).
   gallery?: GalleryOrigin;
+  /// Made in the theme workshop here: it may be saved over from there.
+  workshop?: boolean;
 }
 
 /** What Textus AI made and the user installed from a reply's card: a

@@ -1,4 +1,5 @@
-import { holdStill, pastAnEnd, stillPoint } from "./hold-still";
+import { pageIsTheHands } from "../../engine/controls/scroll-hold";
+import { holdStillWhile } from "./still-point";
 import { drawAllBlocks } from "./lazy-blocks-drawer";
 import {
   DRAW_SCREENS,
@@ -102,17 +103,14 @@ function latest(
  *  scroll heard when the page comes to rest. */
 function stillWhile(observer: IntersectionObserver, change: () => void) {
   const scroller = observer.root as Element | null;
-  if (scroller && pastAnEnd(scroller)) {
+  if (scroller && pageIsTheHands(scroller)) {
     scroller.addEventListener("scroll", () => stillWhile(observer, change), {
       once: true,
       passive: true,
     });
     return;
   }
-  const root = scroller?.querySelector(".ProseMirror");
-  const still = scroller && root ? stillPoint(root, scroller) : null;
-  change();
-  if (scroller) holdStill(scroller, still);
+  holdStillWhile(scroller?.querySelector(".ProseMirror"), scroller, change);
 }
 
 const onNear = (

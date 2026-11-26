@@ -7,7 +7,7 @@ import { createSubscribers } from "../../utils/store";
 
 // Help > Report a Problem: asked for here, at startup; the dialog itself
 // loads the first time it is.
-const ReportProblemDialog = lazyComponent(
+export const ReportProblemDialog = lazyComponent(
   lazyModule("report-problem", () => import("./ReportProblem")),
   (m) => m.ReportProblemDialog,
 );

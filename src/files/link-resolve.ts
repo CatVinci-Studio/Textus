@@ -48,6 +48,8 @@ function joined(dir: string, link: string): string | null {
   return parts.join("/");
 }
 
+// Not utils' dirname: a path from the root has "" for the top, where dirname
+// gives back a bare name itself.
 function folderOf(path: string): string {
   const slash = path.lastIndexOf("/");
   return slash < 0 ? "" : path.slice(0, slash);
@@ -189,10 +191,17 @@ export function pathIndex(root: string, paths: readonly string[]): PathIndex {
   return { root, notes: noteIndex(paths.map((p) => relativeTo(root, p))) };
 }
 
-function relativeTo(root: string, path: string): string {
+/** `path` from the folder `root`, with "/"; as it is outside it. */
+export function relativeTo(root: string, path: string): string {
   const base = slashed(root).replace(/\/+$/, "");
   const full = slashed(path);
   return full.startsWith(`${base}/`) ? full.slice(base.length + 1) : full;
+}
+
+/** The folder links written in the document `doc` start from, as a path
+ *  from `root`. */
+export function linkFolderIn(root: string, doc: string): string {
+  return folderOf(relativeTo(root, doc));
 }
 
 const absolute = (paths: PathIndex, rel: string) =>

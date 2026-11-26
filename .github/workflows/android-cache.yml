@@ -1,0 +1,76 @@
+name: Android cache
+
+# Keeps Gradle's downloads (and the Rust build for Android) cached on main.
+# A release runs on a tag, and a tag can restore only caches saved on the
+# default branch: without this, every release fetched all of Gradle's
+# dependencies from Maven Central again, which has answered a burst with
+# 429 and failed the release's Android build. android-release.yml and CI's
+# android job restore what this saves (same keys).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - src-tauri/Cargo.lock
+      - package-lock.json
+      - scripts/android-prepare.sh
+      - .github/workflows/android-cache.yml
+  schedule:
+    # Weekly, so the cache isn't evicted after seven days unused.
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-cache
+  cancel-in-progress: true
+
+jobs:
+  warm:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CARGO_PROFILE_DEV_DEBUG: "0"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+          key: android
+      - run: npm ci
+      - uses: actions/cache@v6
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('src-tauri/Cargo.lock', 'package-lock.json', 'scripts/android-prepare.sh') }}
+          restore-keys: gradle-${{ runner.os }}-
+      - name: Gradle retries downloads with a back-off
+        run: |
+          mkdir -p ~/.gradle
+          cat >> ~/.gradle/gradle.properties <<'PROPS'
+          systemProp.org.gradle.internal.repository.max.retries=6
+          systemProp.org.gradle.internal.repository.initial.backoff=2000
+          PROPS
+      - name: Generate the Android project
+        run: |
+          echo "NDK_HOME=$ANDROID_NDK_LATEST_HOME" >> "$GITHUB_ENV"
+          NDK_HOME=$ANDROID_NDK_LATEST_HOME npx tauri android init --ci
+          sh scripts/android-prepare.sh
+      # A debug build fetches the plugins, libraries and tools the release
+      # build uses; it needs no signing key.
+      - name: Build the APK for arm64, debug
+        run: npx tauri android build --ci --debug --target aarch64 --apk

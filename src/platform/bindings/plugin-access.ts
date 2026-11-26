@@ -29,9 +29,14 @@ export const commands = {
 	plugin_fs_rename: (id: string, root: string, from: string, to: string) => __TAURI_INVOKE<null>("plugin_fs_rename", { id, root, from, to }),
 	/**
 	 *  Moves a file or folder in the folder to the system Trash - never a
-	 *  delete the user can't undo.
+	 *  delete the user can't undo. Refused with `noTrash` where there is none.
 	 */
 	plugin_fs_trash: (id: string, root: string, path: string) => __TAURI_INVOKE<null>("plugin_fs_trash", { id, root, path }),
+	/**
+	 *  The checks of [`plugin_fs_trash`] alone, and the file they allow: iOS
+	 *  moves it to Recently Deleted through the native plugin, as the sidebar does.
+	 */
+	plugin_fs_trash_path: (id: string, root: string, path: string) => __TAURI_INVOKE<string>("plugin_fs_trash_path", { id, root, path }),
 	/**  Makes a folder (and the folders it is in) in the folder. */
 	plugin_fs_mkdir: (id: string, root: string, path: string) => __TAURI_INVOKE<null>("plugin_fs_mkdir", { id, root, path }),
 	/**  The file at `path`, or None when nothing is there. */
@@ -74,6 +79,12 @@ export const commands = {
 	plugin_git_log: (id: string, root: string, path: string, limit: number | null) => __TAURI_INVOKE<GitCommit[]>("plugin_git_log", { id, root, path, limit }),
 	plugin_git_show: (id: string, root: string, hash: string, path: string) => __TAURI_INVOKE<string | null>("plugin_git_show", { id, root, hash, path }),
 	plugin_git_commit: (id: string, root: string, message: string, paths: string[]) => __TAURI_INVOKE<string>("plugin_git_commit", { id, root, message, paths }),
+	/**  Takes the remote's branches (git.sync). */
+	plugin_git_fetch: (id: string, root: string) => __TAURI_INVOKE<null>("plugin_git_fetch", { id, root }),
+	/**  Sends the branch to its remote branch (git.sync). */
+	plugin_git_push: (id: string, root: string) => __TAURI_INVOKE<null>("plugin_git_push", { id, root }),
+	/**  Takes the remote branch's commits in, undone on a conflict (git.sync). */
+	plugin_git_pull: (id: string, root: string) => __TAURI_INVOKE<null>("plugin_git_pull", { id, root }),
 	/**  The hosts named in the user's `~/.ssh/config`. */
 	plugin_ssh_hosts: (id: string) => __TAURI_INVOKE<string[]>("plugin_ssh_hosts", { id }),
 	/**  The user's yes to `id` reaching `host`. */
@@ -233,12 +244,22 @@ export type GitStatus = GitStatus_Serialize | GitStatus_Deserialize;
 export type GitStatus_Deserialize = {
 	/**  None when HEAD is detached. */
 	branch?: string | null,
+	/**  The remote branch it follows (`origin/main`); None with none. */
+	upstream?: string | null,
+	/**  Commits here the remote branch hasn't, and there that this hasn't. */
+	ahead: number,
+	behind: number,
 	changes: GitChange[],
 };
 
 export type GitStatus_Serialize = {
 	/**  None when HEAD is detached. */
 	branch: string | null,
+	/**  The remote branch it follows (`origin/main`); None with none. */
+	upstream: string | null,
+	/**  Commits here the remote branch hasn't, and there that this hasn't. */
+	ahead: number,
+	behind: number,
 	changes: GitChange[],
 };
 

@@ -90,6 +90,7 @@ again when it changes. Uninstalling it moves the file to the Trash.
   "engines": { "textus": ">=1.3.0-beta.2" }, // the plugin API 1.0
   "main": "host.js", // or ["shared.js", "host.js"], run in order
   "platforms": ["desktop", "ios"], // where it runs; the catalog needs it
+  "category": "editing", // where the store lists it (below)
   "activationEvents": [], // when to start before it is used (below)
   "permissions": ["editor.read"],
   // "background": "jobs.js", // scheduled jobs' code (On a schedule)
@@ -119,6 +120,16 @@ again when it changes. Uninstalling it moves the file to the Trash.
 ...args)`, a webview with `api.t(key, ...args)`; `{0}`, `{1}`… are the
   arguments. Textus speaks `en`, `zh`, `zh-Hant`, `ja`, `ko`, `es`, `fr`,
   `de`, `ru` and `pt`.
+- `category` is where the store lists it: `notes` (notes and organizing),
+  `editing` (editing and input), `diagrams` (charts and diagrams), `files`
+  (files and viewers), `import` (import and compatibility), `sync` (sync
+  and services), `ai` or `companions`. Without one, or with one an older
+  Textus doesn't know, it is under Other. From Textus 1.4.7; older ones
+  ignore it.
+- `"needsTextusAi": true` says the plugin does nothing without Textus AI -
+  it only gives Textus AI tools. Where there is none (iOS), the store
+  doesn't list it. A plugin that does other things too leaves it out. From
+  Textus 1.4.7; older ones ignore it.
 - The manifest has a [JSON Schema](../textus-plugin.schema.json):
   `"$schema": "https://raw.githubusercontent.com/CatVinci-Studio/Textus/main/docs/dev/textus-plugin.schema.json"`.
 
@@ -144,31 +155,34 @@ made when they are first shown.
 
 ### What `contributes` takes
 
-| Key               | What it adds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `commands`        | Commands: `{ command, title }`; with `runs: { command: "textus.…", args }` one runs a Textus command with those arguments, no code needed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `keybindings`     | A shortcut for a command, as Settings writes them (`mod+alt+w`). Textus's own shortcuts win a clash; the user can change or clear it in Settings › Shortcuts.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `menus`           | `editor/context` (the editor's right-click menu), `editor/slash` (offered when a word starts with `/`), `file/context` (a file's in the sidebar), `tab/context` (a tab's), `view/title` (buttons at the top of a sidebar view, with an `icon`), `floating/context` (a floating view's right-click menu, first in it; `when: "view == …"` picks the view), `app/plugins` (the Plugins menu), `app/tray` (background mode's icon).                                                                                                                                                                                                                     |
-| `blockMenu`       | `true`: the `/` menu lists Textus's own blocks (the Format menu's) while the plugin is on - as Quick Insert does. A plugin adds a block of its own with `editor/slash` or `editor.registerBlockType` (API 1.8).                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `snippets`        | `{ label, body, keywords? }`: Markdown the `/` menu puts in at the caret, no code needed; `$0` marks where the caret lands. A one-line snippet goes in as text, a longer one as blocks. From API 1.8.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `sidebarTabs`     | `{ id, title, type: "list" \| "webview", icon }`: a sidebar tab. A list is drawn by Textus from `views.registerList`; a webview is the plugin's page. The icon is an SVG drawn in the text colour.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `views`           | `{ id, title, type }`: the same, opened in a tab of its own (`textus.layout.openView`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `customEditors`   | `{ viewType, displayName, filenamePatterns: ["*.pdf"], frontMatter: ["kanban-plugin"], priority }`: a file type opened in the plugin's tab instead of as a document. `frontMatter` (from 1.3.10) claims Markdown documents whose front matter has one of the keys; `filenamePatterns` may then be left out.                                                                                                                                                                                                                                                                                                                                          |
-| `documentTypes`   | `{ extensions: ["qmd"], keep: { blockStarts: [":::"], braces: true, jsx: false } }`: a file type opened as a document in Textus's own editor. `keep` names what of its syntax is shown as source and saved exactly as written: paragraphs starting with one of `blockStarts` (with the blocks after while a bracket is open), `{…}` with `braces`, JSX tags with `jsx`. Turned off, the plugin's files open read-only as text. Textus's own types (md, markdown, mdx, txt, text) can't be taken. From 1.4.3.                                                                                                                                         |
-| `folderDocuments` | `[{ extension: "textbundle", documents: ["text.md"] }]`: a folder with this extension shows in the sidebar as one document and opens the first of `documents` found inside it, its tab named after the folder. From 1.4.6.                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `codeBlocks`      | `{ language, title, frame, size }`: fenced blocks in that language drawn by the plugin (`views.registerCodeBlock`), in a box like a figure, or on the page with `frame: "none"`. With `size: "interface"` the block draws at the interface's text size instead of the document's and its zoom, for an overview (a table, a board) that shows more as the column widens. Textus's own languages (mermaid, math…) can't be taken.                                                                                                                                                                                                                      |
-| `suggestFor`      | `["wikilinks"]`: what a document can hold that the plugin works with. An official one is suggested, once, for a document that holds it while no installed plugin does.                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `completions`     | `{ id, where: "math" \| "text" \| "any", pattern, title }`: completions as you type when what is before the caret matches `pattern` (`editor.registerCompletion`), grouped under `title` in the `/` panel. Needs `editor.read`.                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `aiTools`         | `{ name, description, parameters }`: tools Textus AI can call (`ai.registerTool`); `parameters` is a JSON schema.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `embeds`          | `{ id, targets: ["note", "heading", "block"] }`: `![[…]]` embeds of those kinds drawn read-only from the Markdown `views.registerEmbed(id)` gives. Needs `files.read` (or `files.write`).                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `hovers`          | `["document", "link", "citation"]`: the hover cards the plugin gives (`editor.registerHover`). One plugin answers each kind: the first turned on.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `links`           | `{ pattern, command }`: web links Ctrl/Cmd+clicked in a document whose URL matches `pattern` run `command` with the URL.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `statusItems`     | `{ id, text, tooltip?, command? }`: statuses in the window bar shown while the plugin is on, before its code starts; its `ui.statusItem(id, …)` takes one over.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `settings`        | Rows on the plugin's page in Settings, drawn as Textus's own: `{ key, type, default, title, description?, group?, when? }`. See [Settings of every kind](#settings-of-every-kind).                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `settingsPage`    | `{ title }`: a page of the plugin's own under its settings, a webview.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `walkthroughs`    | `{ title, steps: [{ title, description?, command? }] }`: first steps shown on the plugin's page in Settings while it is on, each with a button for its command (one of `commands`). Never a popup. From API 1.8.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `floatingViews`   | `{ id, title, width, height, place }`: a small transparent page that floats over the desktop or in Textus's window (`place`: `"either"`, `"desktop"`, `"window"`), shown with `layout.openFloating`. It opens in the window unless `place` is `"desktop"`. Its page is looked at, not clicked: the user drags it anywhere, resizes it in proportion from its top corner (0.6× to 1.4×, so lay the page out to its viewport) and folds, closes or moves it from its right-click menu. `side` in its state says which half it sits in. From 1.3.6.                                                                                                     |
-| `agents`          | `{ id, name, command, args, env, setup, provider }`: an AI agent on the user's computer that speaks the [Agent Client Protocol](https://agentclientprotocol.com) on stdio (Claude Agent, Codex, Gemini CLI…), offered in Textus AI's model menu under Agents. Textus starts `command` itself, found on the PATH a terminal would have; `{pluginDir}` in `args` and `env` is the plugin's folder; `setup` says how to install it and sign in, shown when it can't start; `provider` names whose models it runs (`"anthropic"`, `"openai"`), what `ai.onDidChangeState` tells other plugins while it works. Needs `agents`; desktop only. From 1.3.13. |
+| Key               | What it adds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `commands`        | Commands: `{ command, title }`; with `runs: { command: "textus.…", args }` one runs a Textus command with those arguments, no code needed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `keybindings`     | A shortcut for a command, as Settings writes them (`mod+alt+w`). Textus's own shortcuts win a clash; the user can change or clear it in Settings › Shortcuts.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `menus`           | `editor/context` (the editor's right-click menu), `editor/slash` (offered when a word starts with `/`), `file/context` (a file's in the sidebar), `tab/context` (a tab's), `view/title` (buttons at the top of a sidebar view, with an `icon`), `floating/context` (a floating view's right-click menu, first in it; `when: "view == …"` picks the view), `app/plugins` (the Plugins menu), `app/tray` (background mode's icon).                                                                                                                                                                                                                            |
+| `blockMenu`       | `true`: the `/` menu lists Textus's own blocks (the Format menu's) while the plugin is on - as Quick Insert does. A plugin adds a block of its own with `editor/slash` or `editor.registerBlockType` (API 1.8).                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `snippets`        | `{ label, body, keywords? }`: Markdown the `/` menu puts in at the caret, no code needed; `$0` marks where the caret lands. A one-line snippet goes in as text, a longer one as blocks. From API 1.8.                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `sidebarTabs`     | `{ id, title, type: "list" \| "webview", icon }`: a sidebar tab. A list is drawn by Textus from `views.registerList`; a webview is the plugin's page. The icon is an SVG drawn in the text colour.                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `views`           | `{ id, title, type }`: the same, opened in a tab of its own (`textus.layout.openView`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `customEditors`   | `{ viewType, displayName, filenamePatterns: ["*.pdf"], frontMatter: ["kanban-plugin"], priority }`: a file type opened in the plugin's tab instead of as a document. `frontMatter` (from 1.3.10) claims Markdown documents whose front matter has one of the keys; `filenamePatterns` may then be left out.                                                                                                                                                                                                                                                                                                                                                 |
+| `documentTypes`   | `{ extensions: ["qmd"], keep: { blockStarts: [":::"], braces: true, jsx: false } }`: a file type opened as a document in Textus's own editor. `keep` names what of its syntax is shown as source and saved exactly as written: paragraphs starting with one of `blockStarts` (with the blocks after while a bracket is open), `{…}` with `braces`, JSX tags with `jsx`. Turned off, the plugin's files open read-only as text. Textus's own types (md, markdown, mdx, txt, text) can't be taken. From 1.4.3.                                                                                                                                                |
+| `folderDocuments` | `[{ extension: "textbundle", documents: ["text.md"] }]`: a folder with this extension shows in the sidebar as one document and opens the first of `documents` found inside it, its tab named after the folder. From 1.4.6.                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `textFiles`       | `[{ extensions: ["tex", "sty"], language: "latex" }]`: a file type opened as plain text in the source editor and edited there, whatever the window's view, coloured as `language` - a fence's name, Textus's own or a plugin's `codeLanguages` id. Nothing in it is read as Markdown, and save plugins (`onWillSave`) aren't asked. Without a plugin, text that isn't a document shows the same way, read-only. From 1.4.8.                                                                                                                                                                                                                                 |
+| `fileIconThemes`  | `[{ id, label, path: "icons/theme.json" }]`: a set of icons for files and folders, offered in **Settings › Appearance › File icons**. The JSON is VS Code's icon theme cut down: `iconDefinitions` (`{ "md": { "iconPath": "./md.svg" } }`, SVG files of the plugin, relative to the JSON), then `fileExtensions` (longest first: `d.ts` before `ts`), `fileNames`, `folderNames`, `folderNamesExpanded`, and the defaults `file`, `folder`, `folderExpanded`; `light` holds the same keys for the light appearance. Names are matched in any case. What it doesn't name gets its `file` or `folder` icon, or Textus's own where it gives none. From 1.4.7. |
+| `codeBlocks`      | `{ language, title, frame, size }`: fenced blocks in that language drawn by the plugin (`views.registerCodeBlock`), in a box like a figure, or on the page with `frame: "none"`. With `size: "interface"` the block draws at the interface's text size instead of the document's and its zoom, for an overview (a table, a board) that shows more as the column widens. Textus's own languages (mermaid, math…) can't be taken.                                                                                                                                                                                                                             |
+| `codeLanguages`   | `{ id, aliases?, path }`: syntax colours for code blocks in a language Textus doesn't colour (` ```cisco `), from the grammar in `path`, a JSON file of the plugin. A fence names it by `id` or an alias, in any case. See [Code languages](#code-languages). From 1.4.7.                                                                                                                                                                                                                                                                                                                                                                                   |
+| `suggestFor`      | `["wikilinks"]`: what a document can hold that the plugin works with. An official one is suggested, once, for a document that holds it while no installed plugin does.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `completions`     | `{ id, where: "math" \| "text" \| "any" \| "code", pattern, title }`: completions as you type when what is before the caret matches `pattern` (`editor.registerCompletion`), grouped under `title` in the `/` panel. `"any"` is a formula or the text; `"code"` (1.11) is a code block only, with its `language` in the context. Needs `editor.read`.                                                                                                                                                                                                                                                                                                       |
+| `aiTools`         | `{ name, description, parameters }`: tools Textus AI can call (`ai.registerTool`); `parameters` is a JSON schema.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `embeds`          | `{ id, targets: ["note", "heading", "block"] }`: `![[…]]` embeds of those kinds drawn read-only from the Markdown `views.registerEmbed(id)` gives. Needs `files.read` (or `files.write`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `hovers`          | `["document", "link", "citation"]`: the hover cards the plugin gives (`editor.registerHover`). One plugin answers each kind: the first turned on.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `links`           | `{ pattern, command }`: web links Ctrl/Cmd+clicked in a document whose URL matches `pattern` run `command` with the URL.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `statusItems`     | `{ id, text, tooltip?, command? }`: statuses in the window bar shown while the plugin is on, before its code starts; its `ui.statusItem(id, …)` takes one over.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `settings`        | Rows on the plugin's page in Settings, drawn as Textus's own: `{ key, type, default, title, description?, group?, when? }`. See [Settings of every kind](#settings-of-every-kind).                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `settingsPage`    | `{ title }`: a page of the plugin's own under its settings, a webview.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `walkthroughs`    | `{ title, steps: [{ title, description?, command? }] }`: first steps shown on the plugin's page in Settings while it is on, each with a button for its command (one of `commands`). Never a popup. From API 1.8.                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `floatingViews`   | `{ id, title, width, height, place }`: a small transparent page that floats over the desktop or in Textus's window (`place`: `"either"`, `"desktop"`, `"window"`), shown with `layout.openFloating`. It opens in the window unless `place` is `"desktop"`. Its page is looked at, not clicked: the user drags it anywhere, resizes it in proportion from its top corner (0.6× to 1.4×, so lay the page out to its viewport) and folds, closes or moves it from its right-click menu. `side` in its state says which half it sits in. From 1.3.6.                                                                                                            |
+| `agents`          | `{ id, name, command, args, env, setup, provider }`: an AI agent on the user's computer that speaks the [Agent Client Protocol](https://agentclientprotocol.com) on stdio (Claude Agent, Codex, Gemini CLI…), offered in Textus AI's model menu under Agents. Textus starts `command` itself, found on the PATH a terminal would have; `{pluginDir}` in `args` and `env` is the plugin's folder; `setup` says how to install it and sign in, shown when it can't start; `provider` names whose models it runs (`"anthropic"`, `"openai"`), what `ai.onDidChangeState` tells other plugins while it works. Needs `agents`; desktop only. From 1.3.13.        |
 
 A menu item's `when` is a small expression over the moment it is shown:
 `documentOpen`, `folderOpen`, `editorHasSelection`, `fileExtension == .pdf`,
@@ -177,6 +191,71 @@ A menu item's `when` is a small expression over the moment it is shown:
 1.4.1), and from 1.6 the plugin's own keys set with
 `textus.commands.setContext("jane.focus.on", true)`; joined with `&&`, `||`
 and `!`.
+
+### Code languages
+
+A code block in a language Textus doesn't colour is plain text. A plugin
+colours one with no code at all: `contributes.codeLanguages` names it, and
+a JSON file in the plugin holds its grammar.
+
+```json
+"contributes": {
+  "codeLanguages": [
+    { "id": "cisco", "aliases": ["ios", "cisco-ios"], "path": "cisco.json" }
+  ]
+}
+```
+
+```json
+{
+  "flags": "i",
+  "rules": [
+    { "token": "comment", "match": "^\\s*!.*" },
+    { "token": "keyword", "match": "\\b(?:interface|hostname|shutdown)\\b" },
+    { "token": "number", "match": "\\b\\d{1,3}(?:\\.\\d{1,3}){3}\\b" }
+  ]
+}
+```
+
+- A block is read a line at a time. At each place the first rule whose
+  `match` matches there takes the text up to where it ends; where none
+  does, one character stays plain. So order the rules: comments and
+  strings first.
+- `match` is a JavaScript regular expression, as a JSON string. `^` is
+  the line's start. `flags` may hold `i` (any case) and `u`; the file's
+  `flags` are every rule's unless a rule has its own.
+- `token` is one of `comment`, `string`, `number`, `constant`, `keyword`,
+  `operator`, `function`, `type`, `tag`, `attribute`, `punctuation`. They are coloured as Textus's own languages are, so the
+  theme colours them too.
+- The same colours show in the editor, in source mode and in HTML and PDF
+  exports. The file is read only when a block first uses the language.
+- Textus's own languages win: a name it already colours (`python`, `js`)
+  stays its own. Two plugins naming one language: the first turned on
+  colours it.
+- A rule Textus can't use is left out, and why is written to the
+  console; the others still colour. To keep the editor from hanging, a
+  line longer than 500 characters stays plain, a file reads at most 200
+  rules of up to 1,000 characters each, and a grammar that takes over
+  20 ms for one line, or 500 ms for one block, is turned off until
+  Textus starts again. A `match` may not use backreferences or
+  lookbehind (Safari before 16.4 can't run it), and is refused where it
+  could share one run of text out in many ways:
+  - more than two repeats that could take the same characters in turn:
+    `\s*\s*\s*`, `\w+\s?\w+\s?\w+`, `.*a.*b.*`. Something every one
+    of them must stop at, between them, keeps them apart: `\s*:\s*` is
+    fine;
+  - a group repeated without bound (`+`, `*`, `{2,}`) unless each time
+    over it can match only one way: each of its `|` choices a fixed run
+    of characters, no two starting with the same one. `"(?:\\.|[^"\\])*"`
+    and `(?:ab)+` are fine; `(a+)+`, `(?:a|ab)*` and `(\d+\.)+` aren't
+    (write `(\d{1,3}\.){3}` or `[\d.]+`);
+  - a group with a bound counts each time over: `(\w+\s?){2,40}` and
+    `(\d{1,3}){1,10}` are refused, `(\.\d+){3}` and
+    `(?:/\d+){0,3}` are fine;
+  - more than 16 repeats and groups of `|` choices in one `match` (a
+    group's own `|`s count once).
+
+  These lower the risk; they can't rule out every slow pattern.
 
 ## Permissions
 
@@ -201,6 +280,7 @@ turning it on, or leaves it off, and can take each back later.
 | `agents`         | run the AI agents it names in `contributes.agents` (programs on this computer; 1.3.13)                              |
 | `appearance`     | change Textus's colours: a palette over the theme, the frame a gradient (API 1.6)                                   |
 | `git.commit`     | commit files of the open folder with the user's git (1.4.3; reading Git history is `files.read`)                    |
+| `git.sync`       | fetch, push and pull the open folder's repository with the user's git (1.4.6)                                       |
 | `ssh`            | reach servers through the user's own ssh, SFTP only, each host allowed once by the user (API 1.9, desktop, preview) |
 | `network:<host>` | fetch from that host over HTTPS (`*.example.com`, `host:port`, `*` for the open web)                                |
 | `hidden:<path>`  | read that hidden file of the open folder, named from its top: `hidden:.vitepress/config.ts` (1.4.3)                 |
@@ -462,7 +542,8 @@ await textus.notify.show({ title: "Exported", body: "notes.pdf" }); // now
   pet.
 - `app.state` is `"active"` (a Textus window has the focus), `"inactive"`
   (windows open, none focused) or `"background"` (none open);
-  `app.onDidChangeState` follows it.
+  `app.onDidChangeState` follows it. On a phone or tablet it is
+  `"active"` or `"background"`, as below.
 - Check `textus.env.apiVersion` (`"1.1"`) before using these, or set
   `engines.textus` to `">=1.3.0-beta.8"`: Textus doesn't offer a plugin to
   a version it doesn't fit.
@@ -513,8 +594,16 @@ file's commits through renames, and `git.show(hash, path)` the file as a
 commit had it; these need `files.read`. `git.commit(message, paths)`
 commits those files' changes only, through the user's own git (hooks,
 signing), and needs `git.commit`. Hidden files stay out, and nothing
-pushes, pulls or switches branches. Elsewhere `status()` is `null`. Set
+switches branches. Elsewhere `status()` is `null`. Set
 `engines.textus` to `">=1.4.3"`.
+
+From API 1.9 (Textus 1.4.6), `git.fetch()`, `git.push()` and `git.pull()`
+reach the remote with the user's saved credentials and need `git.sync`;
+`status()` also says the remote branch and how many commits are `ahead`
+and `behind`. Nothing asks for a password: a remote that wants one refuses,
+saying to sign in once with git. A pull that conflicts is undone and
+refuses, so no document is left with conflict markers. Set
+`engines.textus` to `">=1.4.6"` for these.
 
 ### Margin notes - `textus.comments` (API 1.8, preview)
 
@@ -578,7 +667,7 @@ columns, types, group, date }` and answers HTML, shown without scripts or
 - `ai.registerInlineCompletion(id, { label, provide })` (`editor.read`, 1.8
   preview): grey text after the caret when typing pauses, from
   `provide({ before, after, path })`. One source at a time, picked by the
-  user in Settings › Textus AI › Writing assist.
+  user in Settings › Textus AI › Chat & writing.
 - `plugins.get(id)`: what another plugin's `activate` returned - its functions, callable from here.
 - `uri.registerHandler(fn)`: `textus://<plugin id>/<path>?<query>` links
   from a browser or another app, for "send to Textus" buttons and links
@@ -656,7 +745,7 @@ exports.activate = function () {
 <script>
   const api = acquireTextusApi();
   const answer = document.getElementById("answer");
-  api.onMessage((message) => {
+  api.onDidReceiveMessage((message) => {
     if (message?.type === "text") answer.textContent += message.text;
     if (message?.type === "error") answer.textContent = message.text;
   });
@@ -875,11 +964,35 @@ What differs is room and what the system allows:
   `"platforms": ["desktop"]`, and Textus on iOS neither lists nor loads it.
   A plugin that works in the background, with `background` code or
   `requires` Keep running in the background (`runInBackground`), is
-  desktop-only by default, and naming `ios` beside it is an error. Check a
+  desktop-only by default. `background` code can't name `ios`; a plugin
+  that only `requires` Keep running in the background may, and on iOS and
+  Android it runs without it - nobody is asked to turn it on. Such a
+  plugin raises `engines.textus` to `>=1.4.7`: an older Textus refuses its
+  manifest everywhere, the desktop too. Check a
   plugin you offer on iOS in a phone-sized window, or the simulator, before
   you publish.
+- iOS has no Textus AI. A plugin that does nothing without it says
+  `"needsTextusAi": true`, and Textus on iOS doesn't list it. Its README's
+  section on its tools for Textus AI, between `<!-- ai-tools -->` and
+  `<!-- /ai-tools -->`, is left out there.
+- The store marks a plugin whose `platforms` leave out `ios` as the
+  computer's only, so its README needn't say so.
 - Files a user opens from the Files app are reached through iOS's own
   grants; a plugin reads them through `files` like any other.
+- `app.state` is `"active"` while Textus is on screen and `"background"`
+  once the user switches to another app or locks the device;
+  `app.onDidChangeState` fires both ways (there is no `"inactive"`). The
+  system may suspend Textus soon after `"background"`, so finish or save
+  quickly then, and don't start long work such as a sync.
+- `files.trash` on iOS moves the file to the Files app's Recently Deleted,
+  where the user can put it back. Android has no system Trash: there the
+  call fails, leaving the file where it is, with a message that ends in
+  `[noTrash]`. A plugin that must move files out of the way checks for
+  that and keeps them itself, for example in a folder of its own.
+- On Android, a folder opened without access to all files is a
+  `content://` folder: `files` can read, list and write text there, but
+  not write binary files or trash anything (`[noTrash]`), and `stat` and
+  listings give no size or modified time.
 
 ## More
 

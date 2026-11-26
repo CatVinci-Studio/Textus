@@ -200,7 +200,7 @@ export function StartPage({ t }: { t: Strings }) {
           />
           <h1 className="start-page-title">Textus</h1>
         </header>
-        <StartActions t={t} look="buttons" />
+        <StartActions t={t} />
         {anyRecent && (
           <div className="start-page-recents">
             <FolderChips

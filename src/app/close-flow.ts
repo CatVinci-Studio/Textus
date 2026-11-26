@@ -1,3 +1,4 @@
+import { tabPinned } from "../document/pinned";
 import { fill } from "../i18n/fill";
 import { useCallback, useEffect } from "react";
 import { thisWindow } from "../platform/this-window";
@@ -13,6 +14,7 @@ import { drafts, session } from "../platform/ipc";
 import { forgetTabZoom } from "../engine/zoom/tab-zoom";
 import { forgetLeft } from "../editor/tab-left";
 import { forgetTracked } from "../document/tracked-file";
+import { forgetReveals } from "../ai/revision/kept-reveals";
 import { forgetTabWebviewState } from "../plugins/views/webviews";
 import { paneOf, shownIsland, windowLayout } from "../engine/layout/store";
 import { flushPendingWrites } from "../storage/pending-writes";
@@ -104,7 +106,10 @@ export function useTabRemoval(opts: {
       if (closedIds.length > 32) closedIds.shift();
       forgetTabZoom(id);
       forgetLeft(id);
-      if (closing?.path) forgetTracked(closing.path);
+      if (closing?.path) {
+        forgetTracked(closing.path);
+        forgetReveals(closing.path);
+      }
       forgetTabWebviewState(id);
       setTabs((prev) => {
         const next = prev.filter((tb) => tb.id !== id);
@@ -128,8 +133,11 @@ export function useTabRemoval(opts: {
 
   const requestCloseTab = useCallback(
     async (id: string) => {
-      await flushAutosave([id]);
       const tab = liveTabs().find((tb) => tb.id === id);
+      // A pinned tab stays, however it is asked to close: unpinned first,
+      // as its row shows no ×.
+      if (tabPinned(tab)) return;
+      await flushAutosave([id]);
       if (tab?.path) closedPaths.push(tab.path);
       if (!tab || !tabIsDirty(tab)) {
         removeTab(id);

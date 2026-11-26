@@ -374,13 +374,16 @@ export const ruleFromDashes: Command = (state, dispatch) => {
   return true;
 };
 
-const onEnter: Command[] = [
+const enterCommands = (codeLeaves: () => boolean): Command[] => [
   frontMatterFromFirstLine,
   ruleFromDashes,
   splitInlineCode,
   enterInTable,
   pipeRowToTable,
-  leaveTextBlockOnEmptyLastLine,
+  (state, dispatch) =>
+    state.selection.$from.parent.type.name === "code_block" && !codeLeaves()
+      ? false
+      : leaveTextBlockOnEmptyLastLine(state, dispatch),
   splitTask,
   newlineInCode,
 ];
@@ -395,52 +398,59 @@ const onShiftEnter: Command[] = [
  *  macOS Pinyin toggles 中/英 with a Shift tap that can overlap the Enter. */
 const SHIFT_OVERLAP_MS = 100;
 
-export const blockKeysPlugin = $prose(() => {
-  let shiftDownAt = -Infinity;
-  return new Plugin({
-    props: {
-      handleKeyDown(view, event) {
-        if (event.key === "Shift") {
-          if (!event.repeat) shiftDownAt = event.timeStamp;
+export const blockKeysPlugin = (options: {
+  /** Settings › Editor: Enter twice leaves a code block. */
+  codeEnterTwiceLeaves: () => boolean;
+}) =>
+  $prose(() => {
+    const onEnter = enterCommands(options.codeEnterTwiceLeaves);
+    let shiftDownAt = -Infinity;
+    return new Plugin({
+      props: {
+        handleKeyDown(view, event) {
+          if (event.key === "Shift") {
+            if (!event.repeat) shiftDownAt = event.timeStamp;
+            return false;
+          }
+          if (event.key !== "Enter" || isImeKeyEvent(view, event)) return false;
+          if (
+            event.shiftKey &&
+            !event.metaKey &&
+            !event.ctrlKey &&
+            !event.altKey &&
+            event.timeStamp - shiftDownAt < SHIFT_OVERLAP_MS
+          ) {
+            // Shift and Enter went down together: an Enter, as meant.
+            const plain = new KeyboardEvent("keydown", {
+              key: "Enter",
+              code: event.code,
+              keyCode: 13,
+            });
+            const handled = view.someProp("handleKeyDown", (f) =>
+              f(view, plain),
+            );
+            if (handled) return true;
+          }
+          if (event.altKey) return false;
+          const mac = modIsMeta();
+          const mod = mac ? event.metaKey : event.ctrlKey;
+          const other = mac ? event.ctrlKey : event.metaKey;
+          if (other || (event.shiftKey && mod)) return false;
+          const commands = event.shiftKey
+            ? onShiftEnter
+            : mod
+              ? onModEnter
+              : onEnter;
+          const state = stateWithLiveSelection(view);
+          if (commands.some((command) => command(state, view.dispatch, view)))
+            return true;
+          if (commands === onEnter) {
+            const trimmed = spacesAfterCaret(state);
+            // Enter itself is still the keymaps' (lists, quotes, headings).
+            if (trimmed) view.dispatch(trimmed);
+          }
           return false;
-        }
-        if (event.key !== "Enter" || isImeKeyEvent(view, event)) return false;
-        if (
-          event.shiftKey &&
-          !event.metaKey &&
-          !event.ctrlKey &&
-          !event.altKey &&
-          event.timeStamp - shiftDownAt < SHIFT_OVERLAP_MS
-        ) {
-          // Shift and Enter went down together: an Enter, as meant.
-          const plain = new KeyboardEvent("keydown", {
-            key: "Enter",
-            code: event.code,
-            keyCode: 13,
-          });
-          const handled = view.someProp("handleKeyDown", (f) => f(view, plain));
-          if (handled) return true;
-        }
-        if (event.altKey) return false;
-        const mac = modIsMeta();
-        const mod = mac ? event.metaKey : event.ctrlKey;
-        const other = mac ? event.ctrlKey : event.metaKey;
-        if (other || (event.shiftKey && mod)) return false;
-        const commands = event.shiftKey
-          ? onShiftEnter
-          : mod
-            ? onModEnter
-            : onEnter;
-        const state = stateWithLiveSelection(view);
-        if (commands.some((command) => command(state, view.dispatch, view)))
-          return true;
-        if (commands === onEnter) {
-          const trimmed = spacesAfterCaret(state);
-          // Enter itself is still the keymaps' (lists, quotes, headings).
-          if (trimmed) view.dispatch(trimmed);
-        }
-        return false;
+        },
       },
-    },
+    });
   });
-});

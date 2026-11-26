@@ -28,7 +28,7 @@ mistake:
 - **Logic in a function of its own** (parsing, diffing, where a card
   stands, what a setting means): a unit test.
 - **A key, a typed character or a paste, and what the document becomes**:
-  an editor integration test. `src/document-view/editor-view-kit.ts` opens
+  an editor integration test. `src/editor/editor-view-kit.ts` opens
   the app's whole editor in jsdom (`openView(markdown)`), presses keys
   through its keymaps (`press("Mod+b")`, `press("Shift+Tab")`), types
   through its input rules (`type("**bold**")`), pastes plain text or HTML
@@ -67,16 +67,16 @@ a key the macOS menu takes reaches nothing.
 
 CI has three layers (`.github/workflows/ci.yml`):
 
-| When                                              | What runs                                                                                                                                                                                              | Required                      |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
-| Every pull request (forks too)                    | `check` (types, lint, formats, repo checks and build, beside the unit tests in 2 shards); the whole e2e suite in Chromium (2 shards) and in WebKit (3 shards); Rust on Linux when `src-tauri/` changed | check, e2e, native, ci-config |
-| A push to `main` (a merged pull request)          | `check`, Rust and the Linux app build; the browsers' cache refreshed. No e2e: it ran on the pull request                                                                                               | -                             |
-| Before a release (the version bump's PR, the tag) | everything: the above, plus Rust on macOS and Windows and the iOS simulator                                                                                                                            | all of them                   |
+| When                                     | What runs                                                                                                                                                                                              | Required                      |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
+| Every pull request (forks too)           | `check` (types, lint, formats, repo checks and build, beside the unit tests in 2 shards); the whole e2e suite in Chromium (2 shards) and in WebKit (3 shards); Rust on Linux when `src-tauri/` changed | check, e2e, native, ci-config |
+| A push to `main` (a merged pull request) | `check`, Rust and the Linux app build; the browsers' cache refreshed. No e2e: it ran on the pull request                                                                                               | -                             |
+| Before a release (the version bump's PR) | everything: the above, plus Rust on macOS and Windows and the iOS simulator                                                                                                                            | all of them                   |
 
 A change to GitHub's settings, the license or the root Markdown alone
 checks only their format (`light` in `scripts/ci-changes.mjs`).
-Documentation alone (`docs`) checks format, links
-(`scripts/check-links.mjs`) and the unit tests that read `docs/`, with no
+Documentation alone (`docs`) checks format, links and the source files
+the developer docs name (`scripts/check-links.mjs`) and the unit tests that read `docs/`, with no
 build or e2e. A run with no test in it
 fails; a test that passes only on its retry is listed as flaky, a warning
 on the pull request, and goes on the watch list.
@@ -92,9 +92,10 @@ near what they changed.
 | Stopwatch flows (`@perf`, `npm run test:perf`)                  | locally                            | when timing is the point; never CI  |
 | Benchmarks (`bench:large-doc`, `bench:plugins`, `bench:motion`) | one machine                        | before a release that touches speed |
 
-The e2e server makes every run read as Linux (`vite.e2e-platform.ts`), so
-Ctrl is the shortcut key on a Mac too; Mac-only keys and window chrome are
-checked in the real app. Screenshot baselines are Linux's alone and are
+The e2e flows run as the machine they are on: on a Mac the browser
+reports a Mac, so ⌘ is the shortcut key and `HOME` and `END` in
+`e2e/helpers.ts` are its keys. Native menus and window chrome are checked
+in the real app. Screenshot baselines are Linux's alone and are
 skipped on a Mac (`ignoreSnapshots` in `playwright.config.ts`); keep them
 few - each one shows a whole screen someone would notice changing.
 
@@ -109,7 +110,7 @@ npm test                                   # every unit and editor integration t
 npx vitest run src/editor/keys/            # some of them
 npx vitest src/editor/keys/markdown-keys.test.ts   # one file, rerun on save
 npm run test:e2e                           # the e2e flows, Chromium (first time: npm run setup:e2e)
-npx playwright test e2e/code-block.spec.ts -g "copy button"   # one flow
+npx playwright test e2e/clipboard.spec.ts -g "Copy as Plain Text"   # one flow
 E2E_WEBKIT=1 npx playwright test --project=webkit             # the WebKit flows (npx playwright install webkit once)
 ```
 
@@ -250,9 +251,10 @@ device is a manual step on a Mac.
 runs the quick suite: `check`, the e2e flows, and `native` on Linux when
 the change reaches Rust; a push to `main` runs it again without the e2e
 flows, which the pull request ran. The full suite - every job below on every
-platform, whatever changed - runs on the tagged commit before a release is
-built (`release.yml` calls `ci.yml`) and on the pull request that changes
-the version. Run the e2e flows locally before a pull request
+platform, whatever changed - runs on the pull request that changes the
+version, and again on the tagged commit before a release is built
+(`release.yml` calls `ci.yml`) unless that pull request's run already
+passed on the same tree (`scripts/ci-tested.mjs`). Run the e2e flows locally before a pull request
 that reaches the browser. The required checks are `check`, `e2e`, `native`
 and `ci-config`; `e2e` and `native` are one-line jobs that pass when every
 job they stand for passed, or when all of them were skipped.
@@ -266,7 +268,7 @@ job they stand for passed, or when all of them were skipped.
 | `e2e (1/2)` and `e2e (2/2)`            | `npm run test:e2e -- --shard=N/2`, with a pinned textus-plugins checkout                                                                                           | a pull request, the full suite                         |
 | `e2e webkit (1/3)` … `(3/3)`           | every flow in WebKit, the width sweep and a11y scan only in the full suite; `e2e` passes only when they do                                                         | a pull request, the full suite                         |
 | `browser cache (chromium)`, `(webkit)` | the Playwright browser fetched and cached when this version's is missing                                                                                           | a push to `main`                                       |
-| `native (ubuntu-22.04)`                | `npm run check:native`                                                                                                                                             | the change reaches Rust                                |
+| `native (ubuntu-22.04)`                | `npm run check:native`, then Android's `cargo clippy` with warnings as errors (`aarch64-linux-android`, the image's default NDK)                                   | the change reaches Rust                                |
 | `native (macos-26)`                    | `npm test`, then `npm run check:native`                                                                                                                            | the full suite                                         |
 | `native (windows-2025)`                | `npm run check:native`                                                                                                                                             | the full suite                                         |
 | `native (windows-2025, unit tests)`    | `npm test`                                                                                                                                                         | the full suite                                         |
@@ -274,7 +276,8 @@ job they stand for passed, or when all of them were skipped.
 
 macOS, Windows and iOS run only in the full suite; in the quick one
 `native` is the Linux job alone. A release builds only once the full suite
-passed on its tag ([releasing.md](releasing.md#what-the-workflow-does)).
+passed on its tree, on the version bump's pull request or on the tag
+([releasing.md](releasing.md#what-the-workflow-does)).
 
 `scripts/ci-changes.mjs` has the rules for "reaches"; the header of
 `ci.yml` sums them up. A light change - only GitHub's settings and
@@ -348,7 +351,7 @@ A flaky test is still a bug - in the test, or in the app. Don't ignore the
 annotation. To find out how flaky a test is, run it many times:
 
 ```sh
-PLAYWRIGHT_PORT=1445 npx playwright test e2e/writing.spec.ts \
+PLAYWRIGHT_PORT=1445 npx playwright test e2e/menu-edit.spec.ts \
   -g "the test's title" --repeat-each=100 --workers=4
 ```
 

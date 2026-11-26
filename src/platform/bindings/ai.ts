@@ -16,8 +16,8 @@ export const commands = {
 	 */
 	ai_can_think_deeper: (provider: string, model: string | null) => __TAURI_INVOKE<boolean>("ai_can_think_deeper", { provider, model }),
 	/**
-	 *  Live model list for the agent model picker in Settings. "custom" has
-	 *  fetch_custom_models instead.
+	 *  Live model list for the agent model picker in Settings. A custom
+	 *  endpoint has fetch_custom_models instead.
 	 */
 	fetch_agent_models: (provider: string) => __TAURI_INVOKE<string[]>("fetch_agent_models", { provider }),
 	web_search_status: (provider: string, model: string | null, searchService: string | null, searxngUrl: string | null) => __TAURI_INVOKE<WebSearchStatus_Serialize>("web_search_status", { provider, model, searchService, searxngUrl }),

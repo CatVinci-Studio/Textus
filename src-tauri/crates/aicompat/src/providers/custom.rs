@@ -16,25 +16,45 @@ mod gemini_thoughts;
 mod stream;
 pub(crate) use stream::*;
 
-/// The key as the server takes it: Google's APIs in `x-goog-api-key`, since
-/// Vertex AI refuses a key sent as a Bearer token, and everyone else Bearer.
-/// OpenCode also refuses a request without a session id to route it by.
+/// How a server takes the key. Google's APIs (Vertex AI reads a Bearer
+/// token as OAuth and refuses a key there) get `x-goog-api-key`, except
+/// Gemini's own OpenAI-compatible layer, which ignores that header and
+/// wants Bearer, like everyone else. OpenCode also refuses a request
+/// without a session id to route it by.
+#[derive(Debug, PartialEq, Eq)]
+enum KeyHeader {
+    Bearer,
+    GoogApiKey,
+    OpenCode,
+}
+
+fn key_header(base_url: &str) -> KeyHeader {
+    let host = reqwest::Url::parse(base_url)
+        .ok()
+        .and_then(|url| url.host_str().map(str::to_string))
+        .unwrap_or_default();
+    if host == "generativelanguage.googleapis.com" {
+        KeyHeader::Bearer
+    } else if host.ends_with(".googleapis.com") {
+        KeyHeader::GoogApiKey
+    } else if host == "opencode.ai" {
+        KeyHeader::OpenCode
+    } else {
+        KeyHeader::Bearer
+    }
+}
+
 pub(crate) fn with_key(
     req: reqwest::RequestBuilder,
     base_url: &str,
     key: &str,
 ) -> reqwest::RequestBuilder {
-    let host = reqwest::Url::parse(base_url)
-        .ok()
-        .and_then(|url| url.host_str().map(str::to_string))
-        .unwrap_or_default();
-    if host.ends_with(".googleapis.com") {
-        req.header("x-goog-api-key", key)
-    } else if host == "opencode.ai" {
-        req.bearer_auth(key)
-            .header("x-opencode-session", opencode_session())
-    } else {
-        req.bearer_auth(key)
+    match key_header(base_url) {
+        KeyHeader::GoogApiKey => req.header("x-goog-api-key", key),
+        KeyHeader::OpenCode => req
+            .bearer_auth(key)
+            .header("x-opencode-session", opencode_session()),
+        KeyHeader::Bearer => req.bearer_auth(key),
     }
 }
 
@@ -160,11 +180,7 @@ pub async fn agent_step(
         req = with_key(req, base_url, key);
     }
     let res = req.send().await.map_err(|e| e.to_string())?;
-    if !res.status().is_success() {
-        let status = res.status();
-        let text = res.text().await.unwrap_or_default();
-        return Err(format!("Custom endpoint request failed ({status}): {text}"));
-    }
+    let res = crate::http::succeeded(res, "Custom endpoint request failed").await?;
 
     let parsed: Value = res.json().await.map_err(|e| e.to_string())?;
     let mut message = parsed

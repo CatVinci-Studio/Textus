@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { TEXT_RUNTIME as textRuntime } from "../text-runtime";
 import pageKit from "./page-kit.js?raw";
 import pageTools from "./page-tools.js?raw";
+import pageDrag from "./page-drag.js?raw";
 
 type PageApi = {
   language: string;
@@ -47,7 +48,8 @@ beforeAll(() => {
     language: "en",
     t: (key: string) => `«${key}»`,
   };
-  for (const code of [textRuntime, pageKit, pageTools]) (0, eval)(code);
+  for (const code of [textRuntime, pageKit, pageTools, pageDrag])
+    (0, eval)(code);
 });
 
 describe("what every plugin page gets", () => {
@@ -149,7 +151,12 @@ describe("what every plugin page gets", () => {
     });
     const pointer = (type: string, y: number, target: EventTarget = window) =>
       target.dispatchEvent(
-        new MouseEvent(type, { bubbles: true, clientY: y, button: 0 }),
+        new MouseEvent(type, {
+          bubbles: true,
+          clientY: y,
+          button: 0,
+          buttons: type === "pointerup" ? 0 : 1,
+        }),
       );
     pointer("pointerdown", 10, items[0]);
     pointer("pointermove", 30);
@@ -220,7 +227,12 @@ describe("what every plugin page gets", () => {
     });
     const pointer = (type: string, y: number, target: EventTarget = window) =>
       target.dispatchEvent(
-        new MouseEvent(type, { bubbles: true, clientY: y, button: 0 }),
+        new MouseEvent(type, {
+          bubbles: true,
+          clientY: y,
+          button: 0,
+          buttons: type === "pointerup" ? 0 : 1,
+        }),
       );
     pointer("pointerdown", 10, items[0]);
     pointer("pointermove", 30);
@@ -237,5 +249,215 @@ describe("what every plugin page gets", () => {
     pointer("pointermove", 10);
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     expect(onDrop).toHaveBeenCalledTimes(1);
+  });
+
+  it("lifts an item under a finger held still, and leaves a moving finger to scroll", () => {
+    vi.useFakeTimers();
+    document.body.innerHTML = `<ul><li>a</li><li>b</li><li>c</li></ul>`;
+    const items = [...document.querySelectorAll("li")];
+    items.forEach((li, i) => {
+      li.getBoundingClientRect = () =>
+        ({ top: 100 + i * 20, height: 20, left: 0, width: 100 }) as DOMRect;
+    });
+    const onDrop = vi.fn();
+    const handle = page().drag.reorder(document.querySelector("ul")!, {
+      items: "li",
+      onDrop,
+    });
+    const finger = (type: string, y: number, target: EventTarget = window) => {
+      const e = new MouseEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        clientY: y,
+        button: 0,
+        buttons: type === "pointerup" ? 0 : 1,
+      });
+      Object.assign(e, { pointerType: "touch", pointerId: 7 });
+      target.dispatchEvent(e);
+      return e;
+    };
+    const touchmove = () => {
+      const e = new Event("touchmove", { bubbles: true, cancelable: true });
+      document.querySelector("li")!.dispatchEvent(e);
+      return e.defaultPrevented;
+    };
+
+    // A swipe: no lift, the page scrolls.
+    finger("pointerdown", 110, items[0]);
+    finger("pointermove", 150);
+    expect(touchmove()).toBe(false);
+    vi.advanceTimersByTime(600);
+    expect(items[0].classList.contains("is-drag-lifted")).toBe(false);
+    finger("pointerup", 150);
+
+    // Held still, it lifts; the page then stays put under the drag.
+    finger("pointerdown", 110, items[0]);
+    vi.advanceTimersByTime(600);
+    expect(items[0].classList.contains("is-drag-lifted")).toBe(true);
+    const menu = new MouseEvent("contextmenu", { cancelable: true });
+    window.dispatchEvent(menu);
+    expect(menu.defaultPrevented).toBe(true);
+    expect(touchmove()).toBe(true);
+    finger("pointermove", 125);
+    finger("pointermove", 155);
+    finger("pointerup", 155);
+    expect(onDrop).toHaveBeenCalledWith(0, 2);
+    expect(touchmove()).toBe(false);
+    expect(document.body.style.userSelect).toBe("");
+
+    // Drawn anew while held: nothing lifts, and the page selects again.
+    const [first] = document.querySelectorAll("li");
+    finger("pointerdown", 110, first);
+    first.remove();
+    vi.advanceTimersByTime(600);
+    expect(document.body.style.userSelect).toBe("");
+    handle.dispose();
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
+  });
+
+  it("scrolls the list's scroller while a dragged item rests at its edge", () => {
+    const frames: FrameRequestCallback[] = [];
+    vi.spyOn(window, "requestAnimationFrame").mockImplementation((fn) => {
+      frames.push(fn);
+      return frames.length;
+    });
+    document.body.innerHTML = `<div id="s" style="overflow-y: auto"><ul><li>a</li><li>b</li><li>c</li></ul></div>`;
+    const scroller = document.getElementById("s")!;
+    Object.defineProperty(scroller, "scrollHeight", { value: 600 });
+    Object.defineProperty(scroller, "clientHeight", { value: 200 });
+    scroller.getBoundingClientRect = () =>
+      ({ top: 0, bottom: 200, left: 0, right: 100 }) as DOMRect;
+    const items = [...document.querySelectorAll("li")];
+    items.forEach((li, i) => {
+      li.getBoundingClientRect = () =>
+        ({ top: 60 + i * 20, height: 20, left: 0, width: 100 }) as DOMRect;
+    });
+    const handle = page().drag.reorder(document.querySelector("ul")!, {
+      items: "li",
+      onDrop: () => {},
+    });
+    const pointer = (type: string, y: number, target: EventTarget = window) =>
+      target.dispatchEvent(
+        new MouseEvent(type, {
+          bubbles: true,
+          clientY: y,
+          button: 0,
+          buttons: type === "pointerup" ? 0 : 1,
+        }),
+      );
+    pointer("pointerdown", 70, items[0]);
+    pointer("pointermove", 195);
+    frames.shift()!(0);
+    expect(scroller.scrollTop).toBeGreaterThan(0);
+    // The item stays under the pointer, the scroll counted.
+    expect(items[0].style.transform).toBe(
+      `translateY(${125 + scroller.scrollTop}px)`,
+    );
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+
+    // At the slowest pace on a 144 Hz screen it still goes, a pixel every
+    // few frames: as far in a second as at 60 Hz.
+    scroller.scrollTop = 0;
+    frames.length = 0;
+    pointer("pointerdown", 70, items[0]);
+    pointer("pointermove", 165);
+    for (let now = 0; now <= 1000 && frames.length; now += 1000 / 144)
+      frames.shift()!(now);
+    expect(scroller.scrollTop).toBeGreaterThan(50);
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    handle.dispose();
+    vi.restoreAllMocks();
+  });
+
+  it("drops where a drag is when its release went unheard, and a new press ends it", () => {
+    document.body.innerHTML = `<ul><li>a</li><li>b</li><li>c</li></ul>`;
+    const items = [...document.querySelectorAll("li")];
+    items.forEach((li, i) => {
+      li.getBoundingClientRect = () =>
+        ({ top: i * 20, height: 20, left: 0, width: 100 }) as DOMRect;
+    });
+    const onDrop = vi.fn();
+    const handle = page().drag.reorder(document.querySelector("ul")!, {
+      items: "li",
+      onDrop,
+    });
+    const pointer = (
+      type: string,
+      y: number,
+      target: EventTarget = window,
+      buttons = 1,
+    ) =>
+      target.dispatchEvent(
+        new MouseEvent(type, { bubbles: true, clientY: y, button: 0, buttons }),
+      );
+    // WebView2 missed the release: the next move has no button down.
+    pointer("pointerdown", 10, items[0]);
+    pointer("pointermove", 45);
+    pointer("pointermove", 45, window, 0);
+    expect(onDrop).toHaveBeenCalledWith(0, 1);
+    expect(items[0].classList.contains("is-drag-lifted")).toBe(false);
+
+    pointer("pointerdown", 10, items[1]);
+    pointer("pointermove", 45);
+    expect(items[1].classList.contains("is-drag-lifted")).toBe(true);
+    pointer("pointerdown", 100, document.body);
+    expect(items[1].classList.contains("is-drag-lifted")).toBe(false);
+    expect(onDrop).toHaveBeenCalledTimes(1);
+    handle.dispose();
+  });
+
+  it("gives the page its own selection back, and leaves a text field's press to it", () => {
+    vi.useFakeTimers();
+    document.body.innerHTML = `<ul><li>a <input></li><li>b</li><li>c <input type="checkbox"></li></ul>`;
+    document.body.style.userSelect = "text";
+    const items = [...document.querySelectorAll("li")];
+    items.forEach((li, i) => {
+      li.getBoundingClientRect = () =>
+        ({ top: i * 20, height: 20, left: 0, width: 100 }) as DOMRect;
+    });
+    const onDrop = vi.fn();
+    const handle = page().drag.reorder(document.querySelector("ul")!, {
+      items: "li",
+      onDrop,
+    });
+    const finger = (type: string, y: number, target: EventTarget = window) => {
+      const e = new MouseEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        clientY: y,
+        button: 0,
+        buttons: type === "pointerup" ? 0 : 1,
+      });
+      Object.assign(e, { pointerType: "touch", pointerId: 3 });
+      target.dispatchEvent(e);
+    };
+    // A tap.
+    finger("pointerdown", 30, items[1]);
+    finger("pointerup", 30);
+    expect(document.body.style.userSelect).toBe("text");
+    // A hold and a drag.
+    finger("pointerdown", 30, items[1]);
+    vi.advanceTimersByTime(600);
+    expect(document.body.style.userSelect).toBe("none");
+    finger("pointermove", 55);
+    finger("pointerup", 55);
+    expect(onDrop).toHaveBeenCalledWith(1, 2);
+    expect(document.body.style.userSelect).toBe("text");
+    // Held on a text field: its own long press (select, the menu).
+    finger("pointerdown", 10, document.querySelector("input")!);
+    vi.advanceTimersByTime(600);
+    expect(items[0].classList.contains("is-drag-lifted")).toBe(false);
+    expect(document.body.style.userSelect).toBe("text");
+    finger("pointerup", 10);
+    // A checkbox is no text field: held, its item lifts.
+    finger("pointerdown", 50, document.querySelector("[type=checkbox]")!);
+    vi.advanceTimersByTime(600);
+    expect(items[2].classList.contains("is-drag-lifted")).toBe(true);
+    finger("pointerup", 50);
+    document.body.style.userSelect = "";
+    handle.dispose();
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
   });
 });

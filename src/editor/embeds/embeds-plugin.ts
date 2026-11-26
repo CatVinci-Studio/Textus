@@ -1,6 +1,7 @@
 import { openDocument } from "../../utils/open-document";
 import { foldButtonKey, showBlockFold } from "../fold/block-fold";
 import { onMemoryIdle } from "../../utils/memory-idle";
+import { keepFresh } from "../../utils/keep-fresh";
 import { slashed } from "../../utils/path";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
@@ -97,10 +98,7 @@ function embedWidget(state: EmbedView, source: string, docPath: string) {
         read: (path) => state.read.add(slashed(path)),
       }).then(() => {
         if (asked.signal.aborted) return;
-        lastShown.delete(key);
-        lastShown.set(key, el.innerHTML);
-        if (lastShown.size > SHOWN_KEPT)
-          lastShown.delete(lastShown.keys().next().value!);
+        keepFresh(lastShown, key, el.innerHTML, SHOWN_KEPT);
       });
     };
     // A note drawn in the note is a whole read-only editor: kept only

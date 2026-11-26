@@ -1,6 +1,10 @@
 import { isSpacedWordChar } from "../../utils/cjk";
 import { type Handle } from "mdast-util-to-markdown";
 import { writeLatexMath } from "../math/latex-math-syntax";
+import {
+  BACKTICK_MATH_OPEN,
+  writeBacktickMath,
+} from "../math/backtick-math-syntax";
 import type { PeekingHandle } from "./link-output";
 import { escapeCellPipes } from "../tables/cell-pipes";
 
@@ -30,17 +34,20 @@ export type MathData =
 
 /**
  * Writes inline math in the delimiter it was read with: as many dollars as
- * the file had (remark-math writes the fewest that work), or LaTeX's `\(x\)`.
+ * the file had (remark-math writes the fewest that work), GitHub's $`x`$,
+ * or LaTeX's `\(x\)`.
  */
 export function withInlineMathAsWritten(inlineMath: Handle): Handle {
-  const latex = (node: { value?: string; data?: unknown }) => {
+  const delimited = (node: { value?: string; data?: unknown }) => {
     const wanted = (node.data as MathData)?.mathDelimiter;
+    if (wanted === BACKTICK_MATH_OPEN)
+      return writeBacktickMath(node.value ?? "");
     return wanted ? writeLatexMath(node.value ?? "", wanted, false) : null;
   };
   const peek = (inlineMath as Partial<PeekingHandle>).peek;
   return Object.assign(
     ((node, parent, state, info) => {
-      const written = latex(node) ?? asWritten(node, parent, state, info);
+      const written = delimited(node) ?? asWritten(node, parent, state, info);
       // A bare "|" would end a table's cell; the formula reads `\|` back.
       return state.stack.includes("tableCell")
         ? escapeCellPipes(written)
@@ -48,7 +55,8 @@ export function withInlineMathAsWritten(inlineMath: Handle): Handle {
     }) as Handle,
     {
       peek: ((node, parent, state, info) =>
-        latex(node) ? "\\" : peek?.(node, parent, state, info)) as Handle,
+        delimited(node)?.charAt(0) ??
+        peek?.(node, parent, state, info)) as Handle,
     },
   );
   function asWritten(...[node, parent, state, info]: Parameters<Handle>) {

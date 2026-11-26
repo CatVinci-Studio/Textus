@@ -128,17 +128,15 @@ export function fixedShortcutGroups(
     );
   }
 
-  // One Format group, where it has always been: Bold and Italic, the
-  // menu's own keys (Highlight), then the editor's block keys - its own
-  // keymaps' too, which no menu item names.
+  // One Format group, where it has always been: the menu's own keys (Bold
+  // to Inline Code), then the editor's block keys - its own keymaps' too,
+  // which no menu item names.
   const menuFormat = groups.findIndex((group) => group.title === t.menuFormat);
   const formatItems =
     menuFormat < 0 ? [] : groups.splice(menuFormat, 1)[0].items;
   groups.push({
     title: t.menuFormat,
     items: [
-      { label: t.toolbarBold, combos: ["mod+b"] },
-      { label: t.toolbarItalic, combos: ["mod+i"] },
       ...formatItems,
       ...editorKeys(t, mac),
       { label: t.shortcutLeaveBlock, combos: ["mod+enter"] },

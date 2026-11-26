@@ -1,9 +1,4 @@
-/* The iPhone's forms of the app's dialogs, menus and bars. The first rules
-   hold for any touch (iPad too); the rest are phone width only. */
-
-:root[data-window-chrome="mobile"] .context-menu-item {
-  min-height: 48px;
-}
+/* The phone's forms of the app's dialogs, menus and bars. */
 
 /* With 44pt rows and the recent documents, the phone menu is taller than
    the desktop's 560px cap; it may use the screen below the title row. */
@@ -24,380 +19,378 @@
   top: 0;
 }
 
-@media (max-width: 760px) {
-  /* ---- Alerts: UIAlertController's card. ---- */
+/* ---- Alerts: UIAlertController's card. ---- */
 
-  /* An alert takes the whole screen, title row included: nothing behind
-     it answers until it is dismissed. */
-  :root[data-window-chrome="mobile"] .tx-backdrop {
-    top: 0;
-  }
+/* An alert takes the whole screen, title row included: nothing behind
+   it answers until it is dismissed. */
+:root[data-window-chrome="mobile"] .tx-backdrop {
+  top: 0;
+}
 
-  :root[data-window-chrome="mobile"] .app-dialog {
-    width: 298px;
-    min-width: 0;
-    max-width: calc(100vw - 36px);
-    padding: 0;
-    overflow: hidden;
-    border: none;
-    border-radius: var(--shape-l);
-    text-align: center;
-    animation: motion-alert-in var(--dur-base) var(--ease-out);
-  }
+:root[data-window-chrome="mobile"] .app-dialog {
+  width: 298px;
+  min-width: 0;
+  max-width: calc(100vw - 36px);
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: var(--shape-l);
+  text-align: center;
+  animation: motion-alert-in var(--dur-base) var(--ease-out);
+}
 
-  /* Dismissed, it only fades - with the dimming behind it. */
-  :root[data-window-chrome="mobile"]
-    .tx-backdrop[data-state="closing"]
-    > .app-dialog {
-    animation: none;
-  }
+/* Dismissed, it only fades - with the dimming behind it. */
+:root[data-window-chrome="mobile"]
+  .tx-backdrop[data-state="closing"]
+  > .app-dialog {
+  animation: none;
+}
 
-  /* The title is the alert's question, not a coloured label: iOS never
-     tints it, a destructive answer is shown on its button instead. */
-  :root[data-window-chrome="mobile"] .app-dialog-title {
-    margin: 0;
-    padding: 28px 16px 0;
-    color: var(--ui-text);
-    font-size: var(--text-body);
-    font-weight: 600;
-    line-height: 1.3;
-  }
+/* The title is the alert's question, not a coloured label: iOS never
+   tints it, a destructive answer is shown on its button instead. */
+:root[data-window-chrome="mobile"] .app-dialog-title {
+  margin: 0;
+  padding: 28px 16px 0;
+  color: var(--ui-text);
+  font-size: var(--text-body);
+  font-weight: 600;
+  line-height: 1.3;
+}
 
-  :root[data-window-chrome="mobile"] .app-dialog p {
-    margin: 0;
-    padding: 4px 16px 28px;
-    font-size: var(--text-footnote);
-    line-height: 1.4;
-  }
+:root[data-window-chrome="mobile"] .app-dialog p {
+  margin: 0;
+  padding: 4px 16px 28px;
+  font-size: var(--text-footnote);
+  line-height: 1.4;
+}
 
-  :root[data-window-chrome="mobile"] .app-dialog > p:first-child {
-    padding-top: 28px;
-  }
+:root[data-window-chrome="mobile"] .app-dialog > p:first-child {
+  padding-top: 28px;
+}
 
-  :root[data-window-chrome="mobile"] .app-dialog-input {
-    width: calc(100% - 36px);
-    min-height: 40px;
-    margin: -8px 16px 16px;
-    text-align: left;
-  }
+:root[data-window-chrome="mobile"] .app-dialog-input {
+  width: calc(100% - 36px);
+  min-height: 40px;
+  margin: -8px 16px 16px;
+  text-align: left;
+}
 
-  /* Answers are rows of text divided by hairlines: two side by side,
-     more stacked. */
-  :root[data-window-chrome="mobile"] .app-dialog .close-prompt-buttons {
-    align-items: stretch;
-    gap: 0;
-    border-top: 1px solid var(--ui-border);
-  }
+/* Answers are rows of text divided by hairlines: two side by side,
+   more stacked. */
+:root[data-window-chrome="mobile"] .app-dialog .close-prompt-buttons {
+  align-items: stretch;
+  gap: 0;
+  border-top: 1px solid var(--ui-border);
+}
 
-  :root[data-window-chrome="mobile"]
-    .app-dialog
-    .close-prompt-buttons:has(> button:nth-of-type(3)) {
-    flex-direction: column;
-  }
+:root[data-window-chrome="mobile"]
+  .app-dialog
+  .close-prompt-buttons:has(> button:nth-of-type(3)) {
+  flex-direction: column;
+}
 
-  :root[data-window-chrome="mobile"] .app-dialog .close-prompt-spacer {
-    display: none;
-  }
+:root[data-window-chrome="mobile"] .app-dialog .close-prompt-spacer {
+  display: none;
+}
 
-  /* .close-prompt in the chain outranks the shared button styles. */
-  :root[data-window-chrome="mobile"]
-    .app-dialog.close-prompt
-    .close-prompt-buttons
-    button {
-    flex: 1 1 0;
-    min-width: 0;
-    min-height: 48px;
-    margin: 0;
-    padding: 0 8px;
-    border: none;
-    border-radius: 0;
-    background: none;
-    color: var(--ui-accent-text);
-    font-size: var(--text-body);
-    font-weight: 400;
-    opacity: 1;
-    /* A row lights at the touch and fades out after it. */
-    transition: background-color var(--dur-base) var(--ease-standard);
-  }
-
-  :root[data-window-chrome="mobile"]
-    .app-dialog.close-prompt
-    .close-prompt-buttons
-    button:active {
-    background: var(--ui-pressed-row);
-    transition-duration: 0s;
-  }
-
-  /* .close-prompt here too, or `border: none` above wins and the buttons lose
-     their hairline. */
-  :root[data-window-chrome="mobile"]
-    .app-dialog.close-prompt
-    .close-prompt-buttons
-    button
-    + button {
-    border-left: 1px solid var(--ui-border);
-  }
-
-  :root[data-window-chrome="mobile"]
-    .app-dialog.close-prompt
-    .close-prompt-buttons:has(> button:nth-of-type(3))
-    button
-    + button {
-    border-top: 1px solid var(--ui-border);
-    border-left: none;
-  }
-
-  /* The answer the alert expects is the bold one. */
-  :root[data-window-chrome="mobile"]
-    .app-dialog.close-prompt
-    .close-prompt-buttons
-    button.close-prompt-primary {
-    font-weight: 600;
-  }
-
-  :root[data-window-chrome="mobile"]
-    .app-dialog.close-prompt
-    .close-prompt-buttons
-    button.app-dialog-danger {
-    color: var(--ui-danger);
-  }
-
-  /* ---- The title row's menu: a pull-down menu. ---- */
-
-  /* The desktop's menu, wide and tall enough for a finger; a long name
-     still ellipsizes at the cap. */
-  :root[data-window-chrome="mobile"] .context-menu {
-    width: max-content;
-    min-width: 264px;
-    max-width: min(352px, calc(100vw - 18px));
-  }
-
-  :root[data-window-chrome="mobile"] .context-menu-item {
-    min-height: 48px;
-    padding: 0 12px;
-    font-size: var(--text-body);
-  }
-
-  /* A submenu opens in place under its row, its rows set in; its chevron
-     turns down. */
-  :root[data-window-chrome="mobile"] .context-menu-inline {
-    width: 100%;
-    min-width: 0;
-    max-width: none;
-    max-height: none;
-    padding: 0;
-  }
-
-  :root[data-window-chrome="mobile"] .context-menu-inline .context-menu-item {
-    padding-left: 28px;
-  }
-
-  :root[data-window-chrome="mobile"]
-    .context-menu-item[aria-expanded="true"]
-    > .context-menu-chevron {
-    transform: rotate(90deg);
-  }
-
-  :root[data-window-chrome="mobile"] .context-menu-chevron {
-    transition: transform var(--dur-fast) var(--ease-out);
-  }
-
-  /* The check of an on/off row sits at the trailing edge, as on the
-     desktop menus; a little larger, for the 17pt row. */
-  :root[data-window-chrome="mobile"] .context-menu-check {
-    width: 22px;
-    height: 22px;
-    margin-left: 0;
-  }
-
-  :root[data-window-chrome="mobile"] .context-menu-check svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  /* A tap leaves :hover on the row it lifted from; a row lights only
-     while pressed. */
-  :root[data-window-chrome="mobile"]
-    .context-menu-item:not(:disabled):is(:hover, :focus-visible) {
-    background: none;
-  }
-
+/* .close-prompt in the chain outranks the shared button styles. */
+:root[data-window-chrome="mobile"]
+  .app-dialog.close-prompt
+  .close-prompt-buttons
+  button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 48px;
+  margin: 0;
+  padding: 0 8px;
+  border: none;
+  border-radius: 0;
+  background: none;
+  color: var(--ui-accent-text);
+  font-size: var(--text-body);
+  font-weight: 400;
+  opacity: 1;
   /* A row lights at the touch and fades out after it. */
-  :root[data-window-chrome="mobile"] .context-menu-item {
-    transition: background-color var(--dur-base) var(--ease-standard);
-  }
+  transition: background-color var(--dur-base) var(--ease-standard);
+}
 
-  :root[data-window-chrome="mobile"] .context-menu-item:not(:disabled):active {
-    background: var(--ui-pressed-row);
-    transition-duration: 0s;
-  }
+:root[data-window-chrome="mobile"]
+  .app-dialog.close-prompt
+  .close-prompt-buttons
+  button:active {
+  background: var(--ui-pressed-row);
+  transition-duration: 0s;
+}
 
-  /* ---- Find and replace: a bar across the top, under the title row. ---- */
+/* .close-prompt here too, or `border: none` above wins and the buttons lose
+   their hairline. */
+:root[data-window-chrome="mobile"]
+  .app-dialog.close-prompt
+  .close-prompt-buttons
+  button
+  + button {
+  border-left: 1px solid var(--ui-border);
+}
 
-  :root[data-window-chrome="mobile"] .find-replace-bar {
-    top: var(--mobile-top);
-    right: 0;
-    left: 0;
-    gap: 0;
-    padding: 0 4px;
-    border: none;
-    border-bottom: 1px solid var(--ui-border);
-    border-radius: 0;
-    box-shadow: none;
-    background: var(--ui-bg);
-  }
+:root[data-window-chrome="mobile"]
+  .app-dialog.close-prompt
+  .close-prompt-buttons:has(> button:nth-of-type(3))
+  button
+  ~ button {
+  border-top: 1px solid var(--ui-border);
+  border-left: none;
+}
 
-  :root[data-window-chrome="mobile"] .find-replace-row {
-    min-height: 48px;
-    gap: 2px;
-  }
+/* The answer the alert expects is the bold one. */
+:root[data-window-chrome="mobile"]
+  .app-dialog.close-prompt
+  .close-prompt-buttons
+  button.close-prompt-primary {
+  font-weight: 600;
+}
 
-  :root[data-window-chrome="mobile"] .find-replace-chevron {
-    width: 44px;
-    height: 48px;
-  }
+:root[data-window-chrome="mobile"]
+  .app-dialog.close-prompt
+  .close-prompt-buttons
+  button.app-dialog-danger {
+  color: var(--ui-danger);
+}
 
-  :root[data-window-chrome="mobile"] .find-replace-field {
-    min-height: 40px;
-    padding: 0 4px 0 8px;
-    border: none;
-    border-radius: var(--shape-m);
-    background: color-mix(in srgb, var(--ui-text) 7%, transparent);
-  }
+/* ---- The title row's menu: a pull-down menu. ---- */
 
-  /* The grey field is the input's edge; the input itself draws none. */
-  :root[data-window-chrome="mobile"] .find-replace-input {
-    border: none;
-    outline: none;
-    background: transparent;
-    box-shadow: none;
-  }
+/* The desktop's menu, wide and tall enough for a finger; a long name
+   still ellipsizes at the cap. */
+:root[data-window-chrome="mobile"] .context-menu {
+  width: max-content;
+  min-width: 264px;
+  max-width: min(352px, calc(100vw - 18px));
+  /* Its rows on whole pixels (--mobile-bar). */
+  padding: var(--space-1);
+}
 
-  :root[data-window-chrome="mobile"] .find-replace-toggle {
-    width: 34px;
-    height: 34px;
-    font-size: var(--text-caption) !important;
-  }
+:root[data-window-chrome="mobile"] .context-menu-item {
+  padding: 0 12px;
+  font-size: var(--text-body);
+}
 
-  :root[data-window-chrome="mobile"] .find-replace-nav {
-    gap: 0;
-  }
+/* A submenu opens in place under its row, its rows set in; its chevron
+   turns down. */
+:root[data-window-chrome="mobile"] .context-menu-inline {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  max-height: none;
+  padding: 0;
+}
 
-  :root[data-window-chrome="mobile"] .find-replace-nav button {
-    min-width: 48px;
-    height: 48px;
-    border: none;
-  }
+:root[data-window-chrome="mobile"] .context-menu-inline .context-menu-item {
+  padding-left: 28px;
+}
 
-  /* Replace and Replace All: text buttons. A class, since :not(:has(svg)) was
-     re-checked for every element added to the editor. */
-  :root[data-window-chrome="mobile"] .find-replace-nav .find-replace-text {
-    padding: 0 8px;
-    color: var(--ui-accent-text);
-    font-size: var(--text-secondary);
-  }
+:root[data-window-chrome="mobile"]
+  .context-menu-item[aria-expanded="true"]
+  > .context-menu-chevron {
+  transform: rotate(90deg);
+}
 
-  :root[data-window-chrome="mobile"]
-    .find-replace-bar
-    button:hover:not(:disabled) {
-    background: none;
-  }
+:root[data-window-chrome="mobile"] .context-menu-chevron {
+  transition: transform var(--dur-fast) var(--ease-out);
+}
 
-  /* ---- Notes at the bottom ---- */
+/* The check of an on/off row sits at the trailing edge, as on the
+   desktop menus; a little larger, for the 17pt row. */
+:root[data-window-chrome="mobile"] .context-menu-check {
+  width: 22px;
+  height: 22px;
+  margin-left: 0;
+}
 
-  /* Clear of the keyboard toolbar and the home indicator alike: one height,
-     since a note a little high is still readable. */
-  :root[data-window-chrome="mobile"] .notice-stack {
-    bottom: calc(48px + 14px + var(--safe-bottom));
-    max-width: calc(100vw - 36px);
-  }
+:root[data-window-chrome="mobile"] .context-menu-check svg {
+  width: 18px;
+  height: 18px;
+}
 
-  /* ---- Tabs: a row a thumb scrolls. ---- */
+/* A tap leaves :hover on the row it lifted from; a row lights only
+   while pressed. */
+:root[data-window-chrome="mobile"]
+  .context-menu-item:not(:disabled):is(:hover, :focus-visible) {
+  background: none;
+}
 
-  :root[data-window-chrome="mobile"] .tab-bar {
-    gap: 4px;
-    overscroll-behavior-x: contain;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
+/* A row lights at the touch and fades out after it. */
+:root[data-window-chrome="mobile"] .context-menu-item {
+  transition: background-color var(--dur-base) var(--ease-standard);
+}
 
-  :root[data-window-chrome="mobile"] .tab-bar::-webkit-scrollbar {
-    display: none;
-  }
+:root[data-window-chrome="mobile"] .context-menu-item:not(:disabled):active {
+  background: var(--ui-pressed-row);
+  transition-duration: 0s;
+}
 
-  /* Tabs keep their own width and the row scrolls, rather than all of
-     them squeezing down to unreadable stubs. At its widest the name keeps
-     about 20 letters beside the ×'s fingertip box. */
-  :root[data-window-chrome="mobile"] .tab-pill {
-    flex-shrink: 0;
-    min-width: 0;
-    max-width: 216px;
-    min-height: 40px;
-    padding: 0 0 0 12px;
-    gap: 0;
-    /* The close button's 44pt reaches past the pill's 36. */
-    overflow: visible;
-    font-size: var(--text-secondary);
-  }
+/* ---- Find and replace: a bar across the top, under the title row. ---- */
 
-  :root[data-window-chrome="mobile"] .tab-pill-dirty-dot {
-    margin-right: 8px;
-  }
+:root[data-window-chrome="mobile"] .find-replace-bar {
+  top: var(--mobile-top);
+  right: 0;
+  left: 0;
+  gap: 0;
+  padding: 0 4px;
+  border: none;
+  border-bottom: 1px solid var(--ui-border);
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--ui-bg);
+}
 
-  :root[data-window-chrome="mobile"] .tab-pill:hover:not(.tab-pill-active) {
-    background: none;
-  }
+:root[data-window-chrome="mobile"] .find-replace-row {
+  min-height: 48px;
+  gap: 2px;
+}
 
-  /* Always shown, as Safari's tab close is, and a full fingertip wide. */
-  :root[data-window-chrome="mobile"] .tab-pill-close {
-    flex-shrink: 0;
-    justify-content: center;
-    width: 48px;
-    height: 48px;
-    margin: -4px 0;
-    padding: 0;
-    opacity: 0.7;
-  }
+:root[data-window-chrome="mobile"] .find-replace-chevron {
+  width: 44px;
+  height: 48px;
+}
 
-  /* Over the desktop's hover-only rule: on a tab not in front too, or its
-     room stood empty after a cut name. */
-  :root[data-window-chrome="mobile"] .tab-pill .tab-pill-close {
-    visibility: visible;
-  }
+:root[data-window-chrome="mobile"] .find-replace-field {
+  min-height: 40px;
+  padding: 0 4px 0 8px;
+  border: none;
+  border-radius: var(--shape-m);
+  background: color-mix(in srgb, var(--ui-text) 7%, transparent);
+}
 
-  :root[data-window-chrome="mobile"] .tab-pill-close:hover {
-    background: none;
-  }
+/* The grey field is the input's edge; the input itself draws none. */
+:root[data-window-chrome="mobile"] .find-replace-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  box-shadow: none;
+}
 
-  :root[data-window-chrome="mobile"] .tab-bar-add {
-    min-width: 48px;
-    min-height: 48px;
-  }
-  :root[data-window-chrome="mobile"] .tab-bar-add > svg {
-    width: 20px;
-    height: 20px;
-  }
+:root[data-window-chrome="mobile"] .find-replace-toggle {
+  width: 34px;
+  height: 34px;
+  font-size: var(--text-caption) !important;
+}
 
-  :root[data-window-chrome="mobile"]
-    .tab-bar:not([data-overflow])
-    .tab-bar-add:hover {
-    background: none;
-  }
+:root[data-window-chrome="mobile"] .find-replace-nav {
+  gap: 0;
+}
 
-  /* The list a fingertip wide; both it and the + square, so no tab
-     scrolling under them shows at their corners. */
-  :root[data-window-chrome="mobile"] .tab-bar-list {
-    width: 44px;
-    height: 44px;
-  }
-  :root[data-window-chrome="mobile"]
-    .tab-bar[data-overflow]
-    :is(.tab-bar-add, .tab-bar-list) {
-    border-radius: 0;
-  }
-  :root[data-window-chrome="mobile"] .tab-bar[data-overflow] .tab-bar-add {
-    right: 44px;
-  }
+:root[data-window-chrome="mobile"] .find-replace-nav button {
+  min-width: 48px;
+  height: 48px;
+  border: none;
+}
+
+/* Replace and Replace All: text buttons. A class, since :not(:has(svg)) was
+   re-checked for every element added to the editor. */
+:root[data-window-chrome="mobile"] .find-replace-nav .find-replace-text {
+  padding: 0 8px;
+  color: var(--ui-accent-text);
+  font-size: var(--text-secondary);
+}
+
+:root[data-window-chrome="mobile"]
+  .find-replace-bar
+  button:hover:not(:disabled) {
+  background: none;
+}
+
+/* ---- Notes at the bottom ---- */
+
+/* Clear of the keyboard toolbar and the home indicator alike: one height,
+   since a note a little high is still readable. */
+:root[data-window-chrome="mobile"] .notice-stack {
+  bottom: calc(48px + 14px + var(--safe-bottom));
+  max-width: calc(100vw - 36px);
+}
+
+/* ---- Tabs: a row a thumb scrolls. ---- */
+
+:root[data-window-chrome="mobile"] .tab-bar {
+  gap: 4px;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+:root[data-window-chrome="mobile"] .tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tabs keep their own width and the row scrolls, rather than all of
+   them squeezing down to unreadable stubs. At its widest the name keeps
+   about 20 letters beside the ×'s fingertip box. */
+:root[data-window-chrome="mobile"] .tab-pill {
+  flex-shrink: 0;
+  min-width: 0;
+  max-width: 216px;
+  min-height: 40px;
+  padding: 0 0 0 12px;
+  gap: 0;
+  /* The close button's 44pt reaches past the pill's 36. */
+  overflow: visible;
+  font-size: var(--text-secondary);
+}
+
+:root[data-window-chrome="mobile"] .tab-pill-dirty-dot {
+  margin-right: 8px;
+}
+
+:root[data-window-chrome="mobile"] .tab-pill:hover:not(.tab-pill-active) {
+  background: none;
+}
+
+/* Always shown, as Safari's tab close is, and a full fingertip wide. */
+:root[data-window-chrome="mobile"] .tab-pill-close {
+  flex-shrink: 0;
+  justify-content: center;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  margin: -2px 0;
+  padding: 0;
+  opacity: 0.7;
+}
+
+/* Over the desktop's hover-only rule: on a tab not in front too, or its
+   room stood empty after a cut name. */
+:root[data-window-chrome="mobile"] .tab-pill .tab-pill-close {
+  visibility: visible;
+}
+
+:root[data-window-chrome="mobile"] .tab-pill-close:hover {
+  background: none;
+}
+
+:root[data-window-chrome="mobile"] .tab-bar-add {
+  min-height: var(--touch-target);
+}
+:root[data-window-chrome="mobile"] .tab-bar-add > svg {
+  width: 20px;
+  height: 20px;
+}
+
+:root[data-window-chrome="mobile"]
+  .tab-bar:not([data-overflow])
+  .tab-bar-add:hover {
+  background: none;
+}
+
+/* The list a fingertip wide; both it and the + square, so no tab
+   scrolling under them shows at their corners. */
+:root[data-window-chrome="mobile"] .tab-bar-list {
+  width: 44px;
+  height: 44px;
+}
+:root[data-window-chrome="mobile"]
+  .tab-bar[data-overflow]
+  :is(.tab-bar-add, .tab-bar-list) {
+  border-radius: 0;
+}
+:root[data-window-chrome="mobile"] .tab-bar[data-overflow] .tab-bar-add {
+  right: 44px;
 }
 
 /* A segmented switch under a finger: taller, the unchosen quieter. */

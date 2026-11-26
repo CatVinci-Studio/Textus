@@ -95,7 +95,7 @@ the hidden `background-host` window to run it (`src/plugins/background/`,
 ## Updates
 
 The update check runs in an editor window's frontend
-(`app/useAppUpdate.ts`): at the window's start and every 4 hours while it is
+(`app/app-update.ts`): at the window's start and every 4 hours while it is
 open. A windowless process checks nothing, and the next window checks at
 once.
 

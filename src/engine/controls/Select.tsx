@@ -16,8 +16,7 @@ import "./Select.css";
 
 /** A drop-in for `<select>` whose list the app draws, in a portal marked
  *  `data-floating-select` so outside-click code treats it as inside its opener.
- *  On a touch screen it opens the app's own menu (an action sheet on a
- *  phone). */
+ *  On a phone it opens the app's menu (ContextMenu). */
 interface OptionItem {
   value: string;
   label: ReactNode;
@@ -101,12 +100,11 @@ function textOf(node: ReactNode): string {
 
 export function Select(props: SelectProps) {
   const phone = usePhoneLayout();
-  return phone ? <SheetSelect {...props} /> : <DrawnSelect {...props} />;
+  return phone ? <MenuSelect {...props} /> : <DrawnSelect {...props} />;
 }
 
-/** A phone's: the app's own menu as an action sheet, not
- *  the system's picker. */
-function SheetSelect({
+/** A phone's: the app's menu, not the system's picker. */
+function MenuSelect({
   value,
   onChange,
   children,

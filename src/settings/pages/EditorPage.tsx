@@ -1,8 +1,6 @@
-import { isMobileApp } from "../../platform/capabilities";
 import type { SettingsPageProps } from "./types";
 import { SettingsGroup } from "./SettingsGroup";
 import {
-  type ContentWidth,
   type EmbedDisplay,
   type ImageAlign,
   type ColorSwatchMode,
@@ -14,10 +12,11 @@ import {
   type PdfMargin,
   type PdfPaper,
   type PdfTextScale,
+  type SingleTildeMode,
+  type SingleNewlineMode,
   type ViewMode,
 } from "../../prefs/settings-values";
 import { AdvancedFold, SettingRow, ToggleRow } from "../sections/controls";
-import { DocTextFold } from "../sections/text-font";
 import { ImageStorageSection } from "../sections/images";
 import { ExportFileRow } from "../sections/export-files";
 import { PandocArgsRows } from "../sections/pandoc-args";
@@ -25,53 +24,11 @@ import { Select } from "../../engine/controls/Select";
 import { canExportPdf, canExportWithPandoc } from "../../platform/capabilities";
 import { isMacPlatform } from "../../platform/os";
 
-/** Editing › Text: how the text is set, and the view a document opens in. */
+/** Editing › Document: the view a document opens in, what it draws and how
+ *  typing helps. */
 export function EditTextPage({ t, settings, setSettings }: SettingsPageProps) {
   return (
     <>
-      {/* How the text is set. */}
-      <SettingsGroup title={t.settingsTextGroup}>
-        <SettingRow label={t.contentWidthLabel}>
-          <Select
-            className="settings-select"
-            aria-label={t.contentWidthLabel}
-            value={settings.contentWidth}
-            onChange={(e) =>
-              setSettings({
-                contentWidth: e.target.value as ContentWidth,
-              })
-            }
-          >
-            <option value="auto">{t.contentWidthAuto}</option>
-            <option value="standard">{t.contentWidthStandard}</option>
-            <option value="full">{t.contentWidthFull}</option>
-          </Select>
-        </SettingRow>
-        <ToggleRow
-          label={t.firstLineIndentLabel}
-          checked={settings.firstLineIndent}
-          onChange={(v) => setSettings({ firstLineIndent: v })}
-        />
-        <ToggleRow
-          label={t.emptyLineHintLabel}
-          checked={settings.emptyLineHint}
-          onChange={(v) => setSettings({ emptyLineHint: v })}
-        />
-        <ToggleRow
-          label={t.blockHandlesLabel}
-          help={t.blockHandlesHelp}
-          checked={settings.blockHandles}
-          onChange={(v) => setSettings({ blockHandles: v })}
-        />
-        {!isMobileApp && (
-          <ToggleRow
-            label={t.smoothCaretLabel}
-            checked={settings.smoothCaret}
-            onChange={(v) => setSettings({ smoothCaret: v })}
-          />
-        )}
-        <DocTextFold t={t} settings={settings} setSettings={setSettings} />
-      </SettingsGroup>
       {/* One view for every document in every window. */}
       <SettingsGroup title={t.settingsViewGroup}>
         <SettingRow label={t.viewModeLabel} help={t.viewModeHelp}>
@@ -119,12 +76,18 @@ export function EditTextPage({ t, settings, setSettings }: SettingsPageProps) {
           checked={settings.typewriterMode}
           onChange={(v) => setSettings({ typewriterMode: v })}
         />
+        <ToggleRow
+          label={t.plainTextMenuLabel}
+          checked={settings.plainTextMenu}
+          onChange={(v) => setSettings({ plainTextMenu: v })}
+        />
       </SettingsGroup>
     </>
   );
 }
 
-/** Editing › Markdown: what the document shows and how typing behaves; diagrams, colour swatches, the ** and ` pairs under Advanced. */
+/** Editing › Markdown: what the document shows, then how typing behaves;
+ *  how diagrams are drawn under Advanced. */
 export function EditMarkdownPage({
   t,
   settings,
@@ -132,8 +95,7 @@ export function EditMarkdownPage({
 }: SettingsPageProps) {
   return (
     <>
-      {/* What the document shows, then how typing behaves. */}
-      <SettingsGroup title={t.navMarkdown}>
+      <SettingsGroup title={t.settingsMdDisplayGroup}>
         <ToggleRow
           label={t.enableMathLabel}
           checked={settings.enableMath}
@@ -150,14 +112,10 @@ export function EditMarkdownPage({
           onChange={(v) => setSettings({ codeLineNumbers: v })}
         />
         <ToggleRow
-          label={t.autoCloseBracketsLabel}
-          checked={settings.autoCloseBrackets}
-          onChange={(v) => setSettings({ autoCloseBrackets: v })}
-        />
-        <ToggleRow
-          label={t.plainTextMenuLabel}
-          checked={settings.plainTextMenu}
-          onChange={(v) => setSettings({ plainTextMenu: v })}
+          label={t.codeEnterTwiceLeavesLabel}
+          hint={t.codeEnterTwiceLeavesHint}
+          checked={settings.codeEnterTwiceLeaves}
+          onChange={(v) => setSettings({ codeEnterTwiceLeaves: v })}
         />
         <SettingRow label={t.embedDisplayLabel}>
           <Select
@@ -172,27 +130,6 @@ export function EditMarkdownPage({
             <option value="card">{t.embedDisplayCard}</option>
           </Select>
         </SettingRow>
-      </SettingsGroup>
-      {/* Rarely changed: how diagrams are drawn, colour swatches, and the
-       ** and ` pairs. */}
-      <AdvancedFold t={t}>
-        {settings.enableMermaid && (
-          <SettingRow label={t.diagramEngineLabel} help={t.diagramEngineHint}>
-            <Select
-              className="settings-select"
-              aria-label={t.diagramEngineLabel}
-              value={settings.diagramEngine}
-              onChange={(e) =>
-                setSettings({
-                  diagramEngine: e.target.value as DiagramEngine,
-                })
-              }
-            >
-              <option value="mermaid">{t.diagramEngineMermaid}</option>
-              <option value="pele">{t.diagramEnginePele}</option>
-            </Select>
-          </SettingRow>
-        )}
         <SettingRow label={t.colorSwatchesLabel}>
           <Select
             className="settings-select"
@@ -209,12 +146,68 @@ export function EditMarkdownPage({
             <option value="everywhere">{t.colorSwatchesEverywhere}</option>
           </Select>
         </SettingRow>
+        <SettingRow label={t.singleTildeLabel}>
+          <Select
+            className="settings-select"
+            aria-label={t.singleTildeLabel}
+            value={settings.singleTilde}
+            onChange={(e) =>
+              setSettings({ singleTilde: e.target.value as SingleTildeMode })
+            }
+          >
+            <option value="subscript">{t.singleTildeSubscript}</option>
+            <option value="strikethrough">{t.singleTildeStrikethrough}</option>
+            <option value="text">{t.singleTildeText}</option>
+          </Select>
+        </SettingRow>
+        <SettingRow label={t.singleNewlineLabel}>
+          <Select
+            className="settings-select"
+            aria-label={t.singleNewlineLabel}
+            value={settings.singleNewline}
+            onChange={(e) =>
+              setSettings({
+                singleNewline: e.target.value as SingleNewlineMode,
+              })
+            }
+          >
+            <option value="join">{t.singleNewlineJoin}</option>
+            <option value="break">{t.singleNewlineBreak}</option>
+          </Select>
+        </SettingRow>
+      </SettingsGroup>
+      <SettingsGroup title={t.settingsMdTypingGroup}>
+        <ToggleRow
+          label={t.autoCloseBracketsLabel}
+          checked={settings.autoCloseBrackets}
+          onChange={(v) => setSettings({ autoCloseBrackets: v })}
+        />
         <ToggleRow
           label={t.autoCloseMarksLabel}
           checked={settings.autoCloseMarks}
           onChange={(v) => setSettings({ autoCloseMarks: v })}
         />
-      </AdvancedFold>
+      </SettingsGroup>
+      {/* Rarely changed: which engine draws diagrams. */}
+      {settings.enableMermaid && (
+        <AdvancedFold t={t}>
+          <SettingRow label={t.diagramEngineLabel} help={t.diagramEngineHint}>
+            <Select
+              className="settings-select"
+              aria-label={t.diagramEngineLabel}
+              value={settings.diagramEngine}
+              onChange={(e) =>
+                setSettings({
+                  diagramEngine: e.target.value as DiagramEngine,
+                })
+              }
+            >
+              <option value="mermaid">{t.diagramEngineMermaid}</option>
+              <option value="pele">{t.diagramEnginePele}</option>
+            </Select>
+          </SettingRow>
+        </AdvancedFold>
+      )}
     </>
   );
 }
@@ -248,7 +241,8 @@ export function EditImagesPage({
   );
 }
 
-/** Editing › Export: PDF and Word, Pandoc's arguments under Advanced. */
+/** Editing › Export: PDF, then Word and Pandoc; Pandoc's arguments under
+ *  Advanced. */
 export function EditExportPage({
   t,
   settings,
@@ -258,7 +252,7 @@ export function EditExportPage({
     <>
       {/* No PDF export on the phone, so no group there either. */}
       {canExportPdf && (
-        <SettingsGroup title={t.menuExport}>
+        <SettingsGroup title="PDF">
           <ToggleRow
             label={t.pdfPageNumbersLabel}
             checked={settings.pdfPageNumbers}
@@ -317,25 +311,25 @@ export function EditExportPage({
               onChange={(v) => setSettings({ pdfLightColors: v })}
             />
           )}
-          {canExportWithPandoc && (
-            <>
-              <ExportFileRow t={t} setting="docxReferenceDoc" />
-              <ToggleRow
-                label={t.exportTocLabel}
-                checked={settings.exportToc}
-                onChange={(v) => setSettings({ exportToc: v })}
-              />
-              <ToggleRow
-                label={t.exportNumberHeadingsLabel}
-                help={t.exportNumberHeadingsHelp}
-                checked={settings.exportNumberHeadings}
-                onChange={(v) => setSettings({ exportNumberHeadings: v })}
-              />
-              <ExportFileRow t={t} setting="exportBibliography" />
-              {settings.exportBibliography && (
-                <ExportFileRow t={t} setting="exportCsl" />
-              )}
-            </>
+        </SettingsGroup>
+      )}
+      {canExportWithPandoc && (
+        <SettingsGroup title={t.settingsPandocGroup}>
+          <ExportFileRow t={t} setting="docxReferenceDoc" />
+          <ToggleRow
+            label={t.exportTocLabel}
+            checked={settings.exportToc}
+            onChange={(v) => setSettings({ exportToc: v })}
+          />
+          <ToggleRow
+            label={t.exportNumberHeadingsLabel}
+            help={t.exportNumberHeadingsHelp}
+            checked={settings.exportNumberHeadings}
+            onChange={(v) => setSettings({ exportNumberHeadings: v })}
+          />
+          <ExportFileRow t={t} setting="exportBibliography" />
+          {settings.exportBibliography && (
+            <ExportFileRow t={t} setting="exportCsl" />
           )}
         </SettingsGroup>
       )}

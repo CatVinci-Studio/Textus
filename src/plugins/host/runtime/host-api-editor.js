@@ -66,6 +66,15 @@ textus.editor = {
       quiet(call("editor.unregisterPasteHandler", { id: id }));
     });
   },
+  registerDropHandler: function (match, provide) {
+    var id = String(++dropHandlerCount);
+    dropHandlers[id] = provide;
+    quiet(call("editor.registerDropHandler", { id: id, match: plain(match) }));
+    return disposable(function () {
+      delete dropHandlers[id];
+      quiet(call("editor.unregisterDropHandler", { id: id }));
+    });
+  },
   // A block the / menu offers, named `id` among the plugin's own; its
   // insert() puts it in at the caret.
   registerBlockType: function (id, type) {

@@ -6,6 +6,29 @@ import { loadSettings } from "../prefs/SettingsContext";
 import { installTestLocalStorage } from "../dev/test-local-storage";
 import { fontChoices } from "../settings/sections/font-choices";
 import { vi } from "vitest";
+import {
+  fontFaceCss,
+  supplyFont,
+  SUPPLIED_FONT_STYLE_ID,
+  themeFontFaces,
+} from "./supplied-font";
+
+vi.mock("../platform/ipc", () => ({
+  systemIpc: {
+    fontFamilies: async () => [
+      {
+        name: "Inter",
+        local: [],
+        files: [{ path: "/f/Inter.otf", weight: 400, italic: false }],
+      },
+    ],
+  },
+}));
+const fontList = async () =>
+  (await import("../platform/ipc")).systemIpc.fontFamilies();
+vi.mock("../platform/file-src", () => ({
+  fileSrc: (path: string) => `asset://localhost${path}`,
+}));
 
 describe("text font and character spacing", () => {
   beforeAll(installTestLocalStorage);
@@ -65,6 +88,7 @@ describe("text font and character spacing", () => {
     const family = (name: string, zh?: string) => ({
       name,
       local: zh ? [{ language: "zh", name: zh }] : [],
+      files: [],
     });
     const installed = [
       family("Georgia"),
@@ -90,6 +114,93 @@ describe("text font and character spacing", () => {
       "PingFang SC",
       "Zapfino",
     ]);
+    vi.restoreAllMocks();
+  });
+
+  it("offers a font the web view can't find by name, served from its files", () => {
+    // WKWebView finds no font the user installed: nothing draws by name.
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+      font: "",
+      measureText: () => ({ width: 1 }),
+    } as unknown as CanvasRenderingContext2D);
+    const inter = {
+      name: "Inter",
+      local: [],
+      files: [
+        {
+          path: "/Users/a/Library/Fonts/Inter-Bold.otf",
+          weight: 700,
+          italic: false,
+        },
+      ],
+    };
+    const unservable = { name: "Collected", local: [], files: [] };
+    const en = fontChoices([inter, unservable], "en");
+    expect(en.recommended).toEqual([{ value: "Inter", label: "Inter" }]);
+    expect(en.more).toEqual([]);
+    expect(fontFaceCss("Inter", inter)).toBe(
+      '@font-face { font-family: "Inter"; ' +
+        'src: url("asset://localhost/Users/a/Library/Fonts/Inter-Bold.otf"); ' +
+        "font-weight: 700; font-style: normal; }",
+    );
+    vi.restoreAllMocks();
+  });
+
+  it("keeps serving the chosen font once the web view draws it", async () => {
+    // The name draws only while its @font-face is in the page.
+    const served = () => document.getElementById(SUPPLIED_FONT_STYLE_ID);
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
+      () => {
+        let font = "";
+        return {
+          set font(value: string) {
+            font = value;
+          },
+          measureText: () => ({
+            width: served() && font.includes('"Inter"') ? 2 : 1,
+          }),
+        } as unknown as CanvasRenderingContext2D;
+      },
+    );
+    await supplyFont("Inter");
+    expect(served()?.textContent).toContain("/f/Inter.otf");
+    await supplyFont("Inter");
+    expect(served()).not.toBeNull();
+    await supplyFont("");
+    expect(served()).toBeNull();
+    vi.restoreAllMocks();
+  });
+
+  it("gives a theme the faces of the fonts drawn only from their files", async () => {
+    // Georgia draws by name; Inter only from an @font-face once served.
+    let served = false;
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
+      () => {
+        let font = "";
+        return {
+          set font(value: string) {
+            font = value;
+          },
+          measureText: () => ({
+            width:
+              font.includes('"Georgia"') || (served && font.includes('"Inter"'))
+                ? 2
+                : 1,
+          }),
+        } as unknown as CanvasRenderingContext2D;
+      },
+    );
+    const faces = await themeFontFaces(["Inter", "", "Georgia", "Inter"]);
+    expect(faces).toBe(fontFaceCss("Inter", (await fontList())[0]));
+    // Served already (the text font, a theme), it still needs its files.
+    served = true;
+    Object.defineProperty(document, "fonts", {
+      configurable: true,
+      value: [{ family: '"Inter"' }],
+    });
+    expect(await themeFontFaces(["Inter"])).toBe(faces);
+    Reflect.deleteProperty(document, "fonts");
+    expect(await themeFontFaces(["Inter"])).toBe("");
     vi.restoreAllMocks();
   });
 });

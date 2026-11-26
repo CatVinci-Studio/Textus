@@ -13,18 +13,9 @@ fn pandoc_reads_the_editor_dialect_and_titles_only_epub() {
 }
 
 #[test]
-fn a_folder_that_shows_single_newlines_exports_them_as_breaks() {
-    let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().to_str().unwrap();
-    assert_eq!(breaks_extension(Some(path)), "");
-    assert_eq!(breaks_extension(None), "");
-    std::fs::create_dir(dir.path().join(".textus")).unwrap();
-    std::fs::write(
-        dir.path().join(".textus/settings.json"),
-        r#"{"conventions":{"softBreaks":true}}"#,
-    )
-    .unwrap();
-    assert_eq!(breaks_extension(Some(path)), "+hard_line_breaks");
+fn single_newlines_export_as_breaks_only_where_the_editor_shows_them() {
+    assert_eq!(breaks_extension(false), "");
+    assert_eq!(breaks_extension(true), "+hard_line_breaks");
 }
 
 #[test]

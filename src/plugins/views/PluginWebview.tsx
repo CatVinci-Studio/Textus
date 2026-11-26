@@ -1,6 +1,12 @@
 import { contentZoom, watchContentZoom } from "../../engine/zoom/tab-zoom";
 import { FRAME_PRESS } from "./pressed-blocks";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { connectFrame, sandboxedFrame, webviewDocument } from "../host/frames";
 import { webviewMessage } from "../manager";
 import { pluginName, pluginRecord } from "../store/plugin-records";
@@ -23,6 +29,7 @@ import {
   type ContextMenuEntry,
 } from "../../engine/controls/ContextMenu";
 import { Presence } from "../../engine/motion/usePresence";
+import { frameHeight, rememberFrameHeight } from "./frame-heights";
 import {
   setWebviewState,
   subscribeWebviews,
@@ -85,8 +92,12 @@ export function PluginWebview({
   fitHeight,
   zoom = 1,
   interfaceSize = false,
+  heightKey,
 }: {
   id: string;
+  /** What the page's height is remembered by, a frame made again for it
+   *  starting there. */
+  heightKey?: string;
   className?: string;
   /** A block in the document drawn at the interface's size, not the
    *  document's text and zoom (an overview that widens instead). */
@@ -112,6 +123,15 @@ export function PluginWebview({
 
   // The size the page draws at: its own times the document's.
   const { ownZoom, tellZoom } = useZoomTeller(zoom);
+  // The box keeps the page's last height until its frame is in it: painted
+  // empty first, a block in the document shrank to nothing for a frame.
+  // Divided by the document's zoom, which the frame is drawn outside of.
+  useLayoutEffect(() => {
+    const box = boxRef.current;
+    const height = heightKey === undefined ? undefined : frameHeight(heightKey);
+    if (box && height !== undefined && !box.firstChild)
+      box.style.minHeight = `calc(${height}px / var(--content-zoom, 1))`;
+  }, [heightKey, html]);
   useEffect(() => {
     const box = boxRef.current;
     const current = webview(id);
@@ -124,6 +144,9 @@ export function PluginWebview({
     const docZoom = () => (interfaceSize ? 1 : contentZoom(frame));
     const frame = sandboxedFrame(page.srcdoc, page.title, { fullscreen: true });
     frame.className = "plugin-webview-frame";
+    const lastHeight =
+      heightKey === undefined ? undefined : frameHeight(heightKey);
+    if (lastHeight !== undefined) frame.style.height = `${lastHeight}px`;
     let endpoint: Parameters<typeof webviewConnected>[1] = null;
     // The clipboard is the page's only through a menu the window drew: a
     // Cut, Copy or Paste the user just picked there (the window's text menu,
@@ -222,11 +245,13 @@ export function PluginWebview({
         zoomGesture: (params: Parameters<typeof passZoomGesture>[1]) =>
           passZoomGesture(frame, params),
         height: ({ height }: { height: unknown }) => {
-          if (fitHeight && typeof height === "number")
-            frame.style.height = `${Math.min(
-              Math.max(height, 24),
-              typeof fitHeight === "function" ? fitHeight() : fitHeight,
-            )}px`;
+          if (!fitHeight || typeof height !== "number") return;
+          const fitted = Math.min(
+            Math.max(height, 24),
+            typeof fitHeight === "function" ? fitHeight() : fitHeight,
+          );
+          frame.style.height = `${fitted}px`;
+          if (heightKey !== undefined) rememberFrameHeight(heightKey, fitted);
         },
       },
       () => ({
@@ -265,6 +290,7 @@ export function PluginWebview({
     );
     sight.observe(box);
     box.replaceChildren(frame);
+    box.style.minHeight = "";
     return () => {
       sight.disconnect();
       stopTheme();
@@ -273,7 +299,16 @@ export function PluginWebview({
       webviewConnected(id, null);
       frame.remove();
     };
-  }, [id, html, fitHeight, ownZoom, tellZoom, interfaceSize, language]);
+  }, [
+    id,
+    html,
+    fitHeight,
+    ownZoom,
+    tellZoom,
+    interfaceSize,
+    language,
+    heightKey,
+  ]);
 
   return (
     <>

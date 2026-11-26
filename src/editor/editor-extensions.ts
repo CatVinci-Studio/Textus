@@ -132,9 +132,7 @@ export function withEditorCore(
     .use(editing(pointerPlugins(settings)))
     // A preview has no handles, but its fold carets come by a block's
     // start as the editor's do.
-    .use(
-      options.preview ? createBlockHandlesPlugin({ enabled: () => false }) : [],
-    )
+    .use(options.preview ? createBlockHandlesPlugin({ grip: false }) : [])
     .use(editing(linuxImeEnterPlugin))
     .use(editing(iosEnterBeforeBlockPlugin))
     .use(editing(compositionPruneGuardPlugin));

@@ -137,6 +137,11 @@ const LOCAL: {
     decode: (raw) => JSON.parse(raw),
     encode: (value) => JSON.stringify(value),
   },
+  pinnedPaths: {
+    key: "textus-pinned-paths",
+    decode: (raw) => JSON.parse(raw),
+    encode: (value) => JSON.stringify(value),
+  },
   foldedBlocks: {
     key: "textus-folded-blocks",
     decode: (raw) => JSON.parse(raw),

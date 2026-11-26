@@ -1,5 +1,5 @@
 import { fill } from "../i18n/fill";
-import { CreateChat } from "../settings/pages/create-chat-lazy";
+import { CreateStudio } from "../settings/pages/create-chat-lazy";
 import { Suspense, useEffect, useState } from "react";
 import { onCreateAsked } from "../ai/chat/create-request";
 import { lazyModule } from "../lazy/lazy-module";
@@ -65,8 +65,8 @@ const SettingsTab = lazyComponent(
 export function CreateTabPage({ t }: { t: Strings }) {
   return (
     <Suspense fallback={null}>
-      <div className="create-tab">
-        <CreateChat t={t} />
+      <div className="create-tab tx-scroll-reveal">
+        <CreateStudio t={t} />
       </div>
     </Suspense>
   );

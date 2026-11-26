@@ -23,6 +23,8 @@ import {
   type DiagramEngine,
   type PandocArgsFormat,
   type ColorSwatchMode,
+  type SingleTildeMode,
+  type SingleNewlineMode,
   type RevisionDisplay,
   type AiChangeMode,
   type CompletionTone,
@@ -62,8 +64,17 @@ export interface Settings {
   /** Line numbers beside each code block, whose lines then scroll sideways
    *  instead of wrapping. */
   codeLineNumbers: boolean;
+  /** Enter on a code block's empty last line leaves the block; off, it
+   *  is a new line, and Mod+Enter or Down leaves it. */
+  codeEnterTwiceLeaves: boolean;
   /** Where a small square of the colour shows before a colour code. */
   colorSwatches: ColorSwatchMode;
+  /** What `~text~` is: a subscript after a letter or digit (`H~2~O`), a
+   *  strikethrough as on GitHub, or the tildes as typed. */
+  singleTilde: SingleTildeMode;
+  /** What one newline inside a paragraph shows as: a space, the lines
+   *  joined, or a line break; a folder's own convention wins. */
+  singleNewline: SingleNewlineMode;
   /** Where newly pasted images go. Existing markdown image references are
    *  never migrated when this changes. */
   imageStorageMode: ImageStorageMode;
@@ -173,10 +184,6 @@ export interface Settings {
   contentWidth: ContentWidth;
   /** Each body paragraph's first line set in by two characters. */
   firstLineIndent: boolean;
-  /** A gray "type / to insert" on the empty line the caret is on. */
-  emptyLineHint: boolean;
-  /** ⋮⋮ beside the block under the pointer. */
-  blockHandles: boolean;
   /** The caret glides to where it goes (computers only). */
   smoothCaret: boolean;
   /** How an image on a line of its own sits. Display only: the file is
@@ -188,12 +195,28 @@ export interface Settings {
   /// The window bar is a row of its own, naming the document in front; the
   /// tabs go in the row under it.
   titleRowShown: boolean;
+  /// A plugin's file icon theme for the files and folders listed, as
+  /// `<plugin id>#<theme id>`; "" for the app's own icons. Kept while its
+  /// plugin is off, so turning it back on brings the icons back.
+  fileIconTheme: string;
+  /// The frame (title bar, rail, sidebar) in the document's background
+  /// rather than a colour of its own.
+  plainFrame: boolean;
   /// The column of icons at the window's left edge (Files, Outline, plugins'
   /// pages). Off, the sidebar shows its tabs along its own top again.
   activityRail: boolean;
   /// Floating islands (the page and panels as rounded sheets on the frame)
   /// or classic (flush, square, hairlines).
   layout: "islands" | "classic";
+  /// The layout, rail and title row as they were when "Use the look of
+  /// earlier versions" turned on, put back when it turns off; null while
+  /// it is off.
+  lookBeforeClassic: {
+    layout: "islands" | "classic";
+    activityRail: boolean;
+    titleRowShown: boolean;
+    plainFrame: boolean;
+  } | null;
   /// Sidebar tabs the user took off the rail, by id.
   activityRailHidden: string[];
   /// Plugins' sidebar tabs the user pinned among Textus's own at the rail's
@@ -255,6 +278,13 @@ export interface Settings {
   autoSuggestFilename: boolean;
   /** Write a document that has a file back to it once typing rests. */
   autosave: boolean;
+  /** Files from a file manager let go on the file tree: asked before they
+   *  are copied into its folder (the dialog's Don't Ask Again turns it
+   *  off). */
+  confirmTreeCopy: boolean;
+  /** The tree asks before moving rows to the Trash (the question's Don't
+   *  Ask Again turns it off). */
+  confirmTreeTrash: boolean;
   /** Export as PDF numbers each page in its bottom margin. */
   pdfPageNumbers: boolean;
   /** The paper, margins and text size a PDF export prints with. */
@@ -311,7 +341,10 @@ export const DEFAULT_SETTINGS: Settings = {
   enableMermaid: true,
   diagramEngine: "mermaid",
   codeLineNumbers: false,
+  codeEnterTwiceLeaves: true,
   colorSwatches: "off",
+  singleTilde: "subscript",
+  singleNewline: "join",
   imageStorageMode: "local",
   imageFolder: DEFAULT_IMAGE_SUBFOLDER,
   imageHost: "picgo",
@@ -356,14 +389,15 @@ export const DEFAULT_SETTINGS: Settings = {
   zenMode: false,
   contentWidth: "auto",
   firstLineIndent: false,
-  emptyLineHint: false,
-  blockHandles: true,
   smoothCaret: false,
   imageAlign: "center",
   menuBarShown: false,
   titleRowShown: false,
+  fileIconTheme: "",
+  plainFrame: false,
   activityRail: true,
   layout: "islands",
+  lookBeforeClassic: null,
   activityRailHidden: [],
   activityRailPinned: [],
   activityRailOrder: [],
@@ -389,6 +423,8 @@ export const DEFAULT_SETTINGS: Settings = {
   addTabShowsStartPage: false,
   autoSuggestFilename: true,
   autosave: false,
+  confirmTreeCopy: true,
+  confirmTreeTrash: true,
   pdfPageNumbers: false,
   pdfPaper: "a4",
   pdfMargin: "normal",

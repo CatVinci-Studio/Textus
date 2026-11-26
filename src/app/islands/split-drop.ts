@@ -9,7 +9,6 @@ import {
 } from "../../engine/layout/store";
 import { moveTab, splitOff, type SplitLayout } from "../../engine/layout/ops";
 import { paneById, paneWithTab } from "../../engine/layout/tree";
-import type { DocumentDrop } from "../../engine/controls/document-drop";
 import {
   dropGeometry,
   dropTargetAt,
@@ -154,10 +153,11 @@ export function arrivalPreview() {
     previewSplit(null);
   };
   return {
-    /** Where a drop at (x, y) lands, shown; null off the documents. */
-    show(x: number, y: number): DropTarget | null {
+    /** Where a drop at (x, y) lands, shown; null off the documents. `at`:
+     *  the place already found there (a tab row's island). */
+    show(x: number, y: number, at?: DropTarget | null): DropTarget | null {
       geometry ??= dropGeometry();
-      const target = dropTargetAt(x, y, geometry);
+      const target = at !== undefined ? at : dropTargetAt(x, y, geometry);
       const key = target
         ? `${target.whole ? "whole" : target.tabId}:${target.zone}`
         : null;
@@ -180,36 +180,12 @@ export function arrivalPreview() {
       }, 0);
     },
     /** Where a drop at (x, y) lands, the preview gone. */
-    take(x: number, y: number): DropTarget | null {
-      const target = dropTargetAt(x, y, geometry ?? dropGeometry());
+    take(x: number, y: number, at?: DropTarget | null): DropTarget | null {
+      const target =
+        at !== undefined ? at : dropTargetAt(x, y, geometry ?? dropGeometry());
       geometry = null;
       clear();
       return target;
-    },
-  };
-}
-
-/** What a sidebar file dragged over the documents does: room made where it
- *  will open (arrivalPreview); `open` gets where it was let go. With Shift
- *  held it is linked to instead (`link`). */
-export function fileDropOnDocuments(
-  open: (path: string, target: DropTarget) => void,
-  opts: { link: (path: string) => void },
-): DocumentDrop {
-  const arrival = arrivalPreview();
-  return {
-    over(x, y, link = false) {
-      if (!link) return !!arrival.show(x, y);
-      arrival.clear();
-      return !!dropTargetAt(x, y);
-    },
-    leave: arrival.clear,
-    drop(path, x, y, link = false) {
-      const target = arrival.take(x, y);
-      if (!target) return false;
-      if (link) opts.link(path);
-      else open(path, target);
-      return true;
     },
   };
 }

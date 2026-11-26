@@ -51,7 +51,7 @@
       }
     },
     "platforms": {
-      "description": "Where it runs: desktop (macOS, Windows, Linux) and ios (iPhone, iPad). Left out, everywhere - unless it works in the background (background code, or requiring runInBackground), which only the desktop does. Textus elsewhere doesn't list or load it.",
+      "description": "Where it runs: desktop (macOS, Windows, Linux) and ios (iPhone, iPad). Left out, everywhere - unless it works in the background (background code, or requiring runInBackground), which only the desktop does. Background code can't name ios; a plugin that only requires runInBackground can, and runs there without it. Textus elsewhere doesn't list or load it.",
       "type": "array",
       "items": { "enum": ["desktop", "ios"] },
       "uniqueItems": true
@@ -105,6 +105,7 @@
               "agents",
               "appearance",
               "git.commit",
+              "git.sync",
               "ssh"
             ]
           },
@@ -135,6 +136,23 @@
           }
         }
       }
+    },
+    "needsTextusAi": {
+      "description": "From 1.10 (Textus 1.4.7): it does nothing without Textus AI (it only gives Textus AI tools). Where there is none (iOS), the store doesn't list it.",
+      "type": "boolean"
+    },
+    "category": {
+      "description": "From 1.10 (Textus 1.4.7): where the store lists it. Left out, or one an older Textus doesn't know: under Other.",
+      "enum": [
+        "notes",
+        "editing",
+        "diagrams",
+        "files",
+        "import",
+        "sync",
+        "ai",
+        "companions"
+      ]
     },
     "contributes": {
       "type": "object",
@@ -383,6 +401,79 @@
             }
           }
         },
+        "textFiles": {
+          "type": "array",
+          "description": "From 1.4.8: file types opened as plain text in the source editor, editable, coloured as a code language.",
+          "items": {
+            "type": "object",
+            "required": ["extensions"],
+            "properties": {
+              "extensions": {
+                "type": "array",
+                "items": { "type": "string" },
+                "minItems": 1,
+                "description": "Extensions without the dot: \"tex\". Textus's own (md, markdown, mdx, txt, text) can't be taken."
+              },
+              "language": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9+#._-]{0,31}$",
+                "description": "The code language it is coloured as, by a fence's name: one Textus colours (\"latex\", \"yaml\") or a plugin's codeLanguages id. Left out, plain text."
+              }
+            }
+          }
+        },
+        "codeLanguages": {
+          "type": "array",
+          "description": "From 1.4.7: code languages coloured from a grammar file of the plugin, in the editor, source mode and exports. Textus's own languages win over a plugin's.",
+          "items": {
+            "type": "object",
+            "required": ["id", "path"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9+#._-]{0,31}$",
+                "description": "The fence's language: \"cisco\". Read in any case."
+              },
+              "aliases": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9+#._-]{0,31}$"
+                },
+                "description": "Other names a fence may use: [\"ios\", \"cisco-ios\"]."
+              },
+              "path": {
+                "type": "string",
+                "pattern": "\\.json$",
+                "description": "The grammar, a JSON file in the plugin: { flags?, rules: [{ token, match, flags? }] }. See the plugin guide's Code languages."
+              }
+            }
+          }
+        },
+        "fileIconThemes": {
+          "type": "array",
+          "description": "From 1.4.7: icon themes for the files and folders listed, picked in Settings › Appearance › File icons.",
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "path"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9-]{0,63}$",
+                "description": "The theme's id in the plugin: \"material\"."
+              },
+              "label": {
+                "type": "string",
+                "description": "Its name in Settings; may be a %key%."
+              },
+              "path": {
+                "type": "string",
+                "pattern": "\\.json$",
+                "description": "Its JSON in the plugin, VS Code's icon theme cut down: iconDefinitions (SVG paths relative to it), fileExtensions, fileNames, folderNames, folderNamesExpanded, file, folder, folderExpanded and light."
+              }
+            }
+          }
+        },
         "settings": {
           "type": "array",
           "items": {
@@ -535,8 +626,8 @@
                 "description": "Starts with the plugin's id and a dot."
               },
               "where": {
-                "enum": ["math", "text", "any"],
-                "description": "In a formula, in the text, or both (the default)."
+                "enum": ["math", "text", "any", "code"],
+                "description": "In a formula, in the text, or both (the default); \"code\" (API 1.11): in a code block only, which no other value reaches."
               },
               "pattern": {
                 "type": "string",

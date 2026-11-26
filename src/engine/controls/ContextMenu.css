@@ -20,6 +20,11 @@
   flex: 1;
 }
 
+/* An outline's headings, set in a step a level. */
+.context-menu-item[data-depth] > .context-menu-label {
+  margin-left: calc((var(--depth) - 1) * 16px);
+}
+
 .context-menu-item:disabled {
   color: var(--ui-muted);
 }

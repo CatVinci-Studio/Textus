@@ -4,10 +4,11 @@ import {
   addCompletionSource,
   type PanelItem,
 } from "../editor/extension-points";
-import { fs } from "../platform/ipc";
+import { folderIndex } from "./folder-index";
 import type { IndexedFile } from "../platform/ipc";
 import { linkToTarget, pathIndex, type LinkStyle } from "./link-resolve";
 import { linkStyleAt } from "./link-style";
+import { windowFolder } from "../platform/window-folder";
 
 /**
  * `[[` lists the folder's notes - the core's fallback, gone as soon as a
@@ -25,15 +26,8 @@ interface Notes {
   lists: Promise<[PanelItem[], PanelItem[]]>;
 }
 
-let root: string | null = null;
 let notes: Notes | null = null;
 onMemoryIdle(() => (notes = null));
-
-/** The window's folder, where `[[` looks. */
-export function setNoteCompletionRoot(next: string | null): void {
-  if (next !== root) notes = null;
-  root = next;
-}
 
 /** Each note, linked from `from` (an unsaved document: the folder's top)
  *  as `metadata.linkTo` writes a wiki link there. */
@@ -61,7 +55,7 @@ export function noteItems(
 }
 
 function load(folder: string, from: string, key: string): Notes {
-  const lists = Promise.all([fs.indexFolder(folder), linkStyleAt(from)]).then(
+  const lists = Promise.all([folderIndex(folder), linkStyleAt(from)]).then(
     ([index, style]) => {
       const items = noteItems(index.files, folder, from, style);
       return [items, items.map((i) => ({ ...i, replaceAfter: 2 }))] as [
@@ -82,6 +76,8 @@ export function registerNoteCompletion(title: () => string): () => void {
     pattern: /\[\[([^[\]|#^\n]*)$/,
     title,
     provide: ({ after, path }) => {
+      // The window's folder, where `[[` looks.
+      const root = windowFolder();
       if (!root) return null;
       const from = path ?? `${root.replace(/[\\/]+$/, "")}/Untitled.md`;
       const key = `${root}\n${from}`;

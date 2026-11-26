@@ -1,5 +1,5 @@
 import { scaledPx } from "../../engine/tokens/chrome-scale";
-import { useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { createSubscribers } from "../../utils/store";
 
 /** A card's width and the air between it and the text. */
@@ -63,15 +63,20 @@ export function columnForMargin(
   return widest >= narrowest ? Math.floor(widest) : null;
 }
 
-// Whether the active document has room for a margin, for Settings. One value
-// per window; assumed to fit until a document has measured.
+// Whether the document in front has room for a margin, for Settings. One
+// value per window; assumed to fit until a document has measured.
 let available = true;
 const subscribers = createSubscribers();
 
-export function setMarginAvailable(value: boolean) {
-  if (value === available) return;
-  available = value;
-  subscribers.publish();
+/** Tells Settings this document's margin room while it is the one in
+ *  front: another document measuring after it (the other side of a split)
+ *  doesn't speak for it. */
+export function useTellMarginRoom(inFront: boolean, noMargin: boolean) {
+  useEffect(() => {
+    if (!inFront || available === !noMargin) return;
+    available = !noMargin;
+    subscribers.publish();
+  }, [inFront, noMargin]);
 }
 
 const subscribe = subscribers.subscribe;

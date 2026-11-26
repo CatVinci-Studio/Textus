@@ -1,12 +1,12 @@
-import { Suspense, useCallback, useRef, useState } from "react";
+import { Suspense } from "react";
 import { useSettings } from "../../prefs/SettingsContext";
-import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick";
+import { useMenuOpen } from "../../engine/controls/useMenuOpen";
 import { AppMenu } from "../menu/app-menu-lazy";
 import type { MenuChecks } from "../../registry/menu/app-menu-model";
 import { HamburgerIcon } from "../../engine/controls/icons";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
 import { Presence } from "../../engine/motion/usePresence";
-import { isIOSApp, isMobileApp } from "../../platform/capabilities";
+import { isMobileApp } from "../../platform/capabilities";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import "./window-controls.css";
 
@@ -16,24 +16,12 @@ import "./window-controls.css";
  */
 export function AppMenuButton({ checks }: { checks?: MenuChecks } = {}) {
   const { t } = useSettings();
-  const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
-  // The menu takes focus for the arrow keys and hands it straight back, so
-  // using it never costs the caret.
-  const focusOnClose = useRef<HTMLElement | null>(null);
-
-  const close = useCallback(() => {
-    setAnchor(null);
-    focusOnClose.current?.focus({ preventScroll: true });
-    focusOnClose.current = null;
-  }, []);
-
-  // Wrapped round the button as well as the menu: the capture-phase listener
-  // would otherwise close the menu just before the button's click reopens it.
-  const ref = useCloseOnOutsideClick<HTMLDivElement>(
+  const {
+    open: anchor,
+    show,
     close,
-    true,
-    anchor !== null,
-  );
+    ref,
+  } = useMenuOpen<{ x: number; y: number }>();
 
   // Where the menu bar went with the OS frame, and the iPhone.
   if (!appDrawsWindowFrame && !isMobileApp) return null;
@@ -50,24 +38,19 @@ export function AppMenuButton({ checks }: { checks?: MenuChecks } = {}) {
           // Pressed, it keeps the focus where it was, for the menu to give
           // back.
           onMouseDown={(e) => {
-            if (!isIOSApp) e.preventDefault();
+            if (!isMobileApp) e.preventDefault();
           }}
           onClick={(e) => {
             if (anchor) {
               close();
               return;
             }
-            if (isIOSApp) {
-              // The phone: blur the editor so the keyboard and the system's
-              // paste bubble go, and don't hand focus back afterwards.
+            // Touch: blur the editor so the keyboard and the system's paste
+            // bubble go, and don't hand focus back afterwards.
+            if (isMobileApp)
               (document.activeElement as HTMLElement | null)?.blur();
-              focusOnClose.current = null;
-            } else {
-              focusOnClose.current =
-                document.activeElement as HTMLElement | null;
-            }
             const rect = e.currentTarget.getBoundingClientRect();
-            setAnchor({ x: rect.left, y: rect.bottom + 2 });
+            show({ x: rect.left, y: rect.bottom + 2 }, !isMobileApp);
           }}
         >
           <HamburgerIcon />

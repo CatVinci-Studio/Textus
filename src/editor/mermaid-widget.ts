@@ -60,3 +60,21 @@ export function diagramWidget(
   });
   return block;
 }
+
+/** Under a diagram that couldn't be drawn, its source still showing: why,
+ *  in the renderer's words (#775). */
+export function diagramErrorWidget(why: string): HTMLElement {
+  const box = document.createElement("div");
+  box.className = "diagram-error";
+  box.contentEditable = "false";
+  box.setAttribute("role", "note");
+  const title = document.createElement("div");
+  title.className = "diagram-error-title";
+  title.textContent = currentStrings().diagramError;
+  const detail = document.createElement("pre");
+  detail.className = "diagram-error-detail";
+  detail.textContent = why;
+  box.append(title);
+  if (why) box.append(detail);
+  return box;
+}

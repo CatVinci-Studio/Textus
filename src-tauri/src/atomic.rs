@@ -8,6 +8,23 @@ use std::sync::atomic::{AtomicU32, Ordering};
 
 static COUNTER: AtomicU32 = AtomicU32::new(0);
 
+/// Whether `path` is the temp file a write renames into place (`tmp_path`).
+#[cfg(desktop)]
+pub(crate) fn is_temp_name(path: &Path) -> bool {
+    path.file_name()
+        .and_then(|n| n.to_str())
+        .is_some_and(|n| n.starts_with('.') && n.ends_with(".tmp"))
+}
+
+/// Where `path` really is, links followed; for one not there yet, its
+/// folder's real path with its name.
+pub(crate) fn real_path(path: &Path) -> Option<PathBuf> {
+    std::fs::canonicalize(path).ok().or_else(|| {
+        let dir = std::fs::canonicalize(path.parent()?).ok()?;
+        Some(dir.join(path.file_name()?))
+    })
+}
+
 fn tmp_path(target: &Path) -> PathBuf {
     let name = target
         .file_name()
@@ -58,7 +75,13 @@ fn existing_target(target: &Path) -> std::io::Result<(PathBuf, Option<std::fs::P
     Ok((real, Some(permissions)))
 }
 
-fn write_via_temp(target: &Path, contents: &[u8], secret: bool) -> std::io::Result<()> {
+/// `by`: the label of the window whose save it is, when one asked for it.
+fn write_via_temp(
+    target: &Path,
+    contents: &[u8],
+    secret: bool,
+    by: Option<&str>,
+) -> std::io::Result<()> {
     // Secrets always get a fresh owner-only file; anything else keeps what
     // the file it replaces had.
     let (real, permissions) = if secret {
@@ -68,6 +91,14 @@ fn write_via_temp(target: &Path, contents: &[u8], secret: bool) -> std::io::Resu
     };
     let target = real.as_path();
     let tmp = tmp_path(target);
+    // A file replaced (a save) is not news to the saving window's tree; a
+    // new one is, and so is a save to the other windows' trees.
+    #[cfg(desktop)]
+    if permissions.is_some() {
+        crate::commands::fs::watch::note_own_write(target, by);
+    }
+    #[cfg(not(desktop))]
+    let _ = by;
     let result = (|| {
         let mut options = std::fs::OpenOptions::new();
         options.write(true).create_new(true);
@@ -101,21 +132,31 @@ fn write_via_temp(target: &Path, contents: &[u8], secret: bool) -> std::io::Resu
 
 /// Sync version, for the handful of call sites that aren't already async.
 pub fn write_sync(target: &Path, contents: impl AsRef<[u8]>) -> std::io::Result<()> {
-    write_via_temp(target, contents.as_ref(), false)
+    write_via_temp(target, contents.as_ref(), false, None)
 }
 
 /// For credentials and API keys: the temp file is created owner-only (0600)
 /// from the start, so the secret is never world-readable.
 pub fn write_secret_sync(target: &Path, contents: impl AsRef<[u8]>) -> std::io::Result<()> {
-    write_via_temp(target, contents.as_ref(), true)
+    write_via_temp(target, contents.as_ref(), true, None)
 }
 
 /// Async version, on the blocking pool: fsync can take tens of milliseconds
 /// on macOS and mustn't stall the runtime.
 pub async fn write(target: &Path, contents: impl AsRef<[u8]>) -> std::io::Result<()> {
+    write_by(target, contents, None).await
+}
+
+/// `write`, for the window labelled `by` when a window asked for it: the
+/// other windows' trees still hear of it.
+pub async fn write_by(
+    target: &Path,
+    contents: impl AsRef<[u8]>,
+    by: Option<String>,
+) -> std::io::Result<()> {
     let target = target.to_path_buf();
     let contents = contents.as_ref().to_vec();
-    tokio::task::spawn_blocking(move || write_via_temp(&target, &contents, false))
+    tokio::task::spawn_blocking(move || write_via_temp(&target, &contents, false, by.as_deref()))
         .await
         .map_err(std::io::Error::other)?
 }
@@ -394,10 +435,9 @@ pub(crate) fn to_trash(path: &std::path::Path) -> Result<(), String> {
     }
 }
 
-/// A file of the user's to the Trash, never deleted: refused where the
-/// system has no Trash (the iPhone). The folder `shown` (the tree's root,
-/// a plugin's folder) and any folder holding it are refused too.
-pub(crate) fn user_file_to_trash(
+/// Refuses to trash the folder `shown` (the tree's root, a plugin's
+/// folder) or any folder holding it.
+pub(crate) fn may_trash(
     path: &std::path::Path,
     shown: Option<&std::path::Path>,
 ) -> Result<(), String> {
@@ -406,11 +446,19 @@ pub(crate) fn user_file_to_trash(
             return Err(crate::errors::error("trashShownFolder"));
         }
     }
+    Ok(())
+}
+
+/// A file of the user's to the Trash, never deleted, as [`may_trash`]
+/// allows. Where the system has no Trash it is refused with `noTrash`;
+/// iOS's is reached through the native plugin instead.
+pub(crate) fn user_file_to_trash(
+    path: &std::path::Path,
+    shown: Option<&std::path::Path>,
+) -> Result<(), String> {
+    may_trash(path, shown)?;
     #[cfg(desktop)]
     return trash::delete(path).map_err(|e| e.to_string());
     #[cfg(not(desktop))]
-    Err(format!(
-        "{} can't be moved to the Trash here.",
-        path.display()
-    ))
+    Err(crate::errors::error("noTrash"))
 }

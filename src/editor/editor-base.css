@@ -20,6 +20,11 @@
 :root[data-doc-font] :is(.milkdown, #write) {
   font-family: var(--doc-chosen-font) !important;
 }
+/* A width the reader chose: the column alone sets it, not a theme's
+   #write measure. */
+:root[data-content-width] #write {
+  max-width: none !important;
+}
 :root[data-doc-tracking] :is(.milkdown, #write) {
   letter-spacing: var(--doc-letter-spacing) !important;
 }
@@ -136,7 +141,7 @@
 }
 
 /* Drawing near the screen holds what the reader sees still itself
-   (editor/lazy/hold-still.ts); the browser's own anchoring would move it
+   (engine/controls/scroll-hold.ts); the browser's own anchoring would move it
    a second time a frame later. */
 .editor-scroll {
   overflow-anchor: none;

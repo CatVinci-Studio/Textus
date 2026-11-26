@@ -38,6 +38,21 @@ const entryOf = (id: string) =>
     }[]
   ).find((entry) => entry.id === id);
 
+/** Whether the search service is worth a row: the model can't search by
+ *  itself, or a service was chosen before. */
+function searchServiceMatters(
+  status: ReturnType<typeof useWebSearchStatus>,
+  chosen: SearchService,
+): status is NonNullable<typeof status> {
+  return !!status && !(status.native && chosen === "auto");
+}
+
+/** Whether Settings shows the search service, for its group's title. */
+export function useSearchServiceShown(): boolean {
+  const { settings } = useSettings();
+  return searchServiceMatters(useWebSearchStatus(), settings.searchService);
+}
+
 /** Settings › Textus AI › Search service: what web_search uses when the chat
  *  model can't search itself. Shown only when that matters, or when a service
  *  was chosen before. */
@@ -45,7 +60,7 @@ export function SearchServiceSection({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const status = useWebSearchStatus();
   const chosen = settings.searchService;
-  if (!status || (status.native && chosen === "auto")) return null;
+  if (!searchServiceMatters(status, chosen)) return null;
   const hint = status.native
     ? t.searchServiceNativeHint
     : status.service

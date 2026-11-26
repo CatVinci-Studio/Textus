@@ -1,8 +1,14 @@
 import { splitFrontmatter } from "../../utils/frontmatter";
-import { Marked, Renderer, type TokenizerAndRendererExtension } from "marked";
+import {
+  Marked,
+  Renderer,
+  type MarkedExtension,
+  type TokenizerAndRendererExtension,
+} from "marked";
 import markedCjkFriendly from "marked-cjk-friendly";
 import createDOMPurify from "dompurify";
 import { escapeHtml } from "../../utils/html";
+import { loadSettings } from "../../prefs/settings-store";
 import { WIKILINK_SOURCE } from "../../utils/note-link";
 import {
   displayMathApart,
@@ -12,6 +18,10 @@ import { sanitizeNodes } from "../html/html-policy";
 import { readImagePresentation } from "../images/image-html";
 import { katexNow, mathSourceHtml } from "../math/katex-loader";
 import { renderFormula } from "../math/matrix-rows";
+import { BACKTICK_MATH, DOLLAR_MATH } from "../math/inline-math-rule";
+
+const BACKTICK_AT_START = new RegExp(`^${BACKTICK_MATH}`);
+const DOLLAR_AT_START = new RegExp(`^${DOLLAR_MATH}`);
 
 function renderMath(source: string, displayMode: boolean): string {
   const katex = katexNow();
@@ -34,7 +44,9 @@ function mathHtml(source: string, display: boolean, block: boolean): string {
 
 // `$$...$$` on its own lines and `$...$` inside text, as the editor's math
 // schema reads them. Inline `$` needs a non-space just inside each delimiter
-// and no digit after the closing one, so "$5 and $10" stays text.
+// and no digit after the closing one, so "$5 and $10" stays text. GitHub's
+// $`...`$ holds anything but a backtick; any other "$`" is a dollar before
+// code.
 function mathExtensions(
   render: (source: string, display: boolean, block: boolean) => string,
 ): TokenizerAndRendererExtension[] {
@@ -63,7 +75,7 @@ function mathExtensions(
           text: display[1],
           display: true,
         };
-      const match = /^\$(?!\s)([^$\n]+?)(?<!\s)\$(?!\d)/.exec(src);
+      const match = BACKTICK_AT_START.exec(src) ?? DOLLAR_AT_START.exec(src);
       if (match)
         return {
           type: "mathInline",
@@ -97,9 +109,36 @@ const wikilink: TokenizerAndRendererExtension = {
 // flanking rules would leave the stars showing.
 const cjkFriendly = markedCjkFriendly();
 
+// `~text~` as the editor reads it (editor-core-syntax): with one tilde not
+// a strikethrough, a subscript after a letter or digit in subscript mode and
+// otherwise the tildes as written; `~~text~~` always strikes out.
+const singleTilde: MarkedExtension = {
+  extensions: [
+    {
+      name: "singleTilde",
+      level: "inline",
+      start: (src) => {
+        const at = src.indexOf("~");
+        return at < 0 ? undefined : at;
+      },
+      // Ahead of marked's own: one tilde never reaches its strikethrough.
+      tokenizer(src, tokens) {
+        const mode = loadSettings().singleTilde;
+        if (mode === "strikethrough" || !/^~(?!~)/.test(src)) return undefined;
+        const match = /^~([A-Za-z0-9+-]+)~(?!~)/.exec(src);
+        const before = tokens.at(-1)?.raw.slice(-1) ?? "";
+        if (mode === "subscript" && match && /^[\p{L}\p{N}]$/u.test(before))
+          return { type: "singleTilde", raw: match[0], text: match[1] };
+        return { type: "text", raw: "~", text: "~" };
+      },
+      renderer: (token) => `<sub>${escapeHtml(String(token.text))}</sub>`,
+    },
+  ],
+};
+
 // Its own instance, not the global `marked`: for chat replies, where a bare
 // newline breaks the line.
-const chatMarked = new Marked(cjkFriendly, {
+const chatMarked = new Marked(cjkFriendly, singleTilde, {
   gfm: true,
   breaks: true,
   extensions: [...mathExtensions(mathHtml), wikilink],
@@ -210,7 +249,7 @@ const footnotes: TokenizerAndRendererExtension[] = [
 ];
 
 // The inline flavour: the chat's, plus footnote references raised.
-const inlineMarked = new Marked(cjkFriendly, {
+const inlineMarked = new Marked(cjkFriendly, singleTilde, {
   gfm: true,
   breaks: true,
   extensions: [
@@ -226,7 +265,7 @@ const MATH_SLOT_TAG = "textus-math";
 
 // The document flavour, for the split view: a single newline is not a line
 // break.
-const documentMarked = new Marked(cjkFriendly, {
+const documentMarked = new Marked(cjkFriendly, singleTilde, {
   gfm: true,
   breaks: false,
   extensions: [

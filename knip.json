@@ -15,5 +15,5 @@
     "duplicates": "off"
   },
   "ignoreDependencies": ["jscpd", "spdx-license-list"],
-  "ignoreBinaries": ["img2webp"]
+  "ignoreBinaries": ["img2webp", "pandoc"]
 }

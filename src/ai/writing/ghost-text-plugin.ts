@@ -30,6 +30,11 @@ import {
 } from "./ghost-state";
 import { markChangeSource } from "../../editor/change-source";
 import { isReadOnly } from "../../editor/read-only-plugin";
+import { codeBlockPlugin } from "../../plugins/contributions/code-blocks";
+
+/** A plugin draws its blocks in this language (a base, a plot): their
+ *  source isn't text the writer reads, so a completion isn't asked with it. */
+const drawnByPlugin = (language: string) => codeBlockPlugin(language) !== null;
 
 // A pause, not a breath between words: shorter, a request goes out at nearly
 // every word, for suggestions typed past before they come.
@@ -87,7 +92,11 @@ export async function triggerGhostTextNow(
 
   const cursorPos = selection.from;
   const doc = view.state.doc;
-  const { before, after, prose } = completionContext(doc, cursorPos);
+  const { before, after, prose } = completionContext(
+    doc,
+    cursorPos,
+    drawnByPlugin,
+  );
   // An explicit ask gets a few sentences and three alternatives (Alt+[ / ]).
   const hints: CompletionHints = {
     ...completionHints(doc, cursorPos, "long"),
@@ -366,6 +375,7 @@ export function createGhostTextPlugin(options: {
               const { before, after, prose } = completionContext(
                 doc,
                 cursorPos,
+                drawnByPlugin,
               );
               // An empty paragraph's subject is the writer's alone; "Continue
               // writing" still asks.

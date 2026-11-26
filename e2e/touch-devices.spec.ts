@@ -5,9 +5,10 @@ import {
   pasteMarkdown,
   PHONE,
   restedOn,
+  settled,
   TABLET,
 } from "./helpers";
-import { openPath } from "./plugin-helpers";
+import { hasPlugin, openPath } from "./plugin-helpers";
 
 // The everyday flows on a touch screen: a phone (its own layout) and a
 // tablet (the desktop's layout, by touch).
@@ -35,29 +36,29 @@ async function fitsTheScreen(page: Page, within = "body") {
   expect(scroll).toBeLessThanOrEqual(0);
 }
 
-/** A phone's tabs are behind the document's name: its sheet's New Tab.
+/** A phone's tabs are behind the document's name: its menu's New File.
  *  A tablet draws the row, so its + is the one there. */
 async function addTab(page: Page) {
   if (await page.locator(".tab-switcher-button").isVisible()) {
     await page.locator(".tab-switcher-button").tap();
-    await page.locator(".tab-switcher-new").tap();
+    await page.getByRole("menuitem", { name: "新建文件" }).tap();
   } else {
     await page.locator(".tab-bar-add").first().tap();
   }
 }
 
-/** How many tabs are open, read where the device shows the count. */
-async function tabCount(page: Page) {
-  return (await page.locator(".tab-switcher-button").isVisible())
-    ? Number(await page.locator(".tab-switcher-count").innerText())
-    : page.locator(".tab-pill").count();
+/** The open tabs, `n` of them, where the device shows them. */
+async function expectTabs(page: Page, n: number) {
+  if (await page.locator(".tab-switcher-button").isVisible())
+    await expect(page.locator(".tab-switcher-count")).toHaveText(`${n}`);
+  else await expect(page.locator(".tab-pill")).toHaveCount(n);
 }
 
-/** The tab in front, from the sheet a phone opens or the row a tablet has. */
+/** The first tab, from the menu a phone opens or the row a tablet has. */
 async function firstTab(page: Page) {
   if (await page.locator(".tab-switcher-button").isVisible()) {
     await page.locator(".tab-switcher-button").tap();
-    await page.locator(".tab-switcher-pick").first().tap();
+    await page.getByRole("menuitemradio").first().tap();
   } else {
     await page.locator(".tab-pill").first().tap();
   }
@@ -93,6 +94,72 @@ for (const device of DEVICES)
       expect(await naming()).toEqual([]);
     });
 
+    test("its plugins store lists nothing that needs Textus AI, nor a README's tools for it", async ({
+      page,
+    }) => {
+      test.skip(!hasPlugin("catvinci.abc"), "No textus-plugins checkout");
+      // As the official manifests say it from their next release.
+      await page.addInitScript(() =>
+        Object.assign(window, {
+          __devCatalogManifests: {
+            "catvinci.keenable": { needsTextusAi: true },
+            "catvinci.openverse": { needsTextusAi: true },
+          },
+        }),
+      );
+      await openApp(page, { settings: { language: "en" } });
+      // Settings' store on the phone, the sidebar's on the tablet.
+      const phone = device.device === PHONE;
+      const store = phone
+        ? page.getByRole("tabpanel", { name: "Plugins" })
+        : page.getByRole("complementary", { name: "Sidebar" });
+      if (phone) {
+        await page.getByRole("button", { name: "Menu", exact: true }).tap();
+        await page.getByRole("menuitem", { name: /Settings/ }).tap();
+        await page.getByRole("button", { name: "Extensions" }).tap();
+        // Plugins is an iPhone's one Extensions tab: no row of tabs.
+        await expect(page.getByRole("tab", { name: "Plugins" })).toHaveCount(0);
+        await store.getByRole("button", { name: "Search" }).first().tap();
+      } else {
+        await page
+          .getByRole("navigation", { name: "Activity bar" })
+          .getByRole("button", { name: "Plugins" })
+          .tap();
+      }
+      const search = store.getByRole("searchbox");
+      const card = (id: string) =>
+        store.locator(
+          phone ? `[data-catalog="${id}"]` : `[data-plugin="${id}"]`,
+        );
+      // The catalog read: a plugin that does without is there.
+      await search.fill("Sheet Music");
+      await expect(card("catvinci.abc")).toBeVisible();
+      for (const [name, id] of [
+        ["Keenable", "catvinci.keenable"],
+        ["Openverse", "catvinci.openverse"],
+      ]) {
+        await search.fill(name);
+        await expect(card(id)).toHaveCount(0);
+      }
+      await search.fill("Sheet Music");
+      await card("catvinci.abc")
+        .locator(phone ? ".plugin-card-open" : ".plugins-panel-open")
+        .tap();
+      const readme = page.locator(".plugin-readme");
+      await expect(readme).toContainText("ABC notation");
+      await expect(readme).not.toContainText("Tools for Textus AI");
+    });
+
+    test("draws the document at the text size saved in Settings", async ({
+      page,
+    }) => {
+      await openApp(page, { settings: { docTextSize: 28 } });
+      await expect(page.locator(".milkdown:visible")).toHaveCSS(
+        "font-size",
+        "28px",
+      );
+    });
+
     test("writing, a second tab and back, the sidebar and settings", async ({
       page,
     }) => {
@@ -104,7 +171,7 @@ for (const device of DEVICES)
       await expect(editor).toContainText("A first line");
 
       await addTab(page);
-      expect(await tabCount(page)).toBe(2);
+      await expectTabs(page, 2);
       // With no keyboard up a phone's new document waits for a tap.
       await page.locator(".ProseMirror:visible").tap();
       await page.keyboard.type("Second");
@@ -118,20 +185,24 @@ for (const device of DEVICES)
       // come in pushing the island aside.
       const toggle = page.locator(".window-bar-sidebar-toggle:visible");
       if (await toggle.count()) await toggle.tap();
-      const settings = page.locator(".activity-rail-settings");
-      await expect(settings).toBeVisible();
+      await expect(page.locator(".activity-rail")).toBeVisible();
       await fitsTheScreen(page, ".activity-rail");
-      await settings.tap();
-      // A phone's Settings is a sheet over the window; a tablet's a tab, as
-      // on the desktop.
+      // A phone's Settings is ☰'s, a sheet over the window; a tablet's the
+      // rail's gear and a tab, as on the desktop.
       if (device.name === "a phone") {
+        await page.locator(".window-menu-button").tap();
+        await page.getByRole("menuitem", { name: /设置/ }).tap();
         const dialog = page.getByRole("dialog", { name: "设置" });
         await expect(
           dialog.getByRole("button", { name: "外观" }),
         ).toBeVisible();
         await fitsTheScreen(page, '[role="dialog"]');
       } else {
+        await page.locator(".activity-rail-settings").tap();
         await expect(page.locator(".settings-tab-page")).toBeVisible();
+        // Its sidebar opens with it: the sheet takes the room left in the
+        // frame it is drawn, not the moment the tab is mounted.
+        await settled(page);
         await fitsTheScreen(page, ".settings-tab-page");
       }
     });
@@ -463,28 +534,97 @@ test.describe("a phone on its side", () => {
 test.describe("a phone's tabs", () => {
   test.use(PHONE);
 
-  test("sit behind the document's name: every tab, the one in front ticked, one closed", async ({
+  test("sit behind the document's name: every tab, the one in front ticked, its menu below", async ({
     page,
   }) => {
     await openApp(page);
     for (let i = 0; i < 3; i++) await addTab(page);
-    await expect(page.locator(".tab-switcher-button")).toContainText("4");
+    await expectTabs(page, 4);
+    const tabs = page.getByRole("menuitemradio");
     await page.locator(".tab-switcher-button").tap();
-    await expect(page.locator(".tab-switcher-row")).toHaveCount(4);
-    // Only the document in front is ticked.
-    await expect(page.locator('[role="menuitem"][aria-current]')).toHaveCount(
+    await expect(tabs).toHaveCount(4);
+    // The last one added is in front, alone ticked.
+    await expect(tabs.last()).toHaveAttribute("aria-checked", "true");
+    await expect(tabs.and(page.locator('[aria-checked="true"]'))).toHaveCount(
       1,
     );
-    // The first tab, from the sheet: the same count, the tick moved.
-    await page.locator(".tab-switcher-pick").first().tap();
-    await expect(page.locator(".tab-switcher-button")).toContainText("4");
+    // The first, picked: the tick moves to it.
+    await tabs.first().tap();
     await page.locator(".tab-switcher-button").tap();
-    await expect(page.locator('[role="menuitem"][aria-current]')).toHaveCount(
-      1,
+    await expect(tabs.first()).toHaveAttribute("aria-checked", "true");
+    // Pinned, it comes first and stays; Close Tab waits for its unpinning.
+    await tabs.last().tap();
+    await page.locator(".tab-switcher-button").tap();
+    await page.getByRole("menuitem", { name: "固定标签" }).tap();
+    await page.locator(".tab-switcher-button").tap();
+    await expect(tabs.first()).toHaveAttribute("aria-checked", "true");
+    await expect(
+      page.getByRole("menuitem", { name: "关闭标签页", exact: true }),
+    ).toBeDisabled();
+    await page.getByRole("menuitem", { name: "取消固定" }).tap();
+    // Closed from its menu: one fewer.
+    await page.locator(".tab-switcher-button").tap();
+    await page.getByRole("menuitem", { name: "关闭标签页", exact: true }).tap();
+    await expectTabs(page, 3);
+  });
+});
+
+test.describe("a phone's sidebar pushed back", () => {
+  test.use(PHONE);
+
+  test("keeps the document's name in sight as the page slides back", async ({
+    page,
+  }) => {
+    await openApp(page, { animations: true });
+    const toggle = page.locator(".window-bar-sidebar-toggle");
+    await toggle.tap();
+    await expect(page.locator(".app-shell")).toHaveAttribute(
+      "data-sidebar",
+      "open",
     );
-    // The last tab, closed from its x: one fewer, still one in front.
-    await page.locator(".tab-switcher-close").last().tap();
-    await expect(page.locator(".tab-switcher-button")).toContainText("3");
+    const sliding = () =>
+      page.evaluate(
+        () =>
+          document
+            .getAnimations()
+            .filter((motion) => motion instanceof CSSTransition).length,
+      );
+    await expect.poll(sliding).toBe(0);
+    await toggle.tap({ force: true });
+    // Held halfway: the page still moved, as WebKit can leave it. Nothing
+    // drawn over the document's name hides it.
+    const over = await page.evaluate(() => {
+      for (const motion of document.getAnimations()) {
+        if (!(motion instanceof CSSTransition)) continue;
+        motion.pause();
+        motion.currentTime =
+          Number(motion.effect?.getComputedTiming().duration) / 2;
+      }
+      const tab = document.querySelector(".tab-switcher-button")!;
+      const box = tab.getBoundingClientRect();
+      const stack = document.elementsFromPoint(
+        box.left + box.width / 2,
+        box.top + box.height / 2,
+      );
+      return (
+        stack
+          .slice(
+            0,
+            stack.findIndex((el) => tab.contains(el)),
+          )
+          // Its own parts and what holds it are drawn under it.
+          .filter((el) => !tab.contains(el) && !el.contains(tab))
+          .filter((el) => {
+            const look = getComputedStyle(el);
+            return (
+              look.backgroundImage !== "none" ||
+              !/rgba\(.*, 0\)|transparent/.test(look.backgroundColor)
+            );
+          })
+          .map((el) => el.className)
+      );
+    });
+    expect(over).toEqual([]);
   });
 });
 

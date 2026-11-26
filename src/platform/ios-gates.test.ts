@@ -11,8 +11,6 @@ import { describe, expect, it } from "vitest";
  */
 const ALLOWED: Record<string, string> = {
   "ai/chat/chat-history.ts": "paths relative to the app's Documents folder",
-  "app/frame/WindowControls.tsx": "the title row's menu button",
-  "app/frame/sidebar-tabs.tsx": "the drawer closes over a document it opened",
   "app/useOpenFolder.ts":
     "a reinstall moves Documents, and the AI's folder with it",
   "ai/chat/panel/agent-panel.tsx": "a docked panel drawn at its width",
@@ -28,7 +26,8 @@ const ALLOWED: Record<string, string> = {
   "platform/ipc-ai-workspace.ts": "the project folder is picked in Files",
   "platform/mobile-viewport.ts":
     "the safe area from WebKit's env(), Android's from its bridge",
-  "theme/apply-appearance.ts":
+  "theme/apply-appearance.ts": "its keyboard takes the window's dark or light",
+  "theme/imported-theme.ts":
     "its WebKit draws CJK as boxes under generic system fonts",
   "engine/controls/elastic-overscroll.ts": "the system's own overscroll",
 };

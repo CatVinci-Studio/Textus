@@ -224,44 +224,36 @@ impl Docx<'_> {
 
     fn table(&mut self, x: &mut Pull) -> String {
         let mut rows = Vec::new();
-        let mut depth = 0usize;
-        loop {
-            match x.next() {
-                Node::Open(tag) => match tag.name.as_str() {
-                    "tr" => rows.push(self.row(x)),
-                    "tblPr" | "tblGrid" => x.skip(),
-                    _ => depth += 1,
-                },
-                Node::Close if depth == 0 => break,
-                Node::Close => depth -= 1,
-                Node::Text(_) => {}
-                Node::End => break,
+        x.walk(|x, tag| match tag.name.as_str() {
+            "tr" => {
+                rows.push(self.row(x));
+                true
             }
-        }
+            "tblPr" | "tblGrid" => {
+                x.skip();
+                true
+            }
+            _ => false,
+        });
         markdown::table(&rows)
     }
 
     fn row(&mut self, x: &mut Pull) -> Vec<String> {
         let mut cells = Vec::new();
-        let mut depth = 0usize;
-        loop {
-            match x.next() {
-                Node::Open(tag) => match tag.name.as_str() {
-                    "tc" => {
-                        let (text, span) = self.cell(x);
-                        cells.push(text);
-                        // A merged cell keeps the columns after it in place.
-                        cells.extend(std::iter::repeat_n(String::new(), span - 1));
-                    }
-                    "trPr" | "tblPrEx" => x.skip(),
-                    _ => depth += 1,
-                },
-                Node::Close if depth == 0 => break,
-                Node::Close => depth -= 1,
-                Node::Text(_) => {}
-                Node::End => break,
+        x.walk(|x, tag| match tag.name.as_str() {
+            "tc" => {
+                let (text, span) = self.cell(x);
+                cells.push(text);
+                // A merged cell keeps the columns after it in place.
+                cells.extend(std::iter::repeat_n(String::new(), span - 1));
+                true
             }
-        }
+            "trPr" | "tblPrEx" => {
+                x.skip();
+                true
+            }
+            _ => false,
+        });
         cells
     }
 

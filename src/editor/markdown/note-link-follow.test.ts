@@ -25,8 +25,8 @@ beforeEach(() => {
     opened.push({ path, ...request });
   });
   fs.fileMtimeMs.mockResolvedValue(1);
-  fs.createDocument.mockResolvedValue("ok");
-  fs.createFolder.mockResolvedValue("ok");
+  fs.createDocument.mockResolvedValue({ path: "ok", made: "ok" });
+  fs.createFolder.mockResolvedValue({ path: "ok", made: "ok" });
 });
 afterEach(() => {
   stopOpening();

@@ -9,6 +9,7 @@ import { parseImageTag, splitAltSize } from "../editor/images/image-html";
 import { splitImageTitle } from "../editor/images/image-rotation";
 import { parseEmbed } from "../editor/images/obsidian-embed";
 import { shownWikilink } from "../editor/markdown/wikilink-reveal";
+import { linkDestination } from "../editor/markdown/link-syntax";
 import {
   calloutHeading,
   readCalloutLine,
@@ -16,6 +17,13 @@ import {
 } from "../editor/markdown/callout-syntax";
 import { OBJECT, findInlineSyntax } from "../editor/markdown/inline-syntax";
 import type { NoteLinkOut } from "./note-links";
+import { SUBSCRIPT_TEXT } from "../editor/marks/script-syntax";
+import type { SingleTildeMode } from "../prefs/settings-values";
+import {
+  BACKTICK_MATH,
+  DOLLAR_MATH,
+  UNESCAPED,
+} from "../editor/math/inline-math-rule";
 
 const IMG_TAG = /<img\b(?:[^<>"']|"[^"]*"|'[^']*')*>/gi;
 const IMAGE = /!\[([^\]]*)\]\((\S+?)(?:\s+"([^"]*)")?\)/g;
@@ -23,9 +31,19 @@ const QUOTE = /^(?:[ \t]*>)+[ \t]?/;
 // A block a comment can't run on into: a list item, heading or table row.
 const BLOCK_START = /^\s*(?:[-+*]\s|\d{1,9}[.)]\s|#{1,6}\s|\|)/;
 
-// Code and math, never rewritten.
-const CODE_MATH =
-  /(`+)[\s\S]*?(?<!`)\1(?!`)|(?<!\\)\$\$[^$\n]+?\$\$|(?<!\\)\$(?!\s)[^$\n]+?(?<!\s)\$(?!\d)/g;
+// Code and math, never rewritten but for GitHub's $`x`$, which Pandoc
+// reads as $x$, and a dollar before code, which Pandoc could open math at.
+const CODE_MATH = new RegExp(
+  [
+    "(`+)[\\s\\S]*?(?<!`)\\1(?!`)",
+    UNESCAPED + BACKTICK_MATH,
+    UNESCAPED + String.raw`\$\$[^$\n]+?\$\$`,
+    UNESCAPED + DOLLAR_MATH,
+    UNESCAPED + "\\$(?=`)",
+  ].join("|"),
+  "g",
+);
+const BACKTICK_MATH_SPAN = new RegExp(`^${BACKTICK_MATH}$`);
 // Wikilinks and embeds (rewritten whole), a link's destination and URLs.
 const LINKS = new RegExp(
   `!?${WIKILINK_SOURCE}|${String.raw`\]\([^)\s]*|<[a-z][a-z0-9+.-]*:[^>\s]*>|\bhttps?:\/\/[^\s<>)]+`}`,
@@ -33,23 +51,27 @@ const LINKS = new RegExp(
 );
 
 // One pass over the words, so nothing a rewrite writes is read again.
-// Groups: 1 citation, 2 highlight, 3 superscript, 4 tilde span.
+// Groups: 1 citation, 2 highlight, 3 superscript (as script-syntax reads
+// one), 4 tilde span, 5 an emoji name after its opening colon.
 const INLINE =
-  /(\[(?:[^[\]\n]*?[\s;])?-?@[\p{L}\p{N}_][^[\]\n]*\](?![([:]))|==(?=\S)(.+?)(?<=\S)==|(?<![\^[\\])\^(?![[^])([^\s^]+)\^|(?<![~\\])~([^~\s](?:[^~\n]*[^~\s])?)~(?!~)/gu;
+  /(\[(?:[^[\]\n]*?[\s;])?-?@[\p{L}\p{N}_][^[\]\n]*\](?![([:]))|==(?=\S)(.+?)(?<=\S)==|(?<![\^[\\])\^(?![[^])((?:[+-]?[A-Za-z0-9]+[+-]?|[+-]+)(?=\^)|[^\s^]+(?=\^(?![A-Za-z0-9])))\^|(?<![~\\])~([^~\s](?:[^~\n]*[^~\s])?)~(?!~)|(?<!\\):(?=([a-z0-9_+-]+):)/gu;
+
+const WORD = /[\p{L}\p{N}]/u;
 
 /** `text` with `outside` applied between the matches of `spans`, and
- *  `inside` (by default, nothing) to each match. */
+ *  `inside` (by default, nothing) to each match and the character after. */
 function between(
   text: string,
   spans: RegExp,
   outside: (text: string) => string,
-  inside: (span: string) => string = (span) => span,
+  inside: (span: string, next: string) => string = (span) => span,
 ): string {
   let out = "";
   let at = 0;
   for (const m of text.matchAll(spans)) {
-    out += outside(text.slice(at, m.index)) + inside(m[0]);
-    at = m.index + m[0].length;
+    const end = m.index + m[0].length;
+    out += outside(text.slice(at, m.index)) + inside(m[0], text[end] ?? "");
+    at = end;
   }
   return out + outside(text.slice(at));
 }
@@ -63,6 +85,8 @@ interface PandocRewrite {
   noteLinks?: ReadonlyMap<string, NoteLinkOut | null>;
   /** A bibliography is set: `[@key]` goes to Pandoc's citeproc. */
   citations?: boolean;
+  /** What `~text~` reads as in the editor; subscript by default. */
+  singleTilde?: SingleTildeMode;
 }
 
 /** Every ASCII punctuation mark escaped: the text reads as written. */
@@ -76,7 +100,7 @@ function imageTag(tag: string): string {
   const image = parseImageTag(tag);
   if (!image) return tag;
   const alt = image.alt.replace(/([[\]\\])/g, "\\$1");
-  const src = /[\s()<>]/.test(image.src) ? `<${image.src}>` : image.src;
+  const src = linkDestination(image.src);
   const title = image.title
     ? ` "${image.title.replace(/(["\\])/g, "\\$1")}"`
     : "";
@@ -117,30 +141,62 @@ function noteLink(source: string, options: PandocRewrite): string {
 function rewriteText(text: string, options: PandocRewrite): string {
   return text.replace(
     INLINE,
-    (whole, cite, mark, sup, tilde, offset: number) => {
+    (whole, cite, mark, sup, tilde, emoji, offset: number) => {
+      // Pandoc reads any :name: as an emoji; the editor only one not glued
+      // to a letter or digit (emoji-shortcode-plugin).
+      if (emoji !== undefined) {
+        const end = offset + emoji.length + 2;
+        return WORD.test(text[offset - 1] ?? "") || WORD.test(text[end] ?? "")
+          ? "\\:"
+          : whole;
+      }
       if (cite) return options.citations ? `\`${cite}\`{=textuscite}` : whole;
       if (mark) return `[${rewriteText(mark, options)}]{.mark}`;
       if (sup) return `[${bracketsEscaped(sup)}]{.textus-sup}`;
-      // The editor's rule: one tilde after a letter or digit, around text
-      // with no space, is a subscript; anywhere else it strikes through.
+      // As the editor reads it (editor-core-syntax): a subscript after a
+      // letter or digit, then a strikethrough or the tildes as written,
+      // which pandoc, reading `~x~` as a subscript, gets escaped.
+      const mode = options.singleTilde ?? "subscript";
+      const afterWord = WORD.test(text[offset - 1] ?? "");
       const subscript =
-        /[\p{L}\p{N}]/u.test(text[offset - 1] ?? "") && !/\s/.test(tilde);
-      return subscript
-        ? `[${bracketsEscaped(tilde)}]{.textus-sub}`
-        : `~~${tilde}~~`;
+        mode === "strikethrough"
+          ? afterWord && !/\s/.test(tilde)
+          : mode === "subscript" && afterWord && SUBSCRIPT_TEXT.test(tilde);
+      if (subscript) return `[${bracketsEscaped(tilde)}]{.textus-sub}`;
+      return mode === "strikethrough" ? `~~${tilde}~~` : `\\~${tilde}\\~`;
     },
   );
 }
 
+/** A math span as Pandoc reads it: GitHub's $`x`$ as $x$ (no space just
+ *  inside, a dollar in it escaped, an empty raw span before a digit so it
+ *  still closes); a dollar before code, which opens nothing, escaped. */
+function dollarMath(span: string, next: string): string {
+  if (span === "$") return "\\$";
+  const found = BACKTICK_MATH_SPAN.exec(span);
+  if (!found) return span;
+  const formula = found[1].trim();
+  // A blank formula draws nothing; one ending in a lone backslash can't
+  // close in Pandoc's form, so it reads as written.
+  if (!formula) return "";
+  if (/(?:^|[^\\])(?:\\\\)*\\$/.test(formula)) return literal(span);
+  const digit = /\d/.test(next) ? "` `{=textus}" : "";
+  return `$${formula.replace(/(?<!\\)\$/g, "\\$")}$${digit}`;
+}
+
 /** Rewrites prose: what code, math and URLs hold is left as written. */
 function rewriteProse(line: string, options: PandocRewrite): string {
-  return between(line, CODE_MATH, (prose) =>
-    between(
-      prose.replace(IMG_TAG, imageTag).replace(IMAGE, sizedImage),
-      LINKS,
-      (words) => rewriteText(words, options),
-      (span) => (span.endsWith("]]") ? noteLink(span, options) : span),
-    ),
+  return between(
+    line,
+    CODE_MATH,
+    (prose) =>
+      between(
+        prose.replace(IMG_TAG, imageTag).replace(IMAGE, sizedImage),
+        LINKS,
+        (words) => rewriteText(words, options),
+        (span) => (span.endsWith("]]") ? noteLink(span, options) : span),
+      ),
+    dollarMath,
   );
 }
 

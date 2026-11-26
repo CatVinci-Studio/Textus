@@ -1,3 +1,4 @@
+import { useIncomingTab } from "../../engine/controls/tabs/incoming-tab";
 import type { FormatBarSide } from "../../prefs/settings-values";
 import { isWindowPanel } from "./panel-pane";
 import { Island } from "../../engine/layout/Island";
@@ -8,13 +9,14 @@ import { plural } from "../../i18n/plural";
 import { DocumentCorners } from "./DocumentCorner";
 import { DocumentViews } from "./DocumentViews";
 import type { Lang } from "../../i18n/langs";
-import { type ComponentProps, type CSSProperties } from "react";
+import { useEffect, type ComponentProps, type CSSProperties } from "react";
 import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import {
   canDragTabsBetweenWindows,
   canUseWindows,
 } from "../../platform/capabilities";
 import {
+  isConversationTab,
   showsStartPage,
   tabIsDirty,
   tabTitle,
@@ -26,26 +28,29 @@ import type { Strings } from "../../i18n/strings";
 import type { TourAi } from "../../utils/events";
 import type { AgentMode } from "../../prefs/SettingsContext";
 import { TabBar } from "../../engine/controls/tabs/TabBar";
-import { tabMenuItems } from "../tabs/tab-menu-items";
+import { documentTabMenu } from "../tabs/tab-menu-items";
 import { FormatBar } from "../FormatBar";
 import { useIslands } from "../../engine/layout/useIslands";
 import { panesOf, type Pane } from "../../engine/layout/tree";
-import { focusPane, reorderInPane } from "../../engine/layout/store";
+import {
+  focusPane,
+  reorderInPane,
+  setTabOrder,
+  windowLayout,
+  windowTabs,
+} from "../../engine/layout/store";
+import {
+  pinnedFirst,
+  placeAmongPinned,
+  tabPinned,
+} from "../../document/pinned";
 import { useTabsInBar } from "./tabs-in-bar";
+import { TabRowsShown } from "./tab-rows";
 import { pullTab } from "./tab-pull";
 import { addFromTabRow, newConversation } from "./ai-tabs";
 import { useDocumentsApart } from "./useDocumentsApart";
-import type { ContextMenuItem } from "../../engine/controls/ContextMenu";
-import { contributedContextItems } from "../../registry/context-menu-items";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
-
-function pluginTabItems(
-  path: string | null,
-): (ContextMenuItem | "separator")[] {
-  const added = contributedContextItems("tab/context", { path });
-  return added.length ? ["separator", ...added] : [];
-}
 
 /** Panes named in reading order, for tests and styles to find. */
 const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth"];
@@ -63,6 +68,7 @@ export function DocumentIslands({
   onDetach,
   onMoveToNewWindow,
   onToggleReadOnly,
+  onPin,
   onKeep,
   previewTab,
   onChange,
@@ -84,6 +90,8 @@ export function DocumentIslands({
   onDetach: (tabId: string) => void;
   onMoveToNewWindow: (tabId: string) => void;
   onToggleReadOnly: (tabId: string) => void;
+  /** A tab pinned or unpinned in its row. */
+  onPin: (tabId: string, pinned: boolean) => void;
   /** A preview tab kept. */
   onKeep: (tabId: string) => void;
   previewTab: TabBarProps["previewTab"];
@@ -108,6 +116,8 @@ export function DocumentIslands({
   // Zen shows the tab in use alone; the split waits until Zen ends.
   const layout = useIslands(zen);
   const phone = usePhoneLayout();
+  // A file dragged in to open as a tab: its room in that island's row.
+  const incoming = useIncomingTab();
   const panes = panesOf(layout.root);
   // Each pane shows its tab in front; its place in reading order names it.
   const shownIn = new Map(
@@ -125,12 +135,31 @@ export function DocumentIslands({
   // its row, the sheet reaches up into the bar's.
   const cells = new Map<string, CSSProperties | undefined>();
   const body = (id: string) => cells.get(id);
-  const { pathItem, readOnlyItem, closeManyItems } = tabMenuItems({
+  // Each row with its pinned tabs first, whatever put them elsewhere (a
+  // pin, a tab come from another island).
+  const order = panes
+    .map(
+      (p) =>
+        `${p.id}:${p.tabs.map((id) => (tabPinned(byId.get(id)) ? "!" : "") + id).join(",")}`,
+    )
+    .join("|");
+  useEffect(() => {
+    for (const p of panesOf(windowLayout().root)) {
+      const pinned = (id: string) => {
+        const tab = windowTabs<DocTab>().find((x) => x.id === id);
+        return !!tab && tabPinned(tab);
+      };
+      const sorted = pinnedFirst(p.tabs, pinned);
+      if (sorted.some((id, i) => id !== p.tabs[i])) setTabOrder(p.id, sorted);
+    }
+  }, [order]);
+  const menuFor = documentTabMenu({
     tabs,
     activeTabId,
     onActivate,
     onClose,
     onToggleReadOnly,
+    onPin,
     t,
   });
   // A document opened from a panel's island goes apart from its pages.
@@ -155,6 +184,7 @@ export function DocumentIslands({
         preview: tab.preview,
         path: tab.path,
         readOnly: tabReadOnly(tab),
+        pinned: tabPinned(tab),
         marked: !!tab.path && (changed.has(tab.path) || !!marks[tab.path]),
         waiting: (tab.path && marks[tab.path]?.pending) || undefined,
       }))}
@@ -180,24 +210,36 @@ export function DocumentIslands({
               : undefined,
         })
       }
-      onReorder={(id, index) => reorderInPane(pane, id, index)}
-      previewTab={pane === panes[0]?.id ? previewTab : null}
+      // The pinned stay first: a drag lands on its own side of them.
+      onReorder={(id, index) => {
+        const tab = byId.get(id);
+        const pinned = list.filter(tabPinned).length;
+        reorderInPane(
+          pane,
+          id,
+          placeAmongPinned(index, !!tab && tabPinned(tab), pinned),
+        );
+      }}
+      previewTab={
+        incoming?.pane === pane
+          ? { title: incoming.title, dirty: false, x: incoming.x }
+          : pane === panes[0]?.id
+            ? previewTab
+            : null
+      }
       // Open beside and Move to New Window are drags (pullTab).
-      menuFor={(id) => [
-        ...pathItem(id, byId.get(id)?.path),
-        ...readOnlyItem(id),
-        "separator",
-        { label: t.menuCloseTab, onSelect: () => onClose(id) },
-        ...closeManyItems(list, id),
-        ...pluginTabItems(byId.get(id)?.path ?? null),
-      ]}
+      menuFor={(id) => menuFor(id, list)}
       labels={{
         tabs: t.menuDocuments,
         close: t.menuCloseTab,
-        add: t.menuNewTab,
+        // Over a conversation the + starts another (addFromTabRow).
+        add: isConversationTab(byId.get(active))
+          ? t.chatNewConversation
+          : t.menuNewFile,
         unsaved: t.unsavedIndicator,
         all: t.menuAllTabs,
         readOnly: t.readOnlyLock,
+        pinned: t.tabPinned,
         waiting: (n) => plural(t.aiPendingCount, n, lang),
       }}
     />
@@ -252,25 +294,27 @@ export function DocumentIslands({
             t={t}
           />
         }
-        <DocumentViews
-          tabs={tabs}
-          activeTabId={activeTabId}
-          shownIn={shownIn}
-          styleOf={body}
-          onActivate={onActivate}
-          onChange={onChange}
-          typewriter={typewriter}
-          tour={tour}
-          // On every island's document in front; a phone's always, at its
-          // foot, over the keyboard while typing (format-bar.css).
-          above={(tab) =>
-            (formatBar || phone) &&
-            formatsShown(tab) && (
-              <FormatBar t={t} tabId={tab.id} side={formatBar ?? "top"} />
-            )
-          }
-          t={t}
-        />
+        <TabRowsShown.Provider value={tabsInBar}>
+          <DocumentViews
+            tabs={tabs}
+            activeTabId={activeTabId}
+            shownIn={shownIn}
+            styleOf={body}
+            onActivate={onActivate}
+            onChange={onChange}
+            typewriter={typewriter}
+            tour={tour}
+            // On every island's document in front; a phone's always, at its
+            // foot, over the keyboard while typing (format-bar.css).
+            above={(tab) =>
+              (formatBar || phone) &&
+              formatsShown(tab) && (
+                <FormatBar t={t} tabId={tab.id} side={formatBar ?? "top"} />
+              )
+            }
+            t={t}
+          />
+        </TabRowsShown.Provider>
       </>
     );
   };

@@ -68,3 +68,15 @@ fn pinned_models_are_current_per_models_dev() {
         }
     }
 }
+
+/// Each of the user's endpoints is reached through the one "custom" entry,
+/// which carries no address of its own: the endpoint's id finds it.
+#[test]
+fn every_custom_endpoint_id_finds_the_custom_entry() {
+    for id in ["custom", "custom:3f2a91bc"] {
+        let entry = find(id).expect(id);
+        assert_eq!(entry.id, "custom");
+        assert!(entry.base_url.is_none());
+    }
+    assert!(find("customer").is_none());
+}

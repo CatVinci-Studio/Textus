@@ -1,0 +1,143 @@
+/* Create's theme workshop: Settings rows on the left, the page they make
+   on the right; under each other where there is no room for both. */
+/* One scroller, the tab's own, as a Settings page: its bar at the tab's
+   edge, showing while it moves (tx-scroll-reveal). The sample page stays in
+   view beside the rows. */
+.create-tab:has(> .theme-workshop-studio) {
+  container: workshop / inline-size;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.create-tab > .theme-workshop-studio {
+  flex: none;
+  max-width: 1280px;
+}
+.theme-workshop {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+.theme-workshop-controls {
+  flex: 0 1 380px;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.theme-workshop-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+.theme-workshop-slider {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.theme-workshop-value {
+  min-width: 4.5em;
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.theme-workshop-made {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  color: var(--ui-muted);
+  font-size: var(--text-secondary);
+}
+.theme-workshop-preview {
+  position: sticky;
+  top: 0;
+  flex: 1 1 420px;
+  min-width: 300px;
+  height: max(360px, calc(100vh - 180px));
+  overflow: hidden;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-m);
+}
+.theme-workshop-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  border: 0;
+  transform-origin: 0 0;
+}
+/* Where the sample is drawn once, out of sight, to be copied. */
+.theme-workshop-draw {
+  position: fixed;
+  top: 0;
+  left: -10000px;
+  width: 760px;
+  visibility: hidden;
+  pointer-events: none;
+}
+/* Palettes as swatches: the theme's own as a word, then a circle each -
+   the page with its text and accent, code with three of its colours. */
+.workshop-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-1);
+}
+.workshop-swatch {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-pill);
+  background:
+    linear-gradient(var(--swatch-mark), var(--swatch-mark)) 50% 70% / 40% 16%
+      no-repeat,
+    linear-gradient(var(--swatch-ink), var(--swatch-ink)) 50% 40% / 56% 16%
+      no-repeat,
+    var(--swatch-bg);
+  cursor: pointer;
+}
+.workshop-swatch[style*="--swatch-third"] {
+  background:
+    linear-gradient(var(--swatch-third), var(--swatch-third)) 50% 78% / 40% 14%
+      no-repeat,
+    linear-gradient(var(--swatch-mark), var(--swatch-mark)) 50% 52% / 56% 14%
+      no-repeat,
+    linear-gradient(var(--swatch-ink), var(--swatch-ink)) 50% 26% / 48% 14%
+      no-repeat,
+    var(--swatch-bg);
+}
+.workshop-swatch.is-follow {
+  width: auto;
+  height: var(--control-height-sm);
+  padding: 0 var(--space-2);
+  background: none;
+  color: var(--ui-text);
+  font: inherit;
+  font-size: var(--text-footnote);
+}
+.workshop-swatch[aria-checked="true"] {
+  border: 2px solid var(--ui-accent);
+}
+
+/* Too narrow for both side by side: one column - the rows, the buttons,
+   then the sample page. */
+@container workshop (max-width: 820px) {
+  .theme-workshop {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .theme-workshop-controls {
+    flex: none;
+    min-width: 0;
+  }
+  .theme-workshop-preview {
+    position: relative;
+    flex: none;
+    min-width: 0;
+    height: 520px;
+  }
+}

@@ -19,6 +19,9 @@ pub(super) const QUIET: &[&str] = &[
     "diff.external=",
     "-c",
     "core.pager=cat",
+    // `ext::` remotes run a command; none of what Textus fetches needs one.
+    "-c",
+    "protocol.ext.allow=never",
 ];
 
 /// The start of the error a call gives in a repository not trusted yet;
@@ -63,6 +66,11 @@ fn runs_a_program(section: &str, key: &str, value: &str) -> bool {
         ("merge", "driver") => true,
         ("gpg", "program") => true,
         ("credential", "helper") => true,
+        // Fetch and push start these on a local remote, through a shell.
+        ("remote", "uploadpack" | "receivepack") => true,
+        // `protocol.ext.allow` (or `protocol.allow`) lets an `ext::` remote
+        // run its command.
+        ("protocol", "allow") => true,
         ("sequence", "editor") => true,
         ("include" | "includeif", "path") => true,
         ("alias" | "pager", _) => true,

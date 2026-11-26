@@ -15,6 +15,7 @@ import {
   NO_RECENTS,
   nativeMenuChecks,
   type MenuChecks,
+  type MenuEntry,
   type MenuNode,
 } from "./app-menu-model";
 import {
@@ -72,7 +73,7 @@ describe("the Windows app menu", () => {
   });
 
   it("has other editors' keys: Ctrl+N a new tab, Ctrl+Shift+N a window, Ctrl+W, Ctrl+Shift+T", () => {
-    expect(accelOf(t.menuNewTab)).toBe("mod+n");
+    expect(accelOf(t.menuNewFile)).toBe("mod+n");
     expect(accelOf(t.menuNewWindow)).toBe("mod+shift+n");
     expect(accelOf(t.menuCloseTab)).toBe("mod+w");
     expect(accelOf(t.menuReopenClosedTab)).toBe("mod+shift+t");
@@ -119,11 +120,18 @@ describe("the View menu's on/off items", () => {
       for (const item of items) expect(item.label).not.toMatch(TOGGLE_WORDS);
       const phone = flatten(buildMobileMenu(strings));
       for (const item of phone) expect(item.label).not.toMatch(TOGGLE_WORDS);
-      expect(
-        phone.find((item) => item.label === strings.menuToggleSidebar)?.checked,
-      ).toBe(false);
     },
   );
+
+  it("leave the document's own actions to its ⋯ on a phone, and the sidebar and Textus AI to the bar's buttons", () => {
+    const phone = flatten(buildMobileMenu(t)).map((item) => item.label);
+    expect(phone).toContain(t.menuSave);
+    expect(phone).not.toContain(t.menuShare);
+    expect(phone).not.toContain(t.menuFindReplace);
+    expect(phone).not.toContain(t.menuToggleSidebar);
+    expect(phone).not.toContain(t.menuTextusAi);
+    expect(buildMobileMenu(t).filter((n) => n === "separator")).toHaveLength(1);
+  });
 
   it("show what is on", () => {
     const view = buildAppMenu(t, shortcuts, NO_RECENTS, {
@@ -139,7 +147,7 @@ describe("the View menu's on/off items", () => {
     expect(checked).toEqual([
       t.menuToggleSidebar,
       t.menuFormatBarHidden,
-      t.menuViewModeDefault,
+      t.viewModeRich,
       t.menuToggleZenMode,
       t.menuFullscreen,
     ]);
@@ -181,22 +189,29 @@ describe("the View menu's on/off items", () => {
     ]);
   });
 
-  it("keep Textus AI out of View, the AI panel out of reach while it is off, and the switch in the phone's menu", () => {
+  it("keep Textus AI's switch out of View, name its panel Textus AI, and keep it out of reach while off", () => {
     const items = (checks: { textusAi?: boolean }) =>
       flatten(buildAppMenu(t, shortcuts, NO_RECENTS, checks));
     const panel = (checks: { textusAi?: boolean }) =>
-      items(checks).find((item) => item.label === t.menuToggleAgentPanel);
+      items(checks).find(
+        (item) =>
+          item.action !== undefined &&
+          "native" in item.action &&
+          item.action.native === "toggle-agent-panel",
+      );
     // The window bar's button and Settings carry the switch on a desktop.
-    expect(items({}).find((item) => item.label === t.menuTextusAi)).toBe(
-      undefined,
-    );
+    expect(
+      items({}).some(
+        (item) =>
+          item.action !== undefined &&
+          "native" in item.action &&
+          item.action.native === "toggle-textus-ai",
+      ),
+    ).toBe(false);
+    expect(panel({})?.label).toBe("Textus AI");
     expect(nativeMenuChecks({})).not.toHaveProperty("toggle-textus-ai");
     expect(panel({})?.disabled).toBe(false);
     expect(panel({ textusAi: false })?.disabled).toBe(true);
-    const phone = flatten(buildMobileMenu(t, { textusAi: false }));
-    expect(phone.find((item) => item.label === t.menuTextusAi)?.checked).toBe(
-      false,
-    );
   });
 
   it("on a phone opens another folder, as the desktop's File menu does", () => {
@@ -206,38 +221,23 @@ describe("the View menu's on/off items", () => {
     ).toEqual({ native: "open-folder" });
   });
 
-  it("head the phone's menu with the word count when the title row has no room for it", () => {
-    const t = resolveStrings("en");
-    const [first] = buildMobileMenu(t, { words: 49 });
-    expect(first).toEqual({ label: "49 words", disabled: true });
-    expect(buildMobileMenu(t)[0]).toMatchObject({ label: t.menuNewFile });
-  });
-
-  it("grey Save, Share and Find on the phone while a page (AI, Settings) is in front", () => {
+  it("grey Save on the phone while a page (AI, Settings) is in front", () => {
     const t = resolveStrings("en");
     const off = (checks: MenuChecks) =>
       flatten(buildMobileMenu(t, checks, [{ label: "P", command: "p" }]))
         .filter((item) => item.disabled)
         .map((item) => item.label);
-    expect(off({ noDocument: true })).toEqual([
-      t.menuSave,
-      t.menuShare,
-      t.menuFindReplace,
-    ]);
+    expect(off({ noDocument: true })).toEqual([t.menuSave]);
     expect(off({})).toEqual([]);
   });
 
-  it("give the phone its plugins' commands, and Textus AI only where it is offered", () => {
+  it("give the phone its plugins' commands", () => {
     const plugins = [{ label: "New Quick Note…", command: "notes.new" }];
     const phone = flatten(buildMobileMenu(t, {}, plugins));
     expect(
       phone.find((item) => item.label === "New Quick Note…")?.action,
     ).toEqual({ native: "plugin-command:notes.new" });
     expect(phone.map((item) => item.label)).toContain(t.menuManagePlugins);
-    expect(phone.map((item) => item.label)).toContain(t.menuTextusAi);
-    const china = flatten(buildMobileMenu(t, {}, plugins, false));
-    expect(china.map((item) => item.label)).not.toContain(t.menuTextusAi);
-    expect(china.map((item) => item.label)).toContain(t.menuManagePlugins);
   });
 
   it("send the macOS bar every native on/off item by id", () => {
@@ -412,6 +412,40 @@ describe("the menu ids", () => {
   });
 });
 
+describe("one name for one thing", () => {
+  const item = (native: string) =>
+    flatten(buildAppMenu(t, shortcuts, NO_RECENTS)).find(
+      (e) =>
+        e.action !== undefined &&
+        "native" in e.action &&
+        e.action.native === native,
+    );
+
+  it("calls New File, Find and the view's names as everywhere else", () => {
+    expect(item("new-file")?.label).toBe(t.menuNewFile);
+    expect(item("find-replace")?.label).toBe("Find…");
+    expect(item("view-mode-default")?.label).toBe(t.viewModeRich);
+    const view = buildAppMenu(t, shortcuts, NO_RECENTS).find(
+      (n) => n !== "separator" && n.label === t.menuView,
+    ) as MenuEntry;
+    expect(view.submenu?.map((n) => n !== "separator" && n.label)).toContain(
+      t.viewModeLabel,
+    );
+  });
+
+  it("puts Bold, Italic and Clear Formatting in Format, as the editor's menu has them", () => {
+    expect(item("toggle-mark:bold")).toMatchObject({
+      label: t.toolbarBold,
+      accel: "mod+b",
+    });
+    expect(item("toggle-mark:italic")).toMatchObject({
+      label: t.toolbarItalic,
+      accel: "mod+i",
+    });
+    expect(item("toggle-mark:clear")?.label).toBe(t.menuClearFormatting);
+  });
+});
+
 describe("the sponsor link", () => {
   it("is in Help, and left out where the store forbids it (iOS)", async () => {
     expect(entries.map((e) => e.label)).toContain(t.menuHelpSponsor);
@@ -423,6 +457,31 @@ describe("the sponsor link", () => {
     const model = await import("./app-menu-model");
     const ios = flatten(model.buildAppMenu(t, shortcuts, NO_RECENTS));
     expect(ios.map((e) => e.label)).not.toContain(t.menuHelpSponsor);
+    vi.doUnmock("../../platform/capabilities");
+  });
+
+  it("leaves out on an iPad what can't work there: the AI panel and guide, the welcome, a report, Pandoc", async () => {
+    const labels = (nodes: MenuNode[]) => flatten(nodes).map((e) => e.label);
+    const gone = [
+      t.menuTextusAi,
+      t.menuHelpAgent,
+      t.menuHelpWelcome,
+      t.menuHelpReport,
+      t.menuExportDocx,
+    ];
+    const desktop = labels(buildAppMenu(t, shortcuts, NO_RECENTS));
+    for (const label of gone) expect(desktop).toContain(label);
+    vi.resetModules();
+    vi.doMock("../../platform/capabilities", async (importOriginal) => ({
+      ...(await importOriginal<object>()),
+      hasTextusAi: false,
+      isDesktopApp: false,
+      canExportWithPandoc: false,
+    }));
+    const model = await import("./app-menu-model");
+    const ipad = labels(model.buildAppMenu(t, shortcuts, NO_RECENTS));
+    for (const label of gone) expect(ipad).not.toContain(label);
+    expect(ipad).toContain(t.menuExportHtml);
     vi.doUnmock("../../platform/capabilities");
   });
 

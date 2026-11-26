@@ -129,33 +129,32 @@ pub(crate) fn write_new_file_sync(
     bytes: &[u8],
     reuse: bool,
 ) -> std::io::Result<String> {
-    for n in 0..10_000 {
-        let candidate = numbered_name(name, n);
-        let path = dir.join(&candidate);
-        match std::fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&path)
-        {
-            Ok(claimed) => {
-                drop(claimed);
-                // Through a temp file: a crash mid-write must not leave a
-                // truncated image that the document already links to.
-                if let Err(e) = crate::atomic::write_sync(&path, bytes) {
-                    let _ = std::fs::remove_file(&path);
-                    return Err(e);
-                }
-                return Ok(candidate);
-            }
-            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {
-                if reuse && std::fs::read(&path).is_ok_and(|held| held == bytes) {
-                    return Ok(candidate);
-                }
-            }
-            Err(e) => return Err(e),
+    let mut claimed = false;
+    let name = super::dropped::into_free_name(
+        dir,
+        (0..10_000).map(|n| numbered_name(name, n)),
+        |path| {
+            drop(
+                std::fs::OpenOptions::new()
+                    .write(true)
+                    .create_new(true)
+                    .open(path)?,
+            );
+            claimed = true;
+            Ok(())
+        },
+        |path| reuse && std::fs::read(path).is_ok_and(|held| held == bytes),
+    )?;
+    if claimed {
+        // Through a temp file: a crash mid-write must not leave a truncated
+        // image that the document already links to.
+        let path = dir.join(&name);
+        if let Err(e) = crate::atomic::write_sync(&path, bytes) {
+            let _ = std::fs::remove_file(&path);
+            return Err(e);
         }
     }
-    Err(std::io::Error::other(format!("no free name for {name}")))
+    Ok(name)
 }
 
 #[derive(Serialize)]

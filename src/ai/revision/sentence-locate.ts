@@ -2,6 +2,30 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { textWithPositions } from "../../editor/text-positions";
 import { wholeBlockKind } from "./markdown-forms";
 import { trimBreaks, type SentenceHunk } from "./sentence-diff";
+import { linkHref, parseLink } from "../../editor/markdown/link-syntax";
+
+/** `[url](url)`: a bare URL right against text is written so (link-source's
+ *  asWritten), while the editor holds the URL alone as the link's text. */
+const SELF_LINK = /\[([^[\]\s]+)\]\(([^()\s]+)\)/g;
+
+/** Where `needle`, a piece's text as parsed, stands in `text` from `from`:
+ *  as it is, or with each self-link as the bare URL the document shows. */
+function indexOfShown(
+  text: string,
+  needle: string,
+  from = 0,
+): { index: number; length: number } | null {
+  const index = text.indexOf(needle, from);
+  if (index !== -1) return { index, length: needle.length };
+  const bare = needle.replace(SELF_LINK, (link, label: string, dest: string) =>
+    parseLink(label)?.kind === "bare" && linkHref(label) === dest
+      ? label
+      : link,
+  );
+  if (bare === needle) return null;
+  const at = text.indexOf(bare, from);
+  return at === -1 ? null : { index: at, length: bare.length };
+}
 
 /** Where each of `needles` stands in [from, to), in order; one not found is
  *  skipped. */
@@ -15,13 +39,14 @@ export function findInOrder(
   const out: { from: number; to: number }[] = [];
   let cursor = 0;
   for (const needle of needles) {
-    const index = needle ? text.indexOf(needle, cursor) : -1;
-    if (index === -1) continue;
+    const found = needle ? indexOfShown(text, needle, cursor) : null;
+    if (!found) continue;
+    const { index, length } = found;
     out.push({
       from: positions[index],
-      to: positions[index + needle.length - 1] + 1,
+      to: positions[index + length - 1] + 1,
     });
-    cursor = index + needle.length;
+    cursor = index + length;
   }
   return out;
 }
@@ -58,9 +83,9 @@ export function locateHunks(
   let pos = from;
   if (lead.trim()) {
     const plain = plainPiece(lead);
-    const index = plain ? text.indexOf(plain) : -1;
-    if (!plain || index === -1 || text.slice(0, index).trim()) return null;
-    cursor = index + plain.length;
+    const found = plain ? indexOfShown(text, plain) : null;
+    if (!found || text.slice(0, found.index).trim()) return null;
+    cursor = found.index + found.length;
     pos = at(cursor - 1) + 1;
   }
   // An unchanged piece that can't be matched, or has no text, is whatever
@@ -102,7 +127,8 @@ export function locateHunks(
       continue;
     }
     const plain = plainPiece(markdown);
-    const index = plain ? text.indexOf(plain, cursor) : -1;
+    const shown = plain ? indexOfShown(text, plain, cursor) : null;
+    const index = shown ? shown.index : -1;
     // Found with only whitespace skipped, or text between would belong to no
     // piece, unless an unchanged one before it is still to be placed.
     const adjacent = index !== -1 && !text.slice(cursor, index).trim();
@@ -111,14 +137,15 @@ export function locateHunks(
       out.push({ from: pos, to: pos });
       continue;
     }
-    if (index === -1 || (!adjacent && unplaced < 0)) return null;
+    if (!shown || (!adjacent && unplaced < 0)) return null;
     place(positions[index]);
+    const { length } = shown;
     const found = {
       from: positions[index],
-      to: positions[index + plain.length - 1] + 1,
+      to: positions[index + length - 1] + 1,
     };
     out.push(found);
-    cursor = index + plain.length;
+    cursor = index + length;
     pos = found.to;
   }
   place(to);

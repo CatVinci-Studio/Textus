@@ -2,7 +2,7 @@ import { isError } from "../utils/error-text";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
-import { fileIconFor } from "../engine/controls/file-icons";
+import { FileIcon } from "../engine/controls/file-icons";
 import { basename } from "../utils/path";
 import { FileSearch } from "./FileSearch";
 import "./FileTree.css";
@@ -157,38 +157,35 @@ function TextMatches({
       aria-busy={state.kind === "ready" && state.stale ? true : undefined}
     >
       <h3 className="tx-list-heading">{t.searchTextHeading}</h3>
-      {groups.map((hits) => {
-        const Icon = fileIconFor(hits[0].path);
-        return (
-          <div key={hits[0].path} className="search-text-file">
+      {groups.map((hits) => (
+        <div key={hits[0].path} className="search-text-file">
+          <button
+            type="button"
+            className="tree-row search-text-name"
+            title={hits[0].rel}
+            onClick={() => onOpen(hits[0].path)}
+          >
+            <FileIcon name={hits[0].path} className="tree-icon" />
+            <span className="tx-truncate tree-label">
+              {basename(hits[0].path)}
+            </span>
+            <span className="tx-badge found-count">{hits.length}</span>
+          </button>
+          {hits.map((hit) => (
             <button
+              key={hit.line}
               type="button"
-              className="tree-row search-text-name"
-              title={hits[0].rel}
-              onClick={() => onOpen(hits[0].path)}
+              className="tree-row search-text-line"
+              // Search counts lines from 1, a place from 0.
+              onClick={() => onOpen(hit.path, hit.line - 1)}
             >
-              <Icon className="tree-icon" />
-              <span className="tx-truncate tree-label">
-                {basename(hits[0].path)}
+              <span className="tx-truncate search-text-snippet">
+                {marked(hit.text, needle)}
               </span>
-              <span className="tx-badge found-count">{hits.length}</span>
             </button>
-            {hits.map((hit) => (
-              <button
-                key={hit.line}
-                type="button"
-                className="tree-row search-text-line"
-                // Search counts lines from 1, a place from 0.
-                onClick={() => onOpen(hit.path, hit.line - 1)}
-              >
-                <span className="tx-truncate search-text-snippet">
-                  {marked(hit.text, needle)}
-                </span>
-              </button>
-            ))}
-          </div>
-        );
-      })}
+          ))}
+        </div>
+      ))}
       {note && <div className="tx-list-note">{note}</div>}
       {state.kind === "ready" && state.truncated && (
         <div className="tx-list-note">{t.searchTextCapped}</div>

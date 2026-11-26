@@ -14,7 +14,7 @@
 }
 
 /* Room in the margin for ⋮⋮ and a fold caret left of it. */
-:root:not([data-block-handles="off"]) .editor-content {
+.editor-content {
   --doc-gutter: calc(var(--block-handle-width) * 2 + var(--block-handle-gap));
 }
 
@@ -64,10 +64,6 @@
    (heading-fold-marks.ts), the grip's room kept beside it. */
 .heading-fold-room {
   visibility: hidden;
-}
-
-:root[data-block-handles="off"] .heading-fold-room {
-  display: none;
 }
 
 .heading-fold-mark {

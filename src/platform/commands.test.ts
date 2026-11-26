@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 /** The function names in a Rust list of command paths. */
@@ -31,7 +31,14 @@ describe("the backend's commands", () => {
   it("each have a handler for every binding the frontend is given", () => {
     const rust = (file: string) =>
       readFileSync(`src-tauri/src/${file}`, "utf8");
-    const bound = names(lists(rust("bindings.rs"), "collect_commands"));
+    // bindings.rs and the per-file lists in bindings/.
+    const bindings = [
+      "bindings.rs",
+      ...readdirSync("src-tauri/src/bindings").map((f) => `bindings/${f}`),
+    ];
+    const bound = names(
+      bindings.map((f) => lists(rust(f), "collect_commands")).join("\n"),
+    );
     const handled = names(
       lists(rust("invoke_handler.rs"), "with_plugin_commands") +
         lists(rust("plugins/mod.rs"), "generate_handler"),

@@ -1,7 +1,7 @@
 import { tabElement } from "../engine/layout/tab-element";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { parseHeadings, sourceAnchors } from "./outline-parse";
-import { HEADINGS, currentHeading } from "./outline-current";
+import { HEADINGS, currentHeading, goToHeading } from "./outline-current";
 import { ChevronIcon } from "../engine/controls/icons";
 import { useSettings } from "../prefs/SettingsContext";
 import { useTreeKeys } from "../engine/controls/useTreeKeys";
@@ -9,14 +9,13 @@ import { plainInline } from "../utils/markdown-plain";
 import { Tooltip } from "../engine/controls/Tooltip";
 import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
-import { noteJump } from "../editor/nav-history";
-import { setTabJump } from "../editor/tab-jump";
 import { escapeLabel } from "../editor/markdown/link-label";
 import { PluginOutlineRows, usePluginOutline } from "./OutlineExtras";
 import "./FileTree.css";
 
 interface OutlineProps {
-  content: string;
+  /** Null when the tab in front holds no document. */
+  content: string | null;
   /** The tab whose document it lists, which scrolls to a row's heading. */
   tabId: string;
 }
@@ -29,13 +28,10 @@ function headingAnchor(tabId: string, texts: string[], index: number): string {
   return id || sourceAnchors(texts)[index];
 }
 
-export function Outline({ content, tabId }: OutlineProps) {
+export function Outline({ content: shown, tabId }: OutlineProps) {
+  const content = shown ?? "";
   const { t } = useSettings();
-  // The editor scrolls there as every jump does (revealPosition).
-  const goTo = (index: number) => {
-    noteJump();
-    setTabJump(tabId, { kind: "outline", index }, true);
-  };
+  const goTo = (index: number) => goToHeading(tabId, index);
   const headings = useMemo(() => {
     // Collapse is keyed by level + text + repeat, not index, so a new heading
     // above doesn't move it.
@@ -72,10 +68,7 @@ export function Outline({ content, tabId }: OutlineProps) {
       },
       {
         label: t.outlineSelectSection,
-        onSelect: () => {
-          noteJump();
-          setTabJump(tabId, { kind: "outline", index, select: true }, true);
-        },
+        onSelect: () => goToHeading(tabId, index, true),
       },
       "separator" as const,
     ];
@@ -106,9 +99,12 @@ export function Outline({ content, tabId }: OutlineProps) {
     return rows;
   }, [headings, collapsed]);
 
-  if (headings.length === 0 && extras.length === 0) {
-    return <p className="tx-list-note">{t.outlineEmpty}</p>;
-  }
+  if (headings.length === 0 && extras.length === 0)
+    return (
+      <p className="tx-pane-empty">
+        {shown === null ? t.outlineNoDocument : t.outlineNoHeadings}
+      </p>
+    );
 
   const toggle = (id: string) =>
     setCollapsed((prev) => {

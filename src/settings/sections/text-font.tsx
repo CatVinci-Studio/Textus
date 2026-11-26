@@ -1,8 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { fontChoices } from "./font-choices";
-import type { FontFamily } from "../../platform/bindings/app";
+import { useFontChoices } from "./font-choices";
 import type { Strings } from "../../i18n/strings";
-import { systemIpc } from "../../platform/ipc";
 import {
   DOC_LETTER_SPACINGS,
   DOC_LINE_SPACINGS,
@@ -17,21 +14,11 @@ import { letterSpacingBy } from "../../prefs/settings-normalise";
 import { Select } from "../../engine/controls/Select";
 import { SettingRow } from "./controls";
 import { ChevronIcon } from "../../engine/controls/icons";
+import { NumberField } from "../../engine/controls/NumberField";
+import { fill } from "../../i18n/fill";
 
 /** The reader's own size, spacing and font for the document, over the
  *  theme's: folded under one row that says whether any is set. */
-
-let families: Promise<FontFamily[]> | null = null;
-/** Read once per session: the list is a few hundred names and rarely
- *  changes while Textus runs. */
-function fontFamilies(): Promise<FontFamily[]> {
-  // Without the native side (the browser build) there is no list.
-  families ??= systemIpc
-    .fontFamilies()
-    .then((list) => (Array.isArray(list) ? list : []))
-    .catch(() => []);
-  return families;
-}
 
 const LINE_SPACING_LABELS: Record<DocLineSpacing, keyof Strings> = {
   auto: "docLineSpacingAuto",
@@ -111,18 +98,7 @@ export function DocTextFold({ t, settings, setSettings }: Props) {
 }
 
 function FontRow({ t, settings, setSettings }: Props) {
-  const [fonts, setFonts] = useState<FontFamily[]>([]);
-  useEffect(() => {
-    let live = true;
-    void fontFamilies().then((list) => live && setFonts(list));
-    return () => {
-      live = false;
-    };
-  }, []);
-  const { recommended, more } = useMemo(
-    () => fontChoices(fonts, settings.language),
-    [fonts, settings.language],
-  );
+  const { recommended, more } = useFontChoices(settings.language);
   // A font chosen on another machine still shows as the choice.
   const chosenElsewhere =
     settings.docFont &&
@@ -160,16 +136,6 @@ function FontRow({ t, settings, setSettings }: Props) {
 
 /** Word-style character spacing: expanded or condensed by a number of pt. */
 function LetterSpacingRow({ t, settings, setSettings }: Props) {
-  const [by, setBy] = useState(String(settings.docLetterSpacingBy));
-  useEffect(
-    () => setBy(String(settings.docLetterSpacingBy)),
-    [settings.docLetterSpacingBy],
-  );
-  const commitBy = () => {
-    const value = letterSpacingBy(by);
-    setBy(String(value));
-    setSettings({ docLetterSpacingBy: value });
-  };
   const adjustable =
     settings.docLetterSpacing === "expanded" ||
     settings.docLetterSpacing === "condensed";
@@ -193,28 +159,25 @@ function LetterSpacingRow({ t, settings, setSettings }: Props) {
           ))}
         </Select>
         {adjustable && (
-          <label className="settings-letter-spacing-by">
-            <input
-              className="tx-input settings-text-input"
-              inputMode="decimal"
-              aria-label={t.docLetterSpacingBy}
-              value={by}
-              onChange={(e) => setBy(e.target.value)}
-              onBlur={commitBy}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") commitBy();
-                const step =
-                  e.key === "ArrowUp" ? 1 : e.key === "ArrowDown" ? -1 : 0;
-                if (!step) return;
-                e.preventDefault();
-                const value = letterSpacingBy(
-                  settings.docLetterSpacingBy + step * LETTER_SPACING_BY.step,
-                );
-                setSettings({ docLetterSpacingBy: value });
-              }}
-            />
-            pt
-          </label>
+          <NumberField
+            label={t.docLetterSpacingBy}
+            decreaseLabel={fill(t.numberDecrease, {
+              label: t.docLetterSpacingLabel,
+            })}
+            increaseLabel={fill(t.numberIncrease, {
+              label: t.docLetterSpacingLabel,
+            })}
+            value={settings.docLetterSpacingBy}
+            placeholder={settings.docLetterSpacingBy}
+            min={LETTER_SPACING_BY.min}
+            max={LETTER_SPACING_BY.max}
+            step={LETTER_SPACING_BY.step}
+            unit="pt"
+            onChange={(by) =>
+              by !== null &&
+              setSettings({ docLetterSpacingBy: letterSpacingBy(by) })
+            }
+          />
         )}
       </div>
     </SettingRow>

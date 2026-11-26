@@ -28,17 +28,41 @@ export interface DropTarget {
   whole?: boolean;
 }
 
-/** How near an island's side (a share of its width) a tab must be to open
- *  a new island beside it; its top or bottom (of its height) to stack one
- *  in that island's column alone - wider than the window's outer band
- *  under it, which stacks one under all of them. Inside that, it joins
- *  the island. */
-const EDGE: Record<DropZone, number> = {
-  left: 0.2,
-  right: 0.2,
-  top: 0.15,
-  bottom: 0.15,
-  center: 0,
+/** What is dragged: a tab, a whole island (Alt), or a file from the
+ *  sidebar or a file manager. */
+export type DragKind = "tab" | "island" | "file";
+
+type Side = Exclude<DropZone, "center">;
+/** Whose bands a drag goes by: a whole island's are a tab's. */
+type Bands = "tab" | "file";
+
+/** How near a side puts a drop there: a share of the length across that
+ *  way, kept between two lengths (interface px). */
+interface Band {
+  share: number;
+  min?: number;
+  max?: number;
+}
+
+/** By what is dragged, how near an island's side opens a new island beside
+ *  it; its top or bottom stacks one in that island's column alone - wider
+ *  than the window's outer band under it, which stacks one under all of
+ *  them. Inside that, it joins the island. A file mostly goes into the
+ *  document or opens in it, so its bands are narrow, and above or below
+ *  is no place for one. */
+const EDGE: Record<Bands, Record<Side, Band | null>> = {
+  tab: {
+    left: { share: 0.2 },
+    right: { share: 0.2 },
+    top: { share: 0.15 },
+    bottom: { share: 0.15 },
+  },
+  file: {
+    left: { share: 0.08, min: 40, max: 80 },
+    right: { share: 0.08, min: 40, max: 80 },
+    top: null,
+    bottom: null,
+  },
 };
 /** The place already aimed at holds a little past its line, so a pointer
  *  resting on it doesn't flicker between two. */
@@ -47,33 +71,70 @@ const HOLD = 1.25;
  *  bottom (a share of the height) stacks it there; else the half it is
  *  over puts it on that side. */
 const STACK_EDGE = 0.12;
-/** How near the documents' outer edge puts a drop beside all of them: a
- *  share of that side, kept between two lengths (interface px). */
-const OUTER_SHARE = 0.04;
-const OUTER_MIN = 26;
-const OUTER_MAX = 52;
+/** How near the documents' outer edge puts a drop beside all of them; a
+ *  file only to their left or right, as on one island. */
+const OUTER_BAND: Band = { share: 0.04, min: 26, max: 52 };
+const OUTER: Record<Bands, Record<Side, Band | null>> = {
+  tab: {
+    left: OUTER_BAND,
+    right: OUTER_BAND,
+    top: OUTER_BAND,
+    bottom: OUTER_BAND,
+  },
+  file: { left: OUTER_BAND, right: OUTER_BAND, top: null, bottom: null },
+};
+
+/** `band` across `length`, in viewport px. */
+function bandPx(band: Band, length: number): number {
+  const min = band.min === undefined ? 0 : scaledPx(band.min);
+  const max = band.max === undefined ? Infinity : scaledPx(band.max);
+  return Math.min(max, Math.max(min, length * band.share));
+}
+
+/** How far (x, y) is from each side of `rect`, in viewport px. */
+function distances(rect: DOMRect, x: number, y: number): Record<Side, number> {
+  return {
+    top: y - rect.top,
+    bottom: rect.bottom - y,
+    left: x - rect.left,
+    right: rect.right - x,
+  };
+}
+
+const across = (side: Side, rect: DOMRect) =>
+  side === "left" || side === "right" ? rect.width : rect.height;
+
+/** The side of `rect` nearest (x, y) by `bands` (null: never that side),
+ *  each widened by `hold`, and how near: its distance over its band, 1 at
+ *  the band's line. */
+function nearestSide(
+  rect: DOMRect,
+  x: number,
+  y: number,
+  bands: Record<Side, Band | null>,
+  hold: (side: Side) => number = () => 1,
+): [Side, number] | null {
+  const away = distances(rect, x, y);
+  let best: [Side, number] | null = null;
+  for (const side of ["top", "bottom", "left", "right"] as const) {
+    const band = bands[side];
+    if (!band) continue;
+    const px = bandPx(band, across(side, rect)) * hold(side);
+    const near = away[side] / px;
+    if (!best || near < best[1]) best = [side, near];
+  }
+  return best;
+}
 
 /** The split's outer edge under (x, y), if it is near one. */
 function outerEdge(
   area: DOMRect,
   x: number,
   y: number,
-): "left" | "right" | "top" | "bottom" | null {
-  const band = (length: number) =>
-    Math.min(
-      scaledPx(OUTER_MAX),
-      Math.max(scaledPx(OUTER_MIN), length * OUTER_SHARE),
-    );
-  const across = band(area.width);
-  const down = band(area.height);
-  const sides = [
-    ["top", (y - area.top) / down],
-    ["bottom", (area.bottom - y) / down],
-    ["left", (x - area.left) / across],
-    ["right", (area.right - x) / across],
-  ] as const;
-  const [side, near] = sides.reduce((a, b) => (b[1] < a[1] ? b : a));
-  return near < 1 ? side : null;
+  bands: Bands,
+): Side | null {
+  const nearest = nearestSide(area, x, y, OUTER[bands]);
+  return nearest && nearest[1] < 1 ? nearest[0] : null;
 }
 
 function union(rects: DOMRect[]): DOMRect {
@@ -145,13 +206,14 @@ export function tabRectOf(pane: string | null, id: string): DOMRect | null {
   return new DOMRect(x, island.row.y, slot.w, island.row.h);
 }
 
-/** The zone of the document under (x, y); null off the documents. `held`,
- *  the one aimed at until now, keeps its zone a little past its line. */
+/** The zone of the document under (x, y) for what is dragged (`drag`);
+ *  null off the documents. `held`, the one aimed at until now, keeps its
+ *  zone a little past its line. */
 export function dropTargetAt(
   x: number,
   y: number,
   geometry: DropGeometry = dropGeometry(),
-  halves = false,
+  drag: DragKind = "tab",
   held?: DropTarget | null,
 ): DropTarget | null {
   const { panes } = geometry;
@@ -160,30 +222,25 @@ export function dropTargetAt(
   // A phone shows one island: whatever is dropped joins it.
   if (isPhoneLayout())
     return { zone: "center", tabId: pane.tabId, rect: pane.rect };
+  const bands: Bands = drag === "file" ? "file" : "tab";
   // Split, an outer edge puts it beside all of them.
   if (panes.length > 1) {
     const area = union(panes.map((p) => p.rect));
-    const edge = outerEdge(area, x, y);
+    const edge = outerEdge(area, x, y, bands);
     if (edge) return { zone: edge, tabId: pane.tabId, rect: area, whole: true };
   }
   const { rect, tabId } = pane;
   if (!tabId || !inside(rect, x, y)) return null;
-  const fx = (x - rect.left) / rect.width;
-  const fy = (y - rect.top) / rect.height;
-  if (halves) return { zone: halfAt(fx, fy), tabId, rect };
-  const sides: [DropZone, number][] = [
-    ["top", fy],
-    ["bottom", 1 - fy],
-    ["left", fx],
-    ["right", 1 - fx],
-  ];
+  if (drag === "island") {
+    const fx = (x - rect.left) / rect.width;
+    const fy = (y - rect.top) / rect.height;
+    return { zone: halfAt(fx, fy), tabId, rect };
+  }
   const kept = held && !held.whole && held.tabId === tabId ? held.zone : null;
-  const band = (side: DropZone) =>
-    EDGE[side] * (kept === side ? HOLD : kept === "center" ? 1 / HOLD : 1);
-  const [side, near] = sides
-    .map(([side, near]) => [side, near / band(side)] as const)
-    .reduce((a, b) => (b[1] < a[1] ? b : a));
-  const zone: DropZone = near > 1 ? "center" : side;
+  const hold = (side: Side) =>
+    kept === side ? HOLD : kept === "center" ? 1 / HOLD : 1;
+  const nearest = nearestSide(rect, x, y, EDGE[bands], hold);
+  const zone: DropZone = nearest && nearest[1] <= 1 ? nearest[0] : "center";
   return { zone, tabId, rect };
 }
 

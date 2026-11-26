@@ -316,7 +316,14 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
     },
 ];
 
+/// The entry for a provider id; each of the user's endpoints is the
+/// "custom" entry, told apart by its id where it is reached.
 pub fn find(id: &str) -> Option<&'static ProviderCatalogEntry> {
+    let id = if crate::auth::custom_endpoint::is_custom_id(id) {
+        "custom"
+    } else {
+        id
+    };
     PROVIDER_CATALOG.iter().find(|e| e.id == id)
 }
 

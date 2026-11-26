@@ -12,6 +12,7 @@ import {
   useConnectedProviders,
 } from "../provider-connection";
 import { useExternalAgents } from "../../plugins/contributions/agents";
+import { isCustomId, useCustomEndpointsRead } from "../custom-endpoints";
 import {
   useAgentOptions,
   type AgentOptionsMenu,
@@ -149,10 +150,13 @@ export function useAiSignedIn(forAgent?: string): boolean | null {
   const { connected } = useConnectedProviders(catalog, settings.aiProvider);
   const agents = useExternalAgents();
   const who = useWhoAnswers();
+  const endpointsRead = useCustomEndpointsRead();
   const agent = forAgent ?? who.agent;
   if (agents.some((a) => a.key === agent)) return true;
   const active = catalog.find((e) => e.id === settings.aiProvider);
-  if (!active) return null;
+  // A chosen endpoint that isn't saved (any more) isn't set up.
+  if (!active)
+    return endpointsRead && isCustomId(settings.aiProvider) ? false : null;
   const state = connected[active.id];
   if (isReady(active, state)) return true;
   // A check that couldn't answer (null) isn't a no.

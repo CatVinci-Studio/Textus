@@ -1,3 +1,8 @@
+import {
+  SUBSCRIPT_TEXT,
+  SUPERSCRIPT_GLUED_AFTER,
+  SUPERSCRIPT_SIMPLE,
+} from "./script-syntax";
 import type { Node as ProseNode, Schema } from "@milkdown/kit/prose/model";
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
@@ -178,16 +183,56 @@ export function closeTightRun(
   textBefore: string,
   runStart: number,
   to: number,
+  /** A subscript holds only what the parser reads as one (SUBSCRIPT_TEXT). */
+  { strict = false } = {},
 ): boolean {
   if (!pairsIn(view.state.doc.resolve(to).parent, spec)) return false;
   const open = findRunOpen(textBefore, spec.char, 1);
   if (!open || /\s/.test(open.value)) return false;
   if (spec === SUBSCRIPT) {
+    if (strict && !SUBSCRIPT_TEXT.test(open.value)) return false;
     const before = textBefore.slice(0, open.openIdx).slice(-1);
     if (!LETTER_OR_DIGIT.test(before)) return false;
     return closeOpenRun(view, spec, textBefore, runStart, to, { sub: true });
   }
+  const next = literalTextAfter(view.state.doc.resolve(to)).text.charAt(0);
+  if (
+    SUPERSCRIPT_GLUED_AFTER.test(next) &&
+    !SUPERSCRIPT_SIMPLE.test(open.value)
+  )
+    return false;
   return closeOpenRun(view, spec, textBefore, runStart, to);
+}
+
+/** A letter or digit typed right after a superscript that holds more than
+ *  an exponent takes it back to its carets, as a file reads `x^2+y^2`. */
+export function unglueSuperscript(
+  view: EditorView,
+  from: number,
+  text: string,
+): boolean {
+  if (!SUPERSCRIPT_GLUED_AFTER.test(text)) return false;
+  const span = view.state.doc.resolve(from).nodeBefore;
+  const inner = span?.firstChild;
+  if (
+    span?.type.name !== "md_span" ||
+    span.attrs.delim !== "^" ||
+    span.childCount !== 1 ||
+    !inner?.isText ||
+    inner.marks.length ||
+    inner.text!.includes("^") ||
+    SUPERSCRIPT_SIMPLE.test(inner.text!)
+  )
+    return false;
+  const literal = `^${inner.text}^${text}`;
+  const start = from - span.nodeSize;
+  const tr = view.state.tr.replaceWith(
+    start,
+    from,
+    view.state.schema.text(literal),
+  );
+  view.dispatch(caretAt(tr, start + literal.length));
+  return true;
 }
 
 const LETTER_OR_DIGIT = /^[\p{L}\p{N}]$/u;

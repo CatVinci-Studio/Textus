@@ -1,4 +1,7 @@
-import { conversationFor } from "./conversation/conversation-registry";
+import {
+  conversationFor,
+  forgetConversation,
+} from "./conversation/conversation-registry";
 import type { AgentTurn } from "../types";
 import { storeAgent, storedAgent } from "./conversation/conversation-agent";
 
@@ -34,5 +37,7 @@ export function openConversationTab(
 ): boolean {
   if (!opener) return false;
   if (turns) conversationFor(id, null).restore(id, turns);
-  return opener(null, id, docPath);
+  if (opener(null, id, docPath)) return true;
+  if (turns) forgetConversation(id);
+  return false;
 }

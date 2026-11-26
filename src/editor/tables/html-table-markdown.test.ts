@@ -54,6 +54,28 @@ describe("htmlTableToMarkdown", () => {
     expect(result).toEqual({ markdown: "| h |\n| --- |\n| $5 and $6 |" });
   });
 
+  it("writes a picture whose src has a space or a lone parenthesis, or whose alt a lone bracket", async () => {
+    const result = htmlTableToMarkdown(
+      '<table><tr><td><img src="my pic.png" alt="a"> <img src="pic(1.png" alt="b"> <img src="c.png" alt="c ]d"> <img src="x&lt;y&gt;.png" alt="e"></td></tr></table>',
+    );
+    expect(result).toEqual({
+      markdown:
+        "| ![a](<my pic.png>) ![b](<pic(1.png>) ![c \\]d](c.png) ![e](x%3Cy%3E.png) |\n| --- |",
+    });
+    const t = await openView("markdown" in result ? result.markdown : "");
+    const pictures: { src: string; alt: string }[] = [];
+    t.view.state.doc.descendants((node) => {
+      if (node.type.name === "image")
+        pictures.push({ src: node.attrs.src, alt: node.attrs.alt });
+    });
+    expect(pictures).toEqual([
+      { src: "my pic.png", alt: "a" },
+      { src: "pic(1.png", alt: "b" },
+      { src: "c.png", alt: "c ]d" },
+      { src: "x%3Cy%3E.png", alt: "e" },
+    ]);
+  });
+
   it.each([
     ['<table><tr><td colspan="2">a</td></tr></table>', "merged"],
     ['<table><tr><td rowspan="2">a</td></tr></table>', "merged"],

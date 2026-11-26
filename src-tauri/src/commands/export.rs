@@ -102,13 +102,14 @@ pub fn check_pandoc_args(args: Vec<String>) -> Option<String> {
     pandoc_options::owned_arg(&args).map(str::to_string)
 }
 
-/// Pandoc's extension for a single newline: a line break where the
-/// document's folder shows one (its `.textus` conventions), else nothing.
+/// Pandoc's extension for a single newline: a line break where the editor
+/// shows one, else nothing (CommonMark joins the lines).
 #[cfg(desktop)]
-fn breaks_extension(folder: Option<&str>) -> &'static str {
-    match folder {
-        Some(dir) if crate::conventions::soft_breaks_show(Path::new(dir)) => "+hard_line_breaks",
-        _ => "",
+fn breaks_extension(hard_line_breaks: bool) -> &'static str {
+    if hard_line_breaks {
+        "+hard_line_breaks"
+    } else {
+        ""
     }
 }
 
@@ -146,7 +147,7 @@ pub async fn export_via_pandoc(
             return Err(format!("The Pandoc argument {arg} is set by Textus."));
         }
         let mut args = pandoc_args(&format, &title);
-        args[1].push_str(breaks_extension(resource_dir.as_deref()));
+        args[1].push_str(breaks_extension(options.hard_line_breaks));
         let filter = pandoc_options::lua_filter().map_err(|e| e.to_string())?;
         let mut cmd = crate::spawn::quiet_command(&pandoc_path);
         cmd.arg("--lua-filter")
@@ -261,6 +262,7 @@ pub async fn reveal_in_dir(app: tauri::AppHandle, path: String) -> Result<(), St
 
 /// The sheet a PDF is printed on, in points: the paper, and the band left
 /// at its top and bottom (the sides are the page's own padding).
+#[cfg(any(desktop, target_os = "ios"))]
 #[derive(serde::Deserialize, Clone, Copy, Debug)]
 #[cfg_attr(test, derive(specta::Type))]
 pub struct PdfSheet {

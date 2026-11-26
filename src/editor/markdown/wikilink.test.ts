@@ -72,3 +72,55 @@ describe("a wikilink in a file", () => {
     expect(wikilinks(doc)).toEqual([]);
   });
 });
+
+// The two double-bracket syntaxes, `[[...]]` and `![[...]]`, read and saved
+// alike: [what follows "a ", wikilink read?, embed read?, saved as the
+// wikilink, saved as the embed] (null: saved as written).
+const BRACKETS: [string, boolean, boolean, string | null, string | null][] = [
+  ["[[Note b", false, false, "\\[\\[Note b", "!\\[\\[Note b"],
+  ["[[No]te]] b", false, false, "\\[\\[No]te]] b", "!\\[\\[No]te]] b"],
+  ["[[Note|text]] b", true, true, null, null],
+  ["[[Note#Head]] b", true, true, null, null],
+  ["[[No\nte]] b", false, false, "\\[\\[No\nte]] b", "!\\[\\[No\nte]] b"],
+  ["[[]] b", false, false, "\\[\\[]] b", "!\\[\\[]] b"],
+  ["[[x[y]] b", false, false, "\\[\\[x\\[y]] b", "!\\[\\[x\\[y]] b"],
+  ["[[x]](u) b", false, true, null, "![[x]]\\(u) b"],
+  ["[[a_b]] and _c_ b", true, true, null, null],
+];
+
+describe("double brackets, with and without the !", () => {
+  const nodes = (doc: ProseNode) => {
+    const found: string[] = [];
+    doc.descendants((node) => {
+      if (node.type.name === "wikilink" || node.type.name === "obsidian_embed")
+        found.push(`${node.type.name}:${node.textContent}`);
+    });
+    return found;
+  };
+  const sourceOf = (text: string) => /^!?\[\[[^\s]*?\]\]/.exec(text)![0];
+
+  it.each(BRACKETS)("%j", async (text, link, embed, linkSaved, embedSaved) => {
+    for (const [bang, read, saved, type] of [
+      ["", link, linkSaved, "wikilink"],
+      ["!", embed, embedSaved, "obsidian_embed"],
+    ] as const) {
+      const markdown = `a ${bang}${text}\n`;
+      const { doc, saved: out } = await open(markdown);
+      expect(nodes(doc)).toEqual(
+        read ? [`${type}:${sourceOf(bang + text)}`] : [],
+      );
+      expect(out).toBe(saved === null ? markdown : `a ${saved}\n`);
+    }
+  });
+
+  it("reads either right after a word, and neither in inline code", async () => {
+    for (const bang of ["", "!"]) {
+      const word = await open(`a word${bang}[[Note]] b\n`);
+      expect(nodes(word.doc)).toHaveLength(1);
+      expect(word.saved).toBe(`a word${bang}[[Note]] b\n`);
+      const code = await open(`a \`${bang}[[Note]]\` b\n`);
+      expect(nodes(code.doc)).toEqual([]);
+      expect(code.saved).toBe(`a \`${bang}[[Note]]\` b\n`);
+    }
+  });
+});

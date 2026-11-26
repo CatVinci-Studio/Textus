@@ -1,8 +1,16 @@
 import { provideAiFileMarks } from "../ai/revision/file-marks";
 import { useTabsInBar } from "./islands/tabs-in-bar";
-import { showsStartPage, tabTitle } from "../document/doc-tabs";
+import {
+  isConversationTab,
+  showsStartPage,
+  tabTitle,
+} from "../document/doc-tabs";
 import { useWindowAi } from "./islands/useWindowAi";
-import { conversationIn } from "./islands/ai-tabs";
+import {
+  addFromTabRow,
+  conversationIn,
+  newConversation,
+} from "./islands/ai-tabs";
 import { ConventionsCard } from "./ConventionsCard";
 import { CornerStacks } from "../engine/controls/CornerToast";
 import { Suspense } from "react";
@@ -33,6 +41,7 @@ import { useWindowShell } from "./useWindowShell";
 import { useWindowDocuments } from "./useWindowDocuments";
 import { useWindowWiring } from "./useWindowWiring";
 import { Sidebar } from "./frame/Sidebar";
+import { documentTabMenu } from "./tabs/tab-menu-items";
 import { DocumentIslands } from "./islands/DocumentIslands";
 import { ClosePrompt } from "./ClosePrompt";
 import { DraftRestoredToast, WordImportNotice, ZenExit } from "./AppNotices";
@@ -198,12 +207,33 @@ function App() {
                 <TabSwitcher
                   tabs={tabs}
                   activeTabId={activeTabId}
+                  zen={zenMode}
                   onActivate={setActiveTabId}
-                  onClose={requestCloseTab}
-                  // The tab row's +, which a phone does not draw.
-                  onAdd={
-                    settings.addTabShowsStartPage ? addStartTab : addBlankTab
-                  }
+                  // The tab row's +, which a phone does not draw: over a
+                  // conversation, another one.
+                  add={{
+                    label: isConversationTab(activeTab)
+                      ? t.chatNewConversation
+                      : t.menuNewFile,
+                    onSelect: () =>
+                      addFromTabRow(
+                        activeTab,
+                        settings.addTabShowsStartPage
+                          ? addStartTab
+                          : addBlankTab,
+                        newConversation,
+                      ),
+                  }}
+                  menuFor={documentTabMenu({
+                    tabs,
+                    activeTabId,
+                    onActivate: setActiveTabId,
+                    onClose: requestCloseTab,
+                    onToggleReadOnly: toggleReadOnly,
+                    onPin: (id, pinned) =>
+                      shell.tabState.updateTab(id, { pinned }),
+                    t,
+                  })}
                 />
               ) : undefined
             }
@@ -230,6 +260,7 @@ function App() {
             openFolder={openFolder}
             activePath={activeTab.path}
             activeContent={activeTab.content}
+            activeIsDocument={!activeTab.view && !activeTab.start}
             activeTabId={activeTab.id}
             onToggle={toggleSidebar}
             onClose={() => setPanelOpen(false)}
@@ -259,6 +290,7 @@ function App() {
             onDetach={handleTabDetach}
             onMoveToNewWindow={moveTabToNewWindow}
             onToggleReadOnly={toggleReadOnly}
+            onPin={(id, pinned) => shell.tabState.updateTab(id, { pinned })}
             onKeep={(id) => shell.tabState.updateTab(id, { preview: false })}
             previewTab={dragHoverPreview}
             onChange={handleChange}

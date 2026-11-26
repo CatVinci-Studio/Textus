@@ -87,6 +87,8 @@ describe("saved markdown stays as written", () => {
     ["a single-tilde subscript", "H~2~O\n"],
     ["single and double tildes", "~一~ and ~~二~~\n"],
     ["a single tilde around bold", "~a **b** c~\n"],
+    ["tildes in ranges", "40.30~40.45 = **64.0~64.2%** and 5~10人，20~30人\n"],
+    ["subscripts", "H~2~O and a~n-1~, ~~gone~~\n"],
     ["a footnote", "正文[^1]\n\n[^1]: 脚注\n"],
     ["a code fence's meta", '```js title="a.js" {1,3}\nx\n```\n'],
     ["a code fence's line marks", "```py {1,3} linenums\nx\n```\n"],
@@ -253,6 +255,14 @@ describe("saved markdown stays as written", () => {
     expect(await roundTrip("[**bold** text](u) after\n")).toBe(
       "[**bold** text](u) after\n",
     );
+  });
+
+  it("saves powers written with carets with no backslash added", async () => {
+    for (const text of [
+      "x^2+y^2 and 2^10,3^5 then x^2^\n",
+      "2^10和3^5 and Na^+^Cl^-^\n",
+    ])
+      expect(await roundTrip(text)).toBe(text);
   });
 
   it("reads dollar amounts as text, not math (Pandoc's rule)", async () => {
@@ -581,9 +591,8 @@ describe("an edited block is saved so it reads back the same", () => {
     expect(await savedAfter("x ==`b`== y\n", gluing(" y"))).toBe(
       "x ==`b`==&#x79;\n",
     );
-    expect(await savedAfter("x ~`b`~ y\n", gluing("x "))).toBe(
-      "&#x78;~`b`~ y\n",
-    );
+    // One tilde is no strikethrough (Settings › Editing): nothing to keep.
+    expect(await savedAfter("x ~`b`~ y\n", gluing("x "))).toBe("x~`b`~ y\n");
     // CJK text is read by remark-cjk-friendly as it stands.
     expect(await savedAfter("中文 ~~`代码`~~ 中文\n", gluing(" 中文"))).toBe(
       "中文 ~~`代码`~~中文\n",

@@ -433,6 +433,28 @@ describe("startup restore into the initial tab", () => {
     });
   });
 
+  it("takes a dragged-out tab its boot snapshot already showed, without loading it again", async () => {
+    const dragged = {
+      path: "/docs/dragged.md",
+      content: "dragged, with edits",
+      savedContent: "dragged",
+      diskMtime: 5,
+    };
+    ipc.takeDetachedTab.mockResolvedValue(dragged);
+    const boot = window as Window & { __BOOT__?: unknown };
+    boot.__BOOT__ = { settings: {}, label: "window-2", detachedTab: dragged };
+    try {
+      const { tabs } = await restore();
+      await waitFor(() => expect(ipc.takeDetachedTab).toHaveBeenCalled());
+      await new Promise((r) => setTimeout(r, 20));
+      // The editor isn't remounted: the tab was this one from the start.
+      expect(tabs()[0]).toMatchObject({ id: "initial", reloadKey: 0 });
+      expect(ipc.takeDraftSnapshots).not.toHaveBeenCalled();
+    } finally {
+      delete boot.__BOOT__;
+    }
+  });
+
   it("and for a guide this window was opened to show", async () => {
     ipc.takePendingShowHelp.mockResolvedValue("markdown");
     const { tabs } = await restore();
