@@ -8,7 +8,7 @@ vi.mock("@tauri-apps/api/core", async (importOriginal) => ({
     `asset://localhost/${encodeURIComponent(path)}`,
 }));
 
-describe("showDocImage (#825)", () => {
+describe("showDocImage (#816)", () => {
   it("never sends our origin as the referrer", () => {
     // Image hosts that guard against hotlinking 403 a referrer of another
     // origin, which is what the webview sent for every remote picture.
