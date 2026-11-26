@@ -111,6 +111,12 @@ export function EditMarkdownPage({
           checked={settings.codeLineNumbers}
           onChange={(v) => setSettings({ codeLineNumbers: v })}
         />
+        <ToggleRow
+          label={t.codeEnterTwiceLeavesLabel}
+          hint={t.codeEnterTwiceLeavesHint}
+          checked={settings.codeEnterTwiceLeaves}
+          onChange={(v) => setSettings({ codeEnterTwiceLeaves: v })}
+        />
         <SettingRow label={t.embedDisplayLabel}>
           <Select
             className="settings-select"

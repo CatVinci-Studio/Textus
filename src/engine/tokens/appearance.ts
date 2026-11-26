@@ -26,8 +26,15 @@ const transient = (node: Node | null): boolean =>
     ? node.closest(`[${TRANSIENT}]`)
     : node?.parentElement?.closest(`[${TRANSIENT}]`));
 
+/** On <html> while a theme switch paints (theme/restyle-hold.ts):
+ *  transitions off (base.css). Itself no change of look. */
+export const RESTYLING = "data-restyling";
+
 function start(): () => void {
   const changed = subscribers.publish;
+  const rootChanged = (records: MutationRecord[]) => {
+    if (records.some((r) => r.attributeName !== RESTYLING)) changed();
+  };
   const headChanged = (records: MutationRecord[]) => {
     // Inside a transient style, or one added or removed: no change of look.
     const look = records.some(
@@ -38,7 +45,7 @@ function start(): () => void {
     );
     if (look) changed();
   };
-  const root = new MutationObserver(changed);
+  const root = new MutationObserver(rootChanged);
   root.observe(document.documentElement, { attributes: true });
   const head = new MutationObserver(headChanged);
   head.observe(document.head, {
@@ -76,6 +83,37 @@ export function appearanceIsDark(): boolean {
   if (chosen === "light") return false;
   return window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
 }
+
+/** What sets the page's theme: built-in or imported, the appearance chosen
+ *  and the system's. */
+const THEME_MARKS = [
+  "data-theme",
+  "data-theme-id",
+  "data-content-theme",
+  "data-user-theme",
+  "data-light-page",
+];
+
+/** The page's theme now, as a key that changes when it does. */
+export function themeKey(): string {
+  const root = document.documentElement;
+  // JSON: an attribute that is there but empty differs from none.
+  return JSON.stringify([
+    ...THEME_MARKS.map((name) => root.getAttribute(name)),
+    window.matchMedia?.("(prefers-color-scheme: dark)").matches,
+  ]);
+}
+
+let themeStyleWrites = 0;
+
+/** Sets a theme <style>'s text, counted: a theme switch is then told
+ *  without reading stylesheets that may be megabytes long. */
+export function writeThemeStyle(style: HTMLStyleElement, css: string): void {
+  style.textContent = css;
+  themeStyleWrites++;
+}
+
+export const themeStyleVersion = (): number => themeStyleWrites;
 
 /** Whether the window shows its dark appearance now. */
 export function windowIsDark(): boolean {

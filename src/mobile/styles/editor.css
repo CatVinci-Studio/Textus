@@ -1,27 +1,24 @@
-/* The editor's own controls at iPhone width: hover controls move to the
+/* The editor's own controls on a phone: hover controls move to the
    keyboard toolbar, and what stays in the page is sized for a touch. */
-@media (max-width: 760px) {
-  /* A table's "+" strips show on hover, which a touch never gives; the toolbar
-     adds rows and columns instead. */
-  :root[data-window-chrome="mobile"]
-    :is(.table-add-row-btn, .table-add-col-btn) {
-    display: none;
-  }
+/* A table's "+" strips show on hover, which a touch never gives; the toolbar
+   adds rows and columns instead. */
+:root[data-window-chrome="mobile"] :is(.table-add-row-btn, .table-add-col-btn) {
+  display: none;
+}
 
-  /* An image's resize grip is 6px wide - not something a finger can take
-     hold of. The toolbar's width presets size a tapped image. */
-  :root[data-window-chrome="mobile"] .image-resize-handle {
-    display: none;
-  }
+/* An image's resize grip is 6px wide - not something a finger can take
+   hold of. The toolbar's width presets size a tapped image. */
+:root[data-window-chrome="mobile"] .image-resize-handle {
+  display: none;
+}
 
-  /* A code block's copy and select buttons and language picker: 44pt
-     targets, and 16px text, below which iOS zooms into a focused control. */
-  :root[data-window-chrome="mobile"]
-    :is(.code-block-language-select, .code-block-actions .block-pill) {
-    min-height: 40px;
-    padding: 0 12px;
-    font-size: 18px;
-  }
+/* A code block's copy and select buttons and language picker: 44pt
+   targets, and 16px text, below which iOS zooms into a focused control. */
+:root[data-window-chrome="mobile"]
+  :is(.code-block-language-select, .code-block-actions .block-pill) {
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: 18px;
 }
 
 /* A touch screen (phone, tablet, unfolded fold) shows a table's or a code

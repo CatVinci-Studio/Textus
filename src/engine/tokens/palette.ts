@@ -1,4 +1,5 @@
 import { DOC_DEFAULTS } from "./doc-defaults";
+import { writeThemeStyle } from "./appearance";
 /** Derive application colors from an imported document theme. */
 export type RGB = readonly [number, number, number];
 const WHITE: RGB = [255, 255, 255];
@@ -111,7 +112,7 @@ export function applyThemeChrome(css: string, dark: boolean): string | null {
   if (chrome === null) return null;
   const style = document.createElement("style");
   style.id = CHROME_STYLE_ID;
-  style.textContent = chrome;
+  writeThemeStyle(style, chrome);
   clearThemeChrome();
   document.head.appendChild(style);
   return chrome;

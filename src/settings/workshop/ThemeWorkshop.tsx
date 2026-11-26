@@ -3,7 +3,7 @@ import { useMakeTheme, useStartingTheme } from "./useWorkshopTheme";
 import { fill } from "../../i18n/fill";
 import type { Strings } from "../../i18n/strings";
 import { useSettings } from "../../prefs/SettingsContext";
-import { isEffectiveDark } from "../../theme/apply-appearance";
+import { isEffectiveDark } from "../../theme/imported-theme";
 import type { ThemeCss } from "../../theme/builtin-base";
 import { NO_CHOICES, type TypeChoices } from "../../theme/theme-typography";
 import { WorkshopControls } from "./WorkshopControls";

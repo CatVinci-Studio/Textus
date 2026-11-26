@@ -16,6 +16,7 @@ import {
 } from "../../ai/chat/conversation-scope";
 import { useChatHistory } from "../../ai/chat/chat-history";
 import {
+  isConversationTab,
   makeBlankTab,
   makeStartTab,
   type DocTab,
@@ -29,7 +30,6 @@ import {
 import { moveTab, splitOff } from "../../engine/layout/ops";
 import { paneWithTab } from "../../engine/layout/tree";
 import type { TabState } from "../tabs/useTabState";
-import { pageOf } from "../tabs/page-tabs";
 import { isPhoneLayout } from "../../platform/phone-layout";
 import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import { onBack } from "../../mobile/back";
@@ -39,8 +39,6 @@ import { chatTitles } from "../../ai/chat/chat-title";
 const NONE: string[] = [];
 
 const conversationOf = (tab: DocTab) => conversationIn(tab.view?.state);
-
-const isAiTab = (tab: DocTab) => pageOf(tab) === "ai";
 
 /** The folder's open conversations and its live one. */
 function useConversations(scope: string | null) {
@@ -67,7 +65,7 @@ function useAiTabFollows(
   // Titles as History names them; a tab given a conversation not named yet
   // keeps none of the last one's.
   useEffect(() => {
-    for (const tab of tabsRef.current.filter(isAiTab)) {
+    for (const tab of tabsRef.current.filter(isConversationTab)) {
       const id = conversationOf(tab);
       const title = titles.get(id) || undefined;
       if (tab.view?.title !== title)
@@ -79,7 +77,7 @@ function useAiTabFollows(
   // The tab brought to the front makes its conversation the live one.
   const front = tabsRef.current.find((tab) => tab.id === activeTabId);
   const frontConversation =
-    front && isAiTab(front) ? conversationOf(front) : null;
+    front && isConversationTab(front) ? conversationOf(front) : null;
   useEffect(() => {
     if (scope && frontConversation && frontConversation !== DRAFT)
       setLiveConversation(scope, frontConversation);
@@ -121,7 +119,7 @@ function useAiCommands({
       }
       if (!scope) return false;
       const open = tabsRef.current.find(
-        (tab) => isAiTab(tab) && conversationOf(tab) === id,
+        (tab) => isConversationTab(tab) && conversationOf(tab) === id,
       );
       if (open) {
         tabs.setActiveTabId(open.id);
@@ -138,7 +136,7 @@ function useAiCommands({
   // The AI button, while shown.
   useEffect(() => {
     const press = () => {
-      const ai = tabsRef.current.filter(isAiTab);
+      const ai = tabsRef.current.filter(isConversationTab);
       const target =
         ai.find((tab) => conversationOf(tab) === (live ?? DRAFT)) ?? ai[0];
       if (!target) return setShown(false);
@@ -150,7 +148,7 @@ function useAiCommands({
       const pane = paneWithTab(windowLayout().root, target.id);
       if (pane?.front !== target.id) return tabs.setActiveTabId(target.id);
       const onlyAi = pane.tabs.every((id) =>
-        tabsRef.current.some((tab) => tab.id === id && isAiTab(tab)),
+        tabsRef.current.some((tab) => tab.id === id && isConversationTab(tab)),
       );
       if (onlyAi) setShown(false);
     };
@@ -164,7 +162,7 @@ function useAiCommands({
     if (!phone) return;
     return onBack(() => {
       const front = tabsRef.current.find((tab) => tab.id === activeTabId);
-      if (!front || !isAiTab(front)) return false;
+      if (!front || !isConversationTab(front)) return false;
       const doc = documentInFront();
       if (!doc || doc === activeTabId) return false;
       tabs.setActiveTabId(doc);
@@ -209,7 +207,7 @@ export function useAiTabs({
   const { tabsRef, setTabs, updateTab } = tabs;
   // What the effects below follow: the AI tabs, the conversations wanted
   // and History's names - not every render of the window.
-  const aiTabs = tabsRef.current.filter(isAiTab);
+  const aiTabs = tabsRef.current.filter(isConversationTab);
   const aiKey = aiTabs.map((tab) => `${tab.id}:${conversationOf(tab)}`).join();
   const wantedKey = wanted.join();
   const titlesKey = aiTabs
@@ -219,7 +217,7 @@ export function useAiTabs({
   // The tabs follow the conversations: one each, a closed one's gone, a
   // draft's tab becoming its conversation once sent.
   useEffect(() => {
-    const current = tabsRef.current.filter(isAiTab);
+    const current = tabsRef.current.filter(isConversationTab);
     const have = new Set(current.map(conversationOf));
     // A tab the user closed: its conversation closes (it stays in History).
     for (const id of had.current)

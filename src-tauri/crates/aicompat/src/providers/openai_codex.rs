@@ -114,11 +114,7 @@ pub async fn exchange_code(code: &str, verifier: &str) -> Result<CodexCredential
         .await
         .map_err(|e| e.to_string())?;
 
-    if !res.status().is_success() {
-        let status = res.status();
-        let body = res.text().await.unwrap_or_default();
-        return Err(format!("token exchange failed ({status}): {body}"));
-    }
+    let res = crate::http::succeeded(res, "token exchange failed").await?;
 
     credential_from_token(res.json().await.map_err(|e| e.to_string())?)
 }
@@ -136,11 +132,7 @@ pub async fn refresh(refresh_token: &str) -> Result<CodexCredential, String> {
         .await
         .map_err(|e| e.to_string())?;
 
-    if !res.status().is_success() {
-        let status = res.status();
-        let body = res.text().await.unwrap_or_default();
-        return Err(format!("token refresh failed ({status}): {body}"));
-    }
+    let res = crate::http::succeeded(res, "token refresh failed").await?;
 
     credential_from_token(res.json().await.map_err(|e| e.to_string())?)
 }

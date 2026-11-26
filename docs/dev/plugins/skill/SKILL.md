@@ -115,8 +115,10 @@ exports.activate = function (ctx) {
   the patterns it refuses as too slow);
   `contributes.fileIconThemes`: file and folder icons picked in
   Settings › Appearance; and `editor.registerDropHandler`: a file dragged
-  into the document written as the plugin's own Markdown. Use them rather
-  than drawing your own.
+  into the document written as the plugin's own Markdown. API 1.11
+  (`">=1.4.8"`) adds `contributes.textFiles`: file types (`.tex`, `.bib`)
+  edited as plain text in the source editor, coloured as a code language.
+  Use them rather than drawing your own.
 - Data: `ctx.storage.global` (Textus's config folder),
   `ctx.storage.project` (the open folder, needs `project.data`),
   `ctx.storage.document(path)`; settings from `contributes.settings` via

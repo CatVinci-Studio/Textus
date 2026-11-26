@@ -49,23 +49,22 @@ pub struct Exchange {
     pub reply: String,
 }
 
+/// A memory as the pass and the tidy are shown it, with the id they answer with.
+pub(super) fn listed(m: &Memory) -> String {
+    format!(
+        "- [{}] ({}, {}) {}",
+        m.id,
+        m.scope.as_str(),
+        m.kind.as_str(),
+        m.text
+    )
+}
+
 /// What the pass is shown: what is remembered (with ids), the library
 /// entries the exchange names, whether there is a project, the exchange.
 pub(crate) fn pass_input(dirs: &MemoryDirs, exchange: &Exchange) -> String {
     let memories = dirs.load();
-    let remembered: Vec<String> = memories
-        .items
-        .iter()
-        .map(|m| {
-            format!(
-                "- [{}] ({}, {}) {}",
-                m.id,
-                m.scope.as_str(),
-                m.kind.as_str(),
-                m.text
-            )
-        })
-        .collect();
+    let remembered: Vec<String> = memories.items.iter().map(listed).collect();
     let said = format!("{}\n{}", exchange.messages.join("\n"), exchange.reply);
     let library: Vec<String> = dirs
         .project

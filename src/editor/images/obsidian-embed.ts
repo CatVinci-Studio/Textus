@@ -3,18 +3,12 @@ import { $inputRule, $nodeSchema, $remark } from "@milkdown/kit/utils";
 import { InputRule } from "@milkdown/kit/prose/inputrules";
 import type { RemarkPluginRaw } from "@milkdown/kit/transformer";
 import type {
-  Code,
-  Effects,
-  Extension,
-  State,
-  TokenizeContext,
-} from "micromark-util-types";
-import type {
   Extension as FromMarkdownExtension,
   Handle as FromMarkdownHandle,
 } from "mdast-util-from-markdown";
 import type { Options as ToMarkdownExtension } from "mdast-util-to-markdown";
 import type { Literal } from "mdast";
+import { doubleBracketSyntax } from "../markdown/double-brackets";
 
 /**
  * Obsidian's embeds, `![[file]]`, kept as written (the source is the node's
@@ -120,55 +114,6 @@ export function parseEmbed(source: string): EmbedTarget | null {
   };
 }
 
-const BANG = 33; // "!"
-const OPEN = 91; // "["
-const CLOSE = 93; // "]"
-
-/** micromark: `![[...]]` as one token, so a "_" in a file name isn't
- *  emphasis. Tried before CommonMark's image start would take the `![`. */
-function embedSyntax(): Extension {
-  return {
-    text: { [BANG]: { name: "obsidianEmbed", tokenize } },
-  };
-
-  function tokenize(
-    this: TokenizeContext,
-    effects: Effects,
-    ok: State,
-    nok: State,
-  ): State {
-    let brackets = 0;
-    let empty = true;
-    return start;
-
-    function start(code: Code): State | undefined {
-      effects.enter("obsidianEmbed");
-      effects.consume(code);
-      return open;
-    }
-    function open(code: Code): State | undefined {
-      if (code !== OPEN) return nok(code);
-      effects.consume(code);
-      return ++brackets === 2 ? inside : open;
-    }
-    function inside(code: Code): State | undefined {
-      // Negative codes are line endings and tabs.
-      if (code === null || code < 0 || code === OPEN) return nok(code);
-      if (code === CLOSE && empty) return nok(code);
-      effects.consume(code);
-      if (code === CLOSE) return closeSecond;
-      empty = false;
-      return inside;
-    }
-    function closeSecond(code: Code): State | undefined {
-      if (code !== CLOSE) return nok(code);
-      effects.consume(code);
-      effects.exit("obsidianEmbed");
-      return ok;
-    }
-  }
-}
-
 const enterEmbed: FromMarkdownHandle = function (token) {
   this.enter(
     { type: "obsidianEmbed", value: this.sliceSerialize(token) },
@@ -194,7 +139,10 @@ const remarkObsidianEmbed: RemarkPluginRaw<unknown> = function (
   this: ThisParameterType<RemarkPluginRaw<unknown>>,
 ) {
   const data = this.data();
-  (data.micromarkExtensions ??= []).push(embedSyntax());
+  // Tried before CommonMark's image start would take the `![`.
+  (data.micromarkExtensions ??= []).push(
+    doubleBracketSyntax("obsidianEmbed", { bang: true, refuseParen: false }),
+  );
   (data.fromMarkdownExtensions ??= []).push(embedFromMarkdown);
   (data.toMarkdownExtensions ??= []).push(embedToMarkdown);
 };

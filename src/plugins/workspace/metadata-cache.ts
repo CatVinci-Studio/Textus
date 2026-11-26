@@ -158,7 +158,7 @@ let pending: Promise<FolderIndex> | null = null;
 /** The folder's index, brought up to date; `asker` is the plugin asking
  *  (Rust checks its files.read). Told to the plugins listening when
  *  anything changed since the last time. */
-export async function folderIndex(
+export async function refreshMetadataIndex(
   asker: string,
   root: string,
 ): Promise<FolderIndex> {
@@ -303,7 +303,7 @@ function soon() {
     timer = null;
     const [asker] = watchers;
     const root = getWindowAccess()?.rootPath();
-    if (asker && root) void folderIndex(asker, root).catch(() => {});
+    if (asker && root) void refreshMetadataIndex(asker, root).catch(() => {});
   }, 400);
 }
 

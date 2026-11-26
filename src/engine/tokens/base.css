@@ -382,3 +382,12 @@ html:root[data-plain-frame] {
   --ui-frame-sunk: var(--ui-bg) !important;
   --ui-frame-paint: initial !important;
 }
+
+/* A theme switch (appearance.ts's RESTYLING): every colour changes in the
+   same frame, rather than each control fading at its own pace. */
+:root[data-restyling],
+:root[data-restyling] *,
+:root[data-restyling] *::before,
+:root[data-restyling] *::after {
+  transition: none !important;
+}

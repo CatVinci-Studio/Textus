@@ -11,7 +11,7 @@ use std::net::TcpListener;
 use std::sync::mpsc;
 
 /// A request as the fixture received it.
-struct Seen {
+pub(crate) struct Seen {
     line: String,
     headers: String,
     body: Value,
@@ -19,7 +19,7 @@ struct Seen {
 
 /// Serves `replies` (status, content type, body) to the requests that come
 /// in, one each, in order; the requests come back over the channel.
-fn serve(replies: Vec<(u16, &'static str, Vec<u8>)>) -> (String, mpsc::Receiver<Seen>) {
+pub(crate) fn serve(replies: Vec<(u16, &'static str, Vec<u8>)>) -> (String, mpsc::Receiver<Seen>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let base = format!("http://{}", listener.local_addr().unwrap());
     let (tx, rx) = mpsc::channel();

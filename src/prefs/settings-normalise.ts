@@ -273,6 +273,7 @@ function readSettings(parsed: Raw | null): Settings {
       lookBeforeClassic: storedLook(parsed.lookBeforeClassic),
       // Asked unless the user said not to: only a stored false stops it.
       confirmTreeCopy: parsed.confirmTreeCopy !== false,
+      confirmTreeTrash: parsed.confirmTreeTrash !== false,
       fileIconTheme:
         typeof parsed.fileIconTheme === "string"
           ? parsed.fileIconTheme

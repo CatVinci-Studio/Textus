@@ -215,6 +215,7 @@ pub fn list_recent_folders(app: tauri::AppHandle) -> Vec<String> {
 /// Quit: every window is asked to close, so each unsaved document gets its
 /// prompt, and the app exits once the last one is gone.
 pub(crate) fn quit(app_handle: &tauri::AppHandle) {
+    commands::prefs::remember_open_windows(app_handle);
     // Capture every editor before destruction order can progressively
     // shrink the session. A cancelled dirty-window prompt resets this
     // through cancel_session_quit.
@@ -263,7 +264,7 @@ fn dispatch(app_handle: &tauri::AppHandle, id: &str) {
     {
         emit_to_focused_payload(app_handle, event, payload.to_string());
     } else if id == "new-file" {
-        // New Tab, as a browser's: a tab in the focused window whatever
+        // New File: a tab in the focused window whatever
         // Settings says files open in; a window when there is none.
         if focused_editor_window(app_handle).is_some() {
             emit_to_focused(app_handle, "menu-new-file");

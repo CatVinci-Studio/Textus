@@ -75,6 +75,8 @@ use tab_drag::{DragTrackers, PendingDetachedTabs};
 use tauri::{EventTarget, WebviewUrl, WebviewWindowBuilder};
 
 mod launch;
+#[cfg(desktop)]
+mod open_route;
 pub(crate) use launch::*;
 pub(crate) mod editor_windows;
 mod invoke_handler;
@@ -96,6 +98,7 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
         .manage(mcp::McpHub::default())
         .manage(agents::Agents::default())
         .manage(cli::app::CliBridge::default())
+        .manage(commands::fs::watch::TreeWatches::default())
         .plugin(tauri_plugin_deep_link::init())
         .on_window_event(|window, event| {
             let app = window.app_handle();
@@ -130,26 +133,56 @@ fn desktop_builder(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri:
                 agents::stop_for_window(app, window.label());
                 #[cfg(desktop)]
                 cli::app::window_gone(app, window.label());
+                #[cfg(desktop)]
+                commands::fs::watch::window_gone(app, window.label());
+                #[cfg(desktop)]
+                launch::window_gone(window.label());
                 // File > Quit closes every window so dirty editors can cancel; macOS would
                 // otherwise stay alive windowless, so exit once the final window is gone.
                 if no_other_windows && commands::session::app_quitting() {
                     commands::update::exit_app(app);
                 }
             }
-            // Remember a window's size and place on Close, since after Destroyed they can
-            // no longer be read.
-            if matches!(event, tauri::WindowEvent::CloseRequested { .. })
-                && crate::windows::is_editor_window(window.label())
-            {
-                commands::prefs::remember_editor_window(app, window);
+            #[cfg(desktop)]
+            if crate::windows::is_editor_window(window.label()) {
+                remember_editor_frame(app, window, event);
             }
         })
+}
+
+/// An editor window's normal bounds as they change, and on Close, while they can
+/// still be read, its frame for the next launch: in the UI state, and in the
+/// session for the window that comes back with these documents. Quit keeps
+/// both before it closes the windows.
+#[cfg(desktop)]
+fn remember_editor_frame(
+    app: &tauri::AppHandle,
+    window: &tauri::Window,
+    event: &tauri::WindowEvent,
+) {
+    match event {
+        tauri::WindowEvent::Moved(_) | tauri::WindowEvent::Resized(_) => {
+            commands::prefs::note_bounds(window);
+        }
+        tauri::WindowEvent::CloseRequested { .. } if !commands::session::app_quitting() => {
+            let frame = commands::prefs::closing_frame(window);
+            commands::prefs::remember_editor_window(app, frame);
+            if let Some(state) = app.try_state::<SessionTabsState>() {
+                commands::session::keep_frame(app, window.label(), frame, &state);
+            }
+        }
+        tauri::WindowEvent::Destroyed => commands::prefs::forget_bounds(window.label()),
+        _ => {}
+    }
 }
 
 /// The desktop half of startup, run from the shared setup in `run` once the
 /// main window exists.
 #[cfg(desktop)]
-fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+fn desktop_setup(
+    app: &mut tauri::App,
+    opens: Option<launch::LaunchOpens>,
+) -> Result<(), Box<dyn std::error::Error>> {
     #[cfg(target_os = "linux")]
     crate::editor_windows::detect_wayland();
     #[cfg(target_os = "macos")]
@@ -157,30 +190,14 @@ fn desktop_setup(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error>>
     #[cfg(target_os = "macos")]
     crate::trackpad::watch_trackpad(app.handle());
     #[cfg(target_os = "macos")]
-    crate::commands::traffic_lights::watch();
+    crate::commands::traffic_lights::watch(app.handle());
     // Plugins' jobs and notifications: before the links, one of which may be
     // a notification's click that started Textus.
     schedule::start(app.handle());
     // textus:// links for plugins.
     plugins::uri::listen(app.handle());
-    // Windows/Linux pass an associated file as argv; macOS parks its launch files
-    // in LAUNCH_OPENED. With none, restore last session's documents (also what an
-    // update relaunch relies on).
-    #[allow(unused_mut)]
-    let mut arg_paths = paths_from_argv(
-        std::env::args(),
-        &std::env::current_dir().unwrap_or_default(),
-    );
-    #[cfg(target_os = "macos")]
-    arg_paths.extend(LAUNCH_OPENED.lock().unwrap().take().unwrap_or_default());
-    if !arg_paths.is_empty() {
-        queue_paths_to_open(app.handle(), arg_paths);
-    } else if commands::prefs::read_restore_session_on_startup(app.handle()) {
-        queue_windows_to_open(
-            app.handle(),
-            commands::session::read_session_windows(app.handle()),
-        );
-    }
+    // What the launch opens (launch_opens, decided before the main window).
+    launch::queue_launch(app.handle(), opens);
 
     commands::cli::try_silent_install();
     cli::app::start(app.handle());
@@ -273,9 +290,18 @@ pub fn run() {
             ));
             plugins::document_types::refresh(app.handle());
             memory_level::watch(app.handle().clone());
+            // Windows/Linux pass an associated file as argv; macOS parks its
+            // launch files in LAUNCH_OPENED. With none, last session's documents
+            // (also what an update relaunch relies on). Decided before the main
+            // window, whose boot snapshot says whether it has any coming.
+            #[cfg(desktop)]
+            let opens = launch::launch_opens(app.handle());
+            #[cfg(desktop)]
+            crate::editor_windows::build_main_window(app, opens.as_ref())?;
+            #[cfg(not(desktop))]
             crate::editor_windows::build_main_window(app)?;
             #[cfg(desktop)]
-            desktop_setup(app)?;
+            desktop_setup(app, opens)?;
             Ok(())
         })
         .invoke_handler(invoke_handler::handler())
@@ -284,6 +310,11 @@ pub fn run() {
         .run(|app_handle, event| {
             // Flush whatever is still waiting on its debounce.
             if let tauri::RunEvent::Exit = event {
+                // Quit from outside the menu (the Dock, logging out) closes no window first.
+                #[cfg(desktop)]
+                if !commands::session::app_quitting() {
+                    commands::prefs::remember_open_windows(app_handle);
+                }
                 settings::flush_all(app_handle);
                 #[cfg(desktop)]
                 agents::stop_all(app_handle);

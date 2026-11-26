@@ -130,6 +130,13 @@ export interface FolderDocumentContribution {
   documents: string[];
 }
 
+/** A file type opened as plain text in the source editor, editable,
+ *  coloured as `language` (a fence's name: CodeMirror's or a plugin's). */
+export interface TextFileContribution {
+  extensions: string[];
+  language: string | null;
+}
+
 /** A code language coloured from a grammar file of the plugin's
  *  (editor/code/code-grammar.ts), named in a fence by its id or an alias. */
 export interface CodeLanguageContribution {
@@ -182,11 +189,12 @@ interface AiToolContribution {
   parameters: Record<string, unknown>;
 }
 
-/** Where a plugin suggests completions as you type: in a formula, the text or
- *  both, once the words before the caret match `pattern` (anchored there). */
+/** Where a plugin suggests completions as you type: in a formula, the text,
+ *  both ("any"), or a code block, once the words before the caret match
+ *  `pattern` (anchored there). */
 export interface CompletionContribution {
   id: string;
-  where: "math" | "text" | "any";
+  where: "math" | "text" | "any" | "code";
   /** Anchored at the caret; its last capture group is the query. */
   pattern: string;
   /** The panel group's heading ("%notes%"); the plugin's name without it. */
@@ -272,6 +280,7 @@ export interface Contributes {
   customEditors: CustomEditorContribution[];
   documentTypes: DocumentTypeContribution[];
   folderDocuments: FolderDocumentContribution[];
+  textFiles: TextFileContribution[];
   fileIconThemes: FileIconThemeContribution[];
   settings: SettingContribution[];
   /** A page of its own in Settings, a webview. */

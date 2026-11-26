@@ -119,5 +119,6 @@ stays under the point it was taken by, in a zoomed document too.
 - **Text by role** (`--text-body`, `--text-secondary`, `--text-footnote`,
   `--text-caption`), never a px font size.
 
-The plugins repository's check reports fixed pixels, literal colours and
-hand-drawn copies of these controls.
+The plugins repository's check reports fixed pixels, literal colours, and
+page rules that restyle a shared control's look (colour, border, corners,
+type, padding, height). Placing and sizing one stays allowed.

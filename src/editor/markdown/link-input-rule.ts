@@ -2,6 +2,7 @@ import { InputRule } from "@milkdown/kit/prose/inputrules";
 import type { EditorState, Transaction } from "@milkdown/kit/prose/state";
 import { $inputRule } from "@milkdown/kit/utils";
 import { LINK } from "./link-source";
+import { linkHref, parseLink } from "./link-syntax";
 
 /**
  * `[text](url)` typed out becomes a link as its `)` goes in. A run holding an
@@ -18,6 +19,24 @@ export const TYPED_IMAGE = /!\[([^[\]\n\ufffc]*)\]\(([^()\s\ufffc]+)\)$/;
 
 type Match = RegExpMatchArray | RegExpExecArray;
 
+/** Whether start..end is plain text in one block. A rule's match counts the
+ *  text inside an inline node (raw HTML, a bold span) but not its two edges,
+ *  so a match running over one would start that many positions off. */
+export function plainTextRun(
+  state: EditorState,
+  start: number,
+  end: number,
+): boolean {
+  if (!state.doc.resolve(start).sameParent(state.doc.resolve(end)))
+    return false;
+  let plain = true;
+  state.doc.nodesBetween(start, end, (node) => {
+    if (node.isInline && !node.isText) plain = false;
+    return plain;
+  });
+  return plain;
+}
+
 /** `[text](url)` at start..end as a link: the input rule's change, and the
  *  autopair's and link-settle's when the caret leaves a ")". */
 export function typedLink(
@@ -29,7 +48,8 @@ export function typedLink(
   return match[1].trim() ? linkNodeAt(state, match[0], start, end) : null;
 }
 
-/** `source` at start..end as a link node; null where none may go. */
+/** `source` at start..end as a link node, or null: none may go there, or Markdown
+ *  wouldn't read it as one link (link-normalize would undo it, forever). */
 export function linkNodeAt(
   state: EditorState,
   source: string,
@@ -40,6 +60,8 @@ export function linkNodeAt(
   const $start = state.doc.resolve(start);
   if (
     !link ||
+    !parseLink(source) ||
+    !plainTextRun(state, start, end) ||
     $start.parent.type.spec.code ||
     !$start.parent.canReplaceWith(
       $start.index(),
@@ -63,10 +85,12 @@ export function typedImage(
   end: number,
 ): Transaction | null {
   const image = state.schema.nodes.image;
-  const [, alt, src] = match;
+  const [, alt, written] = match;
+  const src = linkHref(match[0].slice(1)) ?? written;
   const $start = state.doc.resolve(start);
   if (
     !image ||
+    !plainTextRun(state, start, end) ||
     $start.parent.type.spec.code ||
     !$start.parent.canReplaceWith(
       $start.index(),
@@ -75,8 +99,6 @@ export function typedImage(
     )
   )
     return null;
-  // A URL pasted between the parentheses is a link; the replacement drops it
-  // with the rest of the typed text.
   return state.tr
     .replaceWith(start, end, image.create({ src, alt }))
     .setStoredMarks([]);
@@ -84,9 +106,8 @@ export function typedImage(
 
 /**
  * A typed link or image whose ")" is the last character before `end`, for
- * the bracket autopair's ")" that is already there. The block's text is read
- * across text nodes, since a URL pasted inside is a link of its own. Null
- * when there is none.
+ * the bracket autopair's ")" that is already there, read across the text
+ * nodes a paste or marks split it into. Null when there is none.
  */
 export function typedLinkEndingAt(
   state: EditorState,

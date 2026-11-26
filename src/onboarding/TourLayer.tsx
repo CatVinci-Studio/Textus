@@ -12,6 +12,7 @@ import "./TourLayer.css";
 
 /** The hole's corner radius: --shape-m, as the ring's. */
 const RADIUS = 14;
+const NO_SIZE = { width: 0, height: 0 };
 
 /** One rounded hole, as a path cut from the scrim; "" with none. */
 function holePath(hole: Box | null): string {
@@ -82,7 +83,10 @@ function useTourView(
 ) {
   const [view, setView] = useState(viewNow);
   // Measured before the first paint, so no guess is ever drawn.
-  const [cardSize, setCardSize] = useState({ width: 0, height: 0 });
+  const [cardSize, setCardSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   useLayoutEffect(() => {
     const el = card.current;
     if (!el) return;
@@ -91,7 +95,7 @@ function useTourView(
       // Its own width, not one a step narrowed it to (or it would widen
       // and narrow again, back and forth).
       setCardSize((was) => ({
-        width: el.style.width ? was.width : el.offsetWidth,
+        width: el.style.width && was ? was.width : el.offsetWidth,
         height: el.offsetHeight,
       }));
     };
@@ -190,9 +194,10 @@ export function TourLayer({
     {
       hole,
       beside: besideHole,
-      card: placeCard(anchor, cardSize, view, phone, all),
+      card: placeCard(anchor, cardSize ?? NO_SIZE, view, phone, all),
     },
     draw,
+    cardSize !== null,
   );
 
   return (

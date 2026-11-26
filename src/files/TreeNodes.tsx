@@ -1,18 +1,20 @@
 import { explainError } from "../utils/error-explain";
-import { useFileBadge } from "../plugins/contributions/file-badges";
-import { Tooltip } from "../engine/controls/Tooltip";
 import { currentStrings } from "../i18n/current";
-// The file tree's rows: a folder, which reads and lists its entries, and
-// a file.
+// The file tree's folders: each reads and lists its entries, drawing a
+// row for each (TreeRows.tsx).
 
-import { useFileMark } from "../registry/file-marks";
-import { plural } from "../i18n/plural";
-import { memo, useEffect, useMemo, useState, type CSSProperties } from "react";
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { type DirEntryInfo } from "../platform/bindings/files";
-import { ChevronIcon } from "../engine/controls/icons";
 import { fs } from "../platform/ipc";
 import { useSettings } from "../prefs/SettingsContext";
-import { basename, isInside, onTheWay, parentDir } from "../utils/path";
+import { isInside, onTheWay } from "../utils/path";
 import { isDocumentName } from "./document-name";
 import {
   folderDocumentAround,
@@ -21,13 +23,17 @@ import {
 } from "./folder-documents";
 import { localeOf } from "../i18n/langs";
 import { compareEntries, nameCollator } from "../utils/name-order";
-import { useTree, useTreeRowActions } from "./tree-shared";
-import { useRowPicked } from "./tree-selection";
+import { useTree, type TreeShared } from "./tree-shared";
 import { isWithin } from "../utils/path";
 import { DraftRow } from "./DraftRow";
+import { FileNode, FolderRow } from "./TreeRows";
 import { TreeRowsInSight } from "./TreeRowsInSight";
 import type { FileOpenHow } from "./tree-shared";
-import { FileIcon, FolderEntryIcon } from "../engine/controls/file-icons";
+
+/** How long something dragged rests on a folded folder before it opens. */
+const OPEN_UNDER_DRAG_MS = 500;
+/** How many levels of folders stay at the top while their rows scroll by. */
+const STICKY_LEVELS = 5;
 
 interface DirNodeProps {
   path: string;
@@ -95,27 +101,22 @@ function useShownEntries(
   }, [entries, collator, showHidden, scope, sort, folderDocuments]);
 }
 
-export const DirNode = memo(function DirNode({
-  path,
-  depth,
-  ignored = false,
-  activePath,
-  onFileSelect,
-}: DirNodeProps) {
-  const tree = useTree();
+/** Whether a folder is open, and what is being named in it. The root is
+ *  always open; a folder opens on the way to the open document, a folder
+ *  asked to be shown, or something made or being named in or below it, and
+ *  folds with Collapse All. Its being open is told to the disk watch. */
+function useFolderOpen(
+  tree: TreeShared,
+  path: string,
+  depth: number,
+  activePath: string | null,
+) {
   const version = tree.versions[path] ?? 0;
-  const listing = `${version}:${tree.stale[path] ?? 0}:${tree.refreshed}`;
   // The root is always open, and so is a folder on the way down to the open
   // document.
   const [open, setOpen] = useState(
     depth === 0 || (activePath !== null && isInside(activePath, path)),
   );
-  const [loaded, setLoaded] = useState<{
-    listing: string;
-    entries: DirEntryInfo[];
-    /** Why it couldn't be read, in the UI's language. */
-    failed?: string;
-  } | null>(null);
   // A document opened further down shows where it is, and so does a folder
   // asked to be shown (a plugin's showFolder): the folders on the way open,
   // the rest stay as they were.
@@ -128,12 +129,59 @@ export const DirNode = memo(function DirNode({
   }, [activePath, tree.reveal, path]);
   // Something was made in it or moved into it, or is being named in it:
   // show it.
+  // Only a change since Collapse All, or since it was drawn, opens it: a
+  // folder drawn again keeps the fold Collapse All gave it.
   const drafting = tree.draft?.dir === path ? tree.draft.kind : null;
+  const draftBelow = !!tree.draft && isInside(tree.draft.dir, path);
+  const versionSeen = useRef(tree.collapsed[path] ?? 0);
   useEffect(() => {
-    if (version > 0 || drafting) setOpen(true);
-  }, [version, drafting]);
+    const grew = version > versionSeen.current;
+    versionSeen.current = version;
+    if (grew || drafting || draftBelow) setOpen(true);
+  }, [version, drafting, draftBelow]);
+  // Collapse All folds it; a folder drawn after keeps its own state.
+  const collapsedSeen = useRef(tree.collapsed);
+  useEffect(() => {
+    if (collapsedSeen.current === tree.collapsed) return;
+    collapsedSeen.current = tree.collapsed;
+    versionSeen.current = version;
+    if (depth > 0) setOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the version as it folds
+  }, [tree.collapsed, depth]);
+  const { openFolders } = tree;
+  useEffect(
+    () => (open ? openFolders.add(path) : undefined),
+    [open, path, openFolders],
+  );
+  return [open, setOpen, drafting] as const;
+}
+
+export const DirNode = memo(function DirNode({
+  path,
+  depth,
+  ignored = false,
+  activePath,
+  onFileSelect,
+}: DirNodeProps) {
+  const tree = useTree();
+  const version = tree.versions[path] ?? 0;
+  const listing = `${version}:${tree.stale[path] ?? 0}:${tree.refreshed}`;
+  const [open, setOpen, drafting] = useFolderOpen(
+    tree,
+    path,
+    depth,
+    activePath,
+  );
+  const [loaded, setLoaded] = useState<{
+    listing: string;
+    entries: DirEntryInfo[];
+    /** Why it couldn't be read, in the UI's language. */
+    failed?: string;
+  } | null>(null);
 
   useEffect(() => {
+    // Folded, it is not watched: read again when it next opens.
+    if (!open && loaded?.listing) setLoaded({ ...loaded, listing: "" });
     if (!open || loaded?.listing === listing) return;
     let cancelled = false;
     fs.listDir(path).then(
@@ -160,19 +208,41 @@ export const DirNode = memo(function DirNode({
   const sorted = useShownEntries(loaded?.entries ?? null, tree);
 
   // Rows that must be drawn: the open document's, and the way to it.
-  const onWay = onTheWay(activePath, tree.reveal);
+  const onWay = onTheWay(activePath, tree.reveal, tree.draft?.dir);
+  // Something dragged would go in here: the folder with all its rows lit as
+  // one, and a folded one opens if the pointer stays.
+  const dropping = depth > 0 && tree.dropInto === path;
+  useEffect(() => {
+    if (!dropping || open) return;
+    const timer = window.setTimeout(() => setOpen(true), OPEN_UNDER_DRAG_MS);
+    return () => window.clearTimeout(timer);
+  }, [dropping, open, setOpen]);
 
   return (
-    <div className="dir-node">
+    <div
+      className={`dir-node${dropping ? " tx-drop-into" : ""}`}
+      data-drop-dir={depth > 0 ? path : undefined}
+      style={
+        depth === 0
+          ? ({ "--tree-sticky-levels": STICKY_LEVELS } as CSSProperties)
+          : undefined
+      }
+    >
       {depth > 0 && (
-        <FolderRow
-          path={path}
-          depth={depth}
-          open={open}
-          ignored={ignored}
-          dropping={tree.dropInto === path}
-          onToggle={() => setOpen(!open)}
-        />
+        // Scrolled into, the folder's row stays at the top under its own
+        // folders' until its last row goes by (FileTree.css).
+        <div
+          className={`tree-head${depth <= STICKY_LEVELS ? " tree-head-sticky" : ""}`}
+          style={{ "--depth": depth } as CSSProperties}
+        >
+          <FolderRow
+            path={path}
+            depth={depth}
+            open={open}
+            ignored={ignored}
+            onToggle={() => setOpen(!open)}
+          />
+        </div>
       )}
       {open && sorted && (
         <div className="dir-children" role={depth > 0 ? "group" : "none"}>
@@ -237,138 +307,3 @@ export const DirNode = memo(function DirNode({
     </div>
   );
 });
-
-/** A file's row; drawn again only when what it shows changed. */
-const FileNode = memo(function FileNode({
-  entry,
-  depth,
-  active,
-  onSelect,
-}: {
-  entry: DirEntryInfo;
-  depth: number;
-  active: boolean;
-  onSelect: (path: string, how?: FileOpenHow) => void;
-}) {
-  const { t, settings } = useSettings();
-  const lang = settings.language;
-  const tree = useTreeRowActions();
-  const picked = useRowPicked(entry.path);
-  const mark = useFileMark(entry.path);
-  const badge = useFileBadge(entry.path);
-  const changed = !!mark?.changed;
-  // What Textus AI left here waiting for the writer, said after the name.
-  const waiting = mark?.pending
-    ? plural(t.aiPendingCount, mark.pending, lang)
-    : mark?.created
-      ? t.aiCreatedPending
-      : null;
-  return (
-    <>
-      <div
-        className={`tree-row tree-row-file${active ? " tree-row-active" : ""}${picked ? " tree-row-picked" : ""}${entry.ignored ? " tree-row-ignored" : ""}`}
-        role="treeitem"
-        aria-level={depth}
-        aria-selected={active || picked}
-        data-path={entry.path}
-        data-ai-changed={changed || undefined}
-        // Dropped on a file, a drag goes into that file's folder.
-        data-drop-dir={parentDir(entry.path) ?? undefined}
-        style={{ "--depth": depth } as CSSProperties}
-        onClick={(e) => {
-          if (tree.onRowPick?.(e, entry.path)) return;
-          // A click looks (the preview tab); a double click keeps it.
-          onSelect(entry.path, "preview");
-        }}
-        onDoubleClick={() => onSelect(entry.path)}
-        onContextMenu={
-          tree.onRowMenu
-            ? (e) => tree.onRowMenu!(e, entry.path, false)
-            : undefined
-        }
-        onPointerDown={
-          tree.onRowPointerDown
-            ? (e) => tree.onRowPointerDown!(e, entry.path, entry.name, false)
-            : undefined
-        }
-      >
-        {/* A folder opened as one document shows its document's icon. */}
-        <FileIcon
-          name={folderDocumentOf(entry.name)?.[0] ?? entry.name}
-          className="tree-icon"
-        />
-        <Tooltip text={entry.name} description={null} whenCut>
-          <span className="tx-truncate tree-label">{entry.name}</span>
-        </Tooltip>
-        {badge && (
-          <Tooltip text={badge.tooltip ?? badge.text} description={null}>
-            <span
-              className={`tree-badge${badge.tone ? ` plugin-tone-${badge.tone}` : ""}`}
-            >
-              {badge.text}
-            </span>
-          </Tooltip>
-        )}
-        {waiting && <span className="tree-ai-waiting">{waiting}</span>}
-      </div>
-    </>
-  );
-});
-
-/** A folder's own row: a click folds it, a right click or a held touch
- *  opens its menu, a press may start a drag. */
-function FolderRow({
-  path,
-  depth,
-  open,
-  ignored,
-  dropping,
-  onToggle,
-}: {
-  path: string;
-  depth: number;
-  open: boolean;
-  ignored: boolean;
-  dropping: boolean;
-  onToggle: () => void;
-}) {
-  const tree = useTreeRowActions();
-  const picked = useRowPicked(path);
-  return (
-    <div
-      className={`tree-row${dropping ? " tx-drop-into" : ""}${picked ? " tree-row-picked" : ""}${ignored ? " tree-row-ignored" : ""}`}
-      role="treeitem"
-      aria-level={depth}
-      aria-expanded={open}
-      aria-selected={picked}
-      data-path={path}
-      data-drop-dir={path}
-      style={{ "--depth": depth } as CSSProperties}
-      // A double click folds or unfolds it once, as a click does; going
-      // into it is the row's menu's Show Only This Folder.
-      onClick={(e) => {
-        if (e.detail > 1) return;
-        if (tree.onRowPick?.(e, path)) return;
-        onToggle();
-      }}
-      onContextMenu={
-        tree.onRowMenu ? (e) => tree.onRowMenu!(e, path, true) : undefined
-      }
-      onPointerDown={
-        tree.onRowPointerDown
-          ? (e) => tree.onRowPointerDown!(e, path, basename(path), true)
-          : undefined
-      }
-    >
-      <ChevronIcon className={`chevron ${open ? "chevron-open" : ""}`} />
-      <FolderEntryIcon
-        name={basename(path)}
-        open={open}
-        className="tree-icon"
-      />
-      <Tooltip text={basename(path)} description={null} whenCut>
-        <span className="tx-truncate tree-label">{basename(path)}</span>
-      </Tooltip>
-    </div>
-  );
-}

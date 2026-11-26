@@ -17,11 +17,7 @@ import {
 } from "../../registry/menu/app-menu-model";
 import { thisWindow } from "../../platform/this-window";
 import { windowIpc } from "../../platform/ipc";
-import {
-  canToggleFullscreen,
-  hasAppMenu,
-  hasTextusAi,
-} from "../../platform/capabilities";
+import { canToggleFullscreen, hasAppMenu } from "../../platform/capabilities";
 import { usePhoneLayout } from "../../engine/controls/usePhoneLayout";
 import {
   ContextMenu,
@@ -72,7 +68,7 @@ export function AppMenu({
         { ...checks, fullscreen, trackChanges: trackingShown() },
         pluginEntries,
       )
-    : buildMobileMenu(t, checks, pluginEntries, hasTextusAi);
+    : buildMobileMenu(t, checks, pluginEntries);
   const nodes =
     section === undefined
       ? menu
@@ -87,7 +83,6 @@ export function AppMenu({
       anchor={anchor}
       // On a phone a focused first row would only look selected.
       keyboard={!phone}
-      inline
     />
   );
 }

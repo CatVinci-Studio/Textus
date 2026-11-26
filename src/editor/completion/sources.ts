@@ -22,6 +22,9 @@ export interface PanelItem {
   run?: () => void;
 }
 
+/** Where the caret is typing. */
+export type CompletionPlace = "math" | "text" | "code";
+
 export interface CompletionContext {
   /** Before the caret, in its paragraph or formula. */
   text: string;
@@ -32,6 +35,8 @@ export interface CompletionContext {
   /** After the caret, to the end of its block. */
   after: string;
   inMath: boolean;
+  /** In a code block: its language, "" for none. */
+  language?: string;
   /** The document's path; null for an unsaved one. */
   path: string | null;
 }
@@ -49,7 +54,8 @@ export interface CompletionSource {
   id: string;
   /** "core", or the plugin's id. */
   owner: string;
-  where: "math" | "text" | "any";
+  /** "any" is a formula or the text: code only takes sources of its own. */
+  where: CompletionPlace | "any";
   /** Anchored at the caret: `(?:…)$`. */
   pattern: RegExp;
   /** The capture group an item replaces; the whole match without it. The

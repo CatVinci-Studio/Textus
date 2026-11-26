@@ -14,7 +14,7 @@ The pieces:
 | Need                                       | Use                                                                                                                                                                                                                  |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A button that is only an icon              | `engine/controls/IconButton.tsx` (named, with the app's Tooltip)                                                                                                                                                     |
-| A menu at the pointer, or under a button   | `engine/controls/ContextMenu.tsx`; `engine/controls/useMenuButton.tsx` hangs it from a button (end-aligned, with a heading)                                                                                          |
+| A menu at the pointer, or under a button   | `engine/controls/ContextMenu.tsx`; `engine/controls/useMenuButton.tsx` hangs it from a button (end-aligned, with a heading); a menu of its own: `engine/controls/useMenuOpen.ts`                                     |
 | A box that floats over the page            | the `.floating-surface` class; layers from the `--z-*` tokens (`engine/tokens/design-system.css`)                                                                                                                    |
 | Closing it on a press outside or Escape    | `utils/hooks/useCloseOnOutsideClick.ts` (input methods spared; `inside` for a badge or the opener)                                                                                                                   |
 | Placing it next to what opened it          | `engine/controls/placement.ts` (`clampLeft`, `clampTop`, `opensBelow`), or `usePlacement` for a point                                                                                                                |
@@ -22,7 +22,7 @@ The pieces:
 | A list to pick from                        | `showQuickPick` (`engine/controls/quick-pick.tsx`)                                                                                                                                                                   |
 | A note that goes by itself, a progress bar | `showNotice`, `startProgress` (`engine/controls/notices.tsx`)                                                                                                                                                        |
 | A card to act on, bottom right             | `engine/controls/CornerToast.tsx` in a `CornerStack`                                                                                                                                                                 |
-| A phone's sheet                            | `engine/controls/Sheet.tsx` (`ActionSheet` and `BottomCard` are its bodies)                                                                                                                                          |
+| A phone's sheet                            | `engine/controls/Sheet.tsx` (`BottomCard` is its body)                                                                                                                                                               |
 | A select, a switch, a settings row         | `engine/controls/Select.tsx`; `settings/sections/controls.tsx`                                                                                                                                                       |
 | A number typed or stepped, with its unit   | `engine/controls/NumberField.tsx`                                                                                                                                                                                    |
 | A panel's top row                          | `engine/controls/PanelHeader.tsx`                                                                                                                                                                                    |
@@ -48,6 +48,7 @@ The pieces:
 | Telling plugins about something in the window | `emitPluginEvent` (`plugins/app-bridge.ts`), as `plugins/panels-state.ts` does                   |
 | Asking plugins in turn, the first answer wins | `firstAnswer` (`plugins/contributions/first-answer.ts`), as the paste and drop handlers do       |
 | Letting go of what is out of sight            | `keepLoaded` / `useKeptLoaded` (`utils/kept-loaded.ts`), `onMemoryIdle` (`utils/memory-idle.ts`) |
+| A cache bounded to the most recent            | `keepFresh` (`utils/keep-fresh.ts`)                                                              |
 
 ## Text, links and folders
 
@@ -59,6 +60,7 @@ The pieces:
 | Reading a `[[link]]`                                        | `utils/note-link.ts` (`parseNoteLink`; `WIKILINK_SOURCE` to find them in text)                                 |
 | Where a link goes, as a click takes it                      | `files/link-resolve.ts` (and Rust `resolve_note_link`, which shares its cases)                                 |
 | Writing a link the way the folder does                      | `files/link-style.ts`, `files/link-resolve.ts` `linkToTarget`; Markdown links `editor/markdown/link-syntax.ts` |
+| A picture's or link's target as written                     | `linkDestination` in `editor/markdown/link-syntax.ts`                                                          |
 | A link to a file put in a document (a picture for an image) | `files/link-to-file.ts` (`linkToFile`, `fileLinkSource`; `linkingDocument` for the tab to link from)           |
 | A `#heading` or `^block` inside a note                      | `editor/markdown/link-target.ts` `headingIndex`, `editor/markdown/heading-jump.ts`                             |
 | Scrolling to a place in the document                        | `revealPosition` (`editor/reveal-position.ts`); a tab not yet shown takes a `setTabJump`                       |

@@ -1,4 +1,4 @@
-import type { Still } from "../../engine/controls/scroll-hold";
+import { holdStill, type Still } from "../../engine/controls/scroll-hold";
 import { PENDING_ATTR, PLACEHOLDER_CLASS } from "./lazy-rules";
 
 // What the reader sees stays where it is while blocks or views above it
@@ -35,7 +35,7 @@ const changes = (el: Element) =>
  * the top); the first drawn one when nothing below is; the first on screen
  * when none is drawn yet (a screen of placeholders).
  */
-export function stillPoint(root: Element, scroller: Element): Still | null {
+function stillPoint(root: Element, scroller: Element): Still | null {
   const box = scroller.getBoundingClientRect();
   if (!box.height) return null;
   const children = root.children;
@@ -57,4 +57,19 @@ export function stillPoint(root: Element, scroller: Element): Still | null {
     }
   }
   return below ?? first ?? any;
+}
+
+/** Runs `change` with what the reader sees held still. `change` answers
+ *  false when nothing it did moved what is on screen; `shown` is where the
+ *  still block shows after it, when made anew or hidden (none: not held). */
+export function holdStillWhile(
+  root: Element | null | undefined,
+  scroller: Element | null | undefined,
+  change: (still: Still | null) => boolean | void,
+  shown: (el: Element) => Element | null | undefined = (el) => el,
+): void {
+  const still = root && scroller ? stillPoint(root, scroller) : null;
+  if (change(still) === false || !scroller || !still) return;
+  const el = shown(still.el);
+  if (el) holdStill(scroller, { ...still, el });
 }

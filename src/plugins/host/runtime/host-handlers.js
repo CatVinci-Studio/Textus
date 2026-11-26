@@ -144,6 +144,7 @@ var handlers = {
         text: params.text,
         match: params.match,
         inMath: params.inMath,
+        language: params.language,
         query: params.query,
         after: params.after,
         path: params.path,

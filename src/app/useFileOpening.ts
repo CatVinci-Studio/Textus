@@ -24,7 +24,7 @@ import {
   customEditorForContent,
 } from "../plugins/store/plugin-lookup";
 import { basename } from "../utils/path";
-import { isDocumentName } from "../files/document-name";
+import { isDocumentName, textFileOf } from "../files/document-name";
 import { documentPathOf } from "../files/folder-documents";
 import { placeOnArrival } from "../engine/layout/store";
 import { besideOrSay, openBesideOrSay } from "./menu/split-here";
@@ -191,7 +191,12 @@ export function useFileOpening(opts: {
         });
       // Text that isn't a document (a web page): the official plugin that
       // shows it is offered first; declined, it opens as text.
-      if (!asDocument && !reopening && !isDocumentName(basename(path))) {
+      if (
+        !asDocument &&
+        !reopening &&
+        !isDocumentName(basename(path)) &&
+        !textFileOf(path)?.claimed
+      ) {
         const { offerPluginToOpen } =
           await import("../plugins/store/open-offer");
         const offered = await offerPluginToOpen(path, t);
@@ -218,9 +223,11 @@ export function useFileOpening(opts: {
         diskMtime,
         importedFrom: undefined,
         view: undefined,
-        // Text that isn't Markdown (YAML, a web page) is shown, not edited:
-        // the Markdown editor would write it back as Markdown.
-        ...(!asDocument && !isDocumentName(basename(path))
+        // Text that isn't Markdown (YAML, a web page) shows as plain text,
+        // whatever the window's view, read-only unless a plugin's textFiles
+        // takes its type.
+        ...(textFileOf(path) && { sourceMode: true, splitView: false }),
+        ...(!asDocument && textFileOf(path)?.claimed === false
           ? { readOnly: true }
           : {}),
       };

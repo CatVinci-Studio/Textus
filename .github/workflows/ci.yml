@@ -20,8 +20,9 @@ name: CI
 #                  request; here only the browsers' cache is refreshed.
 #   before release the full suite on every platform: native on Linux, macOS
 #                  and Windows, e2e, the iOS simulator. It runs on the pull
-#                  request that bumps the version, and release.yml calls it
-#                  on the tagged commit.
+#                  request that bumps the version; release.yml calls it on
+#                  the tagged commit unless that run passed on the same
+#                  tree (scripts/ci-tested.mjs).
 #
 # `check`'s save round trip (src/document-view/save-roundtrip*.test.ts)
 # runs only when the change can reach saving: the editor, src/document*/,
@@ -234,7 +235,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: CatVinci-Studio/textus-plugins
-          ref: 6b4a7cf6bede6a37ef02317741a6b458d3f78a02
+          ref: d0207b35756ddcdca63d1dd62a74df5ba5c4b710
           path: textus-plugins
       - run: npm ci --prefix textus-plugins
       # Chromium comes from the cache when this Playwright version's is there;
@@ -340,7 +341,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: CatVinci-Studio/textus-plugins
-          ref: 6b4a7cf6bede6a37ef02317741a6b458d3f78a02
+          ref: d0207b35756ddcdca63d1dd62a74df5ba5c4b710
           path: textus-plugins
       - run: npm ci --prefix textus-plugins
       # As in e2e-shard: the browser from main's cache, its libraries

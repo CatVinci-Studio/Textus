@@ -101,8 +101,8 @@ Example: the draft commands (`src-tauri/src/commands/drafts.rs`,
    `desktop_builder` manages aborts the iOS app when the page calls it
    ([ios-code-map.md](ios-code-map.md)). Plugin commands are listed in
    `with_plugin_commands!` (`src-tauri/src/plugins/mod.rs`) instead.
-3. **Generate its types**: add it to its group in
-   `src-tauri/src/bindings.rs` and run `npm run bindings`, which writes
+3. **Generate its types**: add it to its group's file in
+   `src-tauri/src/bindings/` and run `npm run bindings`, which writes
    `src/platform/bindings/<group>.ts`. `cargo test` fails while they are
    stale.
 4. **The wrapper**, in the `src/platform/ipc-*.ts` file of its area:

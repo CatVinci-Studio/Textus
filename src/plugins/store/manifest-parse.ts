@@ -13,6 +13,7 @@ import { ManifestError, list, object, text } from "./manifest-json";
 import {
   parseCodeLanguages,
   parseDocumentTypes,
+  parseTextFiles,
   parseFolderDocuments,
 } from "./manifest-documents";
 import { parseFileIconThemes } from "./manifest-icon-themes";
@@ -251,8 +252,10 @@ export function parseContributes(raw: unknown, id: string): Contributes {
       const o = object(x, at);
       const where =
         o.where === undefined ? "any" : text(o.where, `${at}.where`);
-      if (where !== "math" && where !== "text" && where !== "any")
-        throw new ManifestError(`${at}.where must be "math", "text" or "any".`);
+      if (!["math", "text", "any", "code"].includes(where))
+        throw new ManifestError(
+          `${at}.where must be "math", "text", "any" or "code".`,
+        );
       const pattern = text(o.pattern, `${at}.pattern`);
       // As it is compiled: unicode, at the caret's end.
       try {
@@ -413,6 +416,7 @@ export function parseContributes(raw: unknown, id: string): Contributes {
     customEditors,
     documentTypes: parseDocumentTypes(c),
     folderDocuments: parseFolderDocuments(c),
+    textFiles: parseTextFiles(c),
     codeLanguages: parseCodeLanguages(c, BUILT_IN_BLOCKS),
     fileIconThemes: parseFileIconThemes(c),
     settings,

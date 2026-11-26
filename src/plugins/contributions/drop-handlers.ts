@@ -6,6 +6,7 @@
  * edge) never asks.
  */
 import { firstAnswer } from "./first-answer";
+import { pluginHandlers } from "./plugin-handlers";
 
 /** As the drop sees a file; `fromSystem`: from a file manager, not yet
  *  copied anywhere. */
@@ -25,10 +26,7 @@ export interface DropMatch {
 
 type Provide = (file: DroppedFileInfo) => Promise<string | null>;
 
-const handlers = new Map<
-  string,
-  { plugin: string; match: DropMatch; provide: Provide }
->();
+const handlers = pluginHandlers<{ match: DropMatch; provide: Provide }>();
 
 /** A match as a plugin gives it: `{ kinds?, extensions? }`, at least one. */
 export function dropMatch(value: unknown): DropMatch {
@@ -54,23 +52,23 @@ export function addDropHandler(
   match: DropMatch,
   provide: Provide,
 ): void {
-  handlers.set(`${plugin}#${id}`, { plugin, match, provide });
+  handlers.add(plugin, id, { match, provide });
 }
 
 export function removeDropHandler(plugin: string, id: string): void {
-  handlers.delete(`${plugin}#${id}`);
+  handlers.remove(plugin, id);
 }
 
 export function forgetDropHandlers(plugin: string): void {
-  for (const [key, handler] of handlers)
-    if (handler.plugin === plugin) handlers.delete(key);
+  handlers.forget(plugin);
 }
 
 const extensionOf = (name: string) =>
   name.includes(".") ? name.slice(name.lastIndexOf(".") + 1).toLowerCase() : "";
 
 const takers = (name: string, kind: string) =>
-  [...handlers.values()]
+  handlers
+    .all()
     .filter(
       ({ match }) =>
         match.kinds.includes(kind) ||

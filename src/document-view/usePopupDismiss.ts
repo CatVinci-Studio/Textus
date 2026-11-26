@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 /** Fixed-position popups close when the page moves under them, since they
- *  would point at the wrong text. A phone's action sheets are exempt. */
+ *  would point at the wrong text. A phone's, not on the text, are exempt. */
 export function usePopupDismiss({
   anyPopup,
   setMenu,

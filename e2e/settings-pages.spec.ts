@@ -253,14 +253,14 @@ test("Layout switched in Settings lays the islands out again at once", async ({
   await expect.poll(gap).toBeLessThanOrEqual(1);
 });
 
-test("the classic look turns on in one switch, and off gives back the look before it", async ({
+test("the look of earlier versions turns on in one switch, and off gives back the look before it", async ({
   page,
 }) => {
   await open(page);
   await emit(page, "menu-settings");
   await page.getByRole("button", { name: "外观" }).first().click();
   const classic = page.getByRole("switch", { name: "使用旧版本样式" });
-  const rail = page.getByRole("switch", { name: "显示左侧图标栏" });
+  const rail = page.getByRole("switch", { name: "显示图标栏", exact: true });
   const titleRow = page.getByRole("switch", { name: "标题栏单独一行显示" });
   const layout = page.getByRole("combobox", { name: "布局" });
   await expect(classic).not.toBeChecked();

@@ -1,5 +1,4 @@
 import { useEffect, useState, type RefObject } from "react";
-import { fs } from "../platform/ipc";
 import { canDropFilesIntoTree } from "../platform/capabilities";
 import { useSettings } from "../prefs/SettingsContext";
 import { showConfirmCheck, showMessage } from "../engine/controls/app-dialog";
@@ -10,19 +9,16 @@ import {
   startProgress,
 } from "../engine/controls/notices";
 import { fill } from "../i18n/fill";
-import { plural } from "../i18n/plural";
+import { counted } from "../i18n/current";
 import { basename, folderName } from "../utils/path";
-import {
-  announceFileCreated,
-  FILE_WRITTEN_EVENT,
-  sendAppEvent,
-} from "../utils/events";
 import { isFarUrl } from "../platform/far-files";
 import { explainError } from "../utils/error-explain";
 import { useLatest } from "../utils/hooks/useLatest";
-import { dropDirAt } from "./tree-shared";
+import { canTakeInto, dropDirAt } from "./tree-shared";
 import type { DraggedFile } from "../engine/controls/document-drop";
-import { copyQuestion, setTreeFileDrop } from "./tree-file-drop";
+import { copyQuestion, setTreeFileDrop, type RowsBack } from "./tree-file-drop";
+import { copyIn, type FileStep, type MadeEntry } from "./file-undo";
+import type { TreeTransfer } from "./useTreeTransfer";
 
 /**
  * Files and folders from a file manager let go on the tree, with a folder
@@ -30,7 +26,11 @@ import { copyQuestion, setTreeFileDrop } from "./tree-file-drop";
  * on the drop, after asking (Settings › General, or the dialog's Don't Ask
  * Again), copied into it one after another - never moved, never over a
  * name there. What fails is said by name once the rest are in. The first
- * copy is then picked and shown (`show`). Returns the folder lit.
+ * copy is then picked and shown (`show`), and the drop can be undone
+ * (`record`, useFileUndo). The tree's own rows, dragged out of the window
+ * and brought back onto a folder, are moved or copied there as a row
+ * dragged within it (`transfer`), with a folder open or not. Returns the
+ * folder lit.
  */
 export function useTreeFileDrop(
   treeRef: RefObject<HTMLDivElement | null>,
@@ -39,20 +39,33 @@ export function useTreeFileDrop(
   folder: string | null,
   reload: (...dirs: string[]) => void,
   show: (path: string, isDir: boolean) => void,
+  /** Keeps the drop to undo; returns its notice's Undo. */
+  record: (step: FileStep) => { label: string; run: () => void } | undefined,
+  transfer: TreeTransfer["transfer"],
 ): string | null {
   const { settings, setSettings, t } = useSettings();
   const [into, setInto] = useState<string | null>(null);
-  const latest = useLatest({ settings, setSettings, t, reload, show });
+  const latest = useLatest({
+    settings,
+    setSettings,
+    t,
+    reload,
+    show,
+    record,
+    transfer,
+  });
 
   useEffect(() => {
+    if (!canDropFilesIntoTree) return;
     // A plugin's folder takes no copies from the disk: what is let go on
     // the sidebar opens, as with no folder.
-    if (!folder || !canDropFilesIntoTree || isFarUrl(folder)) return;
+    const takesCopies = !!folder && !isFarUrl(folder);
     const copyAll = async (files: readonly DraggedFile[], dir: string) => {
       const { t, reload, show } = latest.current;
       const where = { folder: folderName(dir) };
       const progress = startProgress(fill(t.treeCopying, where));
       const failed: string[] = [];
+      const made: MadeEntry[] = [];
       let copied = 0;
       for (const [i, { path, isDir }] of files.entries()) {
         reportProgress(progress, {
@@ -60,13 +73,9 @@ export function useTreeFileDrop(
           message: basename(path),
         });
         try {
-          const made = await fs.copyIntoFolder(path, dir);
-          reload(dir);
-          // A folder is no file a plugin made; the tree and search hear of
-          // it as of one moved in.
-          if (isDir) sendAppEvent(FILE_WRITTEN_EVENT, made);
-          else announceFileCreated(made);
-          if (copied++ === 0) show(made, isDir);
+          const done = await copyIn(path, isDir, dir, "numbered", reload);
+          if (done.made) made.push(done.made);
+          if (copied++ === 0) show(done.copy, isDir);
         } catch (err) {
           failed.push(
             `${fill(t.treeCopyFailed, { name: basename(path) })}: ${explainError(err, t)}`,
@@ -74,8 +83,11 @@ export function useTreeFileDrop(
         }
       }
       endProgress(progress);
-      const lang = latest.current.settings.language;
-      if (copied) showNotice(fill(plural(t.treeCopied, copied, lang), where));
+      const undo = latest.current.record({ kind: "made", made });
+      if (copied)
+        showNotice(fill(counted(t.treeCopied, copied), where), {
+          action: undo,
+        });
       if (failed.length)
         await showMessage(failed.join("\n"), { tone: "error" });
     };
@@ -100,18 +112,29 @@ export function useTreeFileDrop(
       }
       await copyAll(files, dir);
     };
+    /** The folder at (x, y), when the tree takes what is dragged. */
+    const dirAt = (x: number, y: number, back?: RowsBack) =>
+      back || takesCopies ? dropDirAt(treeRef.current, x, y) : null;
+    const fits = (
+      files: readonly DraggedFile[],
+      dir: string,
+      back?: RowsBack,
+    ) => !back || canTakeInto(files, dir, back.copy);
     setTreeFileDrop({
-      over(x, y) {
-        const dir = dropDirAt(treeRef.current, x, y);
-        setInto(dir);
+      over(files, x, y, back) {
+        const dir = dirAt(x, y, back);
+        setInto(dir !== null && fits(files, dir, back) ? dir : null);
         return dir !== null;
       },
       leave: () => setInto(null),
-      drop(files, x, y) {
-        const dir = dropDirAt(treeRef.current, x, y);
+      drop(files, x, y, back) {
+        const dir = dirAt(x, y, back);
         setInto(null);
         if (dir === null) return false;
-        if (files.length) void drop(files, dir);
+        if (!files.length || !fits(files, dir, back)) return true;
+        if (back)
+          void latest.current.transfer(files, dir, back.copy ? "copy" : "move");
+        else void drop(files, dir);
         return true;
       },
     });

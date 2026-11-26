@@ -100,3 +100,7 @@ export function sourceHighlighting(): Extension {
     syntaxHighlighting(sourceHighlightStyle),
   ];
 }
+
+/** The same colours for a text file in another language. */
+export const codeHighlighting = (): Extension =>
+  syntaxHighlighting(sourceHighlightStyle);

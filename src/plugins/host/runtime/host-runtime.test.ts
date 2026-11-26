@@ -19,6 +19,10 @@ type Textus = {
   editor: {
     registerHover: (p: object) => { dispose(): void };
     registerBlockType: (id: string, t: object) => { dispose(): void };
+    registerCompletion: (
+      id: string,
+      p: { provideCompletions: (context: object) => unknown },
+    ) => { dispose(): void };
   };
   net: {
     fetch: (url: string, init?: { signal?: AbortSignal }) => Promise<unknown>;
@@ -36,13 +40,18 @@ type Textus = {
 let sent: [string, unknown][] = [];
 let answer: (method: string, params: unknown) => Promise<unknown>;
 let textus: Textus;
+// What the app may call in the plugin.
+let handlers: Record<string, (params: object) => Promise<unknown>>;
 
 beforeAll(() => {
   const scope = window as unknown as Record<string, unknown>;
-  scope.createEndpoint = () => ({
-    notify: (method: string, params: unknown) => sent.push([method, params]),
-    call: (method: string, params: unknown) => answer(method, params),
-  });
+  scope.createEndpoint = (_port: unknown, h: typeof handlers) => {
+    handlers = h;
+    return {
+      notify: (method: string, params: unknown) => sent.push([method, params]),
+      call: (method: string, params: unknown) => answer(method, params),
+    };
+  };
   scope.localized = (_l: unknown, _lang: string, key: string) => key;
   (0, eval)(`${text}\n${host}`);
   window.dispatchEvent(
@@ -91,6 +100,28 @@ it("tells the plugin's log when a permission refuses an event or a provider", as
     "editor.registerBlockType",
     "editor.unregisterBlockType",
   ]);
+});
+
+it("hands a completion provider the code block's language", async () => {
+  let asked: object | null = null;
+  textus.editor.registerCompletion("acme.py", {
+    provideCompletions: (context) => {
+      asked = context;
+      return [];
+    },
+  });
+  await handlers.$provideCompletions({
+    id: "acme.py",
+    request: 1,
+    text: "pri",
+    match: "pri",
+    query: "pri",
+    after: "",
+    inMath: false,
+    language: "python",
+    path: null,
+  });
+  expect(asked).toMatchObject({ match: "pri", language: "python" });
 });
 
 it("stops a fetch whose signal aborts, in the app too", async () => {

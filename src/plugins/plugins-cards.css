@@ -204,11 +204,10 @@ button.plugin-card-open {
 .plugin-installs {
   font-variant-numeric: tabular-nums;
 }
-/* Get more's sort, over the list's right edge. */
+/* Get more's sort, among its section's buttons and level with them. */
 .market-sort {
   display: flex;
   justify-content: flex-end;
-  margin: 0 0 var(--space-2);
 }
 /* A catalog plugin's page: icon, name and Install in a row; its pictures,
    README and permissions below. */

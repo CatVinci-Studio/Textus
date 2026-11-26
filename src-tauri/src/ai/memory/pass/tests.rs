@@ -122,7 +122,9 @@ fn the_pass_is_shown_what_is_remembered_and_the_entries_named() {
             reply: "改好了。".into(),
         },
     );
-    assert!(input.contains("[personal/memory/Reply-briefly] (personal, preference) Reply briefly."));
+    assert!(
+        input.contains("\n- [personal/memory/Reply-briefly] (personal, preference) Reply briefly.")
+    );
     assert!(
         input.contains("- 林晚 - the user's own entry: never update or forget it: 灯塔看守人。")
     );

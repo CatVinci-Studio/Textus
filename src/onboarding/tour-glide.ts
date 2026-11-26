@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { easingFn } from "../engine/frame/easing";
 import { tween } from "../engine/motion/tween";
 import { duration, motionAllowed } from "../engine/motion/motion";
@@ -87,14 +87,18 @@ export function useTargetBox(selector: string | null): Box | null {
 }
 
 /** Moves the drawn frame to `target` on the window's settle span and curve,
- *  writing each frame through `draw`; at once with reduced motion. */
+ *  writing each frame through `draw`; at once with reduced motion. The
+ *  first frame is drawn before paint, once `ready` (the card measured), so
+ *  neither a corner nor a guess ever shows. */
 export function useGlide(
   target: TourFrame,
   draw: (frame: TourFrame) => void,
+  ready = true,
 ): void {
   const shown = useRef<TourFrame | null>(null);
   const key = JSON.stringify(target);
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (!ready) return;
     const to = JSON.parse(key) as TourFrame;
     const from = shown.current;
     if (!from || !motionAllowed()) {
@@ -107,5 +111,5 @@ export function useGlide(
       shown.current = frame;
       draw(frame);
     });
-  }, [key, draw]);
+  }, [key, draw, ready]);
 }

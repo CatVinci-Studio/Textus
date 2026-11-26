@@ -164,6 +164,83 @@ describe("macOS navigation", () => {
     view.destroy();
   });
 
+  it("in a code block, Cmd+Left/Right and Home/End stop at the line's own ends", () => {
+    // "ab\ncd\nef": one visual line by the coordinates, as a "\n" reads.
+    const code = () => [
+      block("paragraph", "p"),
+      block("code_block", "ab\ncd\nef"),
+    ];
+    for (const [key, init] of [
+      ["ArrowRight", { metaKey: true }],
+      ["End", {}],
+    ] as const) {
+      const { view, press } = fixture(code(), 8);
+      expect(
+        press(
+          createMacNavigationPlugin(() => true),
+          key,
+          init,
+        ),
+      ).toBe(true);
+      expect(view.state.selection.head).toBe(9);
+      view.destroy();
+    }
+    for (const [key, init] of [
+      ["ArrowLeft", { metaKey: true }],
+      ["Home", {}],
+    ] as const) {
+      const { view, press } = fixture(code(), 8);
+      expect(
+        press(
+          createMacNavigationPlugin(() => true),
+          key,
+          init,
+        ),
+      ).toBe(true);
+      expect(view.state.selection.head).toBe(7);
+      view.destroy();
+    }
+    // A code block that opens on an empty line: its start stays put.
+    const { view } = fixture([block("code_block", "\nab")], 1);
+    expect(visualLineBoundary(view, 1, -1)).toBe(1);
+    view.destroy();
+  });
+  it("in a code block, Cmd+Up/Down go to its ends first, then the document's", () => {
+    const { view, press } = fixture(
+      [
+        block("paragraph", "p"),
+        block("code_block", "ab\ncd"),
+        block("paragraph", "z"),
+      ],
+      7,
+    );
+    const plugin = createMacNavigationPlugin(() => true);
+    press(plugin, "ArrowUp", { metaKey: true });
+    expect(view.state.selection.head).toBe(4);
+    press(plugin, "ArrowUp", { metaKey: true });
+    expect(view.state.selection.head).toBe(1);
+    view.dispatch(
+      view.state.tr.setSelection(TextSelection.create(view.state.doc, 5)),
+    );
+    press(plugin, "ArrowDown", { metaKey: true, shiftKey: true });
+    expect([view.state.selection.anchor, view.state.selection.head]).toEqual([
+      5, 9,
+    ]);
+    press(plugin, "ArrowDown", { metaKey: true });
+    expect(view.state.selection.head).toBe(12);
+    view.destroy();
+  });
+  it("plain Home and End are left to the browser off a Mac", () => {
+    const { view, press } = fixture();
+    expect(
+      press(
+        createMacNavigationPlugin(() => false),
+        "Home",
+      ),
+    ).toBe(false);
+    view.destroy();
+  });
+
   it("navigates out of nested inline formatting to the containing line", () => {
     const paragraph = schema.node("paragraph", null, [
       schema.text("a "),

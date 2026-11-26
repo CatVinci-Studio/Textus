@@ -10,3 +10,9 @@ export const DocSourceEditor = lazyComponent(
   }),
   (m) => m.DocSourceEditor,
 );
+
+/** A text file that isn't a document, in the same editor. */
+export const TextFileEditor = lazyComponent(
+  lazyModule("text-file-editor", () => import("./TextFileEditor")),
+  (m) => m.TextFileEditor,
+);

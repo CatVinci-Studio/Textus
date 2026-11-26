@@ -64,6 +64,9 @@ export interface Settings {
   /** Line numbers beside each code block, whose lines then scroll sideways
    *  instead of wrapping. */
   codeLineNumbers: boolean;
+  /** Enter on a code block's empty last line leaves the block; off, it
+   *  is a new line, and Mod+Enter or Down leaves it. */
+  codeEnterTwiceLeaves: boolean;
   /** Where a small square of the colour shows before a colour code. */
   colorSwatches: ColorSwatchMode;
   /** What `~text~` is: a subscript after a letter or digit (`H~2~O`), a
@@ -205,8 +208,9 @@ export interface Settings {
   /// Floating islands (the page and panels as rounded sheets on the frame)
   /// or classic (flush, square, hairlines).
   layout: "islands" | "classic";
-  /// The layout, rail and title row as they were when "Use the classic
-  /// look" turned on, put back when it turns off; null while it is off.
+  /// The layout, rail and title row as they were when "Use the look of
+  /// earlier versions" turned on, put back when it turns off; null while
+  /// it is off.
   lookBeforeClassic: {
     layout: "islands" | "classic";
     activityRail: boolean;
@@ -278,6 +282,9 @@ export interface Settings {
    *  are copied into its folder (the dialog's Don't Ask Again turns it
    *  off). */
   confirmTreeCopy: boolean;
+  /** The tree asks before moving rows to the Trash (the question's Don't
+   *  Ask Again turns it off). */
+  confirmTreeTrash: boolean;
   /** Export as PDF numbers each page in its bottom margin. */
   pdfPageNumbers: boolean;
   /** The paper, margins and text size a PDF export prints with. */
@@ -334,6 +341,7 @@ export const DEFAULT_SETTINGS: Settings = {
   enableMermaid: true,
   diagramEngine: "mermaid",
   codeLineNumbers: false,
+  codeEnterTwiceLeaves: true,
   colorSwatches: "off",
   singleTilde: "subscript",
   singleNewline: "join",
@@ -416,6 +424,7 @@ export const DEFAULT_SETTINGS: Settings = {
   autoSuggestFilename: true,
   autosave: false,
   confirmTreeCopy: true,
+  confirmTreeTrash: true,
   pdfPageNumbers: false,
   pdfPaper: "a4",
   pdfMargin: "normal",

@@ -136,6 +136,24 @@ describe("a plugin's manifest", () => {
     expect(() => folders([{ extension: "textbundle", documents: [] }])).toThrow(
       /empty/,
     );
+    // A text file type: edited as plain text, coloured as a fence language.
+    const textFiles = (value: unknown) =>
+      parseManifest({ ...base, contributes: { textFiles: value } }).contributes
+        .textFiles;
+    expect(
+      textFiles([
+        { extensions: [".TeX", "sty"], language: "LaTeX" },
+        { extensions: ["bib"] },
+      ]),
+    ).toEqual([
+      { extensions: ["tex", "sty"], language: "latex" },
+      { extensions: ["bib"], language: null },
+    ]);
+    expect(() => textFiles([{ extensions: ["txt"] }])).toThrow(/Textus's own/);
+    expect(() => textFiles([{ extensions: [] }])).toThrow(/empty/);
+    expect(() => textFiles([{ extensions: ["tex"], language: "a b" }])).toThrow(
+      /fence's language/,
+    );
     // A code language: names lowercase, a grammar file of its own, Textus's
     // drawn fences refused.
     const languages = (codeLanguages: unknown) =>
@@ -269,6 +287,7 @@ describe("a plugin's manifest", () => {
         completions: [
           { id: "catvinci.example.tex", where: "math", pattern: "\\\\[a-z]*" },
           { id: "catvinci.example.any", pattern: "@\\w*", title: "%dates%" },
+          { id: "catvinci.example.py", where: "code", pattern: "\\w+" },
         ],
       },
     });
@@ -280,6 +299,7 @@ describe("a plugin's manifest", () => {
         pattern: "@\\w*",
         title: "%dates%",
       },
+      { id: "catvinci.example.py", where: "code", pattern: "\\w+" },
     ]);
     const bad = (c: object) => () =>
       parseManifest({ ...base, contributes: { completions: [c] } });
@@ -287,7 +307,7 @@ describe("a plugin's manifest", () => {
       /not a regular expression/,
     );
     expect(
-      bad({ id: "catvinci.example.x", where: "code", pattern: "a" }),
+      bad({ id: "catvinci.example.x", where: "table", pattern: "a" }),
     ).toThrow(/where/);
     expect(bad({ id: "other.x", pattern: "a" })).toThrow(/must start with/);
   });

@@ -26,13 +26,12 @@ export function isWindowsPlatform(): boolean {
   );
 }
 
-/** Linux desktop builds; Android also reports "Linux" and is excluded. */
+/** Linux desktop builds. Android also reports "Linux", and so does an
+ *  iPhone's or iPad's web view emulated on a Linux host (CI's e2e): both are
+ *  excluded, as `platformName` names them. */
 export function isLinuxPlatform(): boolean {
   if (typeof navigator === "undefined") return false;
-  return (
-    /linux/i.test(navigator.platform ?? "") &&
-    !/android/i.test(navigator.userAgent)
-  );
+  return /linux/i.test(navigator.platform ?? "") && isDesktop();
 }
 
 /** iOS and iPadOS. An iPad reports "MacIntel" like a Mac by default; the

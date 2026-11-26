@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { undo } from "@milkdown/kit/prose/history";
+import { Plugin } from "@milkdown/kit/prose/state";
 import { closeViews, openView } from "../editor-view-kit";
 import { pickedText } from "../completion/completion-plugin";
 
@@ -50,4 +51,43 @@ describe("a link picked from the [[ list", () => {
     expect(t.markdown()).toMatch(/^see \\?\[\\?\[Ov/);
     expect(links(t.view)).toEqual([]);
   });
+});
+
+/** Fails a test whose plugins keep answering each other, which would
+ *  otherwise run until memory runs out: a test makes a few edits at most. */
+const guardLoops = (view: EditorView) => {
+  let rounds = 0;
+  const guard = new Plugin({
+    appendTransaction() {
+      if (++rounds > 200) throw new Error("plugins answer each other forever");
+      return null;
+    },
+  });
+  view.updateState(
+    view.state.reconfigure({ plugins: [...view.state.plugins, guard] }),
+  );
+};
+
+describe("text the settling would make a link Markdown doesn't read", () => {
+  it("stays text: an unclosed <destination> once the caret leaves it", async () => {
+    const t = await openView("[a](<b)c>");
+    guardLoops(t.view);
+    t.caretAt("[a](<b)c>", 5, 1);
+    t.view.dispatch(t.view.state.tr.deleteSelection());
+    t.caretAtEnd();
+    expect(links(t.view)).toEqual([]);
+    expect(t.markdown()).toBe("[a](<)c>");
+  });
+
+  it.each(["[a](<b) c", "www., x"])(
+    "stays text: %s typed and left",
+    async (text) => {
+      const t = await openView("", { enableCompletion: false });
+      guardLoops(t.view);
+      t.type(text);
+      t.select(1);
+      expect(links(t.view)).toEqual([]);
+      expect(t.markdown()).toBe(text);
+    },
+  );
 });

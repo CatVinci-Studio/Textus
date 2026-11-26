@@ -1,4 +1,5 @@
 import { fromMarkdown } from "mdast-util-from-markdown";
+import { linkDestination } from "./link-syntax";
 
 /**
  * How a link's label is drawn while its source is hidden: bold, italic,
@@ -167,8 +168,7 @@ export function labelMarkdown(node: Node): string {
   if (node.nodeType !== Node.ELEMENT_NODE) return "";
   const el = node as Element;
   if (el.tagName === "IMG") {
-    const src = el.getAttribute("src") ?? "";
-    const dest = /[\s()<>]/.test(src) ? `<${src}>` : src;
+    const dest = linkDestination(el.getAttribute("src") ?? "");
     return `![${escapeLabel(el.getAttribute("alt") ?? "")}](${dest})`;
   }
   if (el.tagName === "CODE") {

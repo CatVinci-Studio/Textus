@@ -187,10 +187,18 @@
   cursor: pointer;
 }
 
-.window-bar-toggle:hover,
-.window-bar-agent:hover,
-.window-bar-sidebar-toggle:hover,
-.window-menu-button:hover,
+/* A touch leaves :hover stuck on the last thing tapped: hover only where
+   something can hover. */
+@media (any-hover: hover) {
+  .window-bar-toggle:hover,
+  .window-bar-agent:hover,
+  .window-bar-sidebar-toggle:hover,
+  .window-menu-button:hover {
+    opacity: 1;
+    background: var(--ui-hover);
+  }
+}
+
 .window-bar-toggle-on {
   opacity: 1;
   background: var(--ui-hover);

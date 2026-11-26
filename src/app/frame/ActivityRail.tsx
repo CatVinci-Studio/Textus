@@ -8,7 +8,6 @@ import {
 import { Presence } from "../../engine/motion/usePresence";
 import { RAIL_DIVIDER, railDrag } from "./rail-drag";
 import { useSettings } from "../../prefs/SettingsContext";
-import { SettingsIcon } from "../../engine/controls/icons";
 import { RailUpdate } from "./RailUpdate";
 import { emitToThisWindow } from "../../platform/menu-events";
 import type { Strings } from "../../i18n/strings";
@@ -49,7 +48,9 @@ export function ActivityRail({
   const shownTabs = tabs.filter(
     (tab) => !tab.railFoot && (!hidden.has(tab.id) || tab.id === shownId),
   );
-  const settingsOn = sidebarOpen && shownId === "settings";
+  // Settings' gear, where it is among the tabs (not on a phone).
+  const foot = tabs.find((tab) => tab.railFoot);
+  const footOn = !!foot && sidebarOpen && shownId === foot.id;
   // Textus's own and the plugins' the user pinned among them, in the tabs'
   // order; the rest under the line, scrolling when they don't all fit.
   const pinned = settings.activityRailPinned;
@@ -133,21 +134,23 @@ export function ActivityRail({
       {/* A newer release, while there is one, over Settings. */}
       <RailUpdate t={t} />
       {/* Settings at the column's foot, out of the tabs' order. */}
-      <Tooltip text={t.settingsTitle} side="right">
-        <button
-          type="button"
-          className="activity-rail-item activity-rail-settings"
-          aria-label={t.settingsTitle}
-          aria-pressed={settingsOn}
-          // Like every rail icon: opens the sidebar on Settings' pages, or
-          // closes it (the Settings tab comes to the front as it opens).
-          onClick={() =>
-            settingsOn ? onCloseSidebar() : emitToThisWindow("menu-settings")
-          }
-        >
-          <SettingsIcon />
-        </button>
-      </Tooltip>
+      {foot && (
+        <Tooltip text={foot.label(t)} side="right">
+          <button
+            type="button"
+            className="activity-rail-item activity-rail-settings"
+            aria-label={foot.label(t)}
+            aria-pressed={footOn}
+            // Like every rail icon: opens the sidebar on Settings' pages, or
+            // closes it (the Settings tab comes to the front as it opens).
+            onClick={() =>
+              footOn ? onCloseSidebar() : emitToThisWindow("menu-settings")
+            }
+          >
+            <foot.Icon />
+          </button>
+        </Tooltip>
+      )}
       <Presence show={menu !== null}>
         {menu && (
           <ContextMenu

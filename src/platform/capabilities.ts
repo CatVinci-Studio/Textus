@@ -20,6 +20,14 @@ const isAndroidApp = isAndroidPlatform();
  *  on a tablet and the phone's on a narrow screen (usePhoneLayout). */
 export const isMobileApp = isIOSApp || isAndroidApp;
 
+/** Two fingers' pinch comes only as touches: Android's web view sends no
+ *  gesture events and no ctrl+wheel for it (app/touch-pinch.ts). */
+export const pinchFromTouches = isAndroidApp;
+
+/** The caret is placed only as the selection changes, so text zoomed
+ *  under it leaves it behind (iOS's WebKit; app/useZoom.ts's caretAgain). */
+export const caretStaysWhereTextWas = isIOSApp;
+
 /** A system Back (Android's button or gesture), which the page answers
  *  first (mobile/back.ts). */
 export const hasSystemBack = isAndroidApp;
@@ -31,8 +39,16 @@ export const canUseWindows = isDesktopApp;
 /** A menu bar and everything that arrives through it. */
 export const hasAppMenu = isDesktopApp;
 
-/** The menu bar is the OS's own (macOS), so it gets UI-language labels sent. */
-export const hasNativeMenuBar = isDesktopApp && isMacPlatform();
+/** The page runs in a real Tauri window. Read as this module loads, before
+ *  the dev shim (dev/tauri-shim.ts) stands in for Tauri in a plain browser,
+ *  which has no menu bar of its own. */
+const inTauriWindow =
+  typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+
+/** The menu bar is the OS's own (macOS), so it gets UI-language labels sent
+ *  and takes its keys (⌘Z) before the page. */
+export const hasNativeMenuBar =
+  isDesktopApp && isMacPlatform() && inTauriWindow;
 
 /** Tabs dragged out of one window into another, or into a new one, with
  *  the window following the pointer: macOS and Windows give the global
@@ -40,6 +56,10 @@ export const hasNativeMenuBar = isDesktopApp && isMacPlatform();
  *  doesn't. */
 export const canDragTabsBetweenWindows =
   isDesktopApp && (isMacPlatform() || isWindowsPlatform());
+
+/** Rows of the file tree dragged out of the window as real files, to a
+ *  file manager or any other app: the system's own drag. */
+export const canDragFilesOut = isDesktopApp;
 
 /** Web page tabs as a native webview over the tab. GTK can't place a second
  *  webview, so Linux keeps the framed page. */

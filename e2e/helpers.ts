@@ -261,3 +261,42 @@ export async function selectionRead(page: Page) {
       }),
   );
 }
+
+/** The dev shim's disk (`__devFs`): each file's path and text. */
+export function devDisk(page: Page): Promise<Record<string, string>> {
+  return page.evaluate(
+    () => (window as unknown as { __devFs: Record<string, string> }).__devFs,
+  );
+}
+
+/** The dev shim's files' paths, sorted. */
+export async function devPaths(page: Page): Promise<string[]> {
+  return Object.keys(await devDisk(page)).sort();
+}
+
+/** The app on a disk of `files`, with `folder` opened as the window's
+ *  folder (File › Open Folder…), in English. */
+export async function openTreeFolder(
+  page: Page,
+  folder: string,
+  files: Record<string, string>,
+) {
+  await page.addInitScript(
+    ({ folder, files }) => {
+      const w = window as unknown as Record<string, unknown>;
+      w.__devFs = files;
+      w.__devPickFolder = folder;
+    },
+    { folder, files },
+  );
+  await openApp(page, { settings: { language: "en" } });
+  await emit(page, "menu-open-folder");
+}
+
+/** The file tree's row whose name holds `name`. */
+export const treeRow = (page: Page, name: string) =>
+  page.locator(".tree-row", { hasText: name });
+
+/** The file tree's row of exactly `path`. */
+export const treeRowAt = (page: Page, path: string) =>
+  page.locator(`.tree-row[data-path="${path}"]`);

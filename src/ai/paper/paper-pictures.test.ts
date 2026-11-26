@@ -40,4 +40,19 @@ describe("a paper's pictures", () => {
     ).toBe(false);
     expect(t.markdown()).toBe("Text.");
   });
+
+  it("put a saved src in <…> when a parenthesis or angle bracket would end it", async () => {
+    const [picture] = paperPictures(paper);
+    for (const [src, written] of [
+      ["plain.png", "plain.png"],
+      ["pic (1).png", "<pic (1).png>"],
+      ["a<b>.png", "<a<b>.png>"],
+    ]) {
+      const t = await openView("Text.\n\n*Figure 1. A green roof*");
+      t.editor.action((ctx) => placePicture(t.view, ctx, picture, src));
+      expect(t.markdown()).toBe(
+        `Text.\n\n![A green roof](${written})\n\n*Figure 1. A green roof*`,
+      );
+    }
+  });
 });

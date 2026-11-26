@@ -9,10 +9,8 @@ import { DocSourceEditor } from "./DocSourceEditor";
 import { sourceViewAt } from "./source-view-registry";
 import { imageMarkdown } from "./useSourceImagePaste";
 import { undo } from "@codemirror/commands";
-import {
-  registerPathCompletion,
-  setPathCompletionRoot,
-} from "../../files/path-completion";
+import { registerPathCompletion } from "../../files/path-completion";
+import { setWindowFolderSource } from "../../platform/window-folder";
 import { INSERT_MARKDOWN_EVENT, sendAppEvent } from "../../utils/events";
 
 // jsdom has no layout: CodeMirror measures a line with the range's rects, and
@@ -135,7 +133,7 @@ it("completes a picture's path from the folder, the pick one undo step", async (
     ],
     truncated: false,
   });
-  setPathCompletionRoot("/notes");
+  setWindowFolderSource(() => "/notes");
   const stop = registerPathCompletion({
     image: () => "Images",
     link: () => "Files",
@@ -164,7 +162,7 @@ it("completes a picture's path from the folder, the pick one undo step", async (
     expect(view.state.doc.toString()).toBe("![](");
   } finally {
     stop();
-    setPathCompletionRoot(null);
+    setWindowFolderSource(null);
   }
 });
 

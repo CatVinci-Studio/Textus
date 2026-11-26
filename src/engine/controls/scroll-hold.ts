@@ -30,17 +30,23 @@ export interface Still {
   top: number;
 }
 
-/** Scrolls by what `still` moved. `now`: where its block is shown now,
- *  when it was made anew (a placeholder drawn). */
+/** Where `held` is on screen now; undefined once gone. */
+function topNow(held: Still | HeldText): number | undefined {
+  if ("range" in held)
+    return held.range.startContainer.isConnected
+      ? held.range.getClientRects()[0]?.top
+      : undefined;
+  return held.el.isConnected ? held.el.getBoundingClientRect().top : undefined;
+}
+
+/** Scrolls by what `still`, a block or a character, moved. */
 export function holdStill(
   scroller: Element,
-  still: Still | null,
-  now: (el: Element) => Element | null | undefined = (el) => el,
+  still: Still | HeldText | null,
 ): void {
-  if (pageIsTheHands(scroller)) return;
-  const el = still && (still.el.isConnected ? still.el : now(still.el));
-  if (!el?.isConnected) return;
-  scrollByHeld(scroller, el.getBoundingClientRect().top - still!.top);
+  if (!still || pageIsTheHands(scroller)) return;
+  const top = topNow(still);
+  if (top !== undefined) scrollByHeld(scroller, top - still.top);
 }
 
 /** By how much a scroller scrolls when a box that starts above its top
@@ -108,7 +114,8 @@ export function blockAt(blocks: Element, line: number): Element | null {
 }
 
 /// Runs `change`, anything that reflows the document, with the line at
-/// viewport y `line` held still: `block` keeps the same share of its height there.
+/// viewport y `line` held still: `block` keeps the same share of its height
+/// there, as `holdStill` holds - whole pixels, not while pulled past an end.
 export function holdBlock(
   scroller: HTMLElement,
   block: Element,
@@ -119,7 +126,40 @@ export function holdBlock(
   const share = was.height > 0 ? (line - was.top) / was.height : 0;
   change();
   const now = block.getBoundingClientRect();
-  scroller.scrollTop += now.top + share * now.height - line;
+  scrollByHeld(scroller, now.top + share * now.height - line);
+}
+
+/** A character on screen, and its top there before a change. */
+export interface HeldText {
+  range: Range;
+  top: number;
+}
+
+/** The character of `within` drawn at viewport point (x, y), hit through
+ *  any transform; null where no text is. */
+export function textAt(within: Element, x: number, y: number): HeldText | null {
+  const at = document.caretRangeFromPoint?.(x, y);
+  const node = at?.startContainer;
+  if (node?.nodeType !== Node.TEXT_NODE || !within.contains(node)) return null;
+  const length = node.textContent?.length ?? 0;
+  if (!length) return null;
+  const from = Math.min(at!.startOffset, length - 1);
+  const range = document.createRange();
+  range.setStart(node, from);
+  range.setEnd(node, from + 1);
+  const top = range.getClientRects()[0]?.top;
+  return top === undefined ? null : { range, top };
+}
+
+/// Runs `change` with `held`'s line back where it was: text that rewraps
+/// keeps its own line still, where a block's share of its height drifts.
+export function holdText(
+  scroller: HTMLElement,
+  held: HeldText,
+  change: () => void,
+) {
+  change();
+  holdStill(scroller, held);
 }
 
 /** `scroller` put back at `top` if something scrolled it; `then` hears

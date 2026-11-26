@@ -48,6 +48,8 @@ function joined(dir: string, link: string): string | null {
   return parts.join("/");
 }
 
+// Not utils' dirname: a path from the root has "" for the top, where dirname
+// gives back a bare name itself.
 function folderOf(path: string): string {
   const slash = path.lastIndexOf("/");
   return slash < 0 ? "" : path.slice(0, slash);

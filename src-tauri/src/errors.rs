@@ -25,6 +25,14 @@ pub(crate) fn error(code: &str) -> String {
     }
 }
 
+/// An I/O error as the user's text: a taken name is `exists`.
+pub(crate) fn exists_or(e: std::io::Error) -> String {
+    match e.kind() {
+        std::io::ErrorKind::AlreadyExists => error("exists"),
+        _ => e.to_string(),
+    }
+}
+
 /// Whether `err` is the error `code` stands for.
 #[cfg(not(target_os = "ios"))]
 pub(crate) fn is(err: &str, code: &str) -> bool {

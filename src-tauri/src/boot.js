@@ -6,7 +6,7 @@
 //    synchronously (src/storage/boot.ts) instead of localStorage.
 // 2. Put the appearance settings on the document NOW, so the first frame is
 //    already in the right theme. React applies the same things again once
-//    it mounts (SettingsContext.tsx) - the element ids and attributes here
+//    it mounts (src/theme/apply-appearance.ts) - the element ids and attributes here
 //    must stay the ones it uses, so it takes these over instead of adding
 //    second copies.
 //
@@ -38,6 +38,10 @@ window.__textusBoot = function (boot, themeCss) {
       );
     if (settings.theme === "light" || settings.theme === "dark")
       root.setAttribute("data-theme", settings.theme);
+    // The theme's page colour for index.html's first paint; the app's own
+    // stylesheets take over (apply-appearance.ts removes it).
+    if (typeof boot.background === "string")
+      root.style.setProperty("--boot-bg", boot.background);
     // The frame's edges and gaps hang on it (layout-tokens.css); the first
     // of the table is the default.
     var layouts = tables.layouts || [];
@@ -99,7 +103,7 @@ window.__textusBoot = function (boot, themeCss) {
     document.head.appendChild(style);
   }
 
-  // isEffectiveDark() in SettingsContext.tsx.
+  // isEffectiveDark() in src/theme/imported-theme.ts.
   function effectiveDark() {
     return (
       settings.theme === "dark" ||
@@ -119,7 +123,7 @@ window.__textusBoot = function (boot, themeCss) {
       var dark = effectiveDark();
       var source = dark && themeCss.dark ? themeCss.dark : themeCss.light;
       // A one-design theme keeps its light page in the dark appearance
-      // (applyUserTheme() in SettingsContext.tsx).
+      // (applyImportedTheme() in src/theme/imported-theme.ts).
       if (dark && !themeCss.dark)
         document.documentElement.setAttribute("data-light-page", "");
       // adaptTyporaCss() in src/theme/typora-compat.ts.
@@ -150,9 +154,9 @@ window.__textusBoot = function (boot, themeCss) {
       addStyle("textus-custom-theme", css);
       // The app's own colours (sidebar, background, accents) as the
       // frontend last derived them from this stylesheet in this appearance
-      // - applyThemeChrome() in src/theme/theme-chrome.ts, which needs a
+      // - applyThemeChrome() in src/engine/tokens/palette.ts, which needs a
       // CSS engine to work them out, so they're remembered in ui-state.json
-      // (ThemeChromeCache in src/storage/ui-state.ts) rather than computed
+      // (ThemeChromeCache in src/storage/ui-state-types.ts) rather than computed
       // here. Anything else: none, and the frontend applies them a moment
       // later as before.
       var chrome = (boot.uiState || {}).themeChrome;
@@ -167,7 +171,7 @@ window.__textusBoot = function (boot, themeCss) {
     }
     if (settings.customCss && String(settings.customCss).trim()) {
       addStyle("textus-user-css", String(settings.customCss));
-      // promoteCustomProperties() in SettingsContext.tsx: the user's `--*`
+      // promoteCustomProperties() in src/theme/imported-theme.ts: the user's `--*`
       // beat the imported chrome's !important ones.
       var userSheet = document.getElementById("textus-user-css").sheet;
       if (userSheet) promote(userSheet.cssRules);

@@ -188,9 +188,13 @@ test("a text file no plugin opens shows read-only, not as Markdown to rewrite", 
   // No catalog: no plugin to offer for it.
   await mockInvoke(page, { plugin_catalog: [], plugin_catalog_cached: [] });
   await openPath(page, "/work/all.base");
-  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  // Its own text in the source view, never the Markdown editor.
+  const editor = page.locator('[data-active-tab="true"] .cm-content');
   await expect(editor).toContainText("views");
-  await expect(editor).toHaveAttribute("contenteditable", "false");
+  await expect(editor).toHaveAttribute("aria-readonly", "true");
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toHaveCount(0);
 });
 
 test("a plugin's code language is coloured in the editor and source mode, by any of its names, and offered in the language menu", async ({
@@ -396,6 +400,63 @@ test("a plugin's block is on the page as a table is, its edge shown only while p
   await expect(block).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
 });
 
+test("a plugin's block opened again starts at its page's height, not growing to it", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.function-plot"), "no plugins checkout");
+  await openWithPlugins(page, {
+    plugins: {
+      "catvinci.function-plot": permissions("catvinci.function-plot"),
+    },
+    folder: {
+      "/work/notes/plot.md": "# Plot\n\n```function-plot\ny = x^2\n```\n",
+      "/work/notes/other.md": "# Other\n",
+    },
+  });
+  // Another tab, so closing the block's leaves the window open.
+  await openPath(page, "/work/notes/other.md");
+  await openPath(page, "/work/notes/plot.md");
+  await expect(page.locator(".tab-pill")).toHaveCount(2);
+  const frame = page.locator(
+    '[data-active-tab="true"] .plugin-code-block .plugin-webview-frame',
+  );
+  await expect(frame).toBeVisible();
+  // The page has said how tall it is.
+  await expect
+    .poll(() => frame.evaluate((f) => (f as HTMLElement).style.height))
+    .not.toBe("");
+  const height = await frame.evaluate((f) => f.getBoundingClientRect().height);
+  await emit(page, "menu-close-tab");
+  await expect(frame).toHaveCount(0);
+  // Every frame's height of the block from the moment it is there again,
+  // until its page is in it and its height has held for a while.
+  const seen = page.evaluate(
+    () =>
+      new Promise<number[]>((done) => {
+        const heights: number[] = [];
+        let held = 0;
+        const sample = () => {
+          const holder = document.querySelector(
+            '[data-active-tab="true"] .plugin-code-holder',
+          );
+          const height = holder?.getBoundingClientRect().height;
+          if (height !== undefined) {
+            const same = height === heights[heights.length - 1];
+            held = same && holder!.querySelector("iframe") ? held + 1 : 0;
+            heights.push(height);
+          }
+          if (held >= 30 || heights.length > 600) done(heights);
+          else requestAnimationFrame(sample);
+        };
+        requestAnimationFrame(sample);
+      }),
+  );
+  await openPath(page, "/work/notes/plot.md");
+  const heights = await seen;
+  expect(heights.length).toBeGreaterThan(0);
+  expect(heights.filter((h) => Math.abs(h - height) > 1)).toEqual([]);
+});
+
 test("a block whose plugin asks for no frame, a base, shows no edge when pointed at, only its source button", async ({
   page,
 }) => {
@@ -497,6 +558,99 @@ test("a plugin reads the document in front as a save would write it", async ({
       }, "/src/plugins/app-bridge.ts"),
     )
     .toBe(file);
+});
+
+test("a plugin reads the document and hears it change in Source Mode and Source and Preview", async ({
+  page,
+}) => {
+  const manifest = {
+    id: "example.reader",
+    name: "Reader",
+    version: "0.1.0",
+    publisher: "example",
+    engines: { textus: ">=1.3.12" },
+    main: "host.js",
+    activationEvents: ["onStartupFinished"],
+    permissions: ["editor.read"],
+  };
+  // Each change it hears, with the path and text it then reads.
+  const host = `exports.activate = function (ctx) {
+    var seen = [];
+    textus.editor.onDidChange(async function () {
+      seen.push({ path: await textus.editor.getPath(), text: await textus.editor.getText() });
+      await ctx.storage.global.set("seen", seen);
+    });
+  };`;
+  await page.addInitScript(
+    ({ manifest, host }) => {
+      if (window.top !== window) return;
+      const w = window as unknown as Record<string, unknown>;
+      w.__devPlugins = [
+        {
+          id: manifest.id,
+          dir: `/plugins/${manifest.id}`,
+          manifest: JSON.stringify(manifest),
+          dev: false,
+          files: { "host.js": host },
+        },
+      ];
+      w.__devFs = { "/work/slides.md": "# Slides\n" };
+      w.__devPluginState = {
+        allOn: true,
+        plugins: {
+          [manifest.id]: { enabled: true, granted: manifest.permissions },
+        },
+      };
+    },
+    { manifest, host },
+  );
+  await openApp(page, { settings: { language: "en" } });
+  await openPath(page, "/work/slides.md");
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toContainText("Slides");
+  const lastSeen = () =>
+    page.evaluate(() => {
+      const stores = (window as unknown as Record<string, unknown>)
+        .__devPluginStore as
+        Record<string, { kv: Record<string, unknown> }> | undefined;
+      const seen = stores?.["example.reader|global|"]?.kv.seen as
+        { path: string | null; text: string | null }[] | undefined;
+      return seen?.at(-1) ?? null;
+    });
+  const source = page.locator('[data-active-tab="true"] .cm-content');
+  for (const [toggle, typed] of [
+    ["menu-toggle-source-mode", "one"],
+    ["menu-toggle-split-view", "two"],
+  ]) {
+    await emit(page, toggle);
+    await source.click();
+    await page.keyboard.press("ControlOrMeta+End");
+    await page.keyboard.type(typed);
+    await expect.poll(lastSeen).toEqual({
+      path: "/work/slides.md",
+      text: expect.stringContaining(typed),
+    });
+  }
+  // Changed in place as an open document, as files.process does.
+  await page.evaluate(async (url) => {
+    const open = (await import(/* @vite-ignore */ url)).openDocumentAt(
+      "/work/slides.md",
+    );
+    open.replaceText(`${open.text()}\n\nmore`, open.revision());
+  }, "/src/registry/open-documents.ts");
+  await expect(source).toContainText("more");
+  // Back in the rendered view, it alone answers.
+  await emit(page, "menu-toggle-split-view");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(editor).toContainText("more");
+  await editor.click();
+  await page.keyboard.press("ControlOrMeta+End");
+  await page.keyboard.type(" three");
+  await expect.poll(lastSeen).toEqual({
+    path: "/work/slides.md",
+    text: expect.stringMatching(/one[\s\S]*two[\s\S]*more three/),
+  });
 });
 
 test("Git marks the blocks changed since the last commit in the margin", async ({

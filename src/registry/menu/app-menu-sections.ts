@@ -2,7 +2,7 @@ import { fill } from "../../i18n/fill";
 import type { Strings } from "../../i18n/strings";
 import { PANDOC_FORMATS } from "../export-formats";
 import { pluginFormats } from "../plugin-export-formats";
-import { isDesktopApp } from "../../platform/capabilities";
+import { canExportWithPandoc, isDesktopApp } from "../../platform/capabilities";
 import type { HeadingAction, Shortcuts } from "../../prefs/SettingsContext";
 import { basename } from "../../utils/path";
 
@@ -45,6 +45,7 @@ export function recentEntries(t: Strings, recents: RecentLists): MenuNode[] {
 /** File › Export's pandoc formats (export-formats.json), then the formats
  *  plugins add (desktop). */
 export function pandocEntries(t: Strings): MenuNode[] {
+  if (!canExportWithPandoc) return [];
   return [
     ...PANDOC_FORMATS.map((f) => ({
       label: t[f.key],

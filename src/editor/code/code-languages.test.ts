@@ -83,6 +83,13 @@ it("is offered in the language menu and to source mode while it is added", async
   expect(pickerLanguages(addedLanguageNames())).toContain("cisco");
   expect(fenceLanguage("Cisco-IOS")?.name).toBe("cisco");
   expect(fenceLanguage("js")?.name).toBe("JavaScript");
+  // A plugin's name holding one of CodeMirror's ("tex" in "bibtex") is
+  // the plugin's.
+  undo.push(
+    addCodeLanguage({ id: "bibtex", aliases: [], load: async () => GRAMMAR }),
+  );
+  expect(fenceLanguage("bibtex")?.name).toBe("bibtex");
+  expect(fenceLanguage("python title=x")?.name).toBe("Python");
   undo.splice(0).forEach((f) => f());
   expect(pickerLanguages(addedLanguageNames())).not.toContain("cisco");
   expect(fenceLanguage("cisco")).toBeNull();

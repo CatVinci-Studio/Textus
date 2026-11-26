@@ -7,6 +7,7 @@ import {
 } from "./os";
 import { hasAppMenu, isMobileApp } from "./capabilities";
 import { isPhoneLayout, onPhoneLayout } from "./phone-layout";
+import { readBoot } from "../storage/boot";
 /**
  * How much of the window frame this app draws itself. macOS keeps its native
  * frame under an overlay title bar; Windows and Linux drop it, so the caption
@@ -36,28 +37,13 @@ export const drawsWindowEdges = isLinuxPlatform();
 /**
  * Whether the page draws the window's outline: Windows 10, whose undecorated
  * window is built without its shadow (editor_windows.rs), the shadow's
- * accent-coloured border with it. WebView2 tells 11 (13 and up) from 10
- * (up to 10) by its platform version.
+ * accent-coloured border with it. Rust says which Windows in the boot
+ * snapshot, so the first frame already has it.
  */
-export async function drawsWindowOutline(): Promise<boolean> {
-  if (!appDrawsWindowFrame || !isWindowsPlatform()) return false;
-  const data = (
-    navigator as Navigator & {
-      userAgentData?: {
-        getHighEntropyValues(hints: string[]): Promise<{
-          platformVersion?: string;
-        }>;
-      };
-    }
-  ).userAgentData;
-  try {
-    const { platformVersion } =
-      (await data?.getHighEntropyValues(["platformVersion"])) ?? {};
-    const major = parseInt(platformVersion ?? "", 10);
-    return major > 0 && major < 13;
-  } catch {
-    return false;
-  }
+export function drawsWindowOutline(): boolean {
+  return (
+    appDrawsWindowFrame && isWindowsPlatform() && readBoot()?.windows10 === true
+  );
 }
 
 /**

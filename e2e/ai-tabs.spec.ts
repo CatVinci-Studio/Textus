@@ -184,6 +184,28 @@ test("a message sent now that the reply can't take stops it and goes next", asyn
   expect(cancels).toBe(1);
 });
 
+test("Stop during a reply gives what waited back to the box", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { menuBarShown: false } });
+  await aiButton(page).click();
+  const box = page.locator(".ai-tab textarea").first();
+  const queue = page.locator(".ai-tab .chat-queue");
+  await box.fill(
+    "a long first question for the reply to take a while, and longer still so that it is stopped well before its end",
+  );
+  await box.press("Enter");
+  await box.fill("second");
+  await box.press("Enter");
+  await box.fill("third");
+  await box.press("Enter");
+  await expect(queue.getByRole("listitem")).toHaveCount(2);
+  await page.locator(".ai-tab .inline-chat-send").click();
+  await expect(queue).toHaveCount(0);
+  await expect(box).toHaveValue("second\n\nthird");
+  await expect(page.locator(".ai-tab .agent-streaming")).toHaveCount(0);
+});
+
 test("pressed again in front of its own island, it collapses; again, it comes back", async ({
   page,
 }) => {
@@ -459,11 +481,22 @@ test("an unsaved document in front keeps the folder's conversation; + opens anot
   const ai = tabs(page).filter({ hasText: "Textus AI" });
   await ai.click();
   await expect(turns).toContainText("第三章写了什么？");
-  // + beside History: a second conversation, a tab of its own, in front.
-  await page
-    .locator(".ai-tab .agent-island-tools")
-    .getByRole("button", { name: "新对话" })
-    .click();
+  // The tab row's +, over a conversation, is New Conversation: a second
+  // one, a tab of its own, in front. The island keeps History, no + of its
+  // own.
+  await expect(
+    page.locator(".ai-tab:visible .agent-island-tools").getByRole("button", {
+      name: "新对话",
+    }),
+  ).toHaveCount(0);
+  const add = page
+    .locator(".tab-bar", {
+      has: page.locator('[aria-selected="true"]', { hasText: "Textus AI" }),
+    })
+    .locator(".tab-bar-add");
+  await add.hover();
+  await expect(page.getByRole("tooltip")).toHaveText("新对话");
+  await add.click();
   await expect(ai).toHaveCount(2);
   await expect(
     page.locator(".ai-tab:visible .inline-chat-messages"),
@@ -684,4 +717,22 @@ test("a folder picked for the AI wins over the sidebar's", async ({ page }) => {
     agentWorkspaceRoot: "/research",
   });
   await expect.poll(lastRoot).toBe("/research");
+});
+
+test("with no row of tabs (Zen), the AI's island keeps a + of its own for a new conversation", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page);
+  await aiButton(page).click();
+  const own = page
+    .locator(".ai-tab:visible .agent-island-tools")
+    .getByRole("button", { name: "新对话" });
+  // The row's + is there: no second one.
+  await expect(own).toHaveCount(0);
+  await emit(page, "menu-toggle-zen-mode");
+  await expect(page.locator(".tab-bar-add:visible")).toHaveCount(0);
+  await expect(own).toBeVisible();
+  await emit(page, "menu-toggle-zen-mode");
+  await expect(own).toHaveCount(0);
 });

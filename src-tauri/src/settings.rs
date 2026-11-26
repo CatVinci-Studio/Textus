@@ -19,6 +19,8 @@ mod stores;
 pub(crate) use stores::*;
 mod app;
 pub(crate) use app::*;
+mod window_background;
+pub(crate) use window_background::*;
 mod ai_records;
 
 #[derive(Serialize)]
@@ -59,7 +61,7 @@ pub fn settings_patch(
         crate::mcp::secrets::seal(&app, servers);
     }
     let rev = stores.patch_settings(&patch);
-    if patch.contains_key("theme") {
+    if patch.contains_key("theme") || patch.contains_key("themeId") {
         theme_changed(&app);
     }
     if proxy_keys_changed(&patch) {
@@ -116,11 +118,15 @@ pub fn ui_state_get(stores: tauri::State<Stores>) -> Value {
 }
 
 /// Same top-level merge as settings. Not broadcast: remembered for the next
-/// window or launch only.
+/// window or launch only. An imported theme's chrome lands after the
+/// settings that picked it: the windows' backgrounds follow it then.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
-pub fn ui_state_patch(stores: tauri::State<Stores>, patch: Map<String, Value>) {
+pub fn ui_state_patch(app: AppHandle, stores: tauri::State<Stores>, patch: Map<String, Value>) {
     stores.ui_state.patch(&patch);
+    if patch.contains_key("themeChrome") {
+        theme_changed(&app);
+    }
 }
 
 #[derive(Serialize, Clone)]

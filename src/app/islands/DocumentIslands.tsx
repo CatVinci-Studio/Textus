@@ -16,6 +16,7 @@ import {
   canUseWindows,
 } from "../../platform/capabilities";
 import {
+  isConversationTab,
   showsStartPage,
   tabIsDirty,
   tabTitle,
@@ -45,6 +46,7 @@ import {
   tabPinned,
 } from "../../document/pinned";
 import { useTabsInBar } from "./tabs-in-bar";
+import { TabRowsShown } from "./tab-rows";
 import { pullTab } from "./tab-pull";
 import { addFromTabRow, newConversation } from "./ai-tabs";
 import { useDocumentsApart } from "./useDocumentsApart";
@@ -266,7 +268,10 @@ export function DocumentIslands({
       labels={{
         tabs: t.menuDocuments,
         close: t.menuCloseTab,
-        add: t.menuNewTab,
+        // Over a conversation the + starts another (addFromTabRow).
+        add: isConversationTab(byId.get(active))
+          ? t.chatNewConversation
+          : t.menuNewFile,
         unsaved: t.unsavedIndicator,
         all: t.menuAllTabs,
         readOnly: t.readOnlyLock,
@@ -325,25 +330,27 @@ export function DocumentIslands({
             t={t}
           />
         }
-        <DocumentViews
-          tabs={tabs}
-          activeTabId={activeTabId}
-          shownIn={shownIn}
-          styleOf={body}
-          onActivate={onActivate}
-          onChange={onChange}
-          typewriter={typewriter}
-          tour={tour}
-          // On every island's document in front; a phone's always, at its
-          // foot, over the keyboard while typing (format-bar.css).
-          above={(tab) =>
-            (formatBar || phone) &&
-            formatsShown(tab) && (
-              <FormatBar t={t} tabId={tab.id} side={formatBar ?? "top"} />
-            )
-          }
-          t={t}
-        />
+        <TabRowsShown.Provider value={tabsInBar}>
+          <DocumentViews
+            tabs={tabs}
+            activeTabId={activeTabId}
+            shownIn={shownIn}
+            styleOf={body}
+            onActivate={onActivate}
+            onChange={onChange}
+            typewriter={typewriter}
+            tour={tour}
+            // On every island's document in front; a phone's always, at its
+            // foot, over the keyboard while typing (format-bar.css).
+            above={(tab) =>
+              (formatBar || phone) &&
+              formatsShown(tab) && (
+                <FormatBar t={t} tabId={tab.id} side={formatBar ?? "top"} />
+              )
+            }
+            t={t}
+          />
+        </TabRowsShown.Provider>
       </>
     );
   };

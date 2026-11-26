@@ -232,4 +232,16 @@ describe("toPandocMarkdown", () => {
       toPandocMarkdown("at 10:100:00, x:smile: and :smile:! `a:b:c` \\:ok:"),
     ).toBe("at 10\\:100:00, x\\:smile: and :smile:! `a:b:c` \\:ok:");
   });
+
+  it("puts an <img>'s src in <…> when a space, parenthesis or angle bracket would end it", () => {
+    expect(toPandocMarkdown('<img src="a.png" width="10">')).toBe(
+      "![](a.png){width=10px}",
+    );
+    expect(toPandocMarkdown('<img src="pic (1).png" width="10">')).toBe(
+      "![](<pic (1).png>){width=10px}",
+    );
+    expect(toPandocMarkdown('<img src="a&lt;b&gt;.png" width="10">')).toBe(
+      "![](<a<b>.png>){width=10px}",
+    );
+  });
 });

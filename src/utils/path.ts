@@ -102,9 +102,27 @@ export function isInside(path: string, dir: string): boolean {
   return inner.startsWith(outer.endsWith("/") ? outer : `${outer}/`);
 }
 
-/** Whether `path` is folder `dir` itself or lies somewhere below it. */
+/** Whether `path` is folder `dir` itself or lies somewhere below it,
+ *  however its separators are written. */
 export function isWithin(path: string, dir: string): boolean {
-  return path === dir || isInside(path, dir);
+  return samePath(path, dir) || isInside(path, dir);
+}
+
+/** Whether `a` and `b` name one path: separators and "." and ".." aside. */
+function samePath(a: string, b: string): boolean {
+  if (a === b) return true;
+  if (a.startsWith("content://") || b.startsWith("content://")) return false;
+  const walkedA = walked(a);
+  return walkedA !== null && walkedA === walked(b);
+}
+
+/** `path` after `from` (itself or a folder holding it) moved to `to`;
+ *  null when it isn't within `from`. */
+export function movedTo(path: string, from: string, to: string): string | null {
+  if (samePath(path, from)) return to;
+  if (!isInside(path, from)) return null;
+  const rest = slashed(path).slice(slashed(from).replace(/\/+$/, "").length);
+  return rest.split("/").filter(Boolean).reduce(joinPath, to);
 }
 
 /** An Android picked folder's entry: under the same picked tree, its

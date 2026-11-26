@@ -5,10 +5,11 @@ import { ImageNameDialog } from "../images/ImageNameDialog";
 import type { ImageStore } from "../images/image-store";
 import { clipboardImageSources } from "../images/pasted-files";
 import { useImageNameRequest } from "../images/useImageNameRequest";
+import { linkDestination } from "../markdown/link-syntax";
 
 /** `![](src)`, the src in angle brackets where it has a space or a bracket. */
 export function imageMarkdown(src: string): string {
-  return /[\s()<>]/.test(src) ? `![](<${src}>)` : `![](${src})`;
+  return `![](${linkDestination(src)})`;
 }
 
 /** Where a stored picture's `![](src)` goes: the source editor's caret. */

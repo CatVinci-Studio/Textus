@@ -1,3 +1,4 @@
+import { keepFresh } from "../../utils/keep-fresh";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { showDocImage } from "../../editor/images/image-plugin";
 import { imageSource } from "../../editor/images/image-source";
@@ -56,10 +57,7 @@ function knownMissing(where: string): MissingReason | null {
 }
 
 function noteMissing(where: string, reason: MissingReason) {
-  recentlyMissing.delete(where);
-  recentlyMissing.set(where, { reason, at: Date.now() });
-  if (recentlyMissing.size > MISSING_KEPT)
-    recentlyMissing.delete(recentlyMissing.keys().next().value!);
+  keepFresh(recentlyMissing, where, { reason, at: Date.now() }, MISSING_KEPT);
 }
 
 /** Within `root`, each picture of the document's files pointed at its file,

@@ -1,4 +1,9 @@
-import { Suspense, useSyncExternalStore, type ComponentType } from "react";
+import {
+  Suspense,
+  useSyncExternalStore,
+  type ComponentProps,
+  type ComponentType,
+} from "react";
 import { PluginTabIcon } from "./plugin-tab-icon";
 import { Tooltip } from "../../engine/controls/Tooltip";
 import {
@@ -9,6 +14,7 @@ import {
 import { pluginRecord } from "../store/plugin-records";
 import { lazyComponent } from "../../lazy/lazy-component";
 import { lazyModule } from "../../lazy/lazy-module";
+import { FramePlaceholder } from "./frame-heights";
 
 /**
  * What draws plugins in the window, loaded the first time one is shown. The
@@ -45,9 +51,15 @@ export const PluginWebviewPanel = waiting(
 export const PluginSettingsWebview = waiting(
   lazyComponent(webviews, (m) => m.PluginSettingsWebview),
 );
-export const PluginCodeBlock = waiting(
-  lazyComponent(codeBlocks, (m) => m.PluginCodeBlock),
-);
+const LazyCodeBlock = lazyComponent(codeBlocks, (m) => m.PluginCodeBlock);
+/** Kept at its page's last height while it loads, not collapsed. */
+export function PluginCodeBlock(props: ComponentProps<typeof LazyCodeBlock>) {
+  return (
+    <Suspense fallback={<FramePlaceholder heightKey={props.widget} />}>
+      <LazyCodeBlock {...props} />
+    </Suspense>
+  );
+}
 export const PluginListPane = waiting(
   lazyComponent(lists, (m) => m.PluginListPane),
 );

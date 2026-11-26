@@ -4,6 +4,8 @@ export const TRIGGER_COMPLETION_EVENT = "textus:trigger-completion";
 export const TRIGGER_GRAMMAR_CHECK_EVENT = "textus:trigger-grammar-check";
 export const TOGGLE_FLOATING_CHAT_EVENT = "textus:toggle-floating-chat";
 export const TOGGLE_FIND_REPLACE_EVENT = "textus:toggle-find-replace";
+/** The outline asked for where it is a menu (a phone's ⋯ › Outline). */
+export const SHOW_OUTLINE_EVENT = "textus:show-outline";
 /** Edit › Replace… and Find Next. */
 export const SHOW_REPLACE_EVENT = "textus:show-replace";
 export const FIND_NEXT_EVENT = "textus:find-next";
@@ -34,6 +36,11 @@ export const EDIT_ACTION_EVENT = "textus:edit-action";
 /// commands don't reach off macOS.
 export const SOURCE_EDIT_EVENT = "textus:source-edit";
 
+/// On the focused element, detail "undo", "redo" or "select-all", before the
+/// document is asked: a part of the window with an undo of its own (the file
+/// tree's last drop) cancels it when it took the edit.
+export const FOCUSED_EDIT_EVENT = "textus:focused-edit";
+
 /// detail: what to do with the writer's tracked changes in the document on screen.
 export const TRACK_CHANGES_EVENT = "textus:track-changes";
 export type TrackChangesAction = "toggle" | "accept-all" | "reject-all";
@@ -60,8 +67,8 @@ export const TABLE_ACTION_EVENT = "textus:table-action";
 /// detail: "width:auto" | "width:<percent>" | "delete", for the selected image.
 export const IMAGE_ACTION_EVENT = "textus:image-action";
 
-/// Opens the editor's menu for the caret as an action sheet, standing in for
-/// the right-click a phone doesn't have.
+/// Opens the editor's menu for the caret, hung from the button (detail),
+/// standing in for the right-click a phone doesn't have.
 export const EDITOR_MORE_EVENT = "textus:editor-more";
 /** The phone's keyboard has come up (mobile/keyboard.ts). */
 export const KEYBOARD_UP_EVENT = "textus:keyboard-up";
@@ -125,6 +132,7 @@ interface AppEvents {
   [TRIGGER_GRAMMAR_CHECK_EVENT]: undefined;
   [TOGGLE_FLOATING_CHAT_EVENT]: undefined;
   [TOGGLE_FIND_REPLACE_EVENT]: undefined;
+  [SHOW_OUTLINE_EVENT]: undefined;
   [SHOW_REPLACE_EVENT]: undefined;
   [FIND_NEXT_EVENT]: undefined;
   [INSERT_LINK_EVENT]: undefined;
@@ -145,7 +153,7 @@ interface AppEvents {
   [TOGGLE_MARK_EVENT]: string;
   [TABLE_ACTION_EVENT]: string;
   [IMAGE_ACTION_EVENT]: string;
-  [EDITOR_MORE_EVENT]: undefined;
+  [EDITOR_MORE_EVENT]: HTMLElement;
   [KEYBOARD_UP_EVENT]: undefined;
   [TOUR_SIGNAL_EVENT]: TourSignal;
   [ZEN_MODE_EVENT]: boolean;
