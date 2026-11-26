@@ -73,14 +73,12 @@
   contain: inline-size;
   min-width: 18ch;
 }
-/* A switch stays at the row's end, however long its name: the name wraps
-   beside it (iOS's rows at the largest text sizes). */
-.settings-toggle-row {
-  flex-wrap: nowrap;
-}
+/* A switch stays at the row's end, its name wrapping beside it: the name's
+   least is a few characters, not its longest unbreakable run (a Chinese
+   name, kept whole by keep-all, pushed the switch under it). */
 .settings-toggle-row > :first-child {
   flex-basis: 0;
-  min-width: 0;
+  min-width: min(100%, 5em);
 }
 
 .tx-input {

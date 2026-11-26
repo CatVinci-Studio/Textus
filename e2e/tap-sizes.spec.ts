@@ -164,7 +164,11 @@ for (const { name, device } of DEVICES)
             uiSizeFollowsSystem: false,
           },
         });
-        const phone = name === "a phone";
+        // The phone's layout: a phone's, and an upright tablet's at the
+        // two steps past Large (phone-layout.ts).
+        const phone =
+          (await page.locator("html").getAttribute("data-window-chrome")) ===
+          "mobile";
         await emit(page, "menu-open-folder");
         const tree = page.locator(".tree-row").first();
         await expect(tree).toBeAttached();
@@ -192,10 +196,7 @@ for (const { name, device } of DEVICES)
         await expect.soft
           .poll(() => offScreen(page), { message: `${where}: document` })
           .toEqual([]);
-        // The document alone: an upright tablet at the largest sizes has
-        // no room for the sidebar beside a readable line (PLAN, to decide).
-        if (!phone && scale > 1.25)
-          await page.locator(".activity-rail-item[aria-pressed=true]").tap();
+
         await expect.soft
           .poll(() => layoutFaults(page), { message: `${where}: document` })
           .toEqual([]);
