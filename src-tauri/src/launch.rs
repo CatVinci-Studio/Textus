@@ -175,10 +175,24 @@ pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
     }
     let ui_ready = UI_READY.load(Ordering::Relaxed);
     // Documents open as tabs, always. Already running: hand the whole batch
-    // to the focused window. Nothing is queued then, or the next window to
+    // to the window that has them or whose folder holds them (open_route),
+    // else the focused one. Nothing is queued then, or the next window to
     // mount would open them again.
     let target = if ui_ready {
-        menu::focused_editor_window(app)
+        let focused = menu::focused_editor_window(app);
+        let windows = app
+            .state::<crate::commands::session::SessionTabsState>()
+            .0
+            .lock()
+            .unwrap()
+            .clone();
+        let live: std::collections::HashMap<_, _> = windows
+            .into_iter()
+            .filter(|(label, _)| {
+                crate::windows::is_editor_window(label) && app.get_window(label).is_some()
+            })
+            .collect();
+        crate::open_route::window_for(&live, &paths, focused.as_deref()).or(focused)
     } else {
         None
     };

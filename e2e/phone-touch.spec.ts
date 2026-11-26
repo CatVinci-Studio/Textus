@@ -119,13 +119,18 @@ for (const { name, device } of TOUCH_DEVICES)
           .toHaveCount(phone ? 0 : 1);
       if (!phone) await rail.getByRole("button", { name: "Files" }).tap();
       const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+      // A phone: a line saying ☰ opens files. A tablet: no folder, and the
+      // Open Folder button.
       await expect
-        .soft(sidebar.locator(".start-page-action"))
+        .soft(sidebar.getByRole("button", { name: "Open Folder…" }))
         .toHaveCount(phone ? 0 : 1);
-      // A line saying ☰ opens files; a tablet adds Open Folder's row.
       await expect
         .soft(sidebar)
-        .toContainText("Open a document or a folder from the menu.");
+        .toContainText(
+          phone
+            ? "Open a document or a folder from the menu."
+            : "No folder is open yet.",
+        );
       if (phone) await page.mouse.click(380, 400);
       await page.getByRole("button", { name: "Menu", exact: true }).tap();
       await expect(

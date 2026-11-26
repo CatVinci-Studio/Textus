@@ -47,6 +47,8 @@ interface SidebarTabProps {
   openFolder: OpenFolder;
   activePath: string | null;
   activeContent: string;
+  /** The tab in front is a document's (not the start page or a page). */
+  activeIsDocument: boolean;
   /** The tab in front, for a jump inside its document. */
   activeTabId: string;
   /** `beside`: in a split beside the document in front. */
@@ -78,6 +80,20 @@ export interface SidebarTabDef {
   phoneWayIn?: () => void;
 }
 
+/** A panel with nothing to show: what is so, and Open Folder (but on a
+ *  phone, whose ☰ has it). */
+function OpenFolderNote({ text, t }: { text: string; t: Strings }) {
+  const phone = usePhoneLayout();
+  return (
+    <div className="tx-pane-empty">
+      <span>{text}</span>
+      {!phone && (
+        <StartActions t={t} only={["menu-open-folder"]} primary={false} />
+      )}
+    </div>
+  );
+}
+
 function FilesPanel({
   t,
   openFolder,
@@ -87,14 +103,12 @@ function FilesPanel({
 }: SidebarTabProps) {
   const phone = usePhoneLayout();
   if (!openFolder.treeRoot)
-    // No folder: where to begin, so a window with nothing open is never a
-    // dead end. New and Open are the menu's; a phone's ☰ has Open Folder
-    // too.
-    return (
-      <div className="sidebar-start">
-        <p className="tx-list-note">{t.sidebarStartHint}</p>
-        {!phone && <StartActions t={t} only={["menu-open-folder"]} />}
-      </div>
+    // No folder: so a window with nothing open is never a dead end. A
+    // phone's ☰ has Open Folder; the line says so.
+    return phone ? (
+      <p className="tx-list-note">{t.sidebarStartHint}</p>
+    ) : (
+      <OpenFolderNote text={t.sidebarNoFolder} t={t} />
     );
   return (
     <FileTree
@@ -122,8 +136,11 @@ const BUILT_IN: SidebarTabDef[] = [
     id: "outline",
     label: (t) => t.outlineTab,
     Icon: OutlineTabIcon,
-    Panel: ({ activeContent, activeTabId }) => (
-      <Outline content={activeContent} tabId={activeTabId} />
+    Panel: ({ activeContent, activeTabId, activeIsDocument }) => (
+      <Outline
+        content={activeIsDocument ? activeContent : null}
+        tabId={activeTabId}
+      />
     ),
     offPhone: true,
     phoneWayIn: () => sendAppEvent(SHOW_OUTLINE_EVENT),
@@ -149,7 +166,7 @@ const BUILT_IN: SidebarTabDef[] = [
           onFocusHandled={onSearchFocusHandled}
         />
       ) : (
-        <div className="tx-list-note">{t.searchNoFolder}</div>
+        <OpenFolderNote text={t.searchNoFolder} t={t} />
       ),
   },
 ];

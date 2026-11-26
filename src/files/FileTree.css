@@ -87,22 +87,51 @@
   --tree-row-h: max(26px, calc(1.35em + 4px));
 }
 
+/* The folder's name and tools stay at the top too, over everything, so
+   scrolled down the tree still says whose rows these are. --tree-top is
+   its height: the folders' rows stay below it. */
+:root:not([data-window-chrome="mobile"]) .tree-main {
+  --tree-top: calc(var(--icon-button-s) + 4px);
+}
+
+/* A tablet's tools are a finger wide (mobile/styles/base.css). */
+@media (pointer: coarse) {
+  :root:is([data-platform="ios"], [data-platform="android"]):not(
+      [data-window-chrome="mobile"]
+    )
+    .tree-main {
+    --tree-top: calc(var(--touch-target) + 4px);
+  }
+}
+
+:root:not([data-window-chrome="mobile"]) .tree-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 11;
+  height: var(--tree-top);
+  margin-bottom: 0;
+  padding-bottom: 4px;
+  background: var(--ui-frame-fill) fixed;
+}
+
 .file-tree .tree-row {
   min-height: var(--tree-row-h);
 }
 
 :root:not([data-window-chrome="mobile"]) .tree-head-sticky {
   position: sticky;
-  top: calc((var(--depth) - 1) * var(--tree-row-h));
+  top: calc(var(--tree-top, 0px) + (var(--depth) - 1) * var(--tree-row-h));
   z-index: calc(10 - var(--depth));
   background: var(--ui-frame-fill) fixed;
 }
 
-/* Shown by the keyboard or a reveal: below the folders' rows that stay
-   above it (at most --tree-sticky-levels, TreeNodes' STICKY_LEVELS). */
+/* Shown by the keyboard or a reveal: below the tools and the folders'
+   rows that stay above it (at most --tree-sticky-levels, TreeNodes'
+   STICKY_LEVELS). */
 :root:not([data-window-chrome="mobile"]) .file-tree .tree-row {
   scroll-margin-top: calc(
-    min(var(--depth, 1) - 1, var(--tree-sticky-levels)) * var(--tree-row-h)
+    var(--tree-top, 0px) + min(var(--depth, 1) - 1, var(--tree-sticky-levels)) *
+      var(--tree-row-h)
   );
 }
 
@@ -187,10 +216,11 @@
 }
 
 /* Out of the way until wanted: shown while the pointer is over the panel
-   or focus is in it, as VS Code's explorer does. Touch has no hover. */
+   or focus is in it, as VS Code's explorer does. Touch has no hover. Open
+   This Folder stays: while the tree follows the document, it says so. */
 @media (any-hover: hover) {
   /* Hidden, they take no room: the folder's name has the whole line. */
-  .file-tree:not(:hover, :focus-within) .tree-tool {
+  .file-tree:not(:hover, :focus-within) .tree-tool:not(.tree-tool-kept) {
     display: none;
   }
 }

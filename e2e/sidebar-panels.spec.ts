@@ -231,7 +231,31 @@ test("the folder's tools coming on hover move none of the tree's rows", async ({
   expect((await row.boundingBox())!.y).toBe(before);
 });
 
-test("scrolled into, the folders' rows stay at the top until their rows go by; folded there, it stays in sight", async ({
+test("following the document, Open This Folder stays in sight; the other tools wait for the pointer", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/w/a.md": "# A\n", "/w/b.md": "# B\n" };
+  });
+  await openApp(page, { settings: { language: "en" } });
+  await openPath(page, "/w/a.md");
+  await page
+    .getByRole("navigation", { name: "Activity bar" })
+    .getByRole("button", { name: "Files" })
+    .click();
+  await expect(page.locator(".tree-root-label")).toHaveText("w");
+  await page.mouse.move(900, 400);
+  const keep = page.getByRole("button", { name: "Open This Folder" });
+  await expect(keep).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sort" })).toBeHidden();
+  // Opened as the folder: no button to open it, the tools on hover alone.
+  await keep.click();
+  await page.mouse.move(900, 400);
+  await expect(page.locator(".tree-tool:visible")).toHaveCount(0);
+});
+
+test("scrolled into, the folder's name and the folders' rows stay at the top until their rows go by; folded there, it stays in sight", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -257,10 +281,17 @@ test("scrolled into, the folders' rows stay at the top until their rows go by; f
   const top = async (name: string) =>
     (await row(name).boundingBox())!.y - (await scroller.boundingBox())!.y;
   const height = (await row("notes").boundingBox())!.height;
+  const toolbar = page.locator(".tree-toolbar");
+  const bar = (await toolbar.boundingBox())!.height;
 
   await scroller.evaluate((el) => (el.scrollTop = 600));
-  await expect.poll(() => top("notes")).toBeCloseTo(0, 0);
-  expect(await top("inner")).toBeCloseTo(height, 0);
+  await expect.poll(() => top("notes")).toBeCloseTo(bar, 0);
+  expect(await top("inner")).toBeCloseTo(bar + height, 0);
+  // The folder's name stays over them all.
+  expect(
+    (await toolbar.boundingBox())!.y - (await scroller.boundingBox())!.y,
+  ).toBeCloseTo(0, 0);
+  await expect(toolbar.locator(".tree-root-label")).toHaveText("proj");
   // Past inner's last row, inner goes up with it; notes stays.
   const pastInner = await row("n10.md").evaluate(
     (el, h) =>
@@ -271,12 +302,12 @@ test("scrolled into, the folders' rows stay at the top until their rows go by; f
     height,
   );
   await scroller.evaluate((el, y) => (el.scrollTop = y), pastInner);
-  await expect.poll(() => top("inner")).toBeLessThan(0);
-  expect(await top("notes")).toBeCloseTo(0, 0);
+  await expect.poll(() => top("inner")).toBeLessThan(bar);
+  expect(await top("notes")).toBeCloseTo(bar, 0);
 
   // Folded from the top, notes stays in sight.
   await scroller.evaluate((el) => (el.scrollTop = 600));
-  await expect.poll(() => top("notes")).toBeCloseTo(0, 0);
+  await expect.poll(() => top("notes")).toBeCloseTo(bar, 0);
   await row("notes").click();
   await expect(row("inner")).toHaveCount(0);
   const folded = await top("notes");

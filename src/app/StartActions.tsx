@@ -10,22 +10,22 @@ import { canOpenFolder } from "../platform/capabilities";
 import type { Strings } from "../i18n/strings";
 
 /**
- * The three ways to begin - a new document, a file, a folder: the start
- * page's capsule buttons (the first the primary, its keys in its tip), or
- * the sidebar's rows of an icon, a name and its keys when no folder is open
- * (start-page.css). Run here as the menu items' events, not through the
- * native menu: in a window-per-document setup that would open another
- * window.
+ * The three ways to begin - a new document, a file, a folder - as capsule
+ * buttons, their keys in their tips: the start page's (the first the
+ * primary), or one alone where a sidebar panel is empty. Run here as the
+ * menu items' events, not through the native menu: in a window-per-document
+ * setup that would open another window.
  */
 export function StartActions({
   t,
-  look = "rows",
   only,
+  primary = true,
 }: {
   t: Strings;
-  look?: "rows" | "buttons";
   /** These of the three alone, by their events. */
   only?: readonly string[];
+  /** The first in the accent, as the start page's call to begin. */
+  primary?: boolean;
 }) {
   const all = [
     {
@@ -52,52 +52,28 @@ export function StartActions({
       : []),
   ];
   const actions = only ? all.filter((a) => only.includes(a.event)) : all;
-  if (look === "buttons")
-    return (
-      <div className="start-page-buttons">
-        {actions.map((a, i) => {
-          const button = (
-            <button
-              key={a.event}
-              type="button"
-              className={i === 0 ? "tx-button primary" : "tx-button"}
-              onClick={() => emitToThisWindow(a.event)}
-            >
-              {a.icon}
-              {a.label}
-            </button>
-          );
-          return a.combo ? (
-            <Tooltip key={a.event} text={formatCombo(a.combo)}>
-              {button}
-            </Tooltip>
-          ) : (
-            button
-          );
-        })}
-      </div>
-    );
   return (
-    <ul className="start-page-actions">
-      {actions.map((a) => (
-        <li key={a.event}>
+    <div className="start-page-buttons">
+      {actions.map((a, i) => {
+        const button = (
           <button
+            key={a.event}
             type="button"
-            className="start-page-action"
+            className={primary && i === 0 ? "tx-button primary" : "tx-button"}
             onClick={() => emitToThisWindow(a.event)}
           >
-            <span className="start-page-action-icon" aria-hidden="true">
-              {a.icon}
-            </span>
-            <span className="start-page-action-label">{a.label}</span>
-            {a.combo && (
-              <kbd className="start-page-action-keys">
-                {formatCombo(a.combo)}
-              </kbd>
-            )}
+            {a.icon}
+            {a.label}
           </button>
-        </li>
-      ))}
-    </ul>
+        );
+        return a.combo ? (
+          <Tooltip key={a.event} text={formatCombo(a.combo)}>
+            {button}
+          </Tooltip>
+        ) : (
+          button
+        );
+      })}
+    </div>
   );
 }

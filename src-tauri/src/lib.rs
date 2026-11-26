@@ -75,6 +75,8 @@ use tab_drag::{DragTrackers, PendingDetachedTabs};
 use tauri::{EventTarget, WebviewUrl, WebviewWindowBuilder};
 
 mod launch;
+#[cfg(desktop)]
+mod open_route;
 pub(crate) use launch::*;
 pub(crate) mod editor_windows;
 mod invoke_handler;

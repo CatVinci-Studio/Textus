@@ -213,6 +213,7 @@ function App() {
             openFolder={openFolder}
             activePath={activeTab.path}
             activeContent={activeTab.content}
+            activeIsDocument={!activeTab.view && !activeTab.start}
             activeTabId={activeTab.id}
             onToggle={toggleSidebar}
             onClose={() => setPanelOpen(false)}
