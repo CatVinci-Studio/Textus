@@ -9,11 +9,12 @@ use sha2::{Digest, Sha256};
 /// The most the catalog's index may be.
 const MAX_CATALOG_BYTES: usize = 8 * 1024 * 1024;
 
-/// The site's address, and the one it had before (which still serves).
-const DOWNLOAD_HOSTS: [&str; 2] = ["textus.md", "textus.catvinci.com"];
+/// The site's address: the one it had before (textus.catvinci.com) is
+/// going away, and nothing this version fetches names it.
+const DOWNLOAD_HOST: &str = "textus.md";
 
 pub(super) fn download_host(url: &reqwest::Url) -> bool {
-    url.scheme() == "https" && url.host_str().is_some_and(|h| DOWNLOAD_HOSTS.contains(&h))
+    url.scheme() == "https" && url.host_str() == Some(DOWNLOAD_HOST)
 }
 
 pub(super) fn client() -> Result<reqwest::Client, String> {
