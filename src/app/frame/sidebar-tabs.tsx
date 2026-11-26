@@ -80,29 +80,19 @@ export interface SidebarTabDef {
   phoneWayIn?: () => void;
 }
 
-/** A panel with nothing to show: what is so, and the ways to begin that
- *  change it (but on a phone, whose ☰ has them). */
-function StartNote({
-  text,
-  t,
-  only,
-}: {
-  text: string;
-  t: Strings;
-  only: readonly string[];
-}) {
+/** A panel with nothing to show: what is so, and Open Folder (but on a
+ *  phone, whose ☰ has it). New and Open are the menu's. */
+function OpenFolderNote({ text, t }: { text: string; t: Strings }) {
   const phone = usePhoneLayout();
   return (
     <div className="tx-pane-empty">
       <span>{text}</span>
-      {!phone && <StartActions t={t} only={only} primary={false} />}
+      {!phone && (
+        <StartActions t={t} only={["menu-open-folder"]} primary={false} />
+      )}
     </div>
   );
 }
-
-/** No folder: the three ways to begin, as the start page has them. */
-const ALL_STARTS = ["menu-new-file", "menu-open-file", "menu-open-folder"];
-const OPEN_FOLDER = ["menu-open-folder"];
 
 function FilesPanel({
   t,
@@ -118,7 +108,7 @@ function FilesPanel({
     return phone ? (
       <p className="tx-list-note">{t.sidebarStartHint}</p>
     ) : (
-      <StartNote text={t.sidebarNoFolder} t={t} only={ALL_STARTS} />
+      <OpenFolderNote text={t.sidebarNoFolder} t={t} />
     );
   return (
     <FileTree
@@ -176,7 +166,7 @@ const BUILT_IN: SidebarTabDef[] = [
           onFocusHandled={onSearchFocusHandled}
         />
       ) : (
-        <StartNote text={t.searchNoFolder} t={t} only={OPEN_FOLDER} />
+        <OpenFolderNote text={t.searchNoFolder} t={t} />
       ),
   },
 ];
