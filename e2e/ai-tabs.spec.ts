@@ -736,3 +736,34 @@ test("with no row of tabs (Zen), the AI's island keeps a + of its own for a new 
   await emit(page, "menu-toggle-zen-mode");
   await expect(own).toHaveCount(0);
 });
+
+// A long conversation took the / list's share of the panel's squeeze too,
+// until the list was a line: the conversation has only the room left over.
+test("the / list keeps its height however long the conversation", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 700 });
+  await openApp(page);
+  await aiButton(page).click();
+  const input = page.locator(".agent-panel-body .inline-chat-input");
+  await input.click();
+  await page.keyboard.type("hello");
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".agent-panel-empty")).toHaveCount(0);
+  await input.click();
+  await page.keyboard.type("/");
+  const list = page.locator(".agent-panel-body .composer-picker");
+  await expect(list).toBeVisible();
+  const before = (await list.boundingBox())!.height;
+  // A long conversation, as weeks of use leave one.
+  await page
+    .locator(".agent-panel-body .inline-chat-messages")
+    .evaluate((messages) => {
+      const long = document.createElement("div");
+      long.style.height = "6000px";
+      messages.prepend(long);
+    });
+  await expect
+    .poll(async () => (await list.boundingBox())!.height)
+    .toBeCloseTo(before, 0);
+});

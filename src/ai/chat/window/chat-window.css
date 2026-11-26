@@ -59,8 +59,9 @@
 
 /* ChatBody's message list is the flexible region here too, so the composer
    sits on the window's bottom edge at any window size. */
+/* The room left over, from nothing up (agent-panel.css). */
 .chat-window-body .inline-chat-messages {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-height: 0;
   max-height: none;
 }

@@ -91,8 +91,11 @@
   flex-direction: column;
 }
 
+/* The room left over, from nothing up: grown from its whole length, a
+   long conversation took the / list's share of the squeeze too, until
+   the list was a line. */
 .agent-panel-body .inline-chat-messages {
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-height: 0;
   max-height: none;
 }

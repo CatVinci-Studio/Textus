@@ -80,4 +80,11 @@ test("turned off, the rail comes and goes with the sidebar under the bar's one b
   await button.click();
   await expect(rail).toHaveCount(0);
   await expect(page.locator(".sidebar-body")).toHaveCount(0);
+  // Closed from the keyboard by its own rail icon, which goes with it: the
+  // keyboard goes back to the bar's button, not to the page's top.
+  await button.click();
+  await rail.locator(".activity-rail-item[aria-pressed=true]").focus();
+  await page.keyboard.press("Enter");
+  await expect(rail).toHaveCount(0);
+  await expect(button).toBeFocused();
 });

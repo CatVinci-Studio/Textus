@@ -14,6 +14,17 @@ import { railTabs, sidebarTab } from "./sidebar-tabs";
 import { ViewTitleActions } from "../../plugins/views/plugin-views";
 import type { FileOpenHow } from "../../files/tree-shared";
 
+/** Closed by a rail button that goes with it (the rail turned off, a
+ *  phone's under the page): the keyboard goes back to the bar's sidebar
+ *  button, not to the page's top. */
+function focusBackToToggle() {
+  requestAnimationFrame(() => {
+    const at = document.activeElement;
+    if (at && at !== document.body) return;
+    document.querySelector<HTMLElement>(".window-bar-sidebar-toggle")?.focus();
+  });
+}
+
 /** The left sidebar, with the activity rail that switches its tabs. */
 export function Sidebar({
   open,
@@ -90,7 +101,10 @@ export function Sidebar({
             if (!open) onToggle();
             onModeChange(id);
           }}
-          onCloseSidebar={onToggle}
+          onCloseSidebar={() => {
+            onToggle();
+            focusBackToToggle();
+          }}
           onReorder={moved}
           t={t}
         />

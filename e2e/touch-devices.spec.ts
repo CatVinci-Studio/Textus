@@ -668,3 +668,25 @@ test.describe("reordering tabs on a phone", () => {
     expect(await scroller.evaluate((el) => el.scrollTop)).toBe(2000);
   });
 });
+
+test.describe("a phone's tab row", () => {
+  test.use(PHONE);
+
+  test("lists every tab by its whole name from the second on", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      (window as unknown as { __devFiles: Record<string, string> }).__devFiles =
+        { "/w/a.md": "A\n", "/w/b.md": "B\n" };
+    });
+    await openApp(page);
+    await openPath(page, "/w/a.md");
+    await expect(page.locator(".tab-bar-list:visible")).toHaveCount(0);
+    await page.locator(".tab-bar-add").first().tap();
+    await openPath(page, "/w/b.md");
+    const list = page.locator(".tab-bar-list:visible");
+    await expect(list).toHaveCount(1);
+    await list.tap();
+    await expect(page.getByRole("menuitemradio")).toHaveCount(2);
+  });
+});
