@@ -23,6 +23,15 @@ describe("keepReadable", () => {
     expect(box.querySelector("svg")!.style.minWidth).toBe("822px");
   });
 
+  it("holds a strip past front matter and a directive over lines", () => {
+    const box = drawnBox("0 0 1000 200");
+    keepReadable(
+      box,
+      "---\nconfig:\n  theme: base\n---\n%%{init: {\n  'theme': 'dark'\n}}%%\ngitGraph\n  commit",
+    );
+    expect(box.querySelector("svg")!.style.minWidth).toBe("650px");
+  });
+
   it("lets an ER diagram fit the column", () => {
     const box = drawnBox("0 0 1049.73 474.5");
     keepReadable(box, "erDiagram\n    CUSTOMER ||--o{ ORDER : places");
@@ -37,7 +46,7 @@ describe("keepReadable", () => {
 
   it("lets a chart fit the column", () => {
     const box = drawnBox("0 0 600 400");
-    keepReadable(box);
+    keepReadable(box, "");
     expect(box.querySelector("svg")!.style.minWidth).toBe("");
   });
 

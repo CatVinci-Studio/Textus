@@ -411,7 +411,12 @@ export function createRawHtmlPreviewPlugin(
             if (toggle || drawnFor(docPath) !== prev.reveal.config)
               return drawAll(newState, docPath, open);
             if (!tr.docChanged && !revealMoved(oldState, newState)) return prev;
-            const { mapped, blocks } = revealChanges(tr, prev.reveal, newState);
+            const { mapped, blocks } = revealChanges(
+              tr,
+              prev.reveal,
+              oldState,
+              newState,
+            );
             const spans = tr.docChanged
               ? mapSpans(prev.spans, tr.mapping)
               : prev.spans;

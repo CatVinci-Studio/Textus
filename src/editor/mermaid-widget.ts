@@ -4,7 +4,7 @@ import { zoomButton } from "./diagram-zoom";
 import { addBlockFold } from "./fold/block-fold";
 import { currentStrings } from "../i18n/current";
 import { drawWhileNear } from "./lazy/draw-when-visible";
-import { keepReadable, mermaidKey } from "./mermaid-blocks";
+import { keepReadable } from "./mermaid-blocks";
 
 /**
  * A drawn diagram under its hidden source: the block that folds to a line,
@@ -54,13 +54,9 @@ export function diagramWidget(
     if (end === undefined) return;
     const block = view.state.doc.resolve(end).nodeBefore;
     if (block?.type.name !== "code_block") return;
-    const tr = view.state.tr
-      .setSelection(
-        TextSelection.create(view.state.doc, end - block.nodeSize + 1),
-      )
-      // The click asks for the source even when the caret doesn't move —
-      // a document just opened with its caret already in this block.
-      .setMeta(mermaidKey, "reveal");
+    const tr = view.state.tr.setSelection(
+      TextSelection.create(view.state.doc, end - block.nodeSize + 1),
+    );
     view.dispatch(tr);
     view.focus();
   });

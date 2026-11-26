@@ -4,7 +4,7 @@ import { isMobileApp } from "../platform/capabilities";
 import { createBlockHandlesPlugin } from "./blocks/block-handles-plugin";
 import { dragAutoscrollPlugin } from "./keys/drag-autoscroll-plugin";
 import { marginClickPlugin } from "./keys/margin-click-plugin";
-import { pointerHoldPlugin } from "./pointer-hold";
+import { pointerHoldPlugin, untouchedPlugin } from "./pointer-hold";
 import { createDrawnCaretPlugin } from "./drawn-caret-plugin";
 import { textDragPlugin } from "./text-drag-plugin";
 
@@ -15,6 +15,7 @@ export function pointerPlugins(settings: {
   return [
     // Before the margin's clicks: held before they move the selection.
     pointerHoldPlugin,
+    untouchedPlugin,
     dragAutoscrollPlugin,
     textDragPlugin,
     marginClickPlugin,

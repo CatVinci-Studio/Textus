@@ -27,9 +27,6 @@ export interface RevealState {
   touched: DecorationSet;
   /** Reveal.config when this was drawn. */
   config: unknown;
-  /** The selection this was drawn for. A caret only moves through a
-   *  transaction, so it is what the drawing still stands for. */
-  drawnAt: { from: number; to: number };
 }
 
 export type Touches = (from: number, to: number) => boolean;
@@ -67,15 +64,13 @@ function recorder(selection: { from: number; to: number }) {
 }
 
 /** Every node `reveal` matches, drawn. `before` first draws what isn't drawn
- *  node by node. `selection` says what to draw for: the caret's selection,
- *  or NOWHERE when the caret was placed by no one (a document just opened). */
+ *  node by node. */
 export function revealAll(
   state: EditorState,
   reveal: Reveal,
   before?: (touches: Touches, decorations: Decoration[]) => void,
-  selection: { from: number; to: number } = revealSelection(state),
 ): RevealState {
-  const { touches, ranges } = recorder(selection);
+  const { touches, ranges } = recorder(revealSelection(state));
   const decorations: Decoration[] = [];
   before?.(touches, decorations);
   state.doc.descendants((node, pos) => {
@@ -87,7 +82,6 @@ export function revealAll(
     set: DecorationSet.create(state.doc, decorations),
     touched: DecorationSet.create(state.doc, ranges),
     config: reveal.config?.(),
-    drawnAt: selection,
   };
 }
 
@@ -98,32 +92,25 @@ const touchesSpan = (a: number, b: number, from: number, to: number) =>
 /**
  * `prev` mapped through `tr`, and the top-level blocks it leaves stale: those
  * the transaction changed and those with a range whose cursorTouches the
- * caret's move flipped. Only ranges at the old or new caret can flip; the
- * old one is `prev.drawnAt`, what its drawing still stands for.
+ * caret's move flipped. Only ranges at the old or new caret can flip.
  */
 export function revealChanges(
   tr: Transaction,
   prev: RevealState,
+  oldState: EditorState,
   newState: EditorState,
 ): { mapped: RevealState; blocks: [number, number][] } {
-  const mapped: RevealState = tr.docChanged
+  const mapped = tr.docChanged
     ? {
         set: prev.set.map(tr.mapping, tr.doc),
         touched: prev.touched.map(tr.mapping, tr.doc),
         config: prev.config,
-        // NOWHERE is before every position: mapping it would drag it into
-        // the document.
-        drawnAt:
-          prev.drawnAt.from < 0
-            ? prev.drawnAt
-            : {
-                from: tr.mapping.map(prev.drawnAt.from, -1),
-                to: tr.mapping.map(prev.drawnAt.to, 1),
-              },
       }
     : prev;
   const ranges: [number, number][] = tr.docChanged ? changedRanges(tr) : [];
-  const { from: a, to: b } = mapped.drawnAt;
+  const before = revealSelection(oldState);
+  const a = tr.mapping.map(before.from, -1);
+  const b = tr.mapping.map(before.to, 1);
   const { from, to } = revealSelection(newState);
   for (const range of [
     ...mapped.touched.find(a, b),
@@ -161,9 +148,6 @@ export function redrawReveal(
     set,
     touched: mapped.touched.remove(stale).add(state.doc, ranges),
     config: mapped.config,
-    // What was left alone was drawn for the same answer as the new selection
-    // would give, or it would have been among `blocks`.
-    drawnAt: revealSelection(state),
   };
 }
 
@@ -182,7 +166,7 @@ export function applyReveal(
   if (reveal.config && reveal.config() !== prev.config)
     return revealAll(newState, reveal);
   if (!tr.docChanged && !revealMoved(oldState, newState)) return prev;
-  const { mapped, blocks } = revealChanges(tr, prev, newState);
+  const { mapped, blocks } = revealChanges(tr, prev, oldState, newState);
   return redrawReveal(mapped, newState, blocks, reveal);
 }
 

@@ -23,13 +23,61 @@ export function revealSelection(state: EditorState): {
 } {
   // Read-only, as in the split view's preview, nothing shows as source: the
   // caret can't change it, so `###` or `**` would only be in the way.
-  if (noRevealKey.getState(state) || isReadOnly(state)) return NOWHERE;
+  if (
+    noRevealKey.getState(state) ||
+    untouchedKey.getState(state) ||
+    isReadOnly(state)
+  )
+    return NOWHERE;
   return pointerHoldKey.getState(state) ?? state.selection;
 }
 
 const noRevealKey = new PluginKey<boolean>("no-reveal");
 // Before every position, so no range is ever touched.
-export const NOWHERE = { from: -2, to: -2 };
+const NOWHERE = { from: -2, to: -2 };
+
+const untouchedKey = new PluginKey<boolean>("untouched");
+
+/** What a person does to the page: until one of these, nothing they did put
+ *  the caret where it is. */
+const TOUCHES = ["mousedown", "touchstart", "keydown"] as const;
+
+/**
+ * A document just opened: its caret was placed by no one (at its start, or
+ * where it was last left), so nothing shows as source until a key, a click
+ * or a touch. A diagram, formula or HTML block first in the document is
+ * drawn, and the first key shows its source before it types into it.
+ */
+/** `view` as if a person had touched it already (tests set their caret by
+ *  hand). */
+export function touch(view: EditorView) {
+  if (untouchedKey.getState(view.state))
+    view.dispatch(view.state.tr.setMeta(untouchedKey, true));
+}
+
+export const untouchedPlugin = $prose(
+  () =>
+    new Plugin<boolean>({
+      key: untouchedKey,
+      state: {
+        init: () => true,
+        apply: (tr, on) => on && !tr.getMeta(untouchedKey),
+      },
+      // Captured: a drawing's own mousedown, which puts the caret in its
+      // source, stops the event before ProseMirror's handlers see it.
+      view(view) {
+        const onTouch = () => touch(view);
+        for (const type of TOUCHES)
+          view.dom.addEventListener(type, onTouch, true);
+        return {
+          destroy: () => {
+            for (const type of TOUCHES)
+              view.dom.removeEventListener(type, onTouch, true);
+          },
+        };
+      },
+    }),
+);
 
 /** A view that is only read (the split view's preview): every syntax drawn,
  *  none shown as source wherever its selection lands. */

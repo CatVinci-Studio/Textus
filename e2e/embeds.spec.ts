@@ -94,6 +94,26 @@ test("a diagram folds to its line, its source kept, and stays folded", async ({
   await expect(doc.locator(".mermaid-preview svg")).toBeVisible();
 });
 
+// #801: a diagram first in a document sat under the caret the document
+// opened with, and showed only its source.
+test("a diagram first in a document is drawn as it opens, its source a click away", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __devFiles: Record<string, string> }).__devFiles = {
+      "/work/d.md": "```mermaid\ngraph LR\n  A --> B\n```\n\nafter\n",
+    };
+  });
+  await openApp(page);
+  await openPath(page, "/work/d.md");
+  const doc = page.locator('[data-active-tab="true"] .ProseMirror');
+  const drawing = doc.locator(".mermaid-preview svg");
+  await expect(drawing).toBeVisible();
+  await expect(doc.locator(".mermaid-source-hidden")).toHaveCount(1);
+  await drawing.click();
+  await expect(doc.locator(".mermaid-source-hidden")).toHaveCount(0);
+});
+
 test("a heading folds its section away, keeps the text, and opens for a caret", async ({
   page,
 }) => {

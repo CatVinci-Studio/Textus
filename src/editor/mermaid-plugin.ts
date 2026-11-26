@@ -1,5 +1,5 @@
 import { onAppearance } from "../engine/tokens/appearance";
-import { Plugin } from "@milkdown/kit/prose/state";
+import { Plugin, PluginKey } from "@milkdown/kit/prose/state";
 import { Decoration } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import type { Node as ProseNode } from "@milkdown/kit/prose/model";
@@ -29,7 +29,6 @@ import {
   drawingKey,
   isCodeBlock,
   isMermaid,
-  mermaidKey,
   type Drawn,
 } from "./mermaid-blocks";
 import { diagramErrorWidget, diagramWidget } from "./mermaid-widget";
@@ -39,6 +38,7 @@ import {
 } from "./pending-diagram";
 import type { DiagramEngine } from "../prefs/SettingsContext";
 
+const mermaidKey = new PluginKey("mermaid-preview");
 const DEBOUNCE_MS = 500;
 /** How far the column's width must move before drawings are laid out again,
  *  and how long it must then hold still: a panel sliding open redraws once. */
@@ -150,18 +150,11 @@ export function createMermaidPreviewPlugin(options: {
     return new Plugin<RevealState>({
       key: mermaidKey,
       state: {
-        // A document just opened: its caret was placed by no one, so the
-        // first block is drawn, not revealed as if held.
-        init: (_config, state) => revealAll(state, reveal, undefined, NOWHERE),
+        init: (_config, state) => revealAll(state, reveal),
         apply(tr, prev, oldState, newState) {
-          const meta = tr.getMeta(mermaidKey);
-          // A finished render has new SVG to show whatever the caret did:
-          // drawn for the selection its drawings still stand for.
-          if (meta === "rerender")
-            return revealAll(newState, reveal, undefined, prev.drawnAt);
-          // A click placed the caret in a source block: draw for it, even
-          // when the caret didn't move to get there.
-          if (meta === "reveal") return revealAll(newState, reveal);
+          // A finished render has new SVG to show whatever the caret did.
+          if (tr.getMeta(mermaidKey) === "rerender")
+            return revealAll(newState, reveal);
           return applyReveal(tr, prev, oldState, newState, reveal);
         },
       },
