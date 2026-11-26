@@ -88,6 +88,42 @@ function offScreen(page: Page): Promise<string[]> {
   });
 }
 
+/** What large text has pushed out of its place: a switch under its name
+ *  instead of beside it, a menu row's label cut short, a document line too
+ *  short to read (under 9 characters of its own size). */
+function layoutFaults(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const out: string[] = [];
+    const shown = (el: Element) => (el as HTMLElement).checkVisibility();
+    for (const row of document.querySelectorAll(".settings-toggle-row")) {
+      const label = row.firstElementChild;
+      const toggle = row.querySelector(".tx-switch");
+      if (!label || !toggle || !shown(row)) continue;
+      if (
+        toggle.getBoundingClientRect().left <
+        label.getBoundingClientRect().right - 1
+      )
+        out.push(`switch under "${label.textContent?.trim().slice(0, 20)}"`);
+    }
+    const large = /xlarge/.test(document.documentElement.dataset.uiSize ?? "");
+    if (large)
+      for (const label of document.querySelectorAll<HTMLElement>(
+        ".context-menu-label",
+      ))
+        if (shown(label) && label.scrollWidth > label.clientWidth + 1)
+          out.push(`menu row cut: "${label.textContent?.slice(0, 20)}"`);
+    const para = [
+      ...document.querySelectorAll<HTMLElement>(".milkdown p"),
+    ].find(shown);
+    if (para) {
+      const size = Number.parseFloat(getComputedStyle(para).fontSize);
+      const chars = para.getBoundingClientRect().width / size;
+      if (chars < 9) out.push(`document line ${chars.toFixed(1)} characters`);
+    }
+    return out;
+  });
+}
+
 const DEVICES = [
   { name: "a phone", device: PHONE },
   { name: "a touch tablet", device: TABLET },
@@ -156,12 +192,22 @@ for (const { name, device } of DEVICES)
         await expect.soft
           .poll(() => offScreen(page), { message: `${where}: document` })
           .toEqual([]);
+        // The document alone: an upright tablet at the largest sizes has
+        // no room for the sidebar beside a readable line (PLAN, to decide).
+        if (!phone && scale > 1.25)
+          await page.locator(".activity-rail-item[aria-pressed=true]").tap();
+        await expect.soft
+          .poll(() => layoutFaults(page), { message: `${where}: document` })
+          .toEqual([]);
         await page.getByRole("button", { name: "Menu", exact: true }).tap();
         await expect(page.getByRole("menuitem").first()).toBeVisible();
         await expect.soft
           .poll(() => smallTaps(page, ".context-menu"), {
             message: `${where}: menu`,
           })
+          .toEqual([]);
+        await expect.soft
+          .poll(() => layoutFaults(page), { message: `${where}: menu` })
           .toEqual([]);
         await page.getByRole("menuitem", { name: /Settings/ }).tap();
         await expect(page.getByLabel("Search settings")).toBeVisible();
@@ -171,5 +217,30 @@ for (const { name, device } of DEVICES)
         await expect.soft
           .poll(() => offScreen(page), { message: `${where}: Settings` })
           .toEqual([]);
+        // General's switches, long names among them.
+        if (phone) await page.getByRole("button", { name: "General" }).tap();
+        else
+          await page
+            .getByRole("tab", { name: /General/ })
+            .first()
+            .tap();
+        await expect.soft
+          .poll(() => layoutFaults(page), { message: `${where}: General` })
+          .toEqual([]);
       });
   });
+
+test.describe("on a phone in Chinese", () => {
+  test.use(PHONE);
+
+  // Chinese names don't break between words (keep-all): a long one pushed
+  // its switch under it.
+  test("a switch stays beside a long name", async ({ page }) => {
+    await openApp(page, { settings: { language: "zh" } });
+    await page.getByRole("button", { name: "菜单", exact: true }).tap();
+    await page.getByRole("menuitem", { name: /设置/ }).tap();
+    await page.getByRole("button", { name: "通用" }).tap();
+    await expect(page.locator(".settings-toggle-row").first()).toBeVisible();
+    await expect.poll(() => layoutFaults(page)).toEqual([]);
+  });
+});

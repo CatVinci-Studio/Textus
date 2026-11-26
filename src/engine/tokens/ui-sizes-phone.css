@@ -11,6 +11,7 @@
   --tree-step: 12px;
   --pane-inset: 12px;
   --chrome-scale: 0.91;
+  --margin-scale: min(var(--chrome-scale), 1);
   --text-caption: 12px;
   --text-footnote: 13px;
   --text-secondary: 15px;

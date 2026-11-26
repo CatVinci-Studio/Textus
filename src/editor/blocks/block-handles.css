@@ -9,8 +9,10 @@
 /* ⋮⋮'s size and its space from the text, which a fold caret left of it
    counts from too (block-fold.css). */
 .editor-content {
-  --block-handle-width: 20px;
-  --block-handle-gap: 4px;
+  /* Grown with the interface up to Large, not past it: the margin's room
+     at the larger steps is the text's (--margin-scale, ui-sizes.css). */
+  --block-handle-width: calc(20px * var(--margin-scale, 1));
+  --block-handle-gap: calc(4px * var(--margin-scale, 1));
 }
 
 /* Room in the margin for ⋮⋮ and a fold caret left of it. */

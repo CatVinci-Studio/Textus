@@ -20,6 +20,19 @@
   flex: 1;
 }
 
+/* At a touch screen's two largest sizes a long label wraps rather than
+   being cut (HIG: keep truncation to a minimum as text grows). */
+:root[data-touch]:is([data-ui-size="xlarge"], [data-ui-size="xxlarge"])
+  .context-menu-label.tx-truncate {
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
+}
+:root[data-touch]:is([data-ui-size="xlarge"], [data-ui-size="xxlarge"])
+  .context-menu-item {
+  padding-block: var(--space-2);
+}
+
 /* An outline's headings, set in a step a level. */
 .context-menu-item[data-depth] > .context-menu-label {
   margin-left: calc((var(--depth) - 1) * 16px);

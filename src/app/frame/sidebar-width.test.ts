@@ -37,6 +37,12 @@ describe("the sidebar's width bounds", () => {
     expect(sidePanelMax(200, SIDEBAR_LIMITS)).toBe(SIDEBAR_MIN_WIDTH);
   });
 
+  it("at a large interface size, keeps to its share", () => {
+    // An iPad upright at Largest: the floor grown 1.75 times no longer
+    // takes more than the share.
+    expect(sidePanelMax(768, SIDEBAR_LIMITS, 0, 1.75)).toBe(345);
+  });
+
   it("clamps into the bounds and rounds", () => {
     expect(clampSidePanel(50, 1400, SIDEBAR_LIMITS)).toBe(SIDEBAR_MIN_WIDTH);
     expect(clampSidePanel(9999, 1400, SIDEBAR_LIMITS)).toBe(528);

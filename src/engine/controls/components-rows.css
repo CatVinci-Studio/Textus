@@ -73,8 +73,14 @@
   contain: inline-size;
   min-width: 18ch;
 }
+/* A switch stays at the row's end, however long its name: the name wraps
+   beside it (iOS's rows at the largest text sizes). */
+.settings-toggle-row {
+  flex-wrap: nowrap;
+}
 .settings-toggle-row > :first-child {
   flex-basis: 0;
+  min-width: 0;
 }
 
 .tx-input {
@@ -302,7 +308,11 @@ textarea.tx-input {
 }
 
 /* A name that would stand in a column of words beside its control
-   (useStackWhenTall): the control goes under it. */
-.settings-row[data-stacked] > :first-child {
+   (useStackWhenTall), or any name at a touch screen's two largest sizes
+   (HIG: a stacked layout for large text): the control goes under it. */
+.settings-row[data-stacked] > :first-child,
+:root[data-touch]:is([data-ui-size="xlarge"], [data-ui-size="xxlarge"])
+  .settings-row:not(.settings-toggle-row)
+  > :first-child {
   flex-basis: 100%;
 }

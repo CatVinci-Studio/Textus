@@ -6,6 +6,9 @@
    larger text (theme/system-text-size.ts); the phone has its own steps
    (ui-sizes-phone.css). */
 :root {
+  /* The document's margins grow with the interface up to Large's, the
+     rest of a larger step going to the text. */
+  --margin-scale: min(var(--chrome-scale, 1), 1.25);
   /* The bar's own row; on a phone or tablet the status bar sits above it,
      inside the bar (--safe-top, mobile/styles/base.css). */
   --window-bar-row: 40px;

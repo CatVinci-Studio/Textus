@@ -46,10 +46,12 @@ export function DocTextFold({ t, settings, setSettings }: Props) {
     <details className="settings-fold">
       <summary className="settings-row">
         <span className="settings-row-label">{t.docTextLabel}</span>
-        <span className="settings-row-value">
-          {custom ? t.docTextCustom : t.docTextSizeAuto}
+        <span className="settings-row-end">
+          <span className="settings-row-value">
+            {custom ? t.docTextCustom : t.docTextSizeAuto}
+          </span>
+          <ChevronIcon className="settings-fold-chevron" />
         </span>
-        <ChevronIcon className="settings-fold-chevron" />
       </summary>
       <div className="settings-fold-body">
         <FontRow t={t} settings={settings} setSettings={setSettings} />
