@@ -36,34 +36,6 @@ async function fitsTheScreen(page: Page, within = "body") {
   expect(scroll).toBeLessThanOrEqual(0);
 }
 
-/** A phone's tabs are behind the document's name: its menu's New File.
- *  A tablet draws the row, so its + is the one there. */
-async function addTab(page: Page) {
-  if (await page.locator(".tab-switcher-button").isVisible()) {
-    await page.locator(".tab-switcher-button").tap();
-    await page.getByRole("menuitem", { name: "新建文件" }).tap();
-  } else {
-    await page.locator(".tab-bar-add").first().tap();
-  }
-}
-
-/** The open tabs, `n` of them, where the device shows them. */
-async function expectTabs(page: Page, n: number) {
-  if (await page.locator(".tab-switcher-button").isVisible())
-    await expect(page.locator(".tab-switcher-count")).toHaveText(`${n}`);
-  else await expect(page.locator(".tab-pill")).toHaveCount(n);
-}
-
-/** The first tab, from the menu a phone opens or the row a tablet has. */
-async function firstTab(page: Page) {
-  if (await page.locator(".tab-switcher-button").isVisible()) {
-    await page.locator(".tab-switcher-button").tap();
-    await page.getByRole("menuitemradio").first().tap();
-  } else {
-    await page.locator(".tab-pill").first().tap();
-  }
-}
-
 for (const device of DEVICES)
   test.describe(`on ${device.name}`, () => {
     test.use(device.device);
@@ -170,13 +142,13 @@ for (const device of DEVICES)
       await page.keyboard.type("A first line");
       await expect(editor).toContainText("A first line");
 
-      await addTab(page);
-      await expectTabs(page, 2);
+      await page.locator(".tab-bar-add").first().tap();
+      await expect(page.locator(".tab-pill")).toHaveCount(2);
       // With no keyboard up a phone's new document waits for a tap.
       await page.locator(".ProseMirror:visible").tap();
       await page.keyboard.type("Second");
       await expect(page.locator(".ProseMirror:visible")).toHaveText("Second");
-      await firstTab(page);
+      await page.locator(".tab-pill").first().tap();
       await expect(page.locator(".ProseMirror:visible")).toHaveText(
         "A first line",
       );
@@ -226,7 +198,7 @@ test.describe("on a phone with its keyboard up", () => {
       dispatchEvent(new CustomEvent("textus-keyboard", { detail: 300 })),
     );
     await page.keyboard.type("A first line");
-    await addTab(page);
+    await page.locator(".tab-bar-add").first().tap();
     const fresh = page.locator(".ProseMirror:visible");
     await expect(fresh).toBeFocused();
     await page.keyboard.type("Second");
@@ -538,48 +510,55 @@ test.describe("a phone on its side", () => {
   });
 });
 
-test.describe("a phone's tabs", () => {
+test.describe("a phone's tab row", () => {
   test.use(PHONE);
 
-  test("sit behind the document's name: every tab, the one in front ticked, its menu below", async ({
+  test("shows no slice of a tab before the first whole one", async ({
     page,
   }) => {
     await openApp(page);
-    for (let i = 0; i < 3; i++) await addTab(page);
-    await expectTabs(page, 4);
-    const tabs = page.getByRole("menuitemradio");
-    await page.locator(".tab-switcher-button").tap();
-    await expect(tabs).toHaveCount(4);
-    // The last one added is in front, alone ticked.
-    await expect(tabs.last()).toHaveAttribute("aria-checked", "true");
-    await expect(tabs.and(page.locator('[aria-checked="true"]'))).toHaveCount(
-      1,
-    );
-    // The first, picked: the tick moves to it.
-    await tabs.first().tap();
-    await page.locator(".tab-switcher-button").tap();
-    await expect(tabs.first()).toHaveAttribute("aria-checked", "true");
-    // Pinned, it comes first and stays; Close Tab waits for its unpinning.
-    await tabs.last().tap();
-    await page.locator(".tab-switcher-button").tap();
-    await page.getByRole("menuitem", { name: "固定标签" }).tap();
-    await page.locator(".tab-switcher-button").tap();
-    await expect(tabs.first()).toHaveAttribute("aria-checked", "true");
-    await expect(
-      page.getByRole("menuitem", { name: "关闭标签页", exact: true }),
-    ).toBeDisabled();
-    await page.getByRole("menuitem", { name: "取消固定" }).tap();
-    // Closed from its menu: one fewer.
-    await page.locator(".tab-switcher-button").tap();
-    await page.getByRole("menuitem", { name: "关闭标签页", exact: true }).tap();
-    await expectTabs(page, 3);
+    // The + at the row's end however many tabs it has, beside their list
+    // once they overflow.
+    const addAtEnd = () =>
+      page.evaluate(() => {
+        const bar = document.querySelector<HTMLElement>(".tab-bar")!;
+        const add = bar.querySelector(".tab-bar-add")!.getBoundingClientRect();
+        const list = bar.querySelector(".tab-bar-list");
+        const end = list
+          ? list.getBoundingClientRect().left
+          : bar.getBoundingClientRect().right -
+            parseFloat(getComputedStyle(bar).paddingRight);
+        return Math.abs(end - add.right) <= 1;
+      });
+    await page.locator(".tab-bar-add").first().tap();
+    expect(await addAtEnd()).toBe(true);
+    for (let i = 0; i < 3; i++)
+      await page.locator(".tab-bar-add").first().tap();
+    await expect(page.locator(".tab-pill")).toHaveCount(5);
+    expect(await addAtEnd()).toBe(true);
+    // The last tab, open, closed: the row a tab shorter, the one before it
+    // open at the row's end.
+    await page.locator(".tab-pill-active .tab-pill-close").tap();
+    await expect(page.locator(".tab-pill")).toHaveCount(4);
+    await settled(page);
+    const cut = await page.evaluate(() => {
+      const bar = document.querySelector<HTMLElement>(".tab-bar")!;
+      const from =
+        bar.getBoundingClientRect().left +
+        parseFloat(getComputedStyle(bar).paddingLeft);
+      return [...bar.querySelectorAll<HTMLElement>(".tab-pill")]
+        .map((pill) => pill.getBoundingClientRect())
+        .filter((box) => box.left < from - 1 && box.right > from + 1)
+        .map((box) => [box.left, box.right, from]);
+    });
+    expect(cut).toEqual([]);
   });
 });
 
 test.describe("a phone's sidebar pushed back", () => {
   test.use(PHONE);
 
-  test("keeps the document's name in sight as the page slides back", async ({
+  test("keeps the tab row in sight as the page slides back", async ({
     page,
   }) => {
     await openApp(page, { animations: true });
@@ -599,7 +578,7 @@ test.describe("a phone's sidebar pushed back", () => {
     await expect.poll(sliding).toBe(0);
     await toggle.tap({ force: true });
     // Held halfway: the page still moved, as WebKit can leave it. Nothing
-    // drawn over the document's name hides it.
+    // drawn over its open tab hides it.
     const over = await page.evaluate(() => {
       for (const motion of document.getAnimations()) {
         if (!(motion instanceof CSSTransition)) continue;
@@ -607,7 +586,7 @@ test.describe("a phone's sidebar pushed back", () => {
         motion.currentTime =
           Number(motion.effect?.getComputedTiming().duration) / 2;
       }
-      const tab = document.querySelector(".tab-switcher-button")!;
+      const tab = document.querySelector(".tab-pill-active")!;
       const box = tab.getBoundingClientRect();
       const stack = document.elementsFromPoint(
         box.left + box.width / 2,
@@ -635,8 +614,8 @@ test.describe("a phone's sidebar pushed back", () => {
   });
 });
 
-test.describe("reordering tabs on a tablet", () => {
-  test.use(TABLET);
+test.describe("reordering tabs on a phone", () => {
+  test.use(PHONE);
 
   test("a tab dragged along the row keeps its document's scroll", async ({
     page,

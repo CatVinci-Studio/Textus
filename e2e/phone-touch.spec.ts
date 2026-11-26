@@ -182,13 +182,12 @@ for (const { name, device } of TOUCH_DEVICES)
       };
       await big([
         ".window-menu-button",
-        // A phone's + is its tab menu's New.
-        ...(phone ? [] : [".tab-bar-add"]),
+        ".tab-bar-add",
         // A tablet's x keeps its size: in its 32px tab a fingertip's target
         // would take the taps meant for the tab.
         ...(phone
           ? [
-              ".tab-switcher-button",
+              ".tab-pill-close",
               ".window-bar-sidebar-toggle",
               ".document-menu-button",
             ]
@@ -392,9 +391,7 @@ test.describe("a phone's unsaved-changes prompt", () => {
     await openApp(page, { settings: { language: "en" } });
     await page.locator(".ProseMirror:visible").tap();
     await page.keyboard.type("Hello");
-    // Closed from the menu behind the document's name.
-    await page.locator(".tab-switcher-button").tap();
-    await page.getByRole("menuitem", { name: "Close Tab", exact: true }).tap();
+    await page.locator(".tab-pill-close").first().tap();
     const prompt = page.locator(".close-prompt.app-dialog");
     await expect(prompt).toBeVisible();
     await expect(page.locator(".sheet-scrim")).toHaveCount(0);

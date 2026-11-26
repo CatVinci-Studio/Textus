@@ -25,7 +25,7 @@ async function open(page: Page) {
 }
 
 const aiButton = (page: Page) =>
-  page.getByRole("button", { name: "Textus AI", exact: true }).first();
+  page.getByRole("button", { name: "Textus AI" }).first();
 
 test("the AI button opens a conversation tab in an island on the right", async ({
   page,
@@ -659,21 +659,18 @@ test.describe("on a phone", () => {
     page,
   }) => {
     await openApp(page);
-    const count = page.locator(".tab-switcher-count");
     await aiButton(page).click();
-    // Over a conversation, the menu's New starts another, as the row's +
-    // does: a phone draws no row.
-    await page.locator(".tab-switcher-button").tap();
-    await page.getByRole("menuitem", { name: "新对话" }).tap();
-    await expect(count).toHaveText("3");
+    await page.locator(".tab-bar-add").first().click();
+    await expect(tabs(page)).toHaveCount(3);
     // A document in front, the AI's tab behind it.
-    await page.locator(".tab-switcher-button").tap();
-    await page.getByRole("menuitemradio").first().tap();
+    await tabs(page).first().click();
     await aiButton(page).click();
-    await expect(page.locator(".tab-switcher-name")).toHaveText(/Textus AI/);
-    await expect(count).toHaveText("3");
+    await expect(
+      page.locator(".tab-pill.active, .tab-pill[aria-selected=true]"),
+    ).toHaveText(/Textus AI/);
+    await expect(tabs(page)).toHaveCount(3);
     await aiButton(page).click();
-    await expect(count).toHaveText("2");
+    await expect(tabs(page)).toHaveCount(2);
   });
 });
 
