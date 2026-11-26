@@ -93,7 +93,13 @@ export function pullTab(
     const whole = wholeIsland(alt);
     // A tab: an island's outer tenth opens one beside it, the rest joins
     // it. A whole island can't join: it goes to the half it is over.
-    const target = dropTargetAt(x, y, geometry, !!whole, current?.target);
+    const target = dropTargetAt(
+      x,
+      y,
+      geometry,
+      whole ? "island" : "tab",
+      current?.target,
+    );
     if (whole) {
       if (!target || target.zone === "center") return null;
       const beside = target.whole ? null : paneOf(base, target.tabId);

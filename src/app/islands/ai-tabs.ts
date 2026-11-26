@@ -19,6 +19,7 @@ export {
   setConversationOpener,
 } from "../../ai/chat/conversation-tabs";
 import { createSubscribers } from "../../utils/store";
+import { isConversationTab } from "../../document/doc-tabs";
 
 /** A tab row's +: over an AI tab, a new conversation beside it, as the
  *  AI's own + makes; else (or where no more conversations can be kept)
@@ -31,7 +32,7 @@ export function addFromTabRow(
   newConversation: (from: string, fallback: () => void) => void,
 ): void {
   const view = front?.view;
-  if (view?.kind === "page" && view.view === "ai")
-    newConversation(conversationIn(view.state), addDocument);
+  if (isConversationTab(front))
+    newConversation(conversationIn(view?.state), addDocument);
   else addDocument();
 }

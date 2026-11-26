@@ -2,7 +2,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 
 // A placeholder's height before its block was ever drawn. It only has to be
 // close: the block is measured once drawn, and what is on screen is held
-// still (hold-still.ts) when an estimate above it turns out wrong.
+// still (engine/controls/scroll-hold.ts) when an estimate above it turns out wrong.
 
 /** The text column as the view measured it. */
 export interface TextMetrics {

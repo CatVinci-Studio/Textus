@@ -66,15 +66,24 @@ describe("imported theme chrome", () => {
 
 describe("themeColumnWidth", () => {
   it("gives a theme's #write max-width the column it asked for", () => {
-    expect(themeColumnWidth("1200px")).toBe("calc(1200px + 3rem)");
+    // #write's own width, as in Typora: the column's margins are its own.
+    expect(themeColumnWidth("1200px")).toEqual([
+      { name: "--theme-text-width", value: "1200px" },
+      {
+        name: "--theme-content-width",
+        value: "calc(1200px + 2 * var(--doc-gutter, 1.75rem))",
+      },
+    ]);
   });
 
   it("lets a percentage width span the pane", () => {
-    expect(themeColumnWidth("80%")).toBe("100%");
+    expect(themeColumnWidth("80%")).toEqual([
+      { name: "--theme-content-width", value: "100%" },
+    ]);
   });
 
   it("leaves the column alone when the theme sets no width", () => {
-    expect(themeColumnWidth("none")).toBeNull();
-    expect(themeColumnWidth("")).toBeNull();
+    expect(themeColumnWidth("none")).toEqual([]);
+    expect(themeColumnWidth("")).toEqual([]);
   });
 });

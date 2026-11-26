@@ -10,6 +10,11 @@ import {
   latexMathSyntax,
 } from "./latex-math-syntax";
 import { looseMathFlow } from "./loose-math-flow";
+import { dollarMathSyntax } from "./dollar-math-syntax";
+import {
+  backtickMathFromMarkdown,
+  backtickMathSyntax,
+} from "./backtick-math-syntax";
 
 interface MdastNode {
   type: string;
@@ -17,32 +22,6 @@ interface MdastNode {
   data?: Record<string, unknown>;
   children?: MdastNode[];
   position?: { start: { offset?: number }; end: { offset?: number } };
-}
-
-/**
- * Pandoc's rule for single-dollar math, on top of remark-math (which pairs
- * any two dollars): no space just inside either `$`, no digit right after
- * the closing one. So "$5 and $6" stay prices; a pair breaking it goes back
- * to text.
- */
-function revertCurrencyDollars(tree: MdastNode, source: string): void {
-  const walk = (node: MdastNode) => {
-    if (!node.children) return;
-    node.children = node.children.map((child) => {
-      walk(child);
-      if (child.type !== "inlineMath") return child;
-      const start = child.position?.start.offset;
-      const end = child.position?.end.offset;
-      if (start === undefined || end === undefined) return child;
-      const raw = source.slice(start, end);
-      if (!raw.startsWith("$") || raw.startsWith("$$")) return child;
-      const inner = raw.slice(1, -1);
-      const breaksRule =
-        /^\s/.test(inner) || /\s$/.test(inner) || /^\d/.test(source[end] ?? "");
-      return breaksRule ? { type: "text", value: raw } : child;
-    });
-  };
-  walk(tree);
 }
 
 /**
@@ -84,11 +63,18 @@ function remarkMathWithPandocDollars(
 ) {
   remarkMath.apply(this, args);
   const data = this.data();
-  (data.micromarkExtensions ??= []).push(latexMathSyntax(), looseMathFlow());
-  (data.fromMarkdownExtensions ??= []).push(latexMathFromMarkdown());
+  (data.micromarkExtensions ??= []).push(
+    latexMathSyntax(),
+    looseMathFlow(),
+    dollarMathSyntax(),
+    backtickMathSyntax(),
+  );
+  (data.fromMarkdownExtensions ??= []).push(
+    latexMathFromMarkdown(),
+    backtickMathFromMarkdown(),
+  );
   return (root: Root, file: { value: unknown }) => {
     const tree = root as MdastNode;
-    revertCurrencyDollars(tree, String(file.value));
     recordDollarRuns(tree, String(file.value));
     unescapeTablePipes(tree);
     displayLatexBlocks(tree);
@@ -105,8 +91,8 @@ export const mathInlineSchema = $nodeSchema("math_inline", () => ({
   group: "inline",
   inline: true,
   marks: "",
-  // As written in the file: "$" (all the editor makes), "$$", or LaTeX's `\(`
-  // or `\[`.
+  // As written in the file: "$" (all the editor makes), "$$", GitHub's
+  // "$`", or LaTeX's `\(` or `\[`.
   attrs: { delimiter: { default: "$", validate: "string" } },
   parseDOM: [
     {

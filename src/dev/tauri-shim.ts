@@ -4,6 +4,7 @@
  * payload)` fires tracked listeners.
  */
 import { agentShim } from "./agent-shim";
+import { fill } from "../i18n/fill";
 import type {
   DirEntryInfo_Serialize,
   FolderIndex,
@@ -13,8 +14,11 @@ import type {
   StreamEvent_Serialize,
 } from "../platform/bindings/ai-agent";
 import type { AgentSkill_Serialize } from "../platform/bindings/ai-project";
-import type { GalleryTheme_Serialize } from "../platform/bindings/app";
-import type { CustomEndpointStatus_Serialize } from "../platform/bindings/auth";
+import type {
+  FontFamily,
+  GalleryTheme_Serialize,
+} from "../platform/bindings/app";
+import type { CustomEndpointStatus } from "../platform/bindings/auth";
 import type { PluginsState_Serialize } from "../platform/bindings/plugins";
 import type { FsEntry_Serialize } from "../platform/bindings/plugin-access";
 import type { SentBlock } from "../editor/markdown/doc-blocks";
@@ -89,11 +93,13 @@ export function installDevTauriShim(): void {
     conversations: {} as Record<string, unknown>,
     archivedChats: 0,
     // The key is kept but, as in Rust, never handed back.
-    customEndpoint: null as {
+    customEndpoints: [] as {
+      id: string;
+      name: string;
       baseUrl: string;
       apiKey: string | null;
       model: string;
-    } | null,
+    }[],
     revisionChoices: null as unknown,
     keptProposals: {} as Record<string, unknown>,
     keptPictures: {} as Record<string, unknown>,
@@ -340,22 +346,27 @@ export function installDevTauriShim(): void {
         return answer(cmd, null);
       }
       // An empty key keeps the stored one, for the URL it was saved with only.
-      case "custom_endpoint_status": {
-        const saved = store.customEndpoint;
+      case "custom_endpoints_status":
         return Promise.resolve(
-          (saved && {
-            base_url: saved.baseUrl,
-            api_key: null,
-            has_api_key: !!saved.apiKey,
-            model: saved.model,
-          }) satisfies CustomEndpointStatus_Serialize | null,
+          store.customEndpoints.map((e) => ({
+            id: e.id,
+            name: e.name,
+            base_url: e.baseUrl,
+            has_api_key: !!e.apiKey,
+            model: e.model,
+          })) satisfies CustomEndpointStatus[],
         );
-      }
       case "set_custom_endpoint": {
         const baseUrl = String(args.baseUrl ?? "");
         const typed = typeof args.apiKey === "string" ? args.apiKey.trim() : "";
-        const saved = store.customEndpoint;
-        store.customEndpoint = {
+        const saved = store.customEndpoints.find((e) => e.id === args.id);
+        const id =
+          saved?.id ||
+          (typeof args.id === "string" && args.id) ||
+          `custom:${Math.random().toString(16).slice(2, 10)}`;
+        const endpoint = {
+          id,
+          name: String(args.name ?? "").trim(),
           baseUrl,
           apiKey:
             typed ||
@@ -364,10 +375,15 @@ export function installDevTauriShim(): void {
               : null),
           model: String(args.model ?? ""),
         };
-        return Promise.resolve(null);
+        store.customEndpoints = saved
+          ? store.customEndpoints.map((e) => (e === saved ? endpoint : e))
+          : [...store.customEndpoints, endpoint];
+        return Promise.resolve(id);
       }
       case "clear_custom_endpoint":
-        store.customEndpoint = null;
+        store.customEndpoints = store.customEndpoints.filter(
+          (e) => e.id !== args.id,
+        );
         return Promise.resolve(null);
       case "revision_choices_read":
         return Promise.resolve(store.revisionChoices);
@@ -669,9 +685,56 @@ export function installDevTauriShim(): void {
         emitSoon("open-paths-as-tabs", args.paths);
         return Promise.resolve(null);
     }
+    // A file is no folder to list, as on disk.
+    const single = w.__devFiles as Record<string, string> | undefined;
+    const named = String(args.path ?? "");
+    if (
+      cmd === "list_dir" &&
+      (named in (files ?? {}) || named in (single ?? {}))
+    )
+      return Promise.reject(new Error("Not a directory"));
+    // `__devDragShift`: Shift held while a file manager's drag is over the window.
+    if (cmd === "drag_modifiers")
+      return Promise.resolve({
+        shift: !!w.__devDragShift,
+        alt: false,
+        ctrl: false,
+      });
+    // `__devPictureSizes`: a picture's size by path, as its header gives it.
+    if (cmd === "picture_size")
+      return Promise.resolve(
+        (w.__devPictureSizes as Record<string, unknown> | undefined)?.[named] ??
+          null,
+      );
+    // A dropped file copied into the document's image folder, under its name.
+    if (cmd === "save_dropped_file") {
+      const source = String(args.source);
+      const name = source.slice(source.lastIndexOf("/") + 1);
+      const folder = String(args.folder)
+        .replace(/^\.\/?/, "")
+        .replace(/\/$/, "");
+      const docDir = String(args.docPath).replace(/\/[^/]*$/, "");
+      const dest = [docDir, folder, name].filter(Boolean).join("/");
+      if (files) files[dest] = files[source] ?? single?.[source] ?? "";
+      const src = [folder, name].filter(Boolean).join("/");
+      return Promise.resolve({ src, embed: null, path: dest });
+    }
     // No fake folder: the folder of a document opened anyway (dropped in,
     // `__devFiles`) lists as empty, as the native side never answers null.
     if (!files) return cmd === "list_dir" ? Promise.resolve([]) : null;
+    const taken = (p: string) =>
+      Object.keys(files).some((f) => f === p || f.startsWith(`${p}/`));
+    const isFolder = (p: string) =>
+      Object.keys(files).some((f) => f.startsWith(`${p}/`));
+    /** `name`, or the first of it numbered from 2 free in `into`, as the
+     *  backend's ids.rs `numbered` (a file's number before its extension). */
+    const freeName = (into: string, name: string, isDir: boolean) => {
+      const [stem, ext] = stemAndExt(name, isDir);
+      let free = name;
+      for (let n = 2; taken(`${into}/${free}`); n++)
+        free = `${stem} ${n}${ext}`;
+      return free;
+    };
     const path = String(args.path ?? args.root ?? "");
     const times = (w.__devFsTimes ??= {}) as Record<string, number>;
     switch (cmd) {
@@ -685,9 +748,14 @@ export function installDevTauriShim(): void {
         times[path] = (times[path] ?? 1) + 1;
         return Promise.resolve(null);
       case "file_mtime_ms":
-        return Promise.resolve(path in files ? (times[path] ?? 1) : null);
-      case "picture_size":
-        return Promise.resolve(null);
+        // A folder is there while a file is under it.
+        return Promise.resolve(
+          path in files
+            ? (times[path] ?? 1)
+            : Object.keys(files).some((f) => f.startsWith(`${path}/`))
+              ? 1
+              : null,
+        );
       case "list_dir": {
         const entries = new Map<string, boolean>();
         for (const file of Object.keys(files)) {
@@ -723,19 +791,26 @@ export function installDevTauriShim(): void {
       // A folder is the files under it; an empty one holds a hidden ".keep".
       case "tree_create_document":
       case "tree_create_folder": {
-        const name = String(args.name).trim();
-        if (!name || name.includes("/"))
+        // Slashes name folders on the way (tree_ops.rs `typed_path`).
+        const parts = String(args.name)
+          .trim()
+          .split("/")
+          .map((part) => part.trim());
+        if (parts.some((part) => !part || part === "." || part === ".."))
           return Promise.reject(ownError("badName"));
+        const name = parts.join("/");
         const doc = cmd === "tree_create_document";
-        const target = `${String(args.dir)}/${doc && !/\.(md|markdown)$/i.test(name) ? `${name}.md` : name}`;
-        if (
-          Object.keys(files).some(
-            (f) => f === target || f.startsWith(`${target}/`),
-          )
-        )
-          return Promise.reject(ownError("exists"));
+        const dir = String(args.dir);
+        const target = `${dir}/${doc && !/\.(md|markdown)$/i.test(name) ? `${name}.md` : name}`;
+        if (taken(target)) return Promise.reject(ownError("exists"));
+        // The topmost folder on the way not there yet, else the entry.
+        const made =
+          parts
+            .slice(0, -1)
+            .map((_, i) => `${dir}/${parts.slice(0, i + 1).join("/")}`)
+            .find((folder) => !taken(folder)) ?? target;
         files[doc ? target : `${target}/.keep`] = "";
-        return Promise.resolve(target);
+        return Promise.resolve({ path: target, made });
       }
       case "open_path_in_new_window": {
         // No second window in the browser: what would open is recorded.
@@ -747,22 +822,45 @@ export function installDevTauriShim(): void {
       }
       case "tree_move_entry": {
         const into = String(args.into);
-        const target = `${into}/${path.split("/").pop()}`;
-        if (into === path.slice(0, path.lastIndexOf("/")))
+        const named = args.name == null ? null : String(args.name);
+        const name = named ?? path.split("/").pop()!;
+        const target = `${into}/${name}`;
+        if (
+          target === path ||
+          (!named && into === path.slice(0, path.lastIndexOf("/")))
+        )
           return Promise.reject(ownError("alreadyThere"));
         if (into === path || into.startsWith(`${path}/`))
           return Promise.reject("A folder can't move into itself");
-        if (
-          Object.keys(files).some(
-            (f) => f === target || f.startsWith(`${target}/`),
-          )
-        )
+        if (taken(target) && !args.keepBoth)
           return Promise.reject(ownError("exists"));
+        const free = `${into}/${freeName(into, name, isFolder(path))}`;
         for (const file of Object.keys(files)) {
           if (file !== path && !file.startsWith(`${path}/`)) continue;
-          files[target + file.slice(path.length)] = files[file];
+          files[free + file.slice(path.length)] = files[file];
           delete files[file];
         }
+        return Promise.resolve(free);
+      }
+      // The tree's own copy: its own name, numbered, or "name copy".
+      case "tree_copy_entry": {
+        const into = String(args.into);
+        const naming = args.naming as "own" | "numbered" | { beside: string };
+        const name = path.slice(path.lastIndexOf("/") + 1);
+        const isDir = isFolder(path);
+        if (isDir && (into === path || into.startsWith(`${path}/`)))
+          return Promise.reject(ownError("copyIntoItself"));
+        if (naming === "own" && taken(`${into}/${name}`))
+          return Promise.reject(ownError("exists"));
+        const [stem, ext] = stemAndExt(name, isDir);
+        const first =
+          typeof naming === "object"
+            ? `${fill(naming.beside, { name: stem })}${ext}`
+            : name;
+        const target = `${into}/${freeName(into, first, isDir)}`;
+        for (const file of Object.keys(files))
+          if (file === path || file.startsWith(`${path}/`))
+            files[target + file.slice(path.length)] = files[file];
         return Promise.resolve(target);
       }
       case "tree_rename_entry": {
@@ -787,16 +885,41 @@ export function installDevTauriShim(): void {
         }
         return Promise.resolve(target);
       }
-      case "tree_trash_entry": {
-        if (path === String(args.root)) return Promise.reject("Tree root");
-        const trashed = ((
-          window as unknown as Record<string, unknown>
-        ).__devTrashed ??= []) as string[];
-        for (const file of Object.keys(files)) {
-          if (file !== path && !file.startsWith(`${path}/`)) continue;
-          delete files[file];
+      case "tree_trash_entries": {
+        const w = window as unknown as Record<string, unknown>;
+        const trashed = (w.__devTrashed ??= []) as string[];
+        // What the Trash holds, by place: its files under their own paths.
+        const bin = (w.__devTrash ??= {}) as Record<
+          string,
+          Record<string, string>
+        >;
+        const places: string[] = [];
+        for (const one of args.paths as string[]) {
+          if (one === String(args.root))
+            return Promise.resolve({ places, error: "Tree root" });
+          const place = `trash:${trashed.length}`;
+          bin[place] = {};
+          for (const file of Object.keys(files)) {
+            if (file !== one && !file.startsWith(`${one}/`)) continue;
+            bin[place][file] = files[file];
+            delete files[file];
+          }
+          trashed.push(one);
+          places.push(place);
         }
-        trashed.push(path);
+        return Promise.resolve({ places, error: null });
+      }
+      case "tree_put_back": {
+        const bin = ((window as unknown as Record<string, unknown>)
+          .__devTrash ?? {}) as Record<string, Record<string, string>>;
+        const held = bin[String(args.place)];
+        if (!held) return Promise.reject(ownError("goneFromTrash"));
+        if (
+          Object.keys(files).some((f) => f === path || f.startsWith(`${path}/`))
+        )
+          return Promise.reject(ownError("exists"));
+        Object.assign(files, held);
+        delete bin[String(args.place)];
         return Promise.resolve(null);
       }
       case "folder_documents": {
@@ -954,7 +1077,7 @@ export function installDevTauriShim(): void {
   // `__devFiles`); installed plugins are `__devPlugins`, and `__devPluginState`
   // starts some on. The catalog is served at /dev-plugins/; see also
   // `__devCatalogInstalled`, `__devCatalogOlder`, `__devCatalogCache`,
-  // `__devCatalogFails` and `__devCatalogStats`.
+  // `__devCatalogFails`, `__devCatalogStats` and `__devCatalogManifests`.
   type DevPluginEntry = {
     enabled: boolean;
     granted: string[];
@@ -979,12 +1102,19 @@ export function installDevTauriShim(): void {
       r.ok
         ? (r.json() as Promise<{ plugins: CatalogEntry[] }>).then((c) =>
             // `__devCatalogStats`: installs and dates by id, as the
-            // release's daily count adds them.
+            // release's daily count adds them; `__devCatalogManifests`:
+            // manifest fields by id, as a newer release of it has them.
             c.plugins.map((p) => ({
               ...p,
               ...((w.__devCatalogStats as Record<string, object> | undefined)?.[
                 p.id
               ] ?? {}),
+              manifest: {
+                ...(p.manifest as object),
+                ...((
+                  w.__devCatalogManifests as Record<string, object> | undefined
+                )?.[p.id] ?? {}),
+              },
             })),
           )
         : Promise.reject(new Error("No textus-plugins checkout to list.")),
@@ -1237,6 +1367,9 @@ export function installDevTauriShim(): void {
         for (const p of Object.keys(folder))
           if (p === path || p.startsWith(`${path}/`)) delete folder[p];
         return Promise.resolve(null);
+      // iOS's checks alone; the move is the native trash below.
+      case "plugin_fs_trash_path":
+        return Promise.resolve(path);
       case "plugin_fs_write":
         ((w.__devFs ??= {}) as Record<string, string>)[path] = args.base64
           ? atob(String(args.contents))
@@ -1436,6 +1569,18 @@ export function installDevTauriShim(): void {
       if (cmd === "plugin:window|outer_position")
         return Promise.resolve({ x: window.screenX, y: window.screenY });
       if (cmd === "plugin:window|scale_factor") return Promise.resolve(1);
+      // iOS's Recently Deleted: what went there in `window.__devTrashed`.
+      if (cmd === "plugin:textus-files|trash") {
+        const path = String((args as { args?: { path?: unknown } }).args?.path);
+        for (const disk of [w.__devFs, w.__devFiles] as Record<
+          string,
+          string
+        >[])
+          for (const p of Object.keys(disk ?? {}))
+            if (p === path || p.startsWith(`${path}/`)) delete disk[p];
+        ((w.__devTrashed ??= []) as string[]).push(path);
+        return Promise.resolve(null);
+      }
       // Pages and links opened in the browser: `window.__devLinks`.
       if (cmd.startsWith("open_") && /_(page|link)$/.test(cmd))
         ((w.__devLinks ??= []) as unknown[]).push({ cmd, ...args });
@@ -1651,6 +1796,33 @@ export function installDevTauriShim(): void {
           }, 30);
         });
       }
+      // A save dialog's and the CSS picker's answers (`window.__devSavePick`,
+      // `__devCssPick`), for a test to export into `__devFs` and import back.
+      if (cmd === "export_save_dialog")
+        return Promise.resolve(w.__devSavePick ?? null);
+      if (cmd === "open_css_file_dialog")
+        return Promise.resolve(w.__devCssPick ?? null);
+      // Common faces across macOS, Windows and Linux; the font pickers keep
+      // only those this browser can draw.
+      if (cmd === "system_font_families") {
+        return Promise.resolve(
+          [
+            "Georgia",
+            "Times New Roman",
+            "DejaVu Serif",
+            "Liberation Serif",
+            "Noto Serif",
+            "Arial",
+            "Helvetica Neue",
+            "DejaVu Sans",
+            "Liberation Sans",
+            "Courier New",
+            "Menlo",
+            "DejaVu Sans Mono",
+            "Liberation Mono",
+          ].map((name): FontFamily => ({ name, local: [], files: [] })),
+        );
+      }
       // Real format handling (PDF, spreadsheets) needs the native side.
       if (cmd === "pick_attachment_files") {
         return Promise.resolve([
@@ -1709,6 +1881,12 @@ export function installDevTauriShim(): void {
 }
 
 /** A request body's base64 as text, or null when it isn't UTF-8 text. */
+/** A name's stem and extension; a folder's whole name is its stem. */
+function stemAndExt(name: string, isDir: boolean): [string, string] {
+  const dot = isDir ? -1 : name.lastIndexOf(".");
+  return dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ""];
+}
+
 function textOf(base64: string): string | null {
   try {
     return new TextDecoder("utf-8", { fatal: true }).decode(

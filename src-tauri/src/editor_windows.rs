@@ -13,24 +13,21 @@ pub(crate) fn next_window_id() -> u32 {
     WINDOW_COUNTER.fetch_add(1, Ordering::Relaxed)
 }
 
+/// A new editor window's label.
+#[cfg(desktop)]
+pub(crate) fn new_window_label() -> String {
+    format!("window-{}", next_window_id())
+}
+
 /// Editor windows by when the user was last in them, latest first: what comes
 /// from outside any window (the tray, a menu with none focused) goes to the
 /// first, and a dropped tab to the frontmost of the windows under it.
 #[cfg(desktop)]
-fn is_editor(label: &str) -> bool {
-    crate::windows::is_editor_window(label)
-}
-
-/// The phone and iPad have the one window.
-#[cfg(not(desktop))]
-fn is_editor(_label: &str) -> bool {
-    true
-}
-
 static RECENT: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
 
+#[cfg(desktop)]
 pub(crate) fn note_focused(label: &str) {
-    if is_editor(label) {
+    if crate::windows::is_editor_window(label) {
         let mut recent = RECENT.lock().unwrap_or_else(|e| e.into_inner());
         recent.retain(|l| l != label);
         recent.insert(0, label.to_string());
@@ -38,6 +35,7 @@ pub(crate) fn note_focused(label: &str) {
 }
 
 /// How recently the window was in use: 0 for the latest, MAX for never.
+#[cfg(desktop)]
 pub(crate) fn focus_rank(label: &str) -> usize {
     RECENT
         .lock()
@@ -48,10 +46,11 @@ pub(crate) fn focus_rank(label: &str) -> usize {
 }
 
 /// The editor window last in use while it is still open, else any editor.
+#[cfg(desktop)]
 pub(crate) fn last_editor(app: &tauri::AppHandle) -> Option<tauri::Window> {
     app.windows()
         .into_iter()
-        .filter(|(label, _)| is_editor(label))
+        .filter(|(label, _)| crate::windows::is_editor_window(label))
         .min_by_key(|(label, _)| focus_rank(label))
         .map(|(_, window)| window)
 }
@@ -169,45 +168,62 @@ pub(crate) fn end_web_process_with_window(window: &tauri::WebviewWindow) {
     });
 }
 
-/// Tells a window's page when macOS enters full screen and when it starts
-/// leaving (`window-fullscreen`), via AppKit notifications, since size checks
-/// lag. Main thread only, once.
+/// Tells a window's page when macOS starts entering full screen and when it
+/// starts leaving (`window-fullscreen`), via AppKit notifications, since size
+/// checks lag. At the start, both ways: AppKit animates between pictures of
+/// the window, so a layout changed only once it has entered pops in after
+/// the animation. Main thread only, once.
 #[cfg(target_os = "macos")]
 pub(crate) fn watch_fullscreen(app: &tauri::AppHandle) {
     use objc2_app_kit::{
-        NSWindowDidEnterFullScreenNotification, NSWindowWillExitFullScreenNotification,
+        NSWindowWillEnterFullScreenNotification, NSWindowWillExitFullScreenNotification,
     };
-    use objc2_foundation::{NSNotification, NSNotificationCenter};
-    use std::ptr::NonNull;
-    let center = NSNotificationCenter::defaultCenter();
     // SAFETY: AppKit's notification names, constant for the process.
     let names = unsafe {
         [
-            (NSWindowDidEnterFullScreenNotification, true),
+            (NSWindowWillEnterFullScreenNotification, true),
             (NSWindowWillExitFullScreenNotification, false),
         ]
     };
     for (name, fullscreen) in names {
         let app = app.clone();
-        let block = block2::RcBlock::new(move |note: NonNull<NSNotification>| {
-            // SAFETY: AppKit hands the block a live notification.
-            let Some(window) = (unsafe { note.as_ref() }).object() else {
-                return;
-            };
-            let window = objc2::rc::Retained::as_ptr(&window) as *mut std::ffi::c_void;
+        on_window_note(name, move |window| {
             for (label, webview) in app.windows() {
                 if webview.ns_window().ok() == Some(window) {
                     let _ = app.emit_to(label.as_str(), "window-fullscreen", fullscreen);
                 }
             }
         });
-        // SAFETY: any window's notification (no object), delivered on the
-        // thread that posts it - AppKit's main thread.
-        let observer = unsafe {
-            center.addObserverForName_object_queue_usingBlock(Some(name), None, None, &block)
-        };
-        std::mem::forget(observer);
     }
+}
+
+/// Calls `act` with the NSWindow each time any window posts `name`, for the
+/// life of the process. Main thread.
+#[cfg(target_os = "macos")]
+pub(crate) fn on_window_note(
+    name: &objc2_foundation::NSNotificationName,
+    act: impl Fn(*mut std::ffi::c_void) + 'static,
+) {
+    use objc2_foundation::{NSNotification, NSNotificationCenter};
+    use std::ptr::NonNull;
+    let block = block2::RcBlock::new(move |note: NonNull<NSNotification>| {
+        // SAFETY: AppKit hands the block a live notification.
+        let Some(window) = (unsafe { note.as_ref() }).object() else {
+            return;
+        };
+        act(objc2::rc::Retained::as_ptr(&window) as *mut std::ffi::c_void);
+    });
+    // SAFETY: any window's notification (no object), delivered on the
+    // thread that posts it - AppKit's main thread.
+    let observer = unsafe {
+        NSNotificationCenter::defaultCenter().addObserverForName_object_queue_usingBlock(
+            Some(name),
+            None,
+            None,
+            &block,
+        )
+    };
+    std::mem::forget(observer);
 }
 
 /// Whether this process talks to a Wayland compositor (no window positions, no
@@ -262,7 +278,18 @@ pub(crate) fn build_window(
     label: &str,
     position: Option<(f64, f64)>,
 ) -> tauri::Result<()> {
-    build_editor_window(app, label, position, false)
+    build_editor_window(app, label, position, false, None)
+}
+
+/// A window that comes back as it was left (`frame`, fitted to today's
+/// screens), or else opens as a new one does.
+#[cfg(desktop)]
+pub(crate) fn build_window_as_left(
+    app: &tauri::AppHandle,
+    label: &str,
+    frame: Option<window_frame::Kept>,
+) -> tauri::Result<()> {
+    build_editor_window(app, label, None, false, frame)
 }
 
 /// A small window, as VS Code's for an editor moved out: its documents and
@@ -273,7 +300,7 @@ pub(crate) fn build_small_window(
     label: &str,
     position: Option<(f64, f64)>,
 ) -> tauri::Result<()> {
-    build_editor_window(app, label, position, true)
+    build_editor_window(app, label, position, true, None)
 }
 
 /// A small window's size: room for a page of text, not a workspace.
@@ -286,14 +313,8 @@ fn build_editor_window(
     label: &str,
     position: Option<(f64, f64)>,
     small: bool,
+    frame: Option<window_frame::Kept>,
 ) -> tauri::Result<()> {
-    // Another window opens where the system puts it, no bigger than the main screen.
-    let wanted = if small {
-        SMALL_WINDOW_SIZE
-    } else {
-        commands::prefs::read_editor_window_size(app).unwrap_or((800.0, 600.0))
-    };
-    let (_, (width, height)) = window_frame::place(None, wanted, &screens(app), EDITOR_MIN_SIZE);
     let url = if small {
         "index.html?window=small"
     } else {
@@ -301,11 +322,58 @@ fn build_editor_window(
     };
     let builder = WebviewWindowBuilder::new(app, label, WebviewUrl::App(url.into()))
         .title(app_identity::APP_NAME)
-        .inner_size(width, height)
         .min_inner_size(EDITOR_MIN_SIZE.0, EDITOR_MIN_SIZE.1);
+    let builder = match frame {
+        Some(frame) => as_left(app, label, builder, frame),
+        None => {
+            // Another window opens where the system puts it, no bigger than the main screen.
+            let wanted = if small {
+                SMALL_WINDOW_SIZE
+            } else {
+                commands::prefs::read_editor_window_size(app).unwrap_or(FIRST_RUN_SIZE)
+            };
+            let (_, (width, height)) =
+                window_frame::place(None, wanted, &screens(app), EDITOR_MIN_SIZE);
+            builder.inner_size(width, height)
+        }
+    };
     build_with_app_chrome(settings::with_boot(builder, app, label), position)?;
     Ok(())
 }
+
+/// The builder set to `frame` fitted to today's screens: its size, its place
+/// where the system lets an app choose, maximized or full screen as it was.
+#[cfg(desktop)]
+fn as_left<'a>(
+    app: &tauri::AppHandle,
+    label: &str,
+    builder: WebviewWindowBuilder<'a, tauri::Wry, tauri::AppHandle>,
+    frame: window_frame::Kept,
+) -> WebviewWindowBuilder<'a, tauri::Wry, tauri::AppHandle> {
+    let opening = window_frame::reopen(frame, &screens(app), EDITOR_MIN_SIZE);
+    let position = opening.position.filter(|_| window_place_known());
+    commands::prefs::seed_bounds(
+        label,
+        window_frame::Kept {
+            position,
+            mode: window_frame::Mode::Normal,
+            ..opening
+        },
+    );
+    let builder = builder
+        .inner_size(opening.size.0, opening.size.1)
+        .maximized(opening.mode == window_frame::Mode::Maximized)
+        .fullscreen(opening.mode == window_frame::Mode::Fullscreen);
+    match position {
+        Some((x, y)) => builder.position(x, y),
+        None => builder,
+    }
+}
+
+/// A window's size before any has closed, fitted to the screen as it opens.
+/// The first window's (tauri.conf.json) is held to it by a test.
+#[cfg(desktop)]
+const FIRST_RUN_SIZE: (f64, f64) = (1200.0, 800.0);
 
 /// Below this the window bar's controls run into each other. The first
 /// window's (tauri.conf.json) is held to it by a test.
@@ -335,7 +403,7 @@ fn screens(app: &tauri::AppHandle) -> Vec<window_frame::Screen> {
 
 #[cfg(desktop)]
 pub(crate) fn open_new_window(app: &tauri::AppHandle) -> tauri::Result<()> {
-    build_window(app, &format!("window-{}", next_window_id()), None)
+    build_window(app, &new_window_label(), None)
 }
 
 /// The Dock icon, Open Textus in the tray, or a relaunch while in the background:
@@ -355,7 +423,8 @@ pub(crate) fn reopen_without_windows(app: &tauri::AppHandle) {
         Vec::new()
     };
     if windows.is_empty() {
-        let _ = open_new_window(app);
+        let frame = commands::prefs::read_editor_frame(app);
+        let _ = build_window_as_left(app, &new_window_label(), frame);
     } else {
         queue_windows_to_open(app, windows);
     }
@@ -363,8 +432,12 @@ pub(crate) fn reopen_without_windows(app: &tauri::AppHandle) {
 
 /// Builds the window tauri.conf.json declares with `"create": false`: Tauri
 /// builds config windows before setup, and this one needs the settings store
-/// and the remembered size.
-pub(crate) fn build_main_window(app: &tauri::App) -> tauri::Result<()> {
+/// and the remembered frame - the first restored window's, else the last
+/// closed window's.
+pub(crate) fn build_main_window(
+    app: &tauri::App,
+    #[cfg(desktop)] opens: Option<&crate::launch::LaunchOpens>,
+) -> tauri::Result<()> {
     let Some(config) = app
         .config()
         .app
@@ -376,25 +449,23 @@ pub(crate) fn build_main_window(app: &tauri::App) -> tauri::Result<()> {
         return Ok(());
     };
     let builder = tauri::WebviewWindowBuilder::from_config(app.handle(), &config)?;
-    // Where the last window closed, if still on a screen, else centred on the main
-    // one; no bigger than its screen.
     #[cfg(desktop)]
     let builder = {
         let app = app.handle();
-        let saved = if window_place_known() {
-            commands::prefs::read_editor_window_position(app)
-        } else {
-            None
+        let restored = match opens {
+            Some(crate::launch::LaunchOpens::Windows(windows)) => {
+                windows.first().and_then(|window| window.frame)
+            }
+            _ => None,
         };
-        let size =
-            commands::prefs::read_editor_window_size(app).unwrap_or((config.width, config.height));
-        let (at, (width, height)) =
-            window_frame::place(saved, size, &screens(app), EDITOR_MIN_SIZE);
-        let builder = builder.inner_size(width, height);
-        match at {
-            Some((x, y)) if window_place_known() => builder.position(x, y),
-            _ => builder,
-        }
+        let frame = restored
+            .or_else(|| commands::prefs::read_editor_frame(app))
+            .unwrap_or(window_frame::Kept {
+                size: (config.width, config.height),
+                position: None,
+                mode: window_frame::Mode::Normal,
+            });
+        as_left(app, "main", builder, frame)
     };
     #[cfg(target_os = "linux")]
     let builder = builder.visible(false);
@@ -415,11 +486,13 @@ pub(crate) fn build_main_window(app: &tauri::App) -> tauri::Result<()> {
 #[cfg(all(test, desktop))]
 mod min_size_tests {
     #[test]
-    fn the_first_window_has_every_window_s_least_size() {
+    fn the_first_window_has_every_window_s_first_and_least_size() {
         let conf: serde_json::Value =
             serde_json::from_str(include_str!("../tauri.conf.json")).unwrap();
         let window = &conf["app"]["windows"][0];
         assert_eq!(window["minWidth"].as_f64(), Some(super::EDITOR_MIN_SIZE.0));
         assert_eq!(window["minHeight"].as_f64(), Some(super::EDITOR_MIN_SIZE.1));
+        assert_eq!(window["width"].as_f64(), Some(super::FIRST_RUN_SIZE.0));
+        assert_eq!(window["height"].as_f64(), Some(super::FIRST_RUN_SIZE.1));
     }
 }

@@ -43,9 +43,17 @@
     "en": "Already there.",
     "text": "errorAlreadyThere"
   },
+  "goneFromTrash": {
+    "en": "It is no longer in the Trash.",
+    "text": "errorGoneFromTrash"
+  },
   "moveIntoItself": {
     "en": "A folder can't move into itself.",
     "text": "errorMoveIntoItself"
+  },
+  "copyIntoItself": {
+    "en": "A folder can't be copied into itself.",
+    "text": "errorCopyIntoItself"
   },
   "notFolder": {
     "en": "Not a folder.",
@@ -54,6 +62,10 @@
   "trashShownFolder": {
     "en": "The folder the tree shows can't be moved to the Trash.",
     "text": "errorTrashShownFolder"
+  },
+  "noTrash": {
+    "en": "There is no Trash here to move files to.",
+    "text": "errorNoTrash"
   },
   "outsideDocuments": {
     "en": "Outside the Textus folder.",

@@ -29,6 +29,15 @@
   pointer-events: none;
 }
 
+/* An empty sheet (the paper under a document's scroller, which is clear):
+   on a layer of its own, drawn once. Otherwise WebKit without a GPU (Linux)
+   paints it again, blurred shadow and all, on every frame of a scroll above
+   it - five times a plain page's cost. Only an empty one: a layer would
+   become the box a fixed child (a popover) is placed in. */
+[data-island]:empty {
+  will-change: transform;
+}
+
 /* Its first tab rising from its edge, open (row-insets.ts): the corner goes
    square, the island's side running straight up into the tab. */
 [data-island][data-corner-joined] {

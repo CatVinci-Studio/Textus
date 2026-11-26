@@ -13,14 +13,18 @@ let katex: Katex | null = null;
 let firstLoad: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
-// A failed load is tried again by the next formula drawn.
-const katexModule = lazyModule("katex", () =>
-  import("./katex-bundle").then((module) => {
-    katex = module.default;
-    for (const listener of listeners) listener();
-    listeners.clear();
-    return katex;
-  }),
+// A failed load is tried again by the next formula drawn. Warmed once the
+// window is idle, so the first document with maths doesn't open blank.
+const katexModule = lazyModule(
+  "katex",
+  () =>
+    import("./katex-bundle").then((module) => {
+      katex = module.default;
+      for (const listener of listeners) listener();
+      listeners.clear();
+      return katex;
+    }),
+  { warm: true },
 );
 
 export function loadKatex(): Promise<Katex> {

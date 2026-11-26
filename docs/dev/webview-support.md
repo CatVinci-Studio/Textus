@@ -3,12 +3,12 @@
 Textus draws its interface with the system's web engine, so the oldest
 engine a user may have is the oldest one the frontend has to work in.
 
-| Platform                           | Engine              | Oldest supported                             |
-| ---------------------------------- | ------------------- | -------------------------------------------- |
-| Windows 10 and 11                  | WebView2 (Chromium) | Chromium 105                                 |
-| macOS 11 and later                 | WKWebView           | the installed Safari's; the build assumes 16 |
-| iPhone and iPad (iOS 16 and later) | WKWebView           | Safari 16                                    |
-| Linux                              | WebKitGTK           | what the distribution ships                  |
+| Platform                             | Engine              | Oldest supported                             |
+| ------------------------------------ | ------------------- | -------------------------------------------- |
+| Windows 10 and 11                    | WebView2 (Chromium) | Chromium 105                                 |
+| macOS 11 and later                   | WKWebView           | the installed Safari's; the build assumes 16 |
+| iPhone and iPad (iOS 16.4 and later) | WKWebView           | Safari 16.4                                  |
+| Linux                                | WebKitGTK           | what the distribution ships                  |
 
 ## Why Chromium 105 on Windows
 
@@ -88,8 +88,8 @@ blurred text on WebKitGTK.
 Still different in Chromium 107, not fixed yet:
 
 - `Ctrl/⌘ + wheel` zoom in the document doesn't keep the line under the
-  pointer in place (e2e `writing.spec.ts`, "zooming keeps the line being
-  read in place"). Likely the pre-standard `zoom` of Chromium before 128,
+  pointer in place (no e2e flow checks it now: the one that did went in
+  1.4.0). Likely the pre-standard `zoom` of Chromium before 128,
   which places zoomed elements differently; not investigated yet.
 - A few colours are flatter than in a current engine, where a plain colour
   can't stand in for a mix: an `h6` is as dark as an `h5`, and a Pele

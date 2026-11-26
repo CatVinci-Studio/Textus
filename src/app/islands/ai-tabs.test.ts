@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { addFromTabRow } from "./ai-tabs";
+import { isConversationTab } from "../../document/doc-tabs";
 
 const aiTab = (conversation?: string) => ({
   view: {
@@ -36,5 +37,15 @@ describe("addFromTabRow", () => {
       expect(addDocument).toHaveBeenCalledOnce();
       expect(startConversation).not.toHaveBeenCalled();
     }
+  });
+});
+
+describe("isConversationTab", () => {
+  it("is an AI tab, nothing else", () => {
+    expect(isConversationTab(aiTab("c1"))).toBe(true);
+    expect(
+      isConversationTab({ view: { kind: "page", view: "settings" } }),
+    ).toBe(false);
+    expect(isConversationTab(undefined)).toBe(false);
   });
 });

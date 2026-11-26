@@ -37,11 +37,7 @@ pub async fn agent_step(
         req = req.bearer_auth(key);
     }
     let res = req.send().await.map_err(|e| e.to_string())?;
-    if !res.status().is_success() {
-        let status = res.status();
-        let text = res.text().await.unwrap_or_default();
-        return Err(format!("Responses API request failed ({status}): {text}"));
-    }
+    let res = crate::http::succeeded(res, "Responses API request failed").await?;
 
     let parsed: serde_json::Value = res.json().await.map_err(|e| e.to_string())?;
     let output = parsed

@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from "vitest";
-import { columnForMargin, marginRoom } from "./margin-room";
+import { act, renderHook } from "@testing-library/react";
+import {
+  columnForMargin,
+  marginRoom,
+  useMarginAvailable,
+  useTellMarginRoom,
+} from "./margin-room";
 
 // The "auto" text width: a 680px column at most widths, 1.5rem padding each
 // side.
@@ -50,5 +56,26 @@ describe("marginRoom", () => {
         }
     }
     root.removeProperty("--ui-text-scale");
+  });
+});
+
+describe("useTellMarginRoom", () => {
+  it("Settings hears the document in front, not the last to measure", () => {
+    const front = renderHook((p) => useTellMarginRoom(p.inFront, p.no), {
+      initialProps: { inFront: true, no: false },
+    });
+    const behind = renderHook((p) => useTellMarginRoom(p.inFront, p.no), {
+      initialProps: { inFront: false, no: false },
+    });
+    const settings = renderHook(() => useMarginAvailable());
+    // The other side of a split narrows after the one in front measured.
+    behind.rerender({ inFront: false, no: true });
+    expect(settings.result.current).toBe(true);
+    // Brought to the front, it speaks for itself.
+    act(() => {
+      front.rerender({ inFront: false, no: false });
+      behind.rerender({ inFront: true, no: true });
+    });
+    expect(settings.result.current).toBe(false);
   });
 });

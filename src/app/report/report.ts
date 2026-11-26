@@ -94,9 +94,27 @@ export function reportPayload(
   };
 }
 
+/** The longest issue address opened: GitHub turns longer ones away. */
+const URL_LIMIT = 7000;
+
 /** The bug report form on GitHub, its fields filled: what the user wrote
- *  and the details, the system and the version. */
+ *  and the details, the system and the version. Too long an address loses
+ *  the details' last lines (a crash, at their top, stays). */
 export function reportUrl(
+  facts: ReportFacts,
+  description: string,
+  details: string,
+): string {
+  const lines = details.split("\n");
+  let url = formUrl(facts, description, details);
+  while (url.length > URL_LIMIT && lines.length > 1) {
+    lines.pop();
+    url = formUrl(facts, description, `${lines.join("\n")}\n…`);
+  }
+  return url;
+}
+
+function formUrl(
   facts: ReportFacts,
   description: string,
   details: string,

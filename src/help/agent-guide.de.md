@@ -4,10 +4,10 @@ Textus bringt eine eingebaute KI fürs Schreiben mit, Textus AI: Vervollständig
 
 ## Einen Dienst verbinden
 
-Alles rund um die KI steht unter **Einstellungen › Textus AI**, auf vier Seiten: **Modelle**, **Schreibhilfe**, **Agent** und **Externe Werkzeuge**.
+Alles rund um die KI steht unter **Einstellungen › Textus AI**, auf vier Seiten: **Modelle**, **Chat und Schreiben**, **Gedächtnis und Skills** und **Externe Werkzeuge**.
 
 1. Wähle auf **Modelle** den Dienst in der Liste **Anbieter**. Melde dich mit deinem Konto an (**Konto**) oder füge einen Schlüssel ein (**API-Schlüssel**) – je nachdem, was der Dienst unterstützt. Ein Punkt in der Liste markiert jeden Dienst, den du eingerichtet hast.
-2. Für einen **Eigenen Endpunkt** (jeder OpenAI-kompatible Server: lokale Modelle, Proxys) gibst du die Basis-URL, bei Bedarf einen Schlüssel und den Modellnamen ein und speicherst.
+2. Für einen eigenen Server (jeder OpenAI-kompatible Server: lokale Modelle, Relays, Proxys) wählst du am Ende der Liste **Eigenen Endpunkt hinzufügen**, gibst ihm einen Namen, trägst die Basis-URL, bei Bedarf einen Schlüssel und den Modellnamen ein und speicherst. Du kannst mehrere anlegen: Jeder steht unter seinem Namen hier und überall, wo du ein Modell wählst.
 3. Wähle unter **Modellwahl** oben auf derselben Seite den **Anbieter für den Chat** und das **Chat-Modell**, und für Vervollständigung und Grammatik den **Anbieter fürs Schreiben** (standardmäßig **Wie im Chat**) und das **Assistenzmodell**.
 
 Die Anmeldung läuft in deinem Browser. Ob Bilder, Websuche und Änderungen am Dokument verfügbar sind, hängt vom gewählten Dienst und Modell ab.
@@ -24,7 +24,7 @@ Die fünf Wege, die du am häufigsten nutzen wirst – zuerst das Gespräch mit 
 
 ### Unterhaltungen
 
-Unterhaltungen öffnen sich als **Tabs**. Klicke auf die Schaltfläche **Textus AI** (die Funken) am rechten Ende der Fensterleiste, drücke <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> oder wähle **Ansicht › KI-Bereich**: Die KI öffnet sich in einer eigenen Insel rechts. Ihre Tabs sind Tabs wie alle anderen: Zieh einen neben ein Dokument, in eine andere Insel oder hinaus in ein eigenes Fenster.
+Unterhaltungen öffnen sich als **Tabs**. Klicke auf die Schaltfläche **Textus AI** (die Funken) am rechten Ende der Fensterleiste, drücke <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> oder wähle **Ansicht › Textus AI**: Die KI öffnet sich in einer eigenen Insel rechts. Ihre Tabs sind Tabs wie alle anderen: Zieh einen neben ein Dokument, in eine andere Insel oder hinaus in ein eigenes Fenster.
 
 - **Pro Ordner**: Unterhaltungen gehören zu dem Ordner, in dem du arbeitest, nicht zu einem einzelnen Dokument. Jede offene Unterhaltung ist ein Tab; mit der vorderen sprichst du, und zwar über das vordere Dokument. Eine geschlossene Unterhaltung bleibt im Verlauf.
 - **Neue Unterhaltung**: Klicke mit rechts auf das leere Papier eines KI-Tabs und wähle **Neue Unterhaltung** (sind noch Änderungen offen, wird vorher nachgefragt). **Gedächtnis** steht im selben Menü.
@@ -39,14 +39,14 @@ Unterhaltungen öffnen sich als **Tabs**. Klicke auf die Schaltfläche **Textus 
 
 ### Änderungen an deinen Dokumenten
 
-**Einstellungen › Textus AI › Schreibhilfe › Wie Textus AI Dateien ändert** legt fest, wie die Änderungen von Textus AI in deinen Text kommen:
+**Einstellungen › Textus AI › Chat und Schreiben › Wie Textus AI Dateien ändert** legt fest, wie die Änderungen von Textus AI in deinen Text kommen:
 
 - **Als Überarbeitungen zum Prüfen** (Standard): Jede Änderung ist eine Überarbeitung, die dort angezeigt wird, wo sie landen würde, und nichts ist endgültig, bis du sie annimmst.
 - **Direkt geschrieben**: Änderungen werden geschrieben, sobald sie ankommen. Sie bleiben markiert, sodass du siehst, was sich geändert hat, und jede Antwort lässt sich rückgängig machen.
 
 Ein Recherche-Text wird in jedem Fall direkt geschrieben. <kbd>Cmd</kbd>+<kbd>Z</kbd> macht eine angenommene Änderung in einem Schritt rückgängig.
 
-**Wie Überarbeitungen aussehen**: **Überarbeitungen anzeigen** (Schreibhilfe, oder die Augen-Schaltfläche in der Prüfleiste) hat drei Ansichten:
+**Wie Überarbeitungen aussehen**: **Überarbeitungen anzeigen** (Chat und Schreiben, oder die Augen-Schaltfläche in der Prüfleiste) hat drei Ansichten:
 - **Nur das Ergebnis, Original am Rand** (Standard);
 - **Original im Text, Änderungen am Rand**;
 - **Alles im Text**: Entfernter Text ist durchgestrichen, neuer Text grün.
@@ -73,11 +73,11 @@ Während du tippst, erscheint am Cursor eine graue Fortsetzung – mit <kbd>Tab<
 
 Gezielt anfordern kannst du eine mit <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd> oder über das Kontextmenü (der Cursor muss am Ende eines Absatzes stehen): Dann bekommst du eine längere Fortsetzung mit bis zu drei Alternativen – mit <kbd>Option</kbd>+<kbd>[</kbd> / <kbd>Option</kbd>+<kbd>]</kbd> blätterst du durch sie.
 
-Unter **Einstellungen › Textus AI › Schreibhilfe › Weiterschreiben & Prüfen** kannst du die Vervollständigung ein- oder ausschalten und einen **Tonfall der Vervollständigung** wählen (Passend zum Dokument / Förmlich / Locker / Wissenschaftlich / Knapp). Gehört das Dokument zu einem Ordner mit Stilprofil oder Lexikon (siehe **Textus AI an dich anpassen** weiter unten), richtet sich die Vervollständigung auch danach.
+Unter **Einstellungen › Textus AI › Chat und Schreiben › Weiterschreiben & Prüfen** kannst du die Vervollständigung ein- oder ausschalten und einen **Tonfall der Vervollständigung** wählen (Passend zum Dokument / Förmlich / Locker / Wissenschaftlich / Knapp). Gehört das Dokument zu einem Ordner mit Stilprofil oder Lexikon (siehe **Textus AI an dich anpassen** weiter unten), richtet sich die Vervollständigung auch danach.
 
 ### Grammatikprüfung
 
-Mögliche Fehler werden unterstrichen. Bewege den Zeiger auf eine Unterstreichung oder setze den Cursor hinein, um die Erklärung zu sehen; **Übernehmen** (oder <kbd>Option</kbd>+<kbd>Enter</kbd>, wenn der Cursor darauf steht) korrigiert den Fehler, **Ignorieren** verwirft den Hinweis. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> prüft den aktuellen Absatz sofort. **Prüfstufe** (Schreibhilfe › Weiterschreiben & Prüfen) legt fest, wie viel angemerkt wird.
+Mögliche Fehler werden unterstrichen. Bewege den Zeiger auf eine Unterstreichung oder setze den Cursor hinein, um die Erklärung zu sehen; **Übernehmen** (oder <kbd>Option</kbd>+<kbd>Enter</kbd>, wenn der Cursor darauf steht) korrigiert den Fehler, **Ignorieren** verwirft den Hinweis. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> prüft den aktuellen Absatz sofort. **Prüfstufe** (Chat und Schreiben › Weiterschreiben & Prüfen) legt fest, wie viel angemerkt wird.
 
 ### Schnellfrage
 
@@ -127,7 +127,7 @@ Das Ordnermenü legt `.textus/` und die Dateien darin an, sobald du sie zum erst
 - Tippst du `@` ins Eingabefeld des Chats, hängst du eine seiner Dateien an deine Nachricht an.
 - Sein Ordner `.textus/` enthält Stilprofil, Lexikon, Schreibanweisungen und Skills des Ordners.
 
-Klicke mit rechts auf das leere Papier eines KI-Tabs und wähle **Gedächtnis**: Die oberste Zeile zeigt den Namen des Ordners; ein Klick darauf öffnet das **Ordnermenü**. Liegt dein Material nicht neben dem Entwurf, nimm dort **Ordner wählen…** (oder **Einstellungen › Textus AI › Agent › Ordner**). Der gewählte Ordner gilt für jedes Dokument – auch für ungespeicherte Entwürfe –, bis du **Ordner der Seitenleiste verwenden** wählst; ohne gewählten Ordner nimmt die KI den in der Seitenleiste geöffneten.
+Klicke mit rechts auf das leere Papier eines KI-Tabs und wähle **Gedächtnis**: Die oberste Zeile zeigt den Namen des Ordners; ein Klick darauf öffnet das **Ordnermenü**. Liegt dein Material nicht neben dem Entwurf, nimm dort **Ordner wählen…** (oder **Einstellungen › Textus AI › Gedächtnis und Skills › Ordner**). Der gewählte Ordner gilt für jedes Dokument – auch für ungespeicherte Entwürfe –, bis du **Ordner der Seitenleiste verwenden** wählst; ohne gewählten Ordner nimmt die KI den in der Seitenleiste geöffneten.
 
 > [!TIP]
 > Dein Entwurf liegt in `masterarbeit/entwürfe/` und deine Interviewnotizen in `masterarbeit/recherche/`? Wähle `masterarbeit/` als Ordner, dann kann Textus AI `recherche/interviews.md` lesen, während du an `entwürfe/kapitel-2.md` arbeitest.
@@ -179,7 +179,7 @@ Einträge hängst du nicht selbst an. Ein Eintrag mit `include: detected` (der S
 
 **Schreibanweisungen sind feste Regeln, die mit jeder Unterhaltung gesendet werden**: worum es im Ordner geht, in welcher Sprache geantwortet wird, Schreibweisen und Begriffe, was Textus AI immer oder nie tun soll. Sie stehen in Dateien namens `agent.md`, auf zwei Ebenen:
 
-- **Global**, für jedes Dokument: **Einstellungen › Textus AI › Agent › Schreibanweisungen (agent.md) › agent.md bearbeiten**.
+- **Global**, für jedes Dokument: **Einstellungen › Textus AI › Gedächtnis und Skills › Schreibanweisungen (agent.md) › agent.md bearbeiten**.
 - **Ordner**, für die Dokumente eines Ordners: `.textus/agent.md`, zu öffnen mit **Schreibanweisungen des Ordners bearbeiten** im Ordnermenü.
 
 Beide öffnen sich in einem Tab und beginnen mit einer kurzen Anleitung in Kommentaren. Gibt es beide, bekommt Textus AI beide – zuerst die globalen Anweisungen, dann die des Ordners –, und wo sie sich widersprechen, gelten die des Ordners.
@@ -199,7 +199,7 @@ Schreibanweisungen gelten nur für Unterhaltungen. Die Vervollständigung liest 
 - **Dieser Ordner**: was dieses Werk betrifft, in `projects/<folder>/memory/` im globalen Konfigurationsordner (Textus verwahrt es dort, nicht in deinem Ordner); Fakten zu Personen, Orten und Begriffen kommen ins Lexikon.
 - **Für alle Ordner**: deine allgemeinen Gewohnheiten, in `memory/` im globalen Konfigurationsordner. Ohne Ordner landet alles hier.
 
-**Gedächtnis** (Rechtsklick auf das Papier eines KI-Tabs › Gedächtnis) listet alles auf, jeweils mit Zeitpunkt und Unterhaltung: **Bearbeiten** öffnet einen Eintrag, **Löschen** entfernt ihn. Ab und zu räumt Textus AI sein Gedächtnis auf, führt Erinnerungen zusammen, die dasselbe sagen, und verwirft eine Regel, die eine neuere aufgehoben hat; was es verworfen hat, steht unter **Kürzlich vergessen** und lässt sich zurückholen. Bei einem Widerspruch gelten deine eigenen Schreibanweisungen, und Textus AI ändert nie deine `agent.md` oder dein Stilprofil. Gibt es zu viele Erinnerungen zum Senden, bleiben die ältesten außen vor, und Gedächtnis weist darauf hin. Der Schalter **Gedächtnis** (Einstellungen › Textus AI › Agent) schaltet die Funktion aus.
+**Gedächtnis** (Rechtsklick auf das Papier eines KI-Tabs › Gedächtnis) listet alles auf, jeweils mit Zeitpunkt und Unterhaltung: **Bearbeiten** öffnet einen Eintrag, **Löschen** entfernt ihn. Ab und zu räumt Textus AI sein Gedächtnis auf, führt Erinnerungen zusammen, die dasselbe sagen, und verwirft eine Regel, die eine neuere aufgehoben hat; was es verworfen hat, steht unter **Kürzlich vergessen** und lässt sich zurückholen. Bei einem Widerspruch gelten deine eigenen Schreibanweisungen, und Textus AI ändert nie deine `agent.md` oder dein Stilprofil. Gibt es zu viele Erinnerungen zum Senden, bleiben die ältesten außen vor, und Gedächtnis weist darauf hin. Der Schalter **Gedächtnis** (Einstellungen › Textus AI › Gedächtnis und Skills) schaltet die Funktion aus.
 
 **Es lernt auch aus deinen Überarbeitungsentscheidungen.** Wenn du dieselbe Art von Änderung mehrmals ablehnst – 「」 zu “” gemacht, ein Wort gegen ein anderes getauscht, Sätze geteilt, ein Oxford-Komma eingefügt –, bietet Textus AI nach der Durchsicht an, sie als Vorgabe zu merken: **Merken** speichert sie unter **Gedächtnis**, **Jetzt nicht** wartet auf mehr, und **Nicht mehr fragen** fragt nach dieser Art nicht mehr. Es fragt höchstens einmal am Tag, und gespeichert wird nur auf deinen Klick, auch wenn das Gedächtnis ausgeschaltet ist. Gezählt wird nur eine kurze Notiz, welche Arten von Änderungen du angenommen oder abgelehnt hast – auf diesem Computer neben deinen Erinnerungen gespeichert und nie gesendet.
 
@@ -225,17 +225,17 @@ Einen Skill kannst du auf zwei Arten verwenden:
 
 War deine Bitte ein eigenes Vorgehen – Schritte, die du wieder brauchen wirst –, bietet Textus AI unter seiner Antwort an, es als Skill zu behalten, für jedes Dokument oder nur für diesen Ordner. Gespeichert wird nur, wenn du es auswählst.
 
-Skills gibt es auf denselben zwei Ebenen wie Schreibanweisungen: globale Skills im Ordner `skills/` des globalen Konfigurationsordners (**Skill importieren…** oben bei Skills unter **Einstellungen › Textus AI › Agent** kopiert eine Skill-Datei dorthin), Ordner-Skills in `.textus/skills/` (ein versteckter Ordner – im Finder von macOS blendet <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> ihn ein). Ein Ordner-Skill mit demselben Namen wie ein globaler ersetzt diesen.
+Skills gibt es auf denselben zwei Ebenen wie Schreibanweisungen: globale Skills im Ordner `skills/` des globalen Konfigurationsordners (**Skill importieren…** oben bei Skills unter **Einstellungen › Textus AI › Gedächtnis und Skills** kopiert eine Skill-Datei dorthin), Ordner-Skills in `.textus/skills/` (ein versteckter Ordner – im Finder von macOS blendet <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> ihn ein). Ein Ordner-Skill mit demselben Namen wie ein globaler ersetzt diesen.
 
 ### Integrierte Skills
 
-Textus bringt vier Skills mit. **Korrektur lesen** im Modus Prüfen prüft Rechtschreibung, Grammatik, Zeichensetzung und Zahlen nach den Regeln der Sprache des Textes. **Design entwerfen**, **Plugin bauen** und **Fähigkeit erstellen** machen nach deiner Beschreibung ein Editor-Design, ein kleines Plugin oder einen eigenen Skill, jeweils in einem eigenen Tab: **Eigenes Theme erstellen** steht im Theme-Store unter Darstellung, **Eigenes Plugin erstellen** im Menü **⋯** des Bereichs Plugins. Weitere Skills – Ausbauen, Straffen, Übersetzen, Zusammenfassen, Kontinuität prüfen, E-Mail, Protokoll und andere – findest du unter **Verfügbar** am Ende von Skills unter **Einstellungen › Textus AI › Agent**. Tipp `/` und wähl einen aus, oder gib seinen Namen in einer beliebigen Sprache der App ein: `/proofread`, `/校对` und `/校正` rufen denselben Skill auf. Textus AI wählt auch selbst einen Skill, wenn deine Anfrage dazu passt. **Design entwerfen** schreibt das CSS des Designs in die Antwort: **Dieses Design verwenden** darunter installiert es; oder speichere es als .css-Datei und füge es mit **Design aus einer CSS-Datei hinzufügen** unter **Einstellungen › Darstellung** hinzu.
+Textus bringt vier Skills mit. **Korrektur lesen** im Modus Prüfen prüft Rechtschreibung, Grammatik, Zeichensetzung und Zahlen nach den Regeln der Sprache des Textes. **Design entwerfen**, **Plugin bauen** und **Fähigkeit erstellen** machen nach deiner Beschreibung ein Editor-Design, ein kleines Plugin oder einen eigenen Skill, jeweils in einem eigenen Tab: **Eigenes Theme erstellen** steht im Theme-Store unter Darstellung, **Eigenes Plugin erstellen** im Menü **⋯** des Bereichs Plugins. Weitere Skills – Ausbauen, Straffen, Übersetzen, Zusammenfassen, Kontinuität prüfen, E-Mail, Protokoll und andere – findest du unter **Verfügbar** am Ende von Skills unter **Einstellungen › Textus AI › Gedächtnis und Skills**. Tipp `/` und wähl einen aus, oder gib seinen Namen in einer beliebigen Sprache der App ein: `/proofread`, `/校对` und `/校正` rufen denselben Skill auf. Textus AI wählt auch selbst einen Skill, wenn deine Anfrage dazu passt. **Design entwerfen** schreibt das CSS des Designs in die Antwort: **Dieses Design verwenden** darunter installiert es; oder speichere es als .css-Datei und füge es mit **Installierte Designs › ⋯ › CSS importieren…** unter **Einstellungen › Darstellung** hinzu.
 
-Die integrierten Skills stehen oben bei Skills unter **Einstellungen › Textus AI › Agent** und sind immer aktiv. **Anpassen…** kopiert einen Skill in den Ordner `skills/` des globalen Konfigurationsordners und öffnet die Kopie, damit du seine Anweisungen ändern kannst; ab dann läuft deine Kopie. **Zurücksetzen** löscht die Kopie und stellt die integrierte Fassung wieder her. Darunter stehen die Skills, die du hinzugefügt hast. Jeder zeigt die Modi, in denen er arbeitet – ein Klick ändert sie –, und sein Schalter schaltet ihn vorerst aus; die Modi bleiben erhalten, bis du ihn wieder einschaltest. Ein eigener Skill mit dem Namen eines integrierten ersetzt diesen.
+Die integrierten Skills stehen oben bei Skills unter **Einstellungen › Textus AI › Gedächtnis und Skills** und sind immer aktiv. **Anpassen…** kopiert einen Skill in den Ordner `skills/` des globalen Konfigurationsordners und öffnet die Kopie, damit du seine Anweisungen ändern kannst; ab dann läuft deine Kopie. **Zurücksetzen** löscht die Kopie und stellt die integrierte Fassung wieder her. Darunter stehen die Skills, die du hinzugefügt hast. Jeder zeigt die Modi, in denen er arbeitet – ein Klick ändert sie –, und sein Schalter schaltet ihn vorerst aus; die Modi bleiben erhalten, bis du ihn wieder einschaltest. Ein eigener Skill mit dem Namen eines integrierten ersetzt diesen.
 
 ### Schreibkonventionen
 
-**Schreibkonventionen** (Einstellungen › Textus AI › Schreibhilfe › Weiterschreiben & Prüfen) legt fest, welchen Regeln für Zeichensetzung, Leerzeichen und Zahlen Textus AI und die Grammatikprüfung folgen. **Automatisch** wendet die nationale Norm an, wo eine Sprache eine hat (etwa GB/T für vereinfachtes Chinesisch oder JTF für Japanisch); sonst folgt es dem, was dein Dokument schon überwiegend tut, und weist nur auf Uneinheitliches hin. Wählst du ein Profil, zum Beispiel **DIN 5008** für Deutsch oder **GOV.UK** für britisches Englisch, werden Dokumente in dieser Sprache danach geprüft.
+**Schreibkonventionen** (Einstellungen › Textus AI › Chat und Schreiben › Weiterschreiben & Prüfen) legt fest, welchen Regeln für Zeichensetzung, Leerzeichen und Zahlen Textus AI und die Grammatikprüfung folgen. **Automatisch** wendet die nationale Norm an, wo eine Sprache eine hat (etwa GB/T für vereinfachtes Chinesisch oder JTF für Japanisch); sonst folgt es dem, was dein Dokument schon überwiegend tut, und weist nur auf Uneinheitliches hin. Wählst du ein Profil, zum Beispiel **DIN 5008** für Deutsch oder **GOV.UK** für britisches Englisch, werden Dokumente in dieser Sprache danach geprüft.
 
 Ein Ordner kann ein eigenes festlegen: Füg im Stilprofil (`.textus/style.md`) zwischen den beiden `---`-Zeilen am Anfang eine Zeile `conventions:` ein. Für die Dokumente dieses Ordners hat sie Vorrang vor der Einstellung.
 
@@ -247,7 +247,7 @@ conventions: zh-Hans-CN/fiction, en-GB/govuk
 
 ### Der globale Konfigurationsordner
 
-**Der globale Konfigurationsordner enthält, was für jedes Dokument gilt**: deine globale `agent.md` und deine globalen Skills. Er gehört zur App, nicht zu einem Ordner; **Einstellungen › Textus AI › Agent › Globaler Konfigurationsordner › Anzeigen** zeigt ihn.
+**Der globale Konfigurationsordner enthält, was für jedes Dokument gilt**: deine globale `agent.md` und deine globalen Skills. Er gehört zur App, nicht zu einem Ordner; **Einstellungen › Textus AI › Gedächtnis und Skills › Globaler Konfigurationsordner › Anzeigen** zeigt ihn.
 
 ```
 agent/                ← der globale Konfigurationsordner
@@ -286,13 +286,13 @@ Ein globales Stilprofil oder Lexikon gibt es nicht: Beide beschreiben ein bestim
 
 ### Recherche
 
-Wähle **Recherche** in der Modus-Schaltfläche und schick ein Thema statt einer Bitte: Textus AI recherchiert es – im Web, in deinem Ordner, in den Papers, die du anhängst –, erstellt eine Gliederung und schreibt den Text ins Dokument. Tippe `/`, um die Art des Textes zu wählen (ein Essay, ein Bericht, ein Literaturüberblick und anderes), oder lass es auf **Automatisch wählen**. **Mit Unteragenten recherchieren** (Schreibhilfe) lässt es Teile der Recherche an Helfer abgeben, die gleichzeitig arbeiten; **Zitate prüfen** lässt jeden zitierten Satz an seinen Quellen prüfen, bevor der Text fertig ist. Ein Recherche-Text wird direkt ins Dokument geschrieben, ganz gleich, was **Wie Textus AI Dateien ändert** sagt.
+Wähle **Recherche** in der Modus-Schaltfläche und schick ein Thema statt einer Bitte: Textus AI recherchiert es – im Web, in deinem Ordner, in den Papers, die du anhängst –, erstellt eine Gliederung und schreibt den Text ins Dokument. Tippe `/`, um die Art des Textes zu wählen (ein Essay, ein Bericht, ein Literaturüberblick und anderes), oder lass es auf **Automatisch wählen**. **Mit Unteragenten recherchieren** (Chat und Schreiben) lässt es Teile der Recherche an Helfer abgeben, die gleichzeitig arbeiten; **Zitate prüfen** lässt jeden zitierten Satz an seinen Quellen prüfen, bevor der Text fertig ist. Ein Recherche-Text wird direkt ins Dokument geschrieben, ganz gleich, was **Wie Textus AI Dateien ändert** sagt.
 
 ### Websuche
 
 Schalte die Schaltfläche **Websuche** neben dem Eingabefeld ein, und Textus AI schlägt im Web nach, wenn eine Anfrage aktuelle Fakten braucht oder solche, bei denen es unsicher ist. Es kann auch eine Seite lesen, deren Adresse du einfügst.
 
-- **Wer sucht**: Modelle, die selbst suchen – OpenAI, Claude, Grok, OpenRouter, Groq, Qwen und Zhipu GLM –, nutzen ihre eigene Suche. Bei jedem anderen Modell (DeepSeek, Gemini, Mistral, Kimi, lokale Modelle, eigene Endpunkte) sucht Textus, mit dem **Suchdienst**, der unter **Einstellungen › Textus AI › Schreibhilfe › Websuche** gewählt ist: **Automatisch** nimmt einen DeepSeek-, Zhipu- oder Kimi-Schlüssel, den du schon für den Chat gespeichert hast; oder wähle Bocha, Tavily, Brave Search oder Exa und füge dessen Schlüssel ein, oder SearXNG und gib die Adresse deines eigenen Servers an. Die Zeile sagt, wohin deine Suchanfragen gehen. Ist nichts zum Suchen eingerichtet, zeigt die Schaltfläche einen roten Punkt.
+- **Wer sucht**: Modelle, die selbst suchen – OpenAI, Claude, Grok, OpenRouter, Groq, Qwen und Zhipu GLM –, nutzen ihre eigene Suche. Bei jedem anderen Modell (DeepSeek, Gemini, Mistral, Kimi, lokale Modelle, eigene Endpunkte) sucht Textus, mit dem **Suchdienst**, der unter **Einstellungen › Textus AI › Chat und Schreiben › Websuche** gewählt ist: **Automatisch** nimmt einen DeepSeek-, Zhipu- oder Kimi-Schlüssel, den du schon für den Chat gespeichert hast; oder wähle Bocha, Tavily, Brave Search oder Exa und füge dessen Schlüssel ein, oder SearXNG und gib die Adresse deines eigenen Servers an. Die Zeile sagt, wohin deine Suchanfragen gehen. Ist nichts zum Suchen eingerichtet, zeigt die Schaltfläche einen roten Punkt.
 - **Quellen**: Die Antwort zitiert, was sie gefunden hat, als [1], [2] und listet diese Seiten darunter auf; ein Klick öffnet eine im Browser. Die Nummern bleiben in der ganzen Unterhaltung gleich.
 - **Quellen als Fußnoten**: Stützt sich ein Vorschlag auf das Web, zeigt seine Karte **Quellen als Fußnoten einfügen**. Angehakt fügt das Annehmen am Ende des Dokuments Markdown-Fußnoten für seine Quellen ein; ohne Haken kommt der Text ohne sie. Die Karte merkt sich deine letzte Wahl.
 - **Seiten werden gelesen, nicht befolgt**: Was auf einer Seite steht, ist nie eine Anweisung an Textus AI, und es schlägt Änderungen weiterhin nur vor. Textus liest nur Seiten aus dem öffentlichen Web, nie von deinem Computer oder aus deinem lokalen Netzwerk.

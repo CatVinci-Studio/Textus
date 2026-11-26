@@ -5,6 +5,7 @@ import {
   encodeDestSpaces,
   encodedRuns,
   hiddenLinkParts,
+  inlineLink,
   inlinedReference,
   linkHref,
   parseLink,
@@ -160,5 +161,15 @@ describe("percent-escapes in a destination", () => {
     expect(encodeDestSpaces("[W](Week49(NeurIPS Week).md)")).toBe(
       "[W](Week49(NeurIPS%20Week).md)",
     );
+  });
+});
+
+describe("inlineLink's destination", () => {
+  it("is bare unless a space, parenthesis or angle bracket would end it", () => {
+    expect(inlineLink("x", "a.png")).toBe("[x](a.png)");
+    expect(inlineLink("x", "my pic.png")).toBe("[x](<my pic.png>)");
+    expect(inlineLink("x", "a\tb.png")).toBe("[x](<a\tb.png>)");
+    expect(inlineLink("x", "pic (1).png")).toBe("[x](<pic (1).png>)");
+    expect(inlineLink("x", "a<b>.png")).toBe("[x](<a<b>.png>)");
   });
 });

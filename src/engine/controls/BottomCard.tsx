@@ -24,12 +24,7 @@ export function BottomCard({
   onClose: () => void;
 }) {
   return (
-    <Sheet
-      role="dialog"
-      label={label}
-      className="bottom-card"
-      onClose={onClose}
-    >
+    <Sheet label={label} className="bottom-card" onClose={onClose}>
       <div className="bottom-card-grab" aria-hidden="true" />
       <div className="bottom-card-body">{children}</div>
       <div className="bottom-card-actions">

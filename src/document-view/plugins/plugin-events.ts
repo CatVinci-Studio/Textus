@@ -6,7 +6,10 @@ import {
   pluginsListen,
 } from "../../plugins/app-bridge";
 import { selectionText } from "../../plugins/contributions/editor-text";
-import { takeChangeSource } from "../../editor/change-source";
+import {
+  takeChangeSource,
+  type ChangeSource,
+} from "../../editor/change-source";
 import { cachedDocument } from "../../editor/markdown/doc-markdown";
 
 /**
@@ -21,7 +24,19 @@ export function documentChangedForPlugins(
   path: string | null,
   ctx: Ctx,
 ): void {
-  const source = takeChangeSource(ctx.get(editorViewCtx).state);
+  tellDocumentChange(
+    active,
+    path,
+    takeChangeSource(ctx.get(editorViewCtx).state),
+  );
+}
+
+/** A change to the document, as any of its views reports it. */
+export function tellDocumentChange(
+  active: boolean,
+  path: string | null,
+  source: ChangeSource,
+): void {
   if (active && pluginsListen("documentChange"))
     emitPluginEvent("documentChange", { path, source });
   if (active && source === "user" && pluginsListen("activity"))

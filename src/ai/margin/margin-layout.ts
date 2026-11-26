@@ -263,6 +263,9 @@ export function useMarginRoom(
     if (!view) return;
     let last: boolean | null = null;
     const check = () => {
+      // Out of sight (a draft kept hidden), it has no width to measure: it
+      // keeps what it last had.
+      if (!scrollEl.clientWidth) return;
       // Cards that don't fit beside the column at its own width get room
       // from it, down to a readable line; none, it keeps its width. Each
       // check starts from its own width: the window or the zoom changed.

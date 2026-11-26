@@ -18,7 +18,7 @@ const OWN_LOOPS: Record<string, string> = {
   "ai/revision/stream-follow-plugin.ts tick": "follows a growing rewrite",
   // Waits a few frames for something to be drawn; nothing moves.
   "app/useSourceModes.ts place": "until the source view exists",
-  "document-view/hold-scroll-on-return.ts drawn": "until the page settles",
+  "app/hold-on-return.ts drawn": "until the page settles",
   "settings/SettingsSearch.tsx go": "until the entry is drawn",
 };
 
@@ -33,9 +33,7 @@ const OWN_REDUCED_MOTION: Record<string, string> = {
 };
 
 /** Files that write a transition into an element's style. */
-const OWN_TRANSITIONS: Record<string, string> = {
-  "engine/drag/row.ts": "rows making room, on --move-make-room",
-};
+const OWN_TRANSITIONS: Record<string, string> = {};
 
 function sources(): [string, string][] {
   return readdirSync(SRC, { recursive: true, encoding: "utf8" })

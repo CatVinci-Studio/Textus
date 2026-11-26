@@ -127,6 +127,28 @@ button.icon {
   border-color: transparent;
   border-radius: 50%;
 }
+/* The shared icon button keeps its own height (ds-buttons.css), not a text
+   button's taller one: a circle, not an oval, on a phone. */
+.tx-icon-button {
+  min-height: 0;
+}
+
+/* The small shared controls keep their look; a finger gets a 44pt target
+   around them, as the app's own (mobile/styles/base.css). */
+@media (pointer: coarse) {
+  :where(.tx-icon-button, .tx-button, button.icon, input.ui-check) {
+    position: relative;
+  }
+  :is(.tx-icon-button, .tx-button, button.icon, input.ui-check)::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+}
 
 input:not([type="checkbox"], [type="radio"]),
 select,

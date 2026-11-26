@@ -13,7 +13,10 @@ import {
   type StreamLayout,
 } from "./sentence-stream";
 import { pendingEditKey, type PendingSentence } from "./pending-types";
+import { windowTabs } from "../../engine/layout/store";
+import { keepReveals } from "./kept-reveals";
 import { renderPendingHtml } from "./pending-fill";
+import { proposalDocPath } from "./pending-doc-pictures";
 
 /** New text coming into the document: one reveal per proposal and the green
  *  text it fills in. DOM side effects only, kept outside the editor state
@@ -265,7 +268,7 @@ export function renderAnimation(anim: InsertAnimation) {
   const shown = fresh ? "" : (anim.drawn ?? "");
   const before = fresh ? 0 : anim.span.children.length;
   const height = fresh ? 0 : anim.span.offsetHeight;
-  renderPendingHtml(anim.span, text);
+  renderPendingHtml(anim.span, text, proposalDocPath(anim.view));
   anim.drawn = text;
   anim.span.dataset.drawn = "true";
   // Each landed block fades in rising, all at once. Text replaced rather
@@ -322,6 +325,35 @@ export function dropAnimation(callId: string) {
   if (!anim) return;
   stopFrame(anim);
   animations.delete(callId);
+}
+
+/** An editor going: its reveals let go of it. Those its document keeps
+ *  stay (without the view) while its tab is open; the rest go. One still
+ *  streaming starts over, but is the tab's to drop as it closes. The window
+ *  drops a closing tab before its editor goes. */
+export function releaseView(
+  view: EditorView,
+  previews: { callId: string; streaming?: boolean }[],
+  path: string | null,
+) {
+  const open =
+    path !== null &&
+    windowTabs<{ id: string; path?: string | null }>().some(
+      (tab) => tab.path === path,
+    );
+  const kept = open ? previews.map((p) => p.callId) : [];
+  const drawn = open
+    ? previews.filter((p) => !p.streaming).map((p) => p.callId)
+    : [];
+  for (const [callId, anim] of animations) {
+    if (anim.view !== view && !previews.some((p) => p.callId === callId))
+      continue;
+    stopFrame(anim);
+    anim.view = null;
+    anim.span = null;
+    if (!drawn.includes(callId)) animations.delete(callId);
+  }
+  if (path !== null) keepReveals(path, kept, dropAnimation);
 }
 
 /** Feeds streamed text into the callId's green widget, and once more with

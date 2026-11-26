@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -19,6 +20,7 @@ import { useNarrowSidebar } from "./useNarrowSidebar";
 import { useNarrowIslands } from "./useNarrowIslands";
 import { useSidebarWidth } from "./sidebar-width";
 import { RAIL_WIDTH } from "./ActivityRail";
+import { phoneWayIn } from "./sidebar-tabs";
 import { chromeScale } from "../../engine/tokens/chrome-scale";
 import { useSettings, type Settings } from "../../prefs/SettingsContext";
 
@@ -31,17 +33,14 @@ function subscribeWindowResize(onChange: () => void) {
 }
 
 /** Whether the window shows the activity rail: on in Settings, or turned
- *  off but with the sidebar open. A phone's is always there, under the
- *  page with the sidebar, both shown as the page is pushed aside. */
+ *  off but with the sidebar open. A phone has none: its library comes in
+ *  as the drawer, the panels' tabs in its header (Sidebar.tsx). */
 export function railShown(
   settings: Pick<Settings, "activityRail">,
   open: boolean,
   phone: boolean,
 ): boolean {
-  // A phone has no rail: its library comes in as the drawer, its panel
-  // tabs in the drawer's header (Sidebar.tsx).
-  if (phone) return false;
-  return settings.activityRail || open;
+  return !phone && (settings.activityRail || open);
 }
 
 type SetOpen = Dispatch<SetStateAction<boolean>>;
@@ -62,7 +61,7 @@ function useSidebarOpen() {
  *  layout (a fold opened out), the wide layout's own, as remembered. */
 function useSidebarRemembered(phone: boolean, open: boolean, setOpen: SetOpen) {
   const wasPhone = useRef(phone);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (wasPhone.current && !phone) setOpen(getUiState("sidebarOpen") === true);
     wasPhone.current = phone;
   }, [phone, setOpen]);
@@ -114,6 +113,8 @@ function useSidebarTabs(open: boolean, setOpen: SetOpen) {
   const [panelMode, setPanelMode] = useSidebarTab();
   const showSidebarTab = useCallback(
     (id: SidebarTabId) => {
+      const elsewhere = isPhoneLayout() ? phoneWayIn(id) : undefined;
+      if (elsewhere) return elsewhere();
       const shown = open && panelMode === id;
       setOpen(!shown);
       if (!shown) setPanelMode(id);

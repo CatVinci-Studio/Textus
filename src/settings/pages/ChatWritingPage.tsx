@@ -14,7 +14,10 @@ import {
 } from "../../ai/revision/revision-display";
 import type { TextKey } from "../../i18n/strings";
 import { SettingRow, ToggleRow } from "../sections/controls";
-import { SearchServiceSection } from "../sections/search-service";
+import {
+  SearchServiceSection,
+  useSearchServiceShown,
+} from "../sections/search-service";
 import { WritingConventionsRow } from "../sections/skills";
 import { Select } from "../../engine/controls/Select";
 import {
@@ -23,7 +26,7 @@ import {
 } from "../../ai/writing/inline-sources";
 
 /**
- * Settings › Textus AI › Writing assist, from what is used most to what is
+ * Settings › Textus AI › Chat & writing, from what is used most to what is
  * set once: the chat, writing assistance, research writing, then the web
  * search service.
  */
@@ -35,6 +38,7 @@ export function ChatWritingPage({
   marginAvailable,
 }: SettingsPageProps) {
   const sources = useInlineSources();
+  const searchShown = useSearchServiceShown();
   return (
     <>
       <SettingsGroup title={t.aiAskLabel}>
@@ -182,7 +186,7 @@ export function ChatWritingPage({
         <WritingConventionsRow t={t} />
       </SettingsGroup>
 
-      {settings.enableAskAi && (
+      {settings.enableAskAi && searchShown && (
         <SettingsGroup title={t.netGroup}>
           <SearchServiceSection t={t} />
         </SettingsGroup>

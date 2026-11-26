@@ -25,6 +25,7 @@ export function Sidebar({
   openFolder,
   activePath,
   activeContent,
+  activeIsDocument,
   activeTabId,
   onToggle,
   onClose,
@@ -43,6 +44,7 @@ export function Sidebar({
   openFolder: OpenFolder;
   activePath: string | null;
   activeContent: string;
+  activeIsDocument: boolean;
   activeTabId: string;
   onToggle: () => void;
   onClose: () => void;
@@ -117,24 +119,34 @@ export function Sidebar({
                   end the name's line: no row of their own. */}
               {phone ? (
                 // No rail: its tabs are the drawer's header, one tap apart.
-                <div className="sidebar-tabs" aria-label={t.activityRail}>
-                  {railTabs()
-                    .filter((tab) => !tab.railFoot)
-                    .map(({ id, label, Icon }) => (
-                      <button
-                        key={id}
-                        type="button"
-                        className={`sidebar-tab${shown.id === id ? " sidebar-tab-active" : ""}`}
-                        aria-label={label(t)}
-                        aria-pressed={shown.id === id}
-                        data-sidebar-tab={id}
-                        onClick={() =>
-                          shown.id === id ? onClose() : onModeChange(id)
-                        }
-                      >
-                        <Icon />
-                      </button>
-                    ))}
+                <div
+                  className="sidebar-tabs"
+                  role="toolbar"
+                  aria-label={t.activityRail}
+                >
+                  {railTabs().map(({ id, label, Icon }) => (
+                    <button
+                      key={id}
+                      type="button"
+                      className={`sidebar-tab${shown.id === id ? " sidebar-tab-active" : ""}`}
+                      aria-label={label(t)}
+                      aria-pressed={shown.id === id}
+                      data-sidebar-tab={id}
+                      onClick={() => {
+                        if (shown.id !== id) return onModeChange(id);
+                        onClose();
+                        // The button goes with the drawer: the keyboard
+                        // goes back to the one that brought it.
+                        document
+                          .querySelector<HTMLElement>(
+                            ".window-bar-sidebar-toggle",
+                          )
+                          ?.focus();
+                      }}
+                    >
+                      <Icon />
+                    </button>
+                  ))}
                 </div>
               ) : (
                 <h2
@@ -153,6 +165,7 @@ export function Sidebar({
                 openFolder={openFolder}
                 activePath={activePath}
                 activeContent={activeContent}
+                activeIsDocument={activeIsDocument}
                 activeTabId={activeTabId}
                 onOpenFile={onOpenFile}
                 onClose={onClose}

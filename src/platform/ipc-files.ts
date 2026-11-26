@@ -65,35 +65,76 @@ export const fs = {
     isFarUrl(path)
       ? farFiles(path).listFolder(path)
       : command("list_dir", path),
-  /** The sidebar tree's New Document, New Folder and drag-to-move. Each
-   *  returns the new path and refuses a taken name. */
-  createDocument: (dir: string, name: string): Promise<string> =>
-    farEntries(dir)?.createEntry(dir, name, false) ??
-    command("tree_create_document", dir, name),
-  createFolder: (dir: string, name: string): Promise<string> =>
-    farEntries(dir)?.createEntry(dir, name, true) ??
-    command("tree_create_folder", dir, name),
-  moveEntry: (path: string, into: string): Promise<string> => {
+  /** The sidebar tree's New Document and New Folder, slashes in the name
+   *  making the folders on the way. Each returns the new path and the
+   *  topmost entry made for it (`made`, what an undo takes away), and
+   *  refuses a taken name. Rust side: `Created` (commands/tree_create.rs). */
+  createDocument: (dir: string, name: string): Promise<Generated.Created> =>
+    farCreated(dir, name, false) ?? command("tree_create_document", dir, name),
+  createFolder: (dir: string, name: string): Promise<Generated.Created> =>
+    farCreated(dir, name, true) ?? command("tree_create_folder", dir, name),
+  /** Into the folder `into`, under its own name or exactly `name` (an
+   *  undo putting it back); `keepBoth` numbers a name taken there, else it
+   *  is refused. A far folder keeps the name. */
+  moveEntry: (
+    path: string,
+    into: string,
+    name?: string,
+    keepBoth = false,
+  ): Promise<string> => {
     const far = farEntries(path);
     const from = far && parentDir(path);
     return far && from
       ? far.moveEntry(path, from, into)
-      : command("tree_move_entry", path, into);
+      : command("tree_move_entry", path, into, name ?? null, keepBoth);
   },
+  /** The tree's copy of `path` into the folder `into`, named as `naming`
+   *  says; returns its path. Rust side: `tree_copy_entry`
+   *  (commands/fs/copy_into.rs). Not in a far folder. */
+  copyEntry: (
+    path: string,
+    into: string,
+    naming: Generated.CopyNaming,
+  ): Promise<string> => command("tree_copy_entry", path, into, naming),
+  /** Rows of the tree handed to the system's drag, as copies; resolves
+   *  when it ends, true when something took them. Rust side:
+   *  `start_file_drag_out` (commands/fs/drag_out.rs). Desktop only. */
+  dragOut: (paths: string[]): Promise<boolean> =>
+    command("start_file_drag_out", paths),
   /** A new name in the same folder; returns the new path. */
   renameEntry: (path: string, name: string): Promise<string> =>
     farEntries(path)?.renameEntry(path, name) ??
     command("tree_rename_entry", path, name),
-  /** To the system's Trash; refuses the tree's own root. A phone has none:
-   *  there a document is deleted (the tree asks first), a folder never. */
-  trashEntry: (path: string, root: string): Promise<void> =>
+  /** To the system's Trash, one after another up to one that fails;
+   *  refuses the tree's own root. A phone has none: there a document is
+   *  deleted (the tree asks first), a folder never. Returns where the
+   *  Trash keeps each that went, for `putBack`, when that is known, and
+   *  why the next didn't go. Rust side: `Trashing` (commands/tree_ops.rs). */
+  trashEntries: (
+    paths: readonly string[],
+    root: string,
+  ): Promise<{ places: (string | null)[]; error: unknown }> =>
     isIOSApp
-      ? nativeFiles.trash(path)
-      : isFarUrl(path)
-        ? farFiles(path)
-            .deleteEntry(path)
-            .then(() => {})
-        : command("tree_trash_entry", path, root),
+      ? eachInTurn(paths, (path) => nativeFiles.trash(path).then(() => null))
+      : paths.some(isFarUrl)
+        ? eachInTurn(paths, (path) =>
+            farFiles(path)
+              .deleteEntry(path)
+              .then(() => null),
+          )
+        : command("tree_trash_entries", [...paths], root).then(
+            ({ places, error }) => ({ places, error: error ?? undefined }),
+          ),
+  /** What `trashEntries` sent to the Trash (kept at `place`) back at `path`;
+   *  refused when something is there now or it left the Trash. */
+  putBack: (place: string, path: string): Promise<void> =>
+    command("tree_put_back", place, path),
+  /** Follows `dirs`, the tree's open folders, as other apps change them,
+   *  in place of those followed before; `seq` numbers the calls, growing,
+   *  as they can arrive out of order. False where nothing watches: a
+   *  phone, or a folder past the system's limit. */
+  watchFolders: (dirs: string[], seq: number): Promise<boolean> =>
+    desktopQueryCommand("tree_watch", false, dirs, seq),
   /** File > Open Folder…'s picker. Rejects with "TOO_BROAD" for the home
    *  folder or a drive root. A phone's is the system's folder picker. */
   pickOpenFolder: (): Promise<string | null> =>
@@ -144,6 +185,12 @@ export const fs = {
     docPath && isFarUrl(docPath)
       ? Promise.reject(new Error(ownError("farPictures")))
       : command("save_pasted_image", docPath, dataBase64, ext, folder),
+  /** A file dropped from a file manager, copied where the document's
+   *  pictures go, to link to. */
+  saveDroppedFile: (docPath: string, source: string, folder: string) =>
+    isFarUrl(docPath)
+      ? Promise.reject(new Error(ownError("farPictures")))
+      : command("save_dropped_file", docPath, source, folder),
   /** A replaced picture's file to the Trash, only from the document's folder
    *  or the drafts' images. Desktop only. */
   movePictureToTrash: (docPath: string | null, path: string) =>
@@ -229,6 +276,33 @@ export const fs = {
 };
 
 /** A document saved in a far folder: plugins' view of it read again. */
+/** A far folder's new entry, as the backend says one it made. */
+function farCreated(
+  dir: string,
+  name: string,
+  isDir: boolean,
+): Promise<Generated.Created> | undefined {
+  return farEntries(dir)
+    ?.createEntry(dir, name, isDir)
+    .then((path) => ({ path, made: path }));
+}
+
+/** `paths` each given to `one` in turn, up to one that fails. */
+async function eachInTurn(
+  paths: readonly string[],
+  one: (path: string) => Promise<string | null>,
+): Promise<{ places: (string | null)[]; error: unknown }> {
+  const places: (string | null)[] = [];
+  for (const path of paths) {
+    try {
+      places.push(await one(path));
+    } catch (error) {
+      return { places, error };
+    }
+  }
+  return { places, error: undefined };
+}
+
 function contentWritten(): void {
   if (!isIOSApp)
     void import("./far-plugin-fs").then((m) => m.contentFolderChanged());

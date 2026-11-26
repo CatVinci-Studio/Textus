@@ -1,5 +1,6 @@
 import type { Endpoint } from "../host/rpc";
 import { createSubscribers } from "../../utils/store";
+import { keepFresh } from "../../utils/keep-fresh";
 
 /**
  * The webviews plugins have open, by id. A webview's state is kept by its
@@ -26,6 +27,10 @@ export interface WebviewRecord {
 
 const records = new Map<string, WebviewRecord>();
 const states = new Map<string, unknown>();
+/** Code blocks' states apart, the latest few: a key per block ever drawn,
+ *  none of which a tab's closing forgets. */
+const blockStates = new Map<string, unknown>();
+const BLOCK_STATES_KEPT = 500;
 const subscribers = createSubscribers();
 
 function changed() {
@@ -147,11 +152,15 @@ export function webviewConnected(id: string, endpoint: Endpoint | null): void {
 }
 
 export function webviewState(key: string): unknown {
-  return states.get(key);
+  return blockStates.get(key) ?? states.get(key);
 }
 
 export function setWebviewState(key: string, state: unknown): void {
-  states.set(key, state);
+  const block = [...records.values()].some(
+    (r) => r.key === key && r.kind === "codeBlock",
+  );
+  if (block) keepFresh(blockStates, key, state, BLOCK_STATES_KEPT);
+  else states.set(key, state);
 }
 
 /** A tab's page closed for good: its state goes with it. */

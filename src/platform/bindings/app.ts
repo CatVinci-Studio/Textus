@@ -52,6 +52,8 @@ export const commands = {
 	 *  window's documents it opens split there, else in a new window.
 	 */
 	start_floating_tab_drag: (tab: DetachedTab_Deserialize, title: string, dirty: boolean, destroySource: boolean, rowHeight: number | null, look: string) => __TAURI_INVOKE<null>("start_floating_tab_drag", { tab, title, dirty, destroySource, rowHeight, look }),
+	/**  Sync, so it runs on the main thread, where GTK must be asked. */
+	drag_modifiers: () => __TAURI_INVOKE<DragModifiers>("drag_modifiers"),
 	/**
 	 *  Where a floating view can float over the desktop: the platforms whose
 	 *  windows can be transparent without a compositor to ask.
@@ -373,13 +375,33 @@ export type DetachedTab_Serialize = {
 	importedFrom?: string,
 };
 
+/**  Read by the file drags in src/app/file-drop/finder-drag.ts. */
+export type DragModifiers = {
+	shift: boolean,
+	/**  Option on a Mac. */
+	alt: boolean,
+	ctrl: boolean,
+};
+
 /**
- *  An installed family: the name CSS knows it by, and what it is called in
- *  the CJK languages that name it themselves (微软雅黑 for Microsoft YaHei).
+ *  An installed family: the name CSS knows it by, what it is called in
+ *  the CJK languages that name it themselves (微软雅黑 for Microsoft YaHei),
+ *  and its files. Used by src/theme/supplied-font.ts and font-choices.ts.
  */
 export type FontFamily = {
 	name: string,
 	local: LocalName[],
+	files: FontFile[],
+};
+
+/**
+ *  A face's file, for an `@font-face`: WKWebView was seen not to find the
+ *  fonts in ~/Library/Fonts by name.
+ */
+export type FontFile = {
+	path: string,
+	weight: number,
+	italic: boolean,
 };
 
 /**  A stylesheet fetched to install the theme, which counts the install. */
@@ -515,6 +537,11 @@ export type PandocOptions_Deserialize = {
 	csl?: string | null,
 	/**  The user's arguments for this format, as an argv list. */
 	extraArgs: string[],
+	/**
+	 *  One newline in a paragraph breaks the line, as the editor shows it
+	 *  (Settings › Editing, or the document's folder).
+	 */
+	hardLineBreaks?: boolean,
 };
 
 /**
@@ -529,6 +556,11 @@ export type PandocOptions_Serialize = {
 	csl: string | null,
 	/**  The user's arguments for this format, as an argv list. */
 	extraArgs: string[],
+	/**
+	 *  One newline in a paragraph breaks the line, as the editor shows it
+	 *  (Settings › Editing, or the document's folder).
+	 */
+	hardLineBreaks: boolean,
 };
 
 /**

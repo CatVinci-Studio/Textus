@@ -2,23 +2,21 @@ import { showConfirm } from "../../engine/controls/app-dialog";
 import { Byline } from "../pages/CatalogRow";
 import { Segmented } from "../../engine/controls/Segmented";
 import { fill } from "../../i18n/fill";
-import { requestCreate } from "../../ai/chat/create-request";
-import { useId, useRef, useState } from "react";
+import { requestWorkshop } from "../../ai/chat/create-request";
+import { useRef, useState } from "react";
 import { useSettings, THEME_MODES } from "../../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "../../prefs/builtin-themes";
 import type { Strings } from "../../i18n/strings";
-import {
-  importThemeCss,
-  saveUserTheme,
-  withUserTheme,
-} from "../../theme/theme-import";
+import { withUserTheme } from "../../theme/theme-import";
+import { exportUserTheme, importThemeFile } from "./theme-files";
+import { ThemeCardMore } from "./ThemeCardMore";
 import { ornamentRules } from "../../theme/theme-export";
-import { basename } from "../../utils/path";
 import { showMessage } from "../../engine/controls/app-dialog";
 import { exportDoc, fs, themes } from "../../platform/ipc";
 import { useLatest } from "../../utils/hooks/useLatest";
 import { Select } from "../../engine/controls/Select";
-import { RowHelp, SettingRow } from "./controls";
+import { SettingRow } from "./controls";
+import { useCustomCssDialog } from "./custom-css-dialog";
 import {
   AvailableThemes,
   galleryCopies,
@@ -34,11 +32,6 @@ import { currentStrings } from "../../i18n/current";
 import { explainError } from "../../utils/error-explain";
 import { matchesWords } from "../../utils/match-words";
 import { madeByAi } from "../../ai/chat/creations";
-
-const CUSTOM_CSS_PLACEHOLDER = `#write > p {
-  text-indent: 2em;
-  line-height: 2;
-}`;
 
 /** The variables a theme sets, as the current theme resolves them: the
  *  starting point of an exported theme. */
@@ -167,20 +160,13 @@ function useThemeAction() {
   return { busy, error, run };
 }
 
-/** Settings › Editor & Appearance › Theme: which form (light, dark), which
- *  theme, and whether the title bar frosts what scrolls beneath it. */
+/** Settings › Appearance: which form (light, dark) and which theme; a
+ *  theme is added from CSS in the theme store's "⋯". */
 export function ThemeSection({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
-  const { busy, error, run } = useThemeAction();
-  const importTheme = useImportTheme(run);
 
   return (
     <>
-      {error && (
-        <div className="settings-error" role="alert">
-          {error}
-        </div>
-      )}
       {/* Independent of the theme below: that picks the palette, this picks
           which of its two forms is shown. Every theme defines both. */}
       <SettingRow label={t.appearanceModeLabel}>
@@ -205,7 +191,6 @@ export function ThemeSection({ t }: { t: Strings }) {
         <Select
           className="settings-select"
           aria-label={t.contentThemeLabel}
-          disabled={busy}
           value={settings.themeId}
           onChange={(e) => setSettings({ themeId: e.target.value })}
         >
@@ -221,73 +206,38 @@ export function ThemeSection({ t }: { t: Strings }) {
           ))}
         </Select>
       </SettingRow>
-
-      <SettingRow label={t.themeImportLabel}>
-        <button
-          type="button"
-          className="tx-button text-button settings-inline-button"
-          disabled={busy}
-          onClick={() => void importTheme()}
-        >
-          {t.chooseFile}
-        </button>
-      </SettingRow>
     </>
   );
 }
 
-/** Picks a CSS file, imports it as a theme named after the file and
- *  selects it. */
-function useImportTheme(run: (action: () => Promise<void>) => Promise<void>) {
+/** A theme action's state, and importing one: picks a CSS file, imports it
+ *  as a theme named after the file and selects it. */
+function useImportTheme() {
+  const action = useThemeAction();
   const { settings, setSettings } = useSettings();
   const latest = useLatest(settings);
-  return () =>
-    run(async () => {
+  const importTheme = () =>
+    action.run(async () => {
       const picked = await fs.openCssFileDialog();
       if (!picked) return;
-      const css = await importThemeCss(picked);
-      const meta = await saveUserTheme(css, {
-        name: basename(picked).replace(/\.css$/i, ""),
-      });
+      const meta = await importThemeFile(picked);
       setSettings({
         userThemes: withUserTheme(latest.current.userThemes, meta),
         themeId: meta.id,
       });
     });
+  return { ...action, importTheme };
 }
 
-/** The user's own CSS, on top of whichever theme is picked. */
-export function CustomCssRow({ t }: { t: Strings }) {
-  const { settings, setSettings } = useSettings();
-  const labelId = useId();
-  return (
-    <div className="settings-row settings-row-stacked">
-      <div className="settings-row-label">
-        <span id={labelId}>{t.customCssLabel}</span>
-        <RowHelp label={t.customCssLabel}>{t.customCssHint}</RowHelp>
-      </div>
-      <textarea
-        className="tx-input settings-code-input"
-        aria-labelledby={labelId}
-        spellCheck={false}
-        rows={5}
-        placeholder={CUSTOM_CSS_PLACEHOLDER}
-        value={settings.customCss}
-        onChange={(e) => setSettings({ customCss: e.target.value })}
-      />
-    </div>
-  );
-}
-
-/** Settings › Extensions › Themes: the user's themes, Get more, "⋯" to
- *  import or export, and the user's own CSS folded under Advanced. */
+/** Settings › Extensions › Themes: the user's themes, Get more, and "⋯"
+ *  to import, export or write one's own CSS. */
 export function ThemesTab({ t }: { t: Strings }) {
   const { settings, setSettings } = useSettings();
   const latest = useLatest(settings);
-  const { busy, error, run } = useThemeAction();
-  const importTheme = useImportTheme(run);
+  const { busy, error, run, importTheme } = useImportTheme();
   const [query, setQuery] = useState("");
   const [openTheme, setOpenTheme] = useState<string | null>(null);
+  const customCss = useCustomCssDialog(t);
   const gallery = useGalleryCatalog();
   const install = useGalleryInstall(t);
   const updates = galleryUpdates(gallery.catalog, settings.userThemes);
@@ -321,98 +271,110 @@ export function ThemesTab({ t }: { t: Strings }) {
       />
     );
   return (
-    <ExtensionsTabLayout
-      t={t}
-      intro={t.extensionsIntroThemes}
-      primary={{
-        label: t.createMakeTheme,
-        onSelect: () => requestCreate("", "theme"),
-      }}
-      query={query}
-      onQuery={setQuery}
-      actions={[
-        { label: t.themeImportButton, onSelect: () => void importTheme() },
-        {
-          label: t.themeExportButton,
-          onSelect: () => void exportThemeCss(t, settings.customCss),
-        },
-      ]}
-      error={error}
-      installedTitle={t.extensionsThemesInstalled}
-      installedCount={settings.userThemes.length}
-      installedCards={mine.length > 0}
-      installed={
-        mine.length ? (
-          mine.map((theme) => {
-            const copy = copies.get(theme.id);
-            return (
-              <ThemeCard
-                key={theme.id}
-                t={t}
-                data-user-theme={theme.id}
-                data-in-use={settings.themeId === theme.id || undefined}
-                name={theme.name}
-                description={copy?.description}
-                previews={copy?.previews}
-                byline={
-                  copy ? (
-                    <ThemeByline t={t} theme={copy} />
-                  ) : (
-                    madeByAi(settings.creations, "theme", theme.id) && (
-                      <Byline t={t} madeHere />
+    <>
+      {customCss.dialog}
+      <ExtensionsTabLayout
+        t={t}
+        intro={t.extensionsIntroThemes}
+        primary={{
+          label: t.createMakeTheme,
+          onSelect: () => requestWorkshop(),
+        }}
+        query={query}
+        onQuery={setQuery}
+        actions={[
+          { label: t.themeImportButton, onSelect: () => void importTheme() },
+          {
+            label: t.themeExportButton,
+            onSelect: () => void exportThemeCss(t, settings.customCss),
+          },
+          { label: t.customCssMenu, onSelect: customCss.open },
+        ]}
+        error={error}
+        installedTitle={t.extensionsThemesInstalled}
+        installedCount={settings.userThemes.length}
+        installedCards={mine.length > 0}
+        installed={
+          mine.length ? (
+            mine.map((theme) => {
+              const copy = copies.get(theme.id);
+              return (
+                <ThemeCard
+                  key={theme.id}
+                  t={t}
+                  data-user-theme={theme.id}
+                  data-in-use={settings.themeId === theme.id || undefined}
+                  name={theme.name}
+                  description={copy?.description}
+                  previews={copy?.previews}
+                  byline={
+                    copy ? (
+                      <ThemeByline t={t} theme={copy} />
+                    ) : (
+                      madeByAi(settings.creations, "theme", theme.id) && (
+                        <Byline t={t} madeHere />
+                      )
                     )
-                  )
-                }
-                onOpen={copy ? () => setOpenTheme(copy.id) : undefined}
-              >
-                {updates.has(theme.id) && (
-                  <button
-                    type="button"
-                    className="tx-button text-button settings-inline-button"
-                    disabled={install.busy === theme.id}
-                    onClick={() => void install.install(updates.get(theme.id)!)}
-                  >
-                    {t.themeGalleryUpdate}
-                  </button>
-                )}
-                {settings.themeId !== theme.id && (
+                  }
+                  onOpen={copy ? () => setOpenTheme(copy.id) : undefined}
+                >
+                  {updates.has(theme.id) && (
+                    <button
+                      type="button"
+                      className="tx-button text-button settings-inline-button"
+                      disabled={install.busy === theme.id}
+                      onClick={() =>
+                        void install.install(updates.get(theme.id)!)
+                      }
+                    >
+                      {t.themeGalleryUpdate}
+                    </button>
+                  )}
+                  {settings.themeId !== theme.id && (
+                    <button
+                      type="button"
+                      className="tx-button text-button settings-inline-button"
+                      disabled={busy}
+                      onClick={() => setSettings({ themeId: theme.id })}
+                    >
+                      {t.themeGalleryUse}
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="tx-button text-button settings-inline-button"
                     disabled={busy}
-                    onClick={() => setSettings({ themeId: theme.id })}
+                    onClick={() => requestWorkshop(theme.id)}
                   >
-                    {t.themeGalleryUse}
+                    {t.themeEditInWorkshop}
                   </button>
-                )}
-                <button
-                  type="button"
-                  className="tx-button text-button settings-inline-button"
-                  disabled={busy}
-                  onClick={() => void remove(theme.id, theme.name)}
-                >
-                  {t.themeDeleteButton}
-                </button>
-              </ThemeCard>
-            );
-          })
-        ) : (
-          <p className="tx-list-note">
-            {query.trim()
-              ? fill(t.pluginsSearchNone, { query: query.trim() })
-              : t.extensionsThemesNone}
-          </p>
-        )
-      }
-      available={
-        <AvailableThemes
-          t={t}
-          query={query}
-          gallery={gallery}
-          install={install}
-          onOpen={(theme) => setOpenTheme(theme.id)}
-        />
-      }
-    />
+                  <ThemeCardMore
+                    t={t}
+                    name={theme.name}
+                    onExport={() => void run(() => exportUserTheme(theme))}
+                    onDelete={() => void remove(theme.id, theme.name)}
+                  />
+                </ThemeCard>
+              );
+            })
+          ) : (
+            <p className="tx-list-note">
+              {query.trim()
+                ? fill(t.pluginsSearchNone, { query: query.trim() })
+                : t.extensionsThemesNone}
+            </p>
+          )
+        }
+        available={
+          <AvailableThemes
+            t={t}
+            query={query}
+            gallery={gallery}
+            install={install}
+            onOpen={(theme) => setOpenTheme(theme.id)}
+          />
+        }
+      />
+    </>
   );
 }

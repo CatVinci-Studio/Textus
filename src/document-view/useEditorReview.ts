@@ -6,6 +6,7 @@ import type { EditorSetup } from "./useEditorSetup";
 import type { EditorChat } from "./useEditorChat";
 import { useRevisionAnnouncements } from "../ai/revision/useRevisionAnnouncements";
 import { useReviewNotes } from "../ai/margin/useReviewNotes";
+import { useTellMarginRoom } from "../ai/margin/margin-room";
 import type { Settings } from "../prefs/SettingsContext";
 import type { Strings } from "../i18n/strings";
 import type { TourAi } from "../utils/events";
@@ -69,6 +70,8 @@ export function useEditorReview({
     showAiNotice: setup.notice.showAiNotice,
     filePath,
   });
+
+  useTellMarginRoom(isActive, notes.noMargin);
 
   useTourSignals({
     tour,

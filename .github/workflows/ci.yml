@@ -7,7 +7,8 @@ name: CI
 #                  Chromium (2 shards) and in WebKit (3 shards; its width
 #                  sweep and a11y scan in the full suite only),
 #                  plus the Rust checks on Linux when src-tauri/ changed
-#                  (scripts/ci-changes.mjs). A change to GitHub's settings
+#                  (scripts/ci-changes.mjs), with a check of the Android
+#                  target. A change to GitHub's settings
 #                  or root Markdown alone checks only their format;
 #                  documentation alone checks format, links and the tests
 #                  that read the docs, without builds or e2e. Required:
@@ -19,8 +20,9 @@ name: CI
 #                  request; here only the browsers' cache is refreshed.
 #   before release the full suite on every platform: native on Linux, macOS
 #                  and Windows, e2e, the iOS simulator. It runs on the pull
-#                  request that bumps the version, and release.yml calls it
-#                  on the tagged commit.
+#                  request that bumps the version; release.yml calls it on
+#                  the tagged commit unless that run passed on the same
+#                  tree (scripts/ci-tested.mjs).
 #
 # `check`'s save round trip (src/document-view/save-roundtrip*.test.ts)
 # runs only when the change can reach saving: the editor, src/document*/,
@@ -233,7 +235,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: CatVinci-Studio/textus-plugins
-          ref: 6b4a7cf6bede6a37ef02317741a6b458d3f78a02
+          ref: d0207b35756ddcdca63d1dd62a74df5ba5c4b710
           path: textus-plugins
       - run: npm ci --prefix textus-plugins
       # Chromium comes from the cache when this Playwright version's is there;
@@ -339,7 +341,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: CatVinci-Studio/textus-plugins
-          ref: 6b4a7cf6bede6a37ef02317741a6b458d3f78a02
+          ref: d0207b35756ddcdca63d1dd62a74df5ba5c4b710
           path: textus-plugins
       - run: npm ci --prefix textus-plugins
       # As in e2e-shard: the browser from main's cache, its libraries
@@ -429,6 +431,28 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - if: matrix.rust && needs.changes.outputs.native == 'true'
         run: npm run check:native
+      # The Android target, checked (not built) wherever the change reaches
+      # Rust: a dependency or module given to the desktop alone fails here,
+      # not in the full suite's mobile jobs, which don't block. iOS-only code
+      # (target_os = "ios") still waits for the ios job. A few crates build
+      # C, so the runner image's default NDK supplies the compiler (any
+      # recent one does for a check). Clippy rather than check: its
+      # -D warnings reaches only our crates, where RUSTFLAGS would build
+      # every dependency again; a warning here is desktop-only code the
+      # phone compiles too, to gate #[cfg(desktop)].
+      - name: Check the Android target
+        if: runner.os == 'Linux' && needs.changes.outputs.native == 'true'
+        working-directory: src-tauri
+        run: |
+          bin="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          if [ ! -x "$bin/aarch64-linux-android24-clang" ]; then
+            echo "::error::no Android NDK on this runner image (ANDROID_NDK_HOME)"
+            exit 1
+          fi
+          rustup target add aarch64-linux-android
+          export CC_aarch64_linux_android="$bin/aarch64-linux-android24-clang"
+          export AR_aarch64_linux_android="$bin/llvm-ar"
+          cargo clippy --target aarch64-linux-android --lib -- -D warnings
 
   # One required check for the three platforms: passes only when all of
   # them passed (or were skipped together, when the change can't reach the
@@ -492,7 +516,7 @@ jobs:
     # Not required: its failure shows here without failing the run (or
     # the release that calls it).
     continue-on-error: true
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 60
     env:
       # As in native-platform: no debug info for a build nothing debugs.
@@ -503,10 +527,10 @@ jobs:
       # it is picked this way).
       - name: Select Xcode
         run: |
-          xcode=$(find /Applications -maxdepth 1 -type d -name 'Xcode_26*.app' \
+          xcode=$(find /Applications -maxdepth 1 -type d -name 'Xcode_27*.app' \
             | grep -E '/Xcode_[0-9.]+\.app$' | sort -V | tail -n1)
           if [ -z "$xcode" ]; then
-            echo "::error::no released Xcode 26 on this runner image"
+            echo "::error::no released Xcode 27 on this runner image"
             exit 1
           fi
           sudo xcode-select -s "$xcode"
@@ -518,6 +542,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-ios, aarch64-apple-ios-sim
+          # Xcode 27's SwiftPM hides the Swift plugins' @_cdecl exports;
+          # swift-rs makes them global again with rustup's llvm-objcopy.
+          components: llvm-tools
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: "./src-tauri -> target"
@@ -576,15 +603,22 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
       - run: npm ci
       # Gradle's downloads: Maven Central has refused a cold run (429).
-      # This job runs only in the full suite, never on main, so it saves
-      # wherever it runs.
+      # android-cache.yml saves them on main under the same key.
       - uses: actions/cache@v6
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('src-tauri/Cargo.lock', 'package-lock.json') }}
+          key: gradle-${{ runner.os }}-${{ hashFiles('src-tauri/Cargo.lock', 'package-lock.json', 'scripts/android-prepare.sh') }}
           restore-keys: gradle-${{ runner.os }}-
+      # Retries that wait seconds and grow, not 125 ms, when Central says 429.
+      - name: Gradle retries downloads with a back-off
+        run: |
+          mkdir -p ~/.gradle
+          cat >> ~/.gradle/gradle.properties <<'PROPS'
+          systemProp.org.gradle.internal.repository.max.retries=6
+          systemProp.org.gradle.internal.repository.initial.backoff=2000
+          PROPS
       # The runner image's SDK and newest NDK.
       - name: Generate the Android project (src-tauri/gen/android)
         run: |

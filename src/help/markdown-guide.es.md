@@ -19,7 +19,7 @@ Alrededor de las palabras: `**negrita**`, `*cursiva*`, `==resaltado==`, `` `cód
 
 ## Escribir textos largos
 
-**Sangría de primera línea** (Ajustes › Edición › Texto) mete dos caracteres la primera línea de cada párrafo; las listas, las citas y las tablas se quedan como están.
+**Sangría de primera línea** (Ajustes › Apariencia › Texto) mete dos caracteres la primera línea de cada párrafo; las listas, las citas y las tablas se quedan como están.
 
 ### Formas de escribir y modos
 
@@ -29,11 +29,11 @@ Además del editor WYSIWYG y del modo código fuente (`Cmd+/`), Textus ofrece tr
 - **Modo máquina de escribir**: la línea que escribes se queda en el centro de la ventana, en el editor, en el modo código fuente y en Código y vista previa.
 - **Modo zen** (`Cmd+Shift+J`): oculta todo menos el documento en el que estás y atenúa todos los párrafos salvo el que estás escribiendo. La × de arriba a la derecha, o el mismo atajo, te saca de él.
 
-Todos están en el menú **Visualización** (**Visualización › Modo** para los dos primeros) y en el grupo **Visualización** de **Ajustes › Edición › Texto**. Cada uno es un solo ajuste para todo Textus: cámbialo en cualquier ventana y todas las pestañas de todas las ventanas cambian con él, los documentos que abras después aparecen en él y Textus vuelve a abrirse en él la próxima vez.
+Todos están en el menú **Visualización** (**Visualización › Vista de edición** para los dos primeros) y en el grupo **Visualización** de **Ajustes › Edición › Documento**. Cada uno es un solo ajuste para todo Textus: cámbialo en cualquier ventana y todas las pestañas de todas las ventanas cambian con él, los documentos que abras después aparecen en él y Textus vuelve a abrirse en él la próxima vez.
 
-**Visualización › Modo › Modo lectura** (también en el menú contextual de una pestaña) impide que un documento cambie, ya sea al escribir, pegar, soltar, deshacer, por Textus AI o por los complementos. Un candado junto al título lo indica; haz clic en él para volver a permitir cambios.
+**Visualización › Vista de edición › Modo lectura** (también en el menú contextual de una pestaña) impide que un documento cambie, ya sea al escribir, pegar, soltar, deshacer, por Textus AI o por los complementos. Un candado junto al título lo indica; haz clic en él para volver a permitir cambios.
 
-**Visualización › Paleta de comandos…** (`Cmd+Shift+P`) encuentra todo lo que hacen los menús, y cada comando que añade un complemento, escribiendo unas letras de su nombre. También cambia el aspecto (claro, oscuro o el del sistema) y el tema del editor, y activa o desactiva Textus AI. **Edición › Buscar y reemplazar…** (`Cmd+F`) busca en el documento, **Edición › Reemplazar…** (`Cmd+Option+F`) lo abre con la fila de reemplazo y `Cmd+G` va a la siguiente coincidencia.
+**Visualización › Paleta de comandos…** (`Cmd+Shift+P`) encuentra todo lo que hacen los menús, y cada comando que añade un complemento, escribiendo unas letras de su nombre. También cambia el aspecto (claro, oscuro o el del sistema) y el tema del editor, y activa o desactiva Textus AI. **Edición › Buscar…** (`Cmd+F`) busca en el documento, **Edición › Reemplazar…** (`Cmd+Option+F`) lo abre con la fila de reemplazo y `Cmd+G` va a la siguiente coincidencia.
 
 El panel **Esquema** de la barra lateral muestra los encabezados del documento; haz clic en uno para ir a él. Haz clic derecho en el esquema para **Expandir todo** y **Contraer todo**, o haz `Option`-clic (`Alt`-clic) en la flecha de un encabezado para plegarlos o desplegarlos todos a la vez.
 
@@ -65,7 +65,7 @@ Pasa el puntero sobre una tabla para añadir o quitar filas y columnas. Escribe 
 
 ### Bloques de código
 
-Bloques de código delimitados con resaltado de sintaxis (cambia el lenguaje desde la esquina superior derecha del bloque). Enter en la última línea vacía sale del bloque, igual que Ctrl/⌘+Enter en cualquier momento; lo mismo vale para las citas. **Copiar** y **Seleccionar todo**, junto al lenguaje, copian o seleccionan el código del bloque, y **Números de línea en los bloques de código** (Ajustes › Edición › Texto) numera sus líneas; ninguno de los dos aparece en las exportaciones ni al imprimir.
+Bloques de código delimitados con resaltado de sintaxis (cambia el lenguaje desde la esquina superior derecha del bloque). Enter en la última línea vacía sale del bloque, igual que Ctrl/⌘+Enter en cualquier momento; lo mismo vale para las citas. **Copiar** y **Seleccionar todo**, junto al lenguaje, copian o seleccionan el código del bloque, y **Números de línea en los bloques de código** (Ajustes › Edición › Documento) numera sus líneas; ninguno de los dos aparece en las exportaciones ni al imprimir.
 
 ```python
 def fib(n: int) -> int:
@@ -127,7 +127,7 @@ sequenceDiagram
     Textus-->>Tú: Lo representa en vivo
 ```
 
-**Motor de diagramas** (Ajustes › Edición › Texto) elige quién dibuja estos bloques: Mermaid, el predeterminado, o Pele, que es más rápido pero distribuye los diagramas a su manera y omite algunas funciones; un diagrama que Pele no puede dibujar lo dibuja Mermaid.
+**Motor de diagramas** (Ajustes › Edición › Documento) elige quién dibuja estos bloques: Mermaid, el predeterminado, o Pele, que es más rápido pero distribuye los diagramas a su manera y omite algunas funciones; un diagrama que Pele no puede dibujar lo dibuja Mermaid.
 
 Sus colores siguen el aspecto: una paleta gris y sobria en el claro y la oscura en el oscuro; un tema importado o el CSS personalizado pueden elegir otra paleta integrada con `--doc-mermaid-theme: forest`.
 
@@ -159,7 +159,7 @@ Para ver una imagen de cerca, haz doble clic en ella o pulsa **Ampliar imagen** 
 
 **Archivo › Abrir carpeta…** abre una carpeta entera en la barra lateral: el árbol de archivos se queda en ella mientras abres los documentos que contiene, la carpeta vuelve con tu sesión y **Archivo › Cerrar carpeta** hace que el árbol vuelva a seguir al documento. El panel **Buscar** (la lupa de la barra de actividad, o `Cmd+Shift+O`) encuentra archivos por su nombre y líneas por sus palabras en toda la carpeta; haz clic en una línea para abrir el documento justo ahí. Ambas funciones son solo de escritorio.
 
-El árbol también es un pequeño gestor de archivos. El nombre de la carpeta superior, encima, te lleva un nivel arriba. Su menú lo ordena por nombre o por fecha de modificación, y muestra **Todos los archivos** o **Solo documentos**. Haz clic derecho en una carpeta, un archivo o el espacio vacío de abajo para crear allí un **Nuevo documento** o una **Nueva carpeta**, y arrastra un archivo o carpeta sobre otra carpeta para moverlo; un documento abierto lo sigue a su nuevo lugar. Nunca se reemplaza nada: un nombre ya usado se rechaza.
+El árbol también es un pequeño gestor de archivos. El nombre de la carpeta superior, encima, te lleva un nivel arriba. Su menú lo ordena por nombre o por fecha de modificación, y muestra **Todos los archivos** o **Solo documentos**. Haz clic derecho en una carpeta, un archivo o el espacio vacío de abajo para crear allí un **Nuevo archivo** o una **Nueva carpeta**, y arrastra un archivo o carpeta sobre otra carpeta para moverlo; un documento abierto lo sigue a su nuevo lugar. Nunca se reemplaza nada: un nombre ya usado se rechaza.
 
 Arrastra archivos desde el Finder o el Explorador de archivos a la ventana para abrirlos: los documentos se abren en pestañas, las imágenes entran en el documento donde las sueltas y una carpeta se abre en la barra lateral. **Archivo › Copiar ruta** copia la ruta completa del documento activo.
 
@@ -200,7 +200,7 @@ Cada grupo de pestañas con la página debajo es una **isla**. Una isla muestra 
 - **Mantén pulsado `Cmd`** (`Ctrl`) un momento con dos o más islas abiertas: cada una muestra un número, y `Cmd+1`… `Cmd+6` va a esa isla.
 - Cierra la última pestaña de una isla y la isla desaparece. Toda la distribución vuelve cuando abres Textus de nuevo.
 
-`Cmd+N` (o `Cmd+T`) abre una pestaña nueva, `Cmd+Shift+N` una ventana nueva, y **Archivo › Reabrir pestaña cerrada** (`Cmd+Shift+T`) recupera los documentos que cerraste, empezando por el último. El **+** al final de una fila abre una pestaña nueva en esa isla. Un clic con el botón central cierra una pestaña; el menú contextual de una pestaña tiene **Cerrar las demás**, **Cerrar pestañas a la izquierda**, **Cerrar pestañas a la derecha** y **Cerrar las guardadas** (las pestañas con cambios sin guardar siguen abiertas), **Copiar ruta** y **Mostrar en el árbol de archivos**. Cuando Textus se vuelve a abrir, cada ventana vuelve con sus propias pestañas.
+`Cmd+N` (o `Cmd+T`) abre una pestaña nueva, `Cmd+Shift+N` una ventana nueva, y **Archivo › Reabrir pestaña cerrada** (`Cmd+Shift+T`) recupera los documentos que cerraste, empezando por el último. El **+** al final de una fila abre una pestaña nueva en esa isla. Un clic con el botón central cierra una pestaña; el menú contextual de una pestaña tiene **Cerrar las demás**, **Cerrar pestañas a la izquierda**, **Cerrar pestañas a la derecha** y **Cerrar las guardadas** (las pestañas con cambios sin guardar siguen abiertas), **Copiar ruta** y **Mostrar en Archivos**. Cuando Textus se vuelve a abrir, cada ventana vuelve con sus propias pestañas.
 
 ## Complementos, temas y habilidades
 
@@ -240,11 +240,11 @@ Los códigos cortos de emoji de GitHub se muestran como su emoji: :tada: (`:tada
 
 Subíndices y superíndices como en Typora y Pandoc: H~2~O (`H~2~O`), x^2^ (`x^2^`); sin espacios dentro.
 
-Al escribir `(`, `[`, `{`, unas comillas o un paréntesis de un método de entrada chino o japonés, como `（`, `【` o `「`, se añade su pareja de cierre tras el cursor: escribir el cierre lo salta, Retroceso justo después de la apertura borra los dos y, con texto seleccionado, la pareja lo rodea. **Cerrar (), [] y «»**, en **Ajustes › Edición › Texto**, lo desactiva.
+Al escribir `(`, `[`, `{`, unas comillas o un paréntesis de un método de entrada chino o japonés, como `（`, `【` o `「`, se añade su pareja de cierre tras el cursor: escribir el cierre lo salta, Retroceso justo después de la apertura borra los dos y, con texto seleccionado, la pareja lo rodea. **Cerrar (), [] y «»**, en **Ajustes › Edición › Documento**, lo desactiva.
 
 Los enlaces se ven así: [el repositorio de Textus](https://github.com/CatVinci-Studio/Textus). Con Ctrl/⌘+clic se sigue un enlace: uno web se abre en el navegador, uno a otro archivo Markdown lo abre en una pestaña y uno a `#un-encabezado` desplaza hasta él. Un clic normal pone el cursor en el enlace y muestra su Markdown, `[texto](url)`, para editarlo ahí mismo; al salir el cursor vuelve a ser un enlace. También se representa el HTML en línea, como las teclas <kbd>Cmd</kbd> + <kbd>S</kbd>, y lo mismo los bloques plegables `<details>`, las tablas HTML, algunos estilos en línea (color, fondo, tamaño, grosor, alineación, subrayado y tachado) y el `<svg>` en línea, que se muestra como imagen. Los scripts y el resto del HTML se quedan como código. Un enlace a un encabezado de otro archivo, como `[ver](notas.md#un-encabezado)`, abre ese archivo en ese encabezado. Los wikilinks de Obsidian (`[[Nota]]`, `[[Nota|texto]]` y `[[Nota#Encabezado]]`) se abren igual, desde la carpeta del documento o desde cualquier parte de su bóveda; ellos y las `#etiquetas` al principio de una línea se guardan tal como se escribieron.
 
-**Muestras antes de los códigos de color** (Ajustes › Edición › Texto) pone un pequeño cuadrado del color delante de un código de color. **Solo en el código** lo muestra en el código en línea que es un color, como `#0af` o `rgb(0 128 255)`, y delante de los valores de color de los bloques de código; **En todo el texto**, también delante de los escritos en el texto con seis u ocho dígitos, como #ff8800, o como función de color, como hsl(210 100% 50%). Los códigos cortos en el texto, las etiquetas como #cafe, los números como #234 y los enlaces se quedan como están.
+**Muestras antes de los códigos de color** (Ajustes › Edición › Documento) pone un pequeño cuadrado del color delante de un código de color. **Solo en el código** lo muestra en el código en línea que es un color, como `#0af` o `rgb(0 128 255)`, y delante de los valores de color de los bloques de código; **En todo el texto**, también delante de los escritos en el texto con seis u ocho dígitos, como #ff8800, o como función de color, como hsl(210 100% 50%). Los códigos cortos en el texto, las etiquetas como #cafe, los números como #234 y los enlaces se quedan como están.
 
 Fórmulas en línea: la equivalencia entre masa y energía $E = mc^2$, la identidad de Euler $e^{i\pi} + 1 = 0$.
 

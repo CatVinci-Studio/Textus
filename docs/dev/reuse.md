@@ -11,27 +11,31 @@ Where a surface sits, when it comes and goes and what it may hold is the
 surfaces table in [design-language.md](../design/design-language.md) (5.5).
 The pieces:
 
-| Need                                       | Use                                                                                                                               |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| A button that is only an icon              | `engine/controls/IconButton.tsx` (named, with the app's Tooltip)                                                                  |
-| A menu at the pointer, or under a button   | `engine/controls/ContextMenu.tsx`; `engine/controls/useMenuButton.tsx` hangs it from a button (end-aligned, with a heading)       |
-| A box that floats over the page            | the `.floating-surface` class; layers from the `--z-*` tokens (`engine/tokens/design-system.css`)                                 |
-| Closing it on a press outside or Escape    | `utils/hooks/useCloseOnOutsideClick.ts` (input methods spared; `inside` for a badge or the opener)                                |
-| Placing it next to what opened it          | `engine/controls/placement.ts` (`clampLeft`, `clampTop`, `opensBelow`), or `usePlacement` for a point                             |
-| A dialog                                   | `engine/controls/app-dialog.tsx` (`showMessage`, `showConfirm`, `showPrompt`); a dialog of your own takes the `.close-prompt` box |
-| A list to pick from                        | `showQuickPick` (`engine/controls/quick-pick.tsx`)                                                                                |
-| A note that goes by itself, a progress bar | `showNotice`, `startProgress` (`engine/controls/notices.tsx`)                                                                     |
-| A card to act on, bottom right             | `engine/controls/CornerToast.tsx` in a `CornerStack`                                                                              |
-| A phone's sheet                            | `engine/controls/Sheet.tsx` (`ActionSheet` and `BottomCard` are its bodies)                                                       |
-| A select, a switch, a settings row         | `engine/controls/Select.tsx`; `settings/sections/controls.tsx`                                                                    |
-| A panel's top row                          | `engine/controls/PanelHeader.tsx`                                                                                                 |
-| A "?" that explains                        | `engine/controls/InfoTip.tsx`                                                                                                     |
-| A handle that resizes a panel              | `engine/controls/ResizeHandle.tsx`                                                                                                |
-| Dragging to reorder or move                | `engine/drag/pointer-drag.ts` and `engine/drag/row.ts` (`trackDrag`, `reorderDrag`) - pointer events, never HTML drag and drop    |
-| A file's icon                              | `engine/controls/file-icons.tsx` (`fileIconFor`)                                                                                  |
-| A Mac-style rubber band past a scroll end  | `engine/controls/elastic-overscroll.ts`                                                                                           |
-| A long press on touch                      | `utils/hooks/useLongPress.ts`                                                                                                     |
-| Telling a screen reader                    | `announce` (`engine/controls/announce.ts`)                                                                                        |
+| Need                                       | Use                                                                                                                                                                                                                  |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A button that is only an icon              | `engine/controls/IconButton.tsx` (named, with the app's Tooltip)                                                                                                                                                     |
+| A menu at the pointer, or under a button   | `engine/controls/ContextMenu.tsx`; `engine/controls/useMenuButton.tsx` hangs it from a button (end-aligned, with a heading); a menu of its own: `engine/controls/useMenuOpen.ts`                                     |
+| A box that floats over the page            | the `.floating-surface` class; layers from the `--z-*` tokens (`engine/tokens/design-system.css`)                                                                                                                    |
+| Closing it on a press outside or Escape    | `utils/hooks/useCloseOnOutsideClick.ts` (input methods spared; `inside` for a badge or the opener)                                                                                                                   |
+| Placing it next to what opened it          | `engine/controls/placement.ts` (`clampLeft`, `clampTop`, `opensBelow`), or `usePlacement` for a point                                                                                                                |
+| A dialog                                   | `engine/controls/app-dialog.tsx` (`showMessage`, `showConfirm`, `showPrompt`); a dialog of your own takes the `.close-prompt` box                                                                                    |
+| A list to pick from                        | `showQuickPick` (`engine/controls/quick-pick.tsx`)                                                                                                                                                                   |
+| A note that goes by itself, a progress bar | `showNotice`, `startProgress` (`engine/controls/notices.tsx`)                                                                                                                                                        |
+| A card to act on, bottom right             | `engine/controls/CornerToast.tsx` in a `CornerStack`                                                                                                                                                                 |
+| A phone's sheet                            | `engine/controls/Sheet.tsx` (`BottomCard` is its body)                                                                                                                                                               |
+| A select, a switch, a settings row         | `engine/controls/Select.tsx`; `settings/sections/controls.tsx`                                                                                                                                                       |
+| A number typed or stepped, with its unit   | `engine/controls/NumberField.tsx`                                                                                                                                                                                    |
+| A panel's top row                          | `engine/controls/PanelHeader.tsx`                                                                                                                                                                                    |
+| A "?" that explains                        | `engine/controls/InfoTip.tsx`                                                                                                                                                                                        |
+| A handle that resizes a panel              | `engine/controls/ResizeHandle.tsx`                                                                                                                                                                                   |
+| Dragging to reorder or move                | `engine/drag/pointer-drag.ts` and `engine/drag/row.ts` (`trackDrag`, `reorderDrag`) - pointer events, never HTML drag and drop                                                                                       |
+| Files dropped on the documents             | `documentDrop` (`engine/controls/document-drop.ts`) is the contract; `app/file-drop/` runs one drag (`fileDropOnDocuments`), `editor/file-drop/` opens room between blocks and fills it (`takeDropsIn`, `fillRooms`) |
+| Items making room for a dragged one        | `slideAside` (`engine/drag/row.ts`), or `flip` with `MAKE_ROOM` - FLIP on the settle spring; tab rows use the frame clock                                                                                            |
+| A file's icon                              | `engine/controls/file-icons.tsx` (`fileIconFor`)                                                                                                                                                                     |
+| A Mac-style rubber band past a scroll end  | `engine/controls/elastic-overscroll.ts`                                                                                                                                                                              |
+| Keeping the page where the reader has it   | `engine/controls/scroll-hold.ts` (`holdStill`, `holdOnResize`, `holdBlock`, `keepWhile`; `pageIsTheHands` past an end)                                                                                               |
+| A long press on touch                      | `utils/hooks/useLongPress.ts`                                                                                                                                                                                        |
+| Telling a screen reader                    | `announce` (`engine/controls/announce.ts`)                                                                                                                                                                           |
 
 ## Loading, platforms and plugins
 
@@ -42,24 +46,30 @@ The pieces:
 | The phone layout                              | `usePhoneLayout` (`engine/controls/usePhoneLayout.ts`)                                           |
 | Calling the backend                           | the areas in `platform/ipc.ts` ([recipes.md](recipes.md#add-a-backend-command))                  |
 | Telling plugins about something in the window | `emitPluginEvent` (`plugins/app-bridge.ts`), as `plugins/panels-state.ts` does                   |
+| Asking plugins in turn, the first answer wins | `firstAnswer` (`plugins/contributions/first-answer.ts`), as the paste and drop handlers do       |
 | Letting go of what is out of sight            | `keepLoaded` / `useKeptLoaded` (`utils/kept-loaded.ts`), `onMemoryIdle` (`utils/memory-idle.ts`) |
+| A cache bounded to the most recent            | `keepFresh` (`utils/keep-fresh.ts`)                                                              |
 
 ## Text, links and folders
 
-| Need                                                     | Use                                                                                                            |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Filtering a list as the user types (pinyin too)          | `utils/list-filter.ts` (`prepareList`, `rankList`)                                                             |
-| Folding case and accents                                 | `utils/search-fold.ts`; pinyin `utils/pinyin.ts`                                                               |
-| Paths: `/`-separated, a note file, a URL or a drive path | `utils/path.ts` (`slashed`, `isNoteFile`, `noteStem`, `hasUrlScheme`, `isDrivePath`, `relativePath`)           |
-| Reading a `[[link]]`                                     | `utils/note-link.ts` (`parseNoteLink`; `WIKILINK_SOURCE` to find them in text)                                 |
-| Where a link goes, as a click takes it                   | `files/link-resolve.ts` (and Rust `resolve_note_link`, which shares its cases)                                 |
-| Writing a link the way the folder does                   | `files/link-style.ts`, `files/link-resolve.ts` `linkToTarget`; Markdown links `editor/markdown/link-syntax.ts` |
-| A `#heading` or `^block` inside a note                   | `editor/markdown/link-target.ts` `headingIndex`, `editor/markdown/heading-jump.ts`                             |
-| Scrolling to a place in the document                     | `revealPosition` (`editor/reveal-position.ts`); a tab not yet shown takes a `setTabJump`                       |
-| Rewriting links when a note moves                        | `files/link-rewrite.ts`                                                                                        |
-| Front matter                                             | `utils/frontmatter.ts`                                                                                         |
-| `\|` in a table cell                                     | `editor/tables/cell-pipes.ts`                                                                                  |
-| How the folder is written, whichever app made it         | `conventions` (Rust `src-tauri/src/conventions/`, `fs.folderConventions`; plugins `files.conventions`)         |
+| Need                                                        | Use                                                                                                            |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Filtering a list as the user types (pinyin too)             | `utils/list-filter.ts` (`prepareList`, `rankList`)                                                             |
+| Folding case and accents                                    | `utils/search-fold.ts`; pinyin `utils/pinyin.ts`                                                               |
+| Paths: `/`-separated, a note file, a URL or a drive path    | `utils/path.ts` (`slashed`, `isNoteFile`, `noteStem`, `hasUrlScheme`, `isDrivePath`, `relativePath`)           |
+| Reading a `[[link]]`                                        | `utils/note-link.ts` (`parseNoteLink`; `WIKILINK_SOURCE` to find them in text)                                 |
+| Where a link goes, as a click takes it                      | `files/link-resolve.ts` (and Rust `resolve_note_link`, which shares its cases)                                 |
+| Writing a link the way the folder does                      | `files/link-style.ts`, `files/link-resolve.ts` `linkToTarget`; Markdown links `editor/markdown/link-syntax.ts` |
+| A picture's or link's target as written                     | `linkDestination` in `editor/markdown/link-syntax.ts`                                                          |
+| A link to a file put in a document (a picture for an image) | `files/link-to-file.ts` (`linkToFile`, `fileLinkSource`; `linkingDocument` for the tab to link from)           |
+| A `#heading` or `^block` inside a note                      | `editor/markdown/link-target.ts` `headingIndex`, `editor/markdown/heading-jump.ts`                             |
+| Scrolling to a place in the document                        | `revealPosition` (`editor/reveal-position.ts`); a tab not yet shown takes a `setTabJump`                       |
+| Rewriting links when a note moves                           | `files/link-rewrite.ts`                                                                                        |
+| The folder's files for a completion list                    | `folderIndex` (`files/folder-index.ts`): one walk while it is fresh, shared by the `[[` and path completions   |
+| A link's or picture's path completed as it is typed         | `files/path-completion.ts` (`targetItems`)                                                                     |
+| Front matter                                                | `utils/frontmatter.ts`                                                                                         |
+| `\|` in a table cell                                        | `editor/tables/cell-pipes.ts`                                                                                  |
+| How the folder is written, whichever app made it            | `conventions` (Rust `src-tauri/src/conventions/`, `fs.folderConventions`; plugins `files.conventions`)         |
 
 ## Textus AI
 
@@ -75,8 +85,8 @@ To build on it:
 | The document the AI works on               | `attachedDocument` (`ai/chat/conversation/document-port.ts`), attached by the editor in front                                                            |
 | A proposed edit shown, decided and applied | `ai/revision/` (its editor plugin and the review bar); never write the document directly                                                                 |
 | Notes beside the text                      | `ai/margin/`                                                                                                                                             |
-| Blocks as the model sees them (`[#id]`)    | `ai/doc-blocks.ts`, `ai/doc-markdown.ts`                                                                                                                 |
-| Streaming text in                          | `ai/stream-reveal.ts`                                                                                                                                    |
+| Blocks as the model sees them (`[#id]`)    | `editor/markdown/doc-blocks.ts`, `editor/markdown/doc-markdown.ts`                                                                                       |
+| Streaming text in                          | `engine/motion/stream-reveal.ts`                                                                                                                         |
 | Sources as footnotes                       | `ai/citations.ts`                                                                                                                                        |
 | A provider and its models                  | `ai/provider-catalog.ts`, Rust `crates/aicompat` (no Tauri inside)                                                                                       |
 | From a plugin                              | `textus.ai.registerTool` (a tool the AI may call), `ai.state()` / `ai.onDidChangeState`                                                                  |

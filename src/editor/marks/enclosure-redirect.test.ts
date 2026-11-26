@@ -32,3 +32,17 @@ describe("input that lands inside a link's source", () => {
     });
   });
 });
+
+describe("input that lands inside raw HTML", () => {
+  it("a typed closer over the autopair's ')' just after it goes in once", async () => {
+    const t = await openView("", { enableCompletion: false });
+    t.type("(<b>");
+    // As WebKit and Chromium report it: inside the tag, the caret just after.
+    const caret = t.view.state.selection.from;
+    expect(redirectMisattributedInput(t.view, caret - 1, caret - 1, ")")).toBe(
+      true,
+    );
+    t.type(" c");
+    expect(t.markdown()).toBe("(<b>) c");
+  });
+});

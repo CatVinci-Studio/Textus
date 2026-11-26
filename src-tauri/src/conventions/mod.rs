@@ -302,12 +302,6 @@ pub async fn project_settings_read(root: String) -> serde_json::Value {
     .unwrap_or(serde_json::Value::Null)
 }
 
-/// Whether a document in `dir` shows a single newline as a line break.
-#[cfg_attr(not(desktop), allow(dead_code))]
-pub(crate) fn soft_breaks_show(dir: &Path) -> bool {
-    of_folder(dir).soft_breaks.is_some_and(|s| s.value)
-}
-
 /// `rel` under `base`, `.` and `..` folded; None for an absolute path.
 fn fold(base: &Path, rel: &str) -> Option<PathBuf> {
     let mut out = base.to_path_buf();

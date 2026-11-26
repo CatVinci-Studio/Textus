@@ -28,6 +28,7 @@ messages. The full API is in [references/textus.d.ts](references/textus.d.ts)
   "description": "Counts the words of the document in front.",
   "engines": { "textus": ">=1.3.10" },
   "platforms": ["desktop", "ios"],
+  "category": "editing",
   "main": "host.js",
   "permissions": ["editor.read"],
   "contributes": {
@@ -44,7 +45,13 @@ messages. The full API is in [references/textus.d.ts](references/textus.d.ts)
 - `engines.textus` is the oldest Textus with every call the code makes.
   `dates`, `templates`, `files.appSettings` and `layout.panels` need
   `">=1.3.10"`; API 1.8's calls and manifest keys (below) need
-  `">=1.4.4-rc.1"`, API 1.9's `">=1.4.6-rc.1"`.
+  `">=1.4.4-rc.1"`, API 1.9's `">=1.4.6-rc.1"`, API 1.10's (the
+  manifest's `contributes.codeLanguages` and `contributes.fileIconThemes`,
+  and `editor.registerDropHandler`) `">=1.4.7"`. The manifest's
+  `category` (one of `notes`, `editing`, `diagrams`, `files`, `import`,
+  `sync`, `ai`, `companions`) and `needsTextusAi` (true when it does
+  nothing without Textus AI) are read from 1.4.7 and ignored before, so
+  they need no higher range.
 - `permissions` lists only what the code uses: `editor.read`,
   `editor.write`, `editor.propose`, `editor.input`, `files.read`,
   `files.write` (includes reading), `project.data`, `clipboard`,
@@ -102,7 +109,16 @@ exports.activate = function (ctx) {
   `ai.stream` (with a `signal`, as `ai.complete` takes too),
   `views.registerDatabaseView`, `files.registerConventionReader`,
   `files.registerProvider` / `openFolder`, `textus.ssh` and the manifest's
-  `contributes.folderDocuments`. Use them rather than drawing your own.
+  `contributes.folderDocuments`. API 1.10 adds `contributes.codeLanguages`:
+  a code block language coloured from a JSON grammar of ordered
+  `{ token, match }` rules, no code (the guide's Code languages, with
+  the patterns it refuses as too slow);
+  `contributes.fileIconThemes`: file and folder icons picked in
+  Settings › Appearance; and `editor.registerDropHandler`: a file dragged
+  into the document written as the plugin's own Markdown. API 1.11
+  (`">=1.4.8"`) adds `contributes.textFiles`: file types (`.tex`, `.bib`)
+  edited as plain text in the source editor, coloured as a code language.
+  Use them rather than drawing your own.
 - Data: `ctx.storage.global` (Textus's config folder),
   `ctx.storage.project` (the open folder, needs `project.data`),
   `ctx.storage.document(path)`; settings from `contributes.settings` via

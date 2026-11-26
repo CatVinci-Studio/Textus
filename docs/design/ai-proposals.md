@@ -24,7 +24,7 @@ Chat has three surfaces and two conversations, all owned by the editor
 
 All render the same `ChatBody`, and all feed one resolution pipeline:
 `MilkdownEditor → usePendingEdits → pending-edit-plugin`. Anchors resolve in
-**markdown source space** (`ai/doc-markdown.ts`), matching what the model was
+**markdown source space** (`editor/markdown/doc-markdown.ts`), matching what the model was
 shown. Previews are pure decorations - until the user clicks Accept, the
 document text is untouched. Accept (`applyEditRange`) is the **only** write
 path: one transaction, one undo step, no direct-apply fallback.
@@ -77,7 +77,7 @@ frontend (`StreamEvent::Picture`), which draws the line as its frame
 ## Where a proposal points: blocks
 
 The blocks are the editor's own top-level nodes: the request carries them,
-each with its id and kind (`ai/doc-blocks.ts`, made by `doc-markdown.ts`'s
+each with its id and kind (`editor/markdown/doc-blocks.ts`, made by `doc-markdown.ts`'s
 `serializeBlocks`), and the backend shows the model each after its id
 (`[#k3f9] `, `ai/doc_blocks.rs`) without splitting the document itself - a
 list or a quote is one block, as it is one node. Every call that points
@@ -252,6 +252,22 @@ also when its anchor spans several paragraphs, which resolve to their whole
 blocks (`sentence-locate.ts` skips the text before the anchor). One that
 can't be (a heading or list turned into something else) is shown whole,
 and the views apply to it as one change with one card.
+A rewrite never changes what a picture shows: a picture is the same by its
+address (`keepPictures` / `keep_pictures`, cases in
+`ai/keep-pictures-cases.json`), so a new description is taken with the
+writer's address and title, a picture written on a line of its own next to
+its caption is set apart in its own paragraph rather than kept twice, a new
+address where a picture was is taken out, and one left out goes back.
+A bare address right after text is written `[url](url)`, as the model sees
+it, while the editor holds the address alone; the pieces are found by
+either (`indexOfShown`), and a sentence never ends at an address's `?` or
+`!` (`splitSentences`). A rewrite streamed sentence by sentence that
+settles without its pieces found is drawn whole too, not left in its
+streamed layout (1.4.7). A change's new text that is blocks of its own - a
+list, paragraphs, a heading after text - is drawn as those blocks after the
+block it lands in (`blocksAfter`), and its pictures are found beside the
+document, a missing one the editor's missing-picture card
+(`pending-doc-pictures.ts`).
 
 **The text reads as the result.** Where a view takes the originals out of
 the text ("Changes in the text", "Result only"), a block whose text is
@@ -501,7 +517,7 @@ file goes once the last of them is decided.
 | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `ai/revision/proposal-stream.ts`                                    | Writing-phase machine: place/feed/finalize/discard, a call's result                                  |
 | `ai/revision/proposal-display.ts`                                   | How a draft is shown: typed in, or drawn again as it grows                                           |
-| `ai/doc-blocks.ts`, `src-tauri/src/ai/doc_blocks.rs`                | The editor's blocks with their ids and kinds, and what a call naming them stands for                 |
+| `editor/markdown/doc-blocks.ts`, `src-tauri/src/ai/doc_blocks.rs`   | The editor's blocks with their ids and kinds, and what a call naming them stands for                 |
 | `ai/revision/sentence-diff.ts`                                      | A rewrite's changes, and how finely each is decided (`regroup`)                                      |
 | `ai/revision/usePendingEdits.ts`                                    | Anchor resolution, accept/reject/rejectAll, status map, review navigation                            |
 | `ai/revision/pending-edit-plugin.ts`                                | Decorations, hover tint, typewriter + settle, the progress cursor, staleness and `rebase`, shortcuts |
@@ -514,7 +530,8 @@ file goes once the last of them is decided.
 | `ai/chat/conversation/document-port.ts`                             | The document in front as the conversations reach it                                                  |
 | `engine/motion/stream-reveal.ts`                                    | The pace streamed text is revealed at (the reveal move): the typewriter and chat replies             |
 | `ai/chat/useRevealedText.ts`                                        | A chat reply as drawn while it streams, paced by `StreamReveal`                                      |
-| `ai/chat/ChatBody.tsx`                                              | Shared conversation UI; streamed-turn → proposal, idempotent afterSend                               |
+| `ai/chat/ChatBody.tsx`                                              | Shared conversation UI; streamed-turn → proposal                                                     |
+| `ai/chat/useChatSend.ts`                                            | Sending from it: send now or queue, Stop, Retry, Continue; idempotent afterSend                      |
 | `ai/chat/window/ChatWindowApp.tsx`, `ai/chat/window/chat-bridge.ts` | Detached window and its bridge: context/status pushes, proposal forwarding                           |
 | `ai/margin/margin-room.ts`                                          | Whether there is room for a margin; the per-window store both menus read                             |
 | `ai/revision/revision-display.ts`                                   | The view drawn without a margin; which margin views can't be picked                                  |

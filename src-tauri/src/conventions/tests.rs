@@ -43,7 +43,6 @@ fn reads_an_obsidian_vault_and_its_defaults() {
     assert_eq!(value(&c.link_style).as_deref(), Some("wiki"));
     assert_eq!(value(&c.soft_breaks), Some(true));
     assert_eq!(value(&c.update_links).as_deref(), Some("always"));
-    assert!(!soft_breaks_show(tempfile::tempdir().unwrap().path()));
 }
 
 #[test]

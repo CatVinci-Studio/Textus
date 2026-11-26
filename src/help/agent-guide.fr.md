@@ -4,10 +4,10 @@ Textus intègre une IA conçue pour l'écriture, Textus AI : complétion, vérif
 
 ## Connecter un service
 
-Tout ce qui touche à l'IA se trouve dans **Réglages › Textus AI**, sur quatre pages : **Modèles**, **Aide à l'écriture**, **Agent** et **Outils externes**.
+Tout ce qui touche à l'IA se trouve dans **Réglages › Textus AI**, sur quatre pages : **Modèles**, **Discussion et écriture**, **Mémoire et compétences** et **Outils externes**.
 
 1. Sur **Modèles**, choisissez le service dans la liste **Fournisseurs**. Connectez-vous à votre compte (**Compte**) ou collez une clé (**Clé API**), selon ce que ce service propose. Un point dans la liste marque chaque service que vous avez configuré.
-2. Pour un **Serveur personnalisé** (tout serveur compatible avec OpenAI : modèles locaux, proxys), saisissez l'URL de base, une clé si le serveur en demande une et le nom du modèle, puis enregistrez.
+2. Pour un serveur à vous (tout serveur compatible avec OpenAI : modèles locaux, relais, proxys), choisissez **Ajouter un serveur personnalisé** en bas de la liste, donnez-lui un nom, saisissez l'URL de base, une clé si le serveur en demande une et le nom du modèle, puis enregistrez. Vous pouvez en ajouter plusieurs : chacun apparaît sous son nom, ici et partout où vous choisissez un modèle.
 3. Sous **Choix du modèle**, en haut de la même page, choisissez le **Fournisseur du chat** et le **Modèle de discussion**, et, pour la complétion et la grammaire, le **Fournisseur de l'écriture** (**Comme le chat** par défaut) et le **Modèle d'assistance**.
 
 La connexion à un compte se fait dans votre navigateur. La prise en charge des images, de la recherche web et des modifications du document dépend du service et du modèle choisis.
@@ -24,7 +24,7 @@ Les cinq usages les plus courants, à commencer par la conversation.
 
 ### Conversations
 
-Les conversations s'ouvrent en **onglets**. Cliquez sur le bouton **Textus AI** (les étincelles) à l'extrémité droite de la barre de la fenêtre, appuyez sur <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> ou choisissez **Présentation › Panneau IA** : l'IA s'ouvre dans un îlot à part, à droite. Ses onglets sont des onglets comme les autres : faites-en glisser un à côté d'un document, dans un autre îlot, ou hors de la fenêtre pour lui donner la sienne.
+Les conversations s'ouvrent en **onglets**. Cliquez sur le bouton **Textus AI** (les étincelles) à l'extrémité droite de la barre de la fenêtre, appuyez sur <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> ou choisissez **Présentation › Textus AI** : l'IA s'ouvre dans un îlot à part, à droite. Ses onglets sont des onglets comme les autres : faites-en glisser un à côté d'un document, dans un autre îlot, ou hors de la fenêtre pour lui donner la sienne.
 
 - **Par dossier** : les conversations appartiennent au dossier où vous travaillez, pas à un document. Chaque conversation ouverte est un onglet ; celle au premier plan est celle à qui vous parlez, au sujet du document au premier plan. Une conversation fermée reste dans l'historique.
 - **Nouvelle conversation** : faites un clic droit sur la page vide d'un onglet IA et choisissez **Nouvelle conversation** (s'il reste des modifications en attente, une confirmation est d'abord demandée). **Mémoire** se trouve dans le même menu.
@@ -39,14 +39,14 @@ Les conversations s'ouvrent en **onglets**. Cliquez sur le bouton **Textus AI** 
 
 ### Modifications de vos documents
 
-**Réglages › Textus AI › Aide à l'écriture › Comment Textus AI modifie les fichiers** décide de la façon dont les changements de Textus AI arrivent dans votre texte :
+**Réglages › Textus AI › Discussion et écriture › Comment Textus AI modifie les fichiers** décide de la façon dont les changements de Textus AI arrivent dans votre texte :
 
 - **En révisions à relire** (par défaut) : chaque changement est une révision affichée là où il s'appliquerait, et rien n'est définitif tant que vous ne l'avez pas accepté.
 - **Écrites directement** : les changements sont écrits à mesure qu'ils arrivent. Ils restent marqués, pour que vous voyiez ce qui a changé, et chaque réponse peut être annulée.
 
 Un texte de Recherche est écrit directement dans tous les cas. <kbd>Cmd</kbd>+<kbd>Z</kbd> annule une modification acceptée en une seule fois.
 
-**L'aspect des révisions** : **Affichage des révisions** (Aide à l'écriture, ou le bouton en forme d'œil dans la barre de relecture) propose trois vues :
+**L'aspect des révisions** : **Affichage des révisions** (Discussion et écriture, ou le bouton en forme d'œil dans la barre de relecture) propose trois vues :
 - **Résultat seul, original dans la marge** (par défaut) ;
 - **Original dans le texte, modifications dans la marge** ;
 - **Tout dans le texte** : le texte supprimé barré, le nouveau texte en vert.
@@ -73,11 +73,11 @@ Pendant que vous tapez, une suite grisée apparaît au curseur : appuyez sur <kb
 
 Pour en demander une explicitement, utilisez <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd> ou le menu contextuel (le curseur doit se trouver à la fin d'un paragraphe) : vous obtenez une suite plus longue, avec jusqu'à trois variantes, que <kbd>Option</kbd>+<kbd>[</kbd> / <kbd>Option</kbd>+<kbd>]</kbd> font défiler.
 
-Sous **Réglages › Textus AI › Aide à l'écriture › Suite et vérification**, vous pouvez activer ou désactiver la complétion et choisir le **Ton de la complétion** (Adapté au document / Soutenu / Décontracté / Académique / Concis). Lorsque le document appartient à un dossier doté d'un profil de style ou d'une bibliothèque (voir **Personnaliser Textus AI** plus bas), la complétion en tient compte aussi.
+Sous **Réglages › Textus AI › Discussion et écriture › Suite et vérification**, vous pouvez activer ou désactiver la complétion et choisir le **Ton de la complétion** (Adapté au document / Soutenu / Décontracté / Académique / Concis). Lorsque le document appartient à un dossier doté d'un profil de style ou d'une bibliothèque (voir **Personnaliser Textus AI** plus bas), la complétion en tient compte aussi.
 
 ### Vérification grammaticale
 
-Les problèmes possibles sont soulignés. Survolez-en un, ou placez le curseur dedans, pour voir l'explication ; **Appliquer** (ou <kbd>Option</kbd>+<kbd>Enter</kbd> avec le curseur dessus) applique la correction, **Ignorer** la fait disparaître. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> vérifie immédiatement le paragraphe en cours. **Niveau de vérification** (Aide à l'écriture › Suite et vérification) règle la quantité de remarques.
+Les problèmes possibles sont soulignés. Survolez-en un, ou placez le curseur dedans, pour voir l'explication ; **Appliquer** (ou <kbd>Option</kbd>+<kbd>Enter</kbd> avec le curseur dessus) applique la correction, **Ignorer** la fait disparaître. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> vérifie immédiatement le paragraphe en cours. **Niveau de vérification** (Discussion et écriture › Suite et vérification) règle la quantité de remarques.
 
 ### Question rapide
 
@@ -127,7 +127,7 @@ Le menu du dossier crée `.textus/` et ses fichiers pour vous la première fois 
 - Taper `@` dans la zone de saisie de la discussion joint l'un de ses fichiers à votre message.
 - Son dossier `.textus/` contient le profil de style, la bibliothèque, les instructions d'écriture et les compétences du dossier.
 
-Faites un clic droit sur la page vide d'un onglet IA et choisissez **Mémoire** : sa première ligne affiche le nom du dossier ; cliquez dessus pour ouvrir le **menu du dossier**. Si votre documentation ne se trouve pas à côté du brouillon, utilisez **Choisir le dossier…** dans ce menu (ou **Réglages › Textus AI › Agent › Dossier**). Le dossier choisi sert pour tous les documents, brouillons non enregistrés compris, jusqu'à ce que vous choisissiez **Utiliser le dossier de la barre latérale** ; sans dossier choisi, l'IA prend celui ouvert dans la barre latérale.
+Faites un clic droit sur la page vide d'un onglet IA et choisissez **Mémoire** : sa première ligne affiche le nom du dossier ; cliquez dessus pour ouvrir le **menu du dossier**. Si votre documentation ne se trouve pas à côté du brouillon, utilisez **Choisir le dossier…** dans ce menu (ou **Réglages › Textus AI › Mémoire et compétences › Dossier**). Le dossier choisi sert pour tous les documents, brouillons non enregistrés compris, jusqu'à ce que vous choisissiez **Utiliser le dossier de la barre latérale** ; sans dossier choisi, l'IA prend celui ouvert dans la barre latérale.
 
 > [!TIP]
 > Votre brouillon est dans `thèse/brouillons/` et vos notes d'entretien dans `thèse/recherche/` ? Choisissez `thèse/` comme dossier : Textus AI pourra lire `recherche/entretiens.md` pendant que vous travaillez sur `brouillons/chapitre-2.md`.
@@ -179,7 +179,7 @@ Vous n'avez pas à joindre les fiches vous-même. Une fiche avec `include: detec
 
 **Les instructions d'écriture sont des règles permanentes envoyées avec chaque conversation** : ce qu'est le dossier, dans quelle langue répondre, l'orthographe et les termes, ce que Textus AI doit toujours faire ou ne jamais faire. Elles se trouvent dans des fichiers nommés `agent.md`, à deux niveaux :
 
-- **Global**, pour tous les documents : **Réglages › Textus AI › Agent › Instructions d'écriture (agent.md) › Modifier agent.md**.
+- **Global**, pour tous les documents : **Réglages › Textus AI › Mémoire et compétences › Instructions d'écriture (agent.md) › Modifier agent.md**.
 - **Dossier**, pour les documents d'un dossier : `.textus/agent.md`, que l'on ouvre avec **Modifier les instructions d'écriture du dossier** dans le menu du dossier.
 
 Les deux s'ouvrent dans un onglet et commencent par un court mode d'emploi en commentaires. Quand les deux existent, Textus AI reçoit les deux (d'abord les instructions globales, puis celles du dossier) et, en cas de contradiction, celles du dossier l'emportent.
@@ -199,7 +199,7 @@ Les instructions d'écriture ne s'appliquent qu'aux conversations. La complétio
 - **Ce dossier** : ce qui concerne cette œuvre, dans `projects/<folder>/memory/` du dossier de configuration globale (Textus le garde là, pas dans votre dossier) ; les faits sur les personnes, les lieux et les termes vont dans la bibliothèque.
 - **Pour tous les dossiers** : vos habitudes générales, dans `memory/` du dossier de configuration globale. Sans dossier, tout va ici.
 
-**Mémoire** (clic droit sur la page d'un onglet IA › Mémoire) liste le tout, avec le moment et la conversation où chaque élément a été retenu : **Modifier** l'ouvre, **Supprimer** l'efface. De temps en temps, Textus AI range sa mémoire : il fusionne les souvenirs qui disent la même chose et abandonne une règle qu'une plus récente a rendue caduque ; ce qu'il a abandonné se trouve sous **Oublié récemment**, d'où vous pouvez le récupérer. Vos propres instructions d'écriture l'emportent en cas de désaccord, et Textus AI ne modifie jamais votre `agent.md` ni votre profil de style. Quand il y a trop de souvenirs à envoyer, les plus anciens sont laissés de côté et Mémoire le signale. L'interrupteur **Mémoire** (Réglages › Textus AI › Agent) désactive cette fonction.
+**Mémoire** (clic droit sur la page d'un onglet IA › Mémoire) liste le tout, avec le moment et la conversation où chaque élément a été retenu : **Modifier** l'ouvre, **Supprimer** l'efface. De temps en temps, Textus AI range sa mémoire : il fusionne les souvenirs qui disent la même chose et abandonne une règle qu'une plus récente a rendue caduque ; ce qu'il a abandonné se trouve sous **Oublié récemment**, d'où vous pouvez le récupérer. Vos propres instructions d'écriture l'emportent en cas de désaccord, et Textus AI ne modifie jamais votre `agent.md` ni votre profil de style. Quand il y a trop de souvenirs à envoyer, les plus anciens sont laissés de côté et Mémoire le signale. L'interrupteur **Mémoire** (Réglages › Textus AI › Mémoire et compétences) désactive cette fonction.
 
 **Il apprend aussi de vos choix de révision.** Quand vous refusez plusieurs fois le même genre de modification — des 「」 changés en “”, un mot remplacé par un autre, des phrases coupées, une virgule d'Oxford ajoutée —, Textus AI propose, une fois la relecture terminée, de le retenir comme exigence : **Retenir** l'enregistre sous **Mémoire**, **Pas maintenant** attend d'en voir davantage et **Ne plus demander** cesse de poser la question pour ce genre. Il ne demande qu'une fois par jour au plus, et rien n'est enregistré sans votre clic, y compris quand la mémoire est désactivée. Ce qu'il compte n'est qu'une courte note des genres de modification acceptés ou refusés, gardée sur cet ordinateur à côté de vos souvenirs et jamais envoyée.
 
@@ -225,17 +225,17 @@ Il y a deux façons d'utiliser une compétence :
 
 Quand ce que vous avez demandé était une démarche à vous, des étapes que vous voudrez refaire, Textus AI propose sous sa réponse de la garder comme compétence, pour tous les documents ou pour ce dossier seulement. Rien n'est enregistré si vous ne le choisissez pas.
 
-Les compétences existent aux deux mêmes niveaux que les instructions d'écriture : les compétences globales dans le dossier `skills/` du dossier de configuration globale (**Importer une compétence…**, en haut de Compétences dans **Réglages › Textus AI › Agent**, y copie un fichier de compétence), les compétences du dossier dans `.textus/skills/` (un dossier caché : dans le Finder de macOS, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> l'affiche). Une compétence du dossier qui porte le même nom qu'une compétence globale la remplace.
+Les compétences existent aux deux mêmes niveaux que les instructions d'écriture : les compétences globales dans le dossier `skills/` du dossier de configuration globale (**Importer une compétence…**, en haut de Compétences dans **Réglages › Textus AI › Mémoire et compétences**, y copie un fichier de compétence), les compétences du dossier dans `.textus/skills/` (un dossier caché : dans le Finder de macOS, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> l'affiche). Une compétence du dossier qui porte le même nom qu'une compétence globale la remplace.
 
 ### Compétences intégrées
 
-Textus propose quatre compétences. **Relire et corriger**, dans Relire, vérifie l'orthographe, la grammaire, la ponctuation et les nombres selon les normes de la langue du texte. **Créer un thème**, **Créer une extension** et **Créer une compétence** font un thème pour l'éditeur, une petite extension ou une compétence à vous d'après votre description, dans un onglet à part : **Créer votre thème** se trouve dans la boutique de thèmes d'Apparence, **Créer votre plugin** dans le menu **⋯** du panneau Extensions. D'autres compétences — développer, resserrer, traduire, résumer, vérifier la cohérence, courriel, compte rendu et d'autres — se trouvent sous **Disponibles**, à la fin de Compétences dans **Réglages › Textus AI › Agent**. Tapez `/` et choisissez-en une, ou tapez son nom dans n'importe quelle langue de l'application : `/proofread`, `/校对` et `/校正` appellent la même compétence. Textus AI choisit aussi une compétence de lui-même quand votre demande s'y prête. **Créer un thème** met le CSS du thème dans la réponse : **Utiliser ce thème**, en dessous, l'installe ; sinon, enregistrez-le dans un fichier .css et ajoutez-le avec **Ajouter un thème depuis un fichier CSS** dans **Réglages › Apparence**.
+Textus propose quatre compétences. **Relire et corriger**, dans Relire, vérifie l'orthographe, la grammaire, la ponctuation et les nombres selon les normes de la langue du texte. **Créer un thème**, **Créer une extension** et **Créer une compétence** font un thème pour l'éditeur, une petite extension ou une compétence à vous d'après votre description, dans un onglet à part : **Créer votre thème** se trouve dans la boutique de thèmes d'Apparence, **Créer votre plugin** dans le menu **⋯** du panneau Extensions. D'autres compétences — développer, resserrer, traduire, résumer, vérifier la cohérence, courriel, compte rendu et d'autres — se trouvent sous **Disponibles**, à la fin de Compétences dans **Réglages › Textus AI › Mémoire et compétences**. Tapez `/` et choisissez-en une, ou tapez son nom dans n'importe quelle langue de l'application : `/proofread`, `/校对` et `/校正` appellent la même compétence. Textus AI choisit aussi une compétence de lui-même quand votre demande s'y prête. **Créer un thème** met le CSS du thème dans la réponse : **Utiliser ce thème**, en dessous, l'installe ; sinon, enregistrez-le dans un fichier .css et ajoutez-le avec **Thèmes installés › ⋯ › Importer du CSS…** dans **Réglages › Apparence**.
 
-Les compétences intégrées ouvrent la liste Compétences de **Réglages › Textus AI › Agent**, toujours actives. **Personnaliser…** copie une compétence dans le dossier `skills/` du dossier de configuration globale et ouvre la copie, pour que vous en modifiiez les instructions ; c'est ensuite votre copie qui s'exécute. **Réinitialiser** supprime la copie et rétablit la version intégrée. En dessous viennent les compétences que vous avez ajoutées. Chacune indique les modes où elle fonctionne (cliquez dessus pour les changer), et son interrupteur la désactive pour l'instant ; ses modes sont gardés pour quand vous la réactivez. Une compétence à vous qui porte le nom d'une compétence intégrée la remplace.
+Les compétences intégrées ouvrent la liste Compétences de **Réglages › Textus AI › Mémoire et compétences**, toujours actives. **Personnaliser…** copie une compétence dans le dossier `skills/` du dossier de configuration globale et ouvre la copie, pour que vous en modifiiez les instructions ; c'est ensuite votre copie qui s'exécute. **Réinitialiser** supprime la copie et rétablit la version intégrée. En dessous viennent les compétences que vous avez ajoutées. Chacune indique les modes où elle fonctionne (cliquez dessus pour les changer), et son interrupteur la désactive pour l'instant ; ses modes sont gardés pour quand vous la réactivez. Une compétence à vous qui porte le nom d'une compétence intégrée la remplace.
 
 ### Conventions d'écriture
 
-**Conventions d'écriture** (Réglages › Textus AI › Aide à l'écriture › Suite et vérification) détermine les règles de ponctuation, d'espacement et d'écriture des nombres que suivent Textus AI et la vérification grammaticale. **Automatique** applique la norme nationale quand la langue en a une (GB/T pour le chinois simplifié, JTF pour le japonais, par exemple) ; sinon, il suit l'usage le plus fréquent dans votre document et ne signale que les incohérences. Choisissez un profil, comme **Fiction** pour le chinois simplifié ou **GOV.UK** pour l'anglais britannique, et les documents dans cette langue s'y conforment.
+**Conventions d'écriture** (Réglages › Textus AI › Discussion et écriture › Suite et vérification) détermine les règles de ponctuation, d'espacement et d'écriture des nombres que suivent Textus AI et la vérification grammaticale. **Automatique** applique la norme nationale quand la langue en a une (GB/T pour le chinois simplifié, JTF pour le japonais, par exemple) ; sinon, il suit l'usage le plus fréquent dans votre document et ne signale que les incohérences. Choisissez un profil, comme **Fiction** pour le chinois simplifié ou **GOV.UK** pour l'anglais britannique, et les documents dans cette langue s'y conforment.
 
 Un dossier peut choisir le sien : ajoutez une ligne `conventions:` entre les deux lignes `---` en tête de son profil de style (`.textus/style.md`). Pour les documents de ce dossier, elle l'emporte sur le réglage.
 
@@ -247,7 +247,7 @@ conventions: zh-Hans-CN/fiction, en-GB/govuk
 
 ### Le dossier de configuration globale
 
-**Le dossier de configuration globale contient ce qui s'applique à tous les documents** : votre `agent.md` global et vos compétences globales. Il appartient à l'application, pas à un dossier ; **Réglages › Textus AI › Agent › Dossier de configuration globale › Afficher** l'affiche.
+**Le dossier de configuration globale contient ce qui s'applique à tous les documents** : votre `agent.md` global et vos compétences globales. Il appartient à l'application, pas à un dossier ; **Réglages › Textus AI › Mémoire et compétences › Dossier de configuration globale › Afficher** l'affiche.
 
 ```
 agent/                ← le dossier de configuration globale
@@ -286,13 +286,13 @@ Il n'existe ni profil de style ni bibliothèque globaux : ils décrivent un ense
 
 ### Recherche
 
-Choisissez **Recherche** dans le bouton de mode et envoyez un sujet plutôt qu'une demande : Textus AI l'étudie (le web, votre dossier, les articles que vous joignez), établit un plan et écrit le texte dans le document. Tapez `/` pour choisir le genre de texte (un essai, un rapport, une revue de littérature, entre autres), ou laissez **Choisir pour moi**. **Rechercher avec des sous-agents** (Aide à l'écriture) lui permet de confier des parties de la recherche à des assistants qui travaillent en même temps ; **Vérifier les citations** fait vérifier chaque phrase citée par rapport à ses sources avant que le texte soit terminé. Le texte est écrit directement dans le document, quoi qu'indique **Comment Textus AI modifie les fichiers**.
+Choisissez **Recherche** dans le bouton de mode et envoyez un sujet plutôt qu'une demande : Textus AI l'étudie (le web, votre dossier, les articles que vous joignez), établit un plan et écrit le texte dans le document. Tapez `/` pour choisir le genre de texte (un essai, un rapport, une revue de littérature, entre autres), ou laissez **Choisir pour moi**. **Rechercher avec des sous-agents** (Discussion et écriture) lui permet de confier des parties de la recherche à des assistants qui travaillent en même temps ; **Vérifier les citations** fait vérifier chaque phrase citée par rapport à ses sources avant que le texte soit terminé. Le texte est écrit directement dans le document, quoi qu'indique **Comment Textus AI modifie les fichiers**.
 
 ### Recherche web
 
 Activez le bouton **Recherche web** à côté de la zone de saisie : Textus AI cherche alors sur le web quand une demande a besoin de faits récents ou dont il n'est pas sûr. Il peut aussi lire une page dont vous collez l'adresse.
 
-- **Qui cherche** : les modèles qui cherchent eux-mêmes — OpenAI, Claude, Grok, OpenRouter, Groq, Qwen et Zhipu GLM — utilisent leur propre recherche. Pour tout autre modèle (DeepSeek, Gemini, Mistral, Kimi, modèles locaux, serveurs personnalisés), c'est Textus qui cherche, avec le **Service de recherche** choisi dans **Réglages › Textus AI › Aide à l'écriture › Recherche web** : **Automatique** utilise une clé DeepSeek, Zhipu ou Kimi déjà enregistrée pour la discussion ; vous pouvez aussi choisir Bocha, Tavily, Brave Search ou Exa et coller sa clé, ou SearXNG et saisir l'adresse de votre propre serveur. La ligne indique où partent vos recherches. Quand rien ne permet de chercher, le bouton affiche un point rouge.
+- **Qui cherche** : les modèles qui cherchent eux-mêmes — OpenAI, Claude, Grok, OpenRouter, Groq, Qwen et Zhipu GLM — utilisent leur propre recherche. Pour tout autre modèle (DeepSeek, Gemini, Mistral, Kimi, modèles locaux, serveurs personnalisés), c'est Textus qui cherche, avec le **Service de recherche** choisi dans **Réglages › Textus AI › Discussion et écriture › Recherche web** : **Automatique** utilise une clé DeepSeek, Zhipu ou Kimi déjà enregistrée pour la discussion ; vous pouvez aussi choisir Bocha, Tavily, Brave Search ou Exa et coller sa clé, ou SearXNG et saisir l'adresse de votre propre serveur. La ligne indique où partent vos recherches. Quand rien ne permet de chercher, le bouton affiche un point rouge.
 - **Sources** : la réponse cite ce qu'elle a trouvé avec [1], [2] et liste ces pages en dessous ; cliquez sur l'une pour l'ouvrir dans votre navigateur. Les numéros restent les mêmes pendant toute la conversation.
 - **Sources en notes de bas de page** : quand une proposition s'appuie sur le web, sa carte affiche **Ajouter les sources en notes de bas de page**. Coché, l'accepter ajoute des notes de bas de page Markdown pour ses sources à la fin du document ; décoché, le texte entre sans elles. La carte retient votre dernier choix.
 - **Les pages sont lues, pas obéies** : ce que dit une page n'est jamais une instruction pour Textus AI, qui ne fait toujours que proposer des modifications. Textus ne lit que des pages du web public, jamais celles de votre ordinateur ou de votre réseau local.

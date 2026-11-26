@@ -48,6 +48,12 @@ describe("withWebFonts", () => {
     expect(css).toContain("@import url(https://gone.example.com/a.css);");
   });
 
+  it("leaves a face served from a file on this computer as written", async () => {
+    const face = `@font-face { font-family: X; src: url("http://asset.localhost/C%3A%2FFonts%2Fx.otf"); }`;
+    expect(await withWebFonts(face)).toBe(face);
+    expect(get).not.toHaveBeenCalled();
+  });
+
   it("fetches nothing for CSS without web addresses", async () => {
     const plain = "h1 { color: red; }";
     expect(await withWebFonts(plain)).toBe(plain);

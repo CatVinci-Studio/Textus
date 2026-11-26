@@ -3,7 +3,7 @@ import { nativeFiles } from "../platform/native-files";
 import { forgetIOSDocument } from "../document/ios-recents";
 import { makeBlankTab, statMtime, tabIsDirty } from "../document/doc-tabs";
 import type { TabState } from "./tabs/useTabState";
-import { isInside } from "../utils/path";
+import { isInside, isWithin } from "../utils/path";
 import { notePathMoved, setPathMoveHooks } from "../plugins/app-bridge";
 import { useWindowEvent } from "../utils/hooks/useWindowEvent";
 import { ENTRY_TRASHED_EVENT } from "../utils/events";
@@ -126,10 +126,7 @@ export function useDocumentActions(opts: {
     skillFilesDeleted(
       tabsRef.current
         .map((tab) => tab.path)
-        .filter(
-          (path): path is string =>
-            !!path && (path === gone || isInside(path, gone)),
-        ),
+        .filter((path): path is string => !!path && isWithin(path, gone)),
     );
   });
 

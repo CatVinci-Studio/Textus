@@ -221,7 +221,7 @@ function PhoneEnd({ t }: { t: Strings }) {
     <>
       <IconButton
         label={t.toolbarMore}
-        onClick={() => sendAppEvent(EDITOR_MORE_EVENT)}
+        onClick={(e) => sendAppEvent(EDITOR_MORE_EVENT, e.currentTarget)}
       >
         <MoreIcon />
       </IconButton>

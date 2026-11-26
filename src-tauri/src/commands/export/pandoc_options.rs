@@ -15,6 +15,10 @@ pub struct PandocOptions {
     pub csl: Option<String>,
     /// The user's arguments for this format, as an argv list.
     pub extra_args: Vec<String>,
+    /// One newline in a paragraph breaks the line, as the editor shows it
+    /// (Settings › Editing, or the document's folder).
+    #[serde(default)]
+    pub hard_line_breaks: bool,
 }
 
 /// Options the export sets itself: where it reads, what it writes, and to
@@ -114,6 +118,7 @@ pub fn owned_arg(args: &[String]) -> Option<&str> {
 /// Turns `[x]{.textus-sub}`, `[x]{.textus-sup}` and `` `[@key]`{=textuscite} ``,
 /// which the export writes for the editor's `~x~`, `^x^` and citations, into
 /// Pandoc's own: the reader has no sub/superscript or citations to match it.
+#[cfg(desktop)]
 pub const LUA_FILTER: &str = r#"function Span(s)
   if s.classes:includes("textus-sub") then return pandoc.Subscript(s.content) end
   if s.classes:includes("textus-sup") then return pandoc.Superscript(s.content) end
@@ -216,6 +221,7 @@ mod tests {
             bibliography: Some("/r/refs.bib".into()),
             csl: Some("/r/apa.csl".into()),
             extra_args: vec![],
+            hard_line_breaks: false,
         };
         assert_eq!(
             settings_args(&options),

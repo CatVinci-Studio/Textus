@@ -1,5 +1,7 @@
 import { tabElement } from "../engine/layout/tab-element";
 import { HEADING_PLACEHOLDER } from "../editor/lazy/lazy-block-views";
+import { noteJump } from "../editor/nav-history";
+import { setTabJump } from "../editor/tab-jump";
 
 /** A document's own headings in its editor, drawn or out of sight as
  *  placeholders (the outline's rows are these, in order). */
@@ -21,4 +23,16 @@ export function currentHeading(tabId: string): number {
     current = i;
   }
   return current;
+}
+
+/** An outline row's jump to heading `index` of `tabId`, or to its whole
+ *  section with `select`; the editor scrolls there as every jump does
+ *  (revealPosition), and Back returns. */
+export function goToHeading(tabId: string, index: number, select = false) {
+  noteJump();
+  setTabJump(
+    tabId,
+    { kind: "outline", index, ...(select && { select }) },
+    true,
+  );
 }

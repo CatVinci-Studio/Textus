@@ -1,11 +1,15 @@
-use crate::app_dirs::AppDirs;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
-use std::fs;
-use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Mutex;
-use tauri::{AppHandle, Manager};
+// The session file and the windows' map: the desktop's alone.
+#[cfg(desktop)]
+use {
+    crate::app_dirs::AppDirs,
+    std::collections::{HashMap, HashSet},
+    std::fs,
+    std::path::PathBuf,
+    std::sync::atomic::{AtomicBool, Ordering},
+    std::sync::Mutex,
+    tauri::{AppHandle, Manager},
+};
 
 /// One window as the next launch brings it back: its documents' paths, how
 /// its islands were laid out (the frontend's own shape, by path), and the
@@ -22,9 +26,16 @@ pub struct WindowSession {
     /// in front. Never written to the session file.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub opened: Vec<String>,
+    /// Where the window was and how it was left. Rust's alone: kept as the
+    /// window closes (`keep_frame`), never sent by the page.
+    #[cfg(desktop)]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(test, specta(skip))]
+    pub frame: Option<crate::window_frame::Kept>,
 }
 
 impl WindowSession {
+    #[cfg(any(desktop, target_os = "ios"))]
     pub fn of_paths(paths: Vec<String>) -> Self {
         Self {
             paths,
@@ -36,12 +47,15 @@ impl WindowSession {
 /// Every window's session, written to disk window by window. Closing the
 /// last editor window leaves the file alone, so the next launch brings it
 /// back.
+#[cfg(desktop)]
 pub struct SessionTabsState(pub Mutex<HashMap<String, WindowSession>>);
 
 /// Set while File > Quit is closing every window, so their Destroyed events
 /// don't shrink the snapshot taken at the start.
+#[cfg(desktop)]
 static APP_QUITTING: AtomicBool = AtomicBool::new(false);
 
+#[cfg(desktop)]
 fn session_file(app: &AppHandle) -> Option<PathBuf> {
     app.path()
         .own_config_dir()
@@ -50,6 +64,7 @@ fn session_file(app: &AppHandle) -> Option<PathBuf> {
 }
 
 /// The last session's windows.
+#[cfg(desktop)]
 pub fn read_session_windows(app: &AppHandle) -> Vec<WindowSession> {
     let Some(path) = session_file(app) else {
         return Vec::new();
@@ -66,11 +81,13 @@ pub fn read_session_windows(app: &AppHandle) -> Vec<WindowSession> {
 }
 
 /// Whether `raw` is a session file this version writes.
+#[cfg(desktop)]
 fn readable_session(raw: &str) -> bool {
     serde_json::from_str::<Vec<WindowSession>>(raw).is_ok()
 }
 
 /// The windows' sessions in the file, those with nothing left out.
+#[cfg(desktop)]
 fn parse_session(raw: &str) -> Vec<WindowSession> {
     serde_json::from_str::<Vec<WindowSession>>(raw)
         .unwrap_or_default()
@@ -80,10 +97,12 @@ fn parse_session(raw: &str) -> Vec<WindowSession> {
 }
 
 /// A window worth bringing back: one with documents or a folder.
+#[cfg(desktop)]
 fn kept(window: &WindowSession) -> bool {
     !window.paths.is_empty() || window.folder.is_some()
 }
 
+#[cfg(desktop)]
 fn write_session(app: &AppHandle, windows: &[WindowSession]) {
     let Some(path) = session_file(app) else {
         return;
@@ -96,6 +115,7 @@ fn write_session(app: &AppHandle, windows: &[WindowSession]) {
 /// The last session's windows with `paths` handed over as the app opens
 /// with no window: in the window whose folder holds them all (else the
 /// first), in front. With no session, one window of them alone.
+#[cfg(desktop)]
 pub fn with_documents(saved: Vec<WindowSession>, paths: Vec<String>) -> Vec<WindowSession> {
     let mut windows = saved;
     let holds = |window: &WindowSession| {
@@ -127,6 +147,7 @@ pub fn with_documents(saved: Vec<WindowSession>, paths: Vec<String>) -> Vec<Wind
 
 /// Every window's session, the main window first, each path in one window
 /// only; windows left with nothing are dropped.
+#[cfg(desktop)]
 fn merge_windows(map: &HashMap<String, WindowSession>) -> Vec<WindowSession> {
     let mut labels: Vec<&String> = map.keys().collect();
     labels.sort_by_key(|label| (label.as_str() != "main", label.as_str()));
@@ -152,6 +173,7 @@ fn merge_windows(map: &HashMap<String, WindowSession>) -> Vec<WindowSession> {
 /// This window's session as it last told it: what a reloaded page comes
 /// back to (its folder, its islands), where a first start takes what it was
 /// opened with.
+#[cfg(desktop)]
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn window_session_current(
@@ -162,6 +184,7 @@ pub fn window_session_current(
 }
 
 /// This window's session as it now stands.
+#[cfg(desktop)]
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn update_window_session(
@@ -172,6 +195,7 @@ pub fn update_window_session(
 ) {
     let merged = {
         let mut map = state.0.lock().unwrap();
+        let session = with_kept_frame(&map, window.label(), session);
         if map.get(window.label()) == Some(&session) {
             return;
         }
@@ -181,7 +205,82 @@ pub fn update_window_session(
     write_session(&app, &merged);
 }
 
+/// `session` as the page sent it, with the frame Rust kept for the window.
+#[cfg(desktop)]
+fn with_kept_frame(
+    map: &HashMap<String, WindowSession>,
+    label: &str,
+    session: WindowSession,
+) -> WindowSession {
+    WindowSession {
+        frame: map.get(label).and_then(|kept| kept.frame),
+        ..session
+    }
+}
+
+/// `frame` kept as the window `label`'s; whether that changed anything.
+#[cfg(desktop)]
+fn set_frame(
+    map: &mut HashMap<String, WindowSession>,
+    label: &str,
+    frame: Option<crate::window_frame::Kept>,
+) -> bool {
+    match map.get_mut(label) {
+        Some(window) if window.frame != frame => {
+            window.frame = frame;
+            true
+        }
+        _ => false,
+    }
+}
+
+/// A closing window's frame, kept with its documents: the session file then
+/// has it if this is the last window, which the next launch brings back.
+#[cfg(desktop)]
+pub fn keep_frame(
+    app: &AppHandle,
+    label: &str,
+    frame: Option<crate::window_frame::Kept>,
+    state: &SessionTabsState,
+) {
+    let merged = {
+        let mut map = state.0.lock().unwrap();
+        if !set_frame(&mut map, label, frame) {
+            return;
+        }
+        merge_windows(&map)
+    };
+    write_session(app, &merged);
+}
+
+/// Every open window's frame read now, kept with its documents: as the app
+/// quits, before any window closes. Read with the map unlocked, since a
+/// window's state is read on the main thread, which may be waiting for it.
+#[cfg(desktop)]
+pub fn keep_open_frames(app: &AppHandle, state: &SessionTabsState) {
+    let labels: Vec<String> = state.0.lock().unwrap().keys().cloned().collect();
+    let frames: Vec<_> = labels
+        .into_iter()
+        .filter_map(|label| {
+            let window = app.get_window(&label)?;
+            Some((label, crate::commands::prefs::closing_frame(&window)?))
+        })
+        .collect();
+    let merged = {
+        let mut map = state.0.lock().unwrap();
+        let mut changed = false;
+        for (label, frame) in frames {
+            changed |= set_frame(&mut map, &label, Some(frame));
+        }
+        changed.then(|| merge_windows(&map))
+    };
+    if let Some(windows) = merged {
+        write_session(app, &windows);
+    }
+}
+
 /// Captures the complete session before File > Quit starts closing windows.
+#[cfg(desktop)]
 pub fn begin_app_quit(app: &AppHandle, state: &SessionTabsState) {
     APP_QUITTING.store(true, Ordering::SeqCst);
     if let Some(windows) = quit_snapshot(&state.0.lock().unwrap()) {
@@ -191,16 +290,19 @@ pub fn begin_app_quit(app: &AppHandle, state: &SessionTabsState) {
 
 /// What File > Quit writes before it closes the windows. `None` with no editor
 /// window open (macOS): the file already holds the last window's session.
+#[cfg(desktop)]
 fn quit_snapshot(map: &HashMap<String, WindowSession>) -> Option<Vec<WindowSession>> {
     (!map.is_empty()).then(|| merge_windows(map))
 }
 
+#[cfg(desktop)]
 pub fn app_quitting() -> bool {
     APP_QUITTING.load(Ordering::SeqCst)
 }
 
 /// A dirty-window prompt cancelled File > Quit after other windows closed:
 /// resume ordinary bookkeeping and persist only the windows still alive.
+#[cfg(desktop)]
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub fn cancel_session_quit(app: AppHandle, state: tauri::State<SessionTabsState>) {
@@ -218,6 +320,7 @@ pub fn cancel_session_quit(app: AppHandle, state: tauri::State<SessionTabsState>
 /// that should replace the disk snapshot. `None` keeps the snapshot: the
 /// window never reported, the app is quitting, or this was the last editor
 /// window.
+#[cfg(desktop)]
 fn remove_window(
     map: &mut HashMap<String, WindowSession>,
     label: &str,
@@ -231,6 +334,7 @@ fn remove_window(
     }
 }
 
+#[cfg(desktop)]
 pub fn forget_window(app: &AppHandle, label: &str, state: &SessionTabsState) {
     let merged = {
         let mut map = state.0.lock().unwrap();
@@ -329,6 +433,27 @@ mod tests {
         };
         map.insert("main".into(), main.clone());
         assert_eq!(merge_windows(&map), vec![main, of(&["three.md"])]);
+    }
+
+    #[test]
+    fn each_window_s_frame_survives_the_page_s_updates_and_the_file() {
+        let frame = crate::window_frame::Kept {
+            size: (1000.0, 700.0),
+            position: Some((40.0, 60.0)),
+            mode: crate::window_frame::Mode::Maximized,
+        };
+        let mut map = windows(&[("main", &["one.md"]), ("window-2", &["two.md"])]);
+        map.get_mut("window-2").unwrap().frame = Some(frame);
+        // The page never sends a frame; the one Rust kept stays.
+        let sent = of(&["two.md", "three.md"]);
+        let session = with_kept_frame(&map, "window-2", sent);
+        assert_eq!(session.frame, Some(frame));
+        map.insert("window-2".into(), session);
+        let written = serde_json::to_string(&merge_windows(&map)).unwrap();
+        let read = parse_session(&written);
+        assert_eq!(read[0].frame, None);
+        assert_eq!(read[1].frame, Some(frame));
+        assert!(readable_session(&written));
     }
 
     #[test]

@@ -10,6 +10,12 @@ import {
   pastePattern,
   removePasteHandler,
 } from "../contributions/paste-handlers";
+import {
+  addDropHandler,
+  dropMatch,
+  removeDropHandler,
+  type DroppedFileInfo,
+} from "../contributions/drop-handlers";
 import { resolveBlockEdit } from "../../editor/markdown/doc-blocks";
 import type { EditProposal } from "../../ai/types";
 import {
@@ -183,6 +189,15 @@ export function editorHandlers(p: PluginScope) {
       ),
     "editor.unregisterPasteHandler": ({ id }: Params) =>
       removePasteHandler(p.id, str(id, "id")),
+    "editor.registerDropHandler": ({ id, match }: Params) =>
+      addDropHandler(p.id, str(id, "id"), dropMatch(match), (file) =>
+        p.request<string | null>("$provideDrop", {
+          id,
+          file: file satisfies DroppedFileInfo,
+        }),
+      ),
+    "editor.unregisterDropHandler": ({ id }: Params) =>
+      removeDropHandler(p.id, str(id, "id")),
     "editor.registerOutline": () =>
       addOutlineProvider(p.id, (blocks) =>
         p.request<unknown>("$provideOutline", { blocks }),

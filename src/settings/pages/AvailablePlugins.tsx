@@ -1,7 +1,7 @@
 import { explainError } from "../../utils/error-explain";
 import { fill } from "../../i18n/fill";
 import { useState, type ReactNode } from "react";
-import { Byline, CatalogRow } from "./CatalogRow";
+import { Byline, CatalogRow, DesktopOnlyMark, headedRows } from "./CatalogRow";
 import { CatalogProblem, catalogMessage, catalogStatus } from "./CatalogStatus";
 import { PluginIcon } from "./PluginArt";
 import type { Strings } from "../../i18n/strings";
@@ -17,11 +17,14 @@ import {
 import { Select } from "../../engine/controls/Select";
 import { AvailableSection } from "./AvailableSection";
 import { installsText } from "./installs-text";
+import { desktopOnly } from "../../plugins/plugin-platform";
+import { byCategory } from "../../plugins/store/plugin-categories";
 
 const SORTS: CatalogSort[] = ["popular", "newest", "name"];
 
-/** The catalog's plugins not installed yet, the most installed first (or
- *  as sorted), each opening its page. */
+/** The catalog's plugins not installed yet, by category with the most
+ *  installed first in each, or in one list by date or name (a search keeps
+ *  the categories); each opens its page. */
 export function AvailablePlugins({
   t,
   catalog,
@@ -45,12 +48,16 @@ export function AvailablePlugins({
     name: t.pluginsSortName,
   };
   const ready = catalog.status === "ready";
-  const shown = ready
+  const offered = ready
     ? offeredItems(
         sortCatalog(searchCatalog(catalog.items, query), sort),
         installed,
       )
     : [];
+  const shown =
+    sort === "popular" || query.trim()
+      ? byCategory(offered, t)
+      : offered.map((item) => ({ item }));
   const message = catalogMessage({
     t,
     status: catalogStatus(catalog),
@@ -91,9 +98,8 @@ export function AvailablePlugins({
           />
         )
       }
-      rows={shown.map((item) => (
+      rows={headedRows(shown, "plugin-subgroup-title", (item) => (
         <CatalogCard
-          key={item.id}
           item={item}
           t={t}
           action={actionFor(item.id)}
@@ -137,7 +143,9 @@ function CatalogCard({
           author={item.manifest.author || item.manifest.publisher}
           version={item.manifest.version}
           installs={installs}
-        />
+        >
+          {desktopOnly(item.manifest) && <DesktopOnlyMark t={t} />}
+        </Byline>
       }
       openLabel={fill(t.pluginOpenDetails, { name })}
       onOpen={onOpen}

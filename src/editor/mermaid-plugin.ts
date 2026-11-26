@@ -16,7 +16,14 @@ import { pausesFeatures } from "./large-doc";
 import { viewsWaitForScreen } from "./lazy/lazy-rules";
 import { registerDrawAll, stopDrawing } from "./lazy/draw-when-visible";
 import { appearanceIsDark } from "../engine/tokens/appearance";
-import { diagramRenderer, mermaidTheme } from "./diagram-engine";
+import {
+  diagramColours,
+  diagramRenderer,
+  mermaidTheme,
+} from "./diagram-engine";
+import { drawingFor, keepDrawing, lastDrawing } from "./drawn-diagrams";
+import { keepFresh } from "../utils/keep-fresh";
+import { holdStillWhile } from "./lazy/still-point";
 import {
   collectMermaidBlocks,
   drawingKey,
@@ -24,7 +31,7 @@ import {
   isMermaid,
   type Drawn,
 } from "./mermaid-blocks";
-import { diagramWidget } from "./mermaid-widget";
+import { diagramErrorWidget, diagramWidget } from "./mermaid-widget";
 import {
   redrawPendingDiagrams,
   registerPendingDrawer,
@@ -48,6 +55,18 @@ const PENDING_KEPT = 30;
 // each other's measuring node mid-render.
 let renderIdCounter = 0;
 
+/** A drawing another editor made, under ids of this one's own: two tabs
+ *  showing one SVG shared its marker and style ids. */
+function adopt(drawn: Drawn): Drawn {
+  const id = ++renderIdCounter;
+  const ids = new RegExp(`mermaid-preview-${drawn.id}(?!\\d)`, "g");
+  return {
+    ...drawn,
+    id,
+    svg: drawn.svg.replace(ids, `mermaid-preview-${id}`),
+  };
+}
+
 /**
  * A live diagram preview below every ```mermaid and ```chart block. While
  * the cursor is away from a drawn block its source hides; moving back in, or
@@ -70,6 +89,8 @@ export function createMermaidPreviewPlugin(options: {
     // Keyed by source text, not position: an edit above shifts every later
     // block's position, which would miss the cache and flash the source.
     let lastRenders = new Map<string, Drawn>();
+    // Why each source that couldn't be drawn wasn't, shown under it (#775).
+    let failures = new Map<string, string>();
     // What Textus AI's proposals drew, by source: an accepted diagram shows at
     // once, and the next pass takes the drawing over.
     const pendingDrawn = new Map<string, Drawn>();
@@ -86,8 +107,13 @@ export function createMermaidPreviewPlugin(options: {
       if (!options.enabled() || !isMermaid(node)) return [];
       const code = drawingKey(node.attrs.language, node.textContent);
       const to = from + node.nodeSize;
-      const drawn = lastRenders.get(code) ?? pendingDrawn.get(code);
-      if (!drawn) return [];
+      const failed = failures.get(code);
+      let drawn = lastRenders.get(code) ?? pendingDrawn.get(code);
+      // A tab made again shows the last drawing until its first pass.
+      const last =
+        drawn || failed !== undefined ? undefined : lastDrawing(code);
+      if (last) lastRenders.set(code, (drawn = adopt(last)));
+      if (!drawn) return failureNote(code, to, failed);
       const { svg } = drawn;
       if (touches(from, to)) return [];
       return [
@@ -156,7 +182,8 @@ export function createMermaidPreviewPlugin(options: {
           // The editor's largest optional dependencies, fetched only when a real
           // diagram has to be drawn.
           const draw = diagramRenderer(engine, { width, fontFamily, dark });
-          return { draw, styleOf };
+          const styles = [layout, mermaidStyle];
+          return { draw, styleOf, styles };
         }
 
         // A proposal's diagram, drawn as the document's are.
@@ -175,10 +202,7 @@ export function createMermaidPreviewPlugin(options: {
             );
             drawn = { svg, engine: by, style: styleOf(by), id };
           }
-          pendingDrawn.delete(key);
-          pendingDrawn.set(key, drawn);
-          if (pendingDrawn.size > PENDING_KEPT)
-            pendingDrawn.delete(pendingDrawn.keys().next().value as string);
+          keepFresh(pendingDrawn, key, drawn, PENDING_KEPT);
           return { svg: drawn.svg, idPrefix: `mermaid-preview-${drawn.id}` };
         });
 
@@ -214,14 +238,32 @@ export function createMermaidPreviewPlugin(options: {
           scroller = next;
         }
 
+        // The new drawings with what the reader sees held where it is. A
+        // diagram's source that hides has no place after: its drawing,
+        // where the source began, is held instead.
+        function redraw() {
+          holdStillWhile(
+            editorView.dom,
+            editorView.dom.closest(".editor-scroll"),
+            () =>
+              editorView.dispatch(
+                editorView.state.tr.setMeta(mermaidKey, "rerender"),
+              ),
+            (el: Element | null) => {
+              while (el && !el.getClientRects().length)
+                el = el.nextElementSibling;
+              return el;
+            },
+          );
+        }
+
         async function renderAll(all = false) {
           if (!options.enabled()) {
             // Nothing drawn before: nothing to take back.
-            if (lastRenders.size === 0) return;
+            if (lastRenders.size === 0 && failures.size === 0) return;
             lastRenders = new Map();
-            editorView.dispatch(
-              editorView.state.tr.setMeta(mermaidKey, "rerender"),
-            );
+            failures = new Map();
+            redraw();
             return;
           }
 
@@ -235,25 +277,28 @@ export function createMermaidPreviewPlugin(options: {
           const mySeq = ++renderSeq;
           const blocks = collectMermaidBlocks(editorView.state.doc);
           if (blocks.length === 0) {
-            if (lastRenders.size === 0) return;
+            if (lastRenders.size === 0 && failures.size === 0) return;
             lastRenders = new Map();
-            editorView.dispatch(
-              editorView.state.tr.setMeta(mermaidKey, "rerender"),
-            );
+            failures = new Map();
+            redraw();
             return;
           }
 
-          const { draw, styleOf } = drawing();
+          const { draw, styleOf, styles } = drawing();
 
           const rendered = new Map<string, Drawn>();
+          const failed = new Map<string, string>();
           let offScreen = false;
           const large = viewsWaitForScreen(editorView.state.doc);
           for (const { from, code, language, key } of blocks) {
-            if (!code.trim() || rendered.has(key)) continue;
+            if (!code.trim() || rendered.has(key) || failed.has(key)) continue;
             // A pass only draws sources it hasn't drawn for the same width, face and
             // engine.
-            const cached = lastRenders.get(key) ?? pendingDrawn.get(key);
-            if (cached && cached.style === styleOf(cached.engine)) {
+            const own = lastRenders.get(key) ?? pendingDrawn.get(key);
+            const fresh = own && own.style === styleOf(own.engine);
+            const shared = fresh ? undefined : drawingFor(key, styles);
+            const cached = fresh ? own : shared && adopt(shared);
+            if (cached) {
               rendered.set(key, cached);
               continue;
             }
@@ -268,10 +313,14 @@ export function createMermaidPreviewPlugin(options: {
                 `mermaid-preview-${id}`,
                 language,
               );
+              const drawn = { svg, engine: by, style: styleOf(by), id };
+              keepDrawing(key, drawn);
               if (mySeq !== renderSeq) return;
-              rendered.set(key, { svg, engine: by, style: styleOf(by), id });
-            } catch {
-              // Invalid or half-typed diagram syntax: skip this block.
+              rendered.set(key, drawn);
+            } catch (error) {
+              // Invalid or half-typed: its source stays, with why under it.
+              if (mySeq !== renderSeq) return;
+              failed.set(key, whyNotDrawn(error));
             }
           }
 
@@ -282,12 +331,13 @@ export function createMermaidPreviewPlugin(options: {
             rendered.size === lastRenders.size &&
             [...rendered].every(
               ([code, drawn]) => lastRenders.get(code) === drawn,
-            );
+            ) &&
+            failed.size === failures.size &&
+            [...failed].every(([code, why]) => failures.get(code) === why);
           lastRenders = rendered;
+          failures = failed;
           if (unchanged) return;
-          editorView.dispatch(
-            editorView.state.tr.setMeta(mermaidKey, "rerender"),
-          );
+          redraw();
         }
 
         let waitingToBeShown = false;
@@ -323,14 +373,9 @@ export function createMermaidPreviewPlugin(options: {
             void renderAll();
         };
         // Only a change of colours: every diagram is drawn again.
-        const colours = () => {
-          const root = document.documentElement.dataset;
-          const dark = window.matchMedia?.("(prefers-color-scheme: dark)");
-          return `${root.theme}|${root.contentTheme}|${root.lightPage}|${dark?.matches}`;
-        };
-        let drawnIn = colours();
+        let drawnIn = diagramColours();
         const stopAppearance = onAppearance(() => {
-          const now = colours();
+          const now = diagramColours();
           if (now === drawnIn) return;
           drawnIn = now;
           restyle();
@@ -385,4 +430,34 @@ export function createMermaidPreviewPlugin(options: {
       },
     });
   });
+}
+
+/** The note under a diagram that couldn't be drawn (`why`: undefined when
+ *  it didn't fail); a renderer that said nothing still gets its title. */
+export function failureNote(
+  code: string,
+  to: number,
+  why: string | undefined,
+): Decoration[] {
+  if (why === undefined) return [];
+  return [
+    Decoration.widget(to, () => diagramErrorWidget(why), {
+      side: 1,
+      key: `mermaid-error-${fnv1a(code).toString(36)}-${fnv1a(why).toString(36)}`,
+      ignoreSelection: true,
+    }),
+  ];
+}
+
+/** What a renderer threw, as a few lines a person can act on: Mermaid's
+ *  "Parse error on line 3: ... Expecting ..., got ...". */
+export function whyNotDrawn(error: unknown): string {
+  const text =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "";
+  const lines = text.trim().split("\n").slice(0, 6).join("\n");
+  return lines.length > 600 ? `${lines.slice(0, 600)}…` : lines;
 }

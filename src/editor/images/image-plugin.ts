@@ -38,6 +38,9 @@ import {
 import { imageRotationView } from "./image-rotation";
 import { reserveRoom, rememberSize } from "./picture-sizes";
 import { DROP_IMAGE_FILES_EVENT } from "../../utils/events";
+import { takeFileDrops } from "../file-drop/file-rooms";
+import { takeDropsIn } from "../file-drop/file-drop-insert";
+import { parseMarkdownSource } from "../markdown/parse-markdown-source";
 import {
   changedRangesOf,
   decorateAll,
@@ -56,7 +59,7 @@ import {
 } from "./image-store";
 import { openDiagramViewer, zoomButton } from "../diagram-zoom";
 import { trackDrag } from "../../engine/drag/pointer-drag";
-import { holdOnResize } from "../lazy/hold-on-resize";
+import { holdOnResize } from "../../engine/controls/scroll-hold";
 /**
  * Image paste (stored in the document's image folder, relative src) and
  * render (local srcs rewritten to asset: URLs; the document keeps the original).
@@ -224,7 +227,11 @@ function createImageView(
   };
   img.addEventListener("load", clearMissing);
   img.addEventListener("load", () => rememberSize(shown(), img));
-  const stopHold = holdOnResize(dom);
+  // A picture resized by hand moves the page as the hand does.
+  const stopHold = holdOnResize(dom, {
+    scroller: () => dom.closest(".editor-scroll"),
+    byHand: () => dom.matches(".image-view-resizing"),
+  });
   // A short, wide strip (a README badge) has nothing to enlarge or
   // resize, and the controls would cover its words.
   img.addEventListener("load", () => {
@@ -337,7 +344,7 @@ function createImageView(
 const BADGE_HEIGHT_PX = 48;
 
 export function createImagePlugin(options: ImageStore) {
-  return $prose(() => {
+  return $prose((ctx) => {
     // Each pasted blob: src and the stored src that replaced it.
     const storedBlobs = new Map<string, string>();
     return new Plugin<DecorationSet>({
@@ -352,9 +359,9 @@ export function createImagePlugin(options: ImageStore) {
         trs.some((tr) => tr.docChanged)
           ? swapStoredBlobs(state.tr, storedBlobs, changedRangesOf(trs))
           : null,
-      // Tauri hands drops to the app, so they arrive as a window event, to
-      // every island's editor: the one under the point takes them, else
-      // (dropped on the sidebar) the one in use.
+      // Pictures dropped from another app on iPad (files-from-apps.ts)
+      // arrive as a window event, to every island's editor: the one under
+      // the point takes them, else the one in use.
       view: (view) => {
         const onDrop = (e: Event) => {
           const { paths, point } = (
@@ -383,9 +390,17 @@ export function createImagePlugin(options: ImageStore) {
           void saveAndInsertImages(view, paths.map(fileImage), options);
         };
         window.addEventListener(DROP_IMAGE_FILES_EVENT, onDrop);
+        // Files dragged over it open room between its blocks (file-rooms.ts).
+        takeFileDrops();
+        const untake = takeDropsIn(view, {
+          store: options,
+          parse: (md) => parseMarkdownSource(ctx, md)?.content ?? null,
+        });
         return {
-          destroy: () =>
-            window.removeEventListener(DROP_IMAGE_FILES_EVENT, onDrop),
+          destroy: () => {
+            window.removeEventListener(DROP_IMAGE_FILES_EVENT, onDrop);
+            untake();
+          },
         };
       },
       props: {

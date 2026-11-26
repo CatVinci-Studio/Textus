@@ -71,6 +71,9 @@ impl AgentRequest {
 /// The provider and the project a request names.
 pub(crate) struct Session<'a> {
     pub app: &'a tauri::AppHandle,
+    /// The id the request named: a custom endpoint's own, where `entry` is
+    /// the one they share.
+    pub provider: String,
     pub entry: &'static ProviderCatalogEntry,
     pub model: Option<String>,
     pub doc_path: Option<&'a str>,
@@ -92,6 +95,7 @@ impl<'a> Session<'a> {
             .ok_or_else(|| format!("unknown provider: {provider}"))?;
         Ok(Self {
             app,
+            provider: provider.to_string(),
             entry,
             model,
             doc_path,
@@ -112,8 +116,15 @@ impl<'a> Session<'a> {
         thinking: ThinkingLevel,
         native: Option<NativeSearch>,
     ) -> Result<Option<AgentProvider>, String> {
-        crate::ai::route::agent_provider(self.app, self.entry, self.model.clone(), thinking, native)
-            .await
+        crate::ai::route::agent_provider(
+            self.app,
+            &self.provider,
+            self.entry,
+            self.model.clone(),
+            thinking,
+            native,
+        )
+        .await
     }
 
     /// The model Research's stages step: `provider`, refused for one that

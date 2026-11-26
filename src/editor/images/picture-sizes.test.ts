@@ -42,4 +42,20 @@ describe("a picture's room before it loads", () => {
     reserveRoom(next, "/n/a.md\nz.png", "z.png", "/n/a.md", () => true);
     expect([next.width, next.height]).toEqual([30, 20]);
   });
+
+  it("is kept for the latest pictures only, and never for one written in", () => {
+    const img = document.createElement("img");
+    Object.defineProperty(img, "naturalWidth", { value: 30 });
+    Object.defineProperty(img, "naturalHeight", { value: 20 });
+    rememberSize("/n/a.md\ndata:image/png;base64,AAAA", img);
+    for (let i = 0; i < 600; i++) rememberSize(`/n/a.md\n${i}.png`, img);
+    const room = (key: string) => {
+      const next = document.createElement("img");
+      reserveRoom(next, key, "https://e.com/p.png", "/n/a.md", () => true);
+      return next.hasAttribute("width");
+    };
+    expect(room("/n/a.md\ndata:image/png;base64,AAAA")).toBe(false);
+    expect(room("/n/a.md\n0.png")).toBe(false);
+    expect(room("/n/a.md\n599.png")).toBe(true);
+  });
 });

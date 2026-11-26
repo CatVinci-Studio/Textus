@@ -1,6 +1,6 @@
 [package]
 name = "textus"
-version = "1.4.6-rc.4"
+version = "1.4.8-rc.4"
 description = "Textus: an Integrated Writing Environment, designed for professional writing"
 authors = ["CatVinci Studio"]
 edition = "2021"
@@ -46,6 +46,8 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+# Ids for new custom endpoints (every platform) and scheduled notifications.
+uuid = { version = "1", features = ["v4"] }
 # Dates: plugins' scheduled jobs across daylight saving (src/schedule/),
 # memory and past conversations' days, on every platform.
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
@@ -170,12 +172,18 @@ tauri-plugin-updater = "2.14"
 tauri-plugin-process = "2.4"
 # textus:// links for plugins (plugins/uri.rs).
 tauri-plugin-deep-link = "2"
+# Rows of the file tree dragged out of the window go to Finder, Explorer or
+# another app as real files (commands/fs/drag_out.rs): the system's own drag
+# on each desktop, which Tauri and wry don't offer.
+drag = "2.1"
 # A picture an accepted AI picture replaced goes to the system's Trash or
 # Recycle Bin when the user says so (commands/images.rs) - never deleted.
 trash = "5"
+# The file tree follows its open folders as other apps change them
+# (commands/fs/watch.rs).
+notify = "9"
 # A notification's id, which its click names (src/schedule/notify/): random,
 # so a textus:// link from a web page can't name one. In the tree through tauri.
-uuid = { version = "1", features = ["v4"] }
 
 # macOS-native PDF export (commands/export.rs): the themed document is
 # rendered in an offscreen WKWebView with createPDF and cut into A4 sheets
@@ -198,6 +206,8 @@ objc2-foundation = { version = "0.3", features = [
     "NSOperation",
     # The system's version, for a problem report (commands/system_info.rs).
     "NSProcessInfo",
+    # The tree's Trash, keeping where each item went (commands/trash_place.rs).
+    "NSFileManager",
     "block2",
 ] }
 # CFString: the LaunchServices calls of commands/default_editor.rs.
@@ -290,6 +300,10 @@ libloading = "0.7"
 # Plugins' notifications and their clicks over D-Bus (src/schedule/notify/linux.rs).
 # Already in the tree through tauri-plugin-opener, with the blocking API on.
 zbus = "5"
+# The font folders fontconfig names (a distribution's own, Flatpak's, a
+# user's custom ones), which WebKitGTK draws from: without it fontdb only
+# looks in four fixed folders.
+fontdb = { version = "0.24", default-features = false, features = ["fs", "memmap", "fontconfig"] }
 
 [target.'cfg(any(windows, target_os = "linux"))'.dependencies]
 # A second launch with a textus:// link hands it to the running app

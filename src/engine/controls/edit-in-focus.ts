@@ -1,6 +1,7 @@
 import { editIpc } from "../../platform/ipc-app";
 import {
   EDIT_ACTION_EVENT,
+  FOCUSED_EDIT_EVENT,
   SOURCE_EDIT_EVENT,
   sendAppEvent,
 } from "../../utils/events";
@@ -41,6 +42,17 @@ export function editInFocus(action: FocusedEdit): void {
   }
   if (focused instanceof HTMLElement && focused.closest('[aria-modal="true"]'))
     return;
+  if (
+    focused instanceof HTMLElement &&
+    !focused.dispatchEvent(
+      new CustomEvent(FOCUSED_EDIT_EVENT, {
+        detail: action,
+        bubbles: true,
+        cancelable: true,
+      }),
+    )
+  )
+    return;
   sendAppEvent(EDIT_ACTION_EVENT, action);
 }
 
@@ -54,4 +66,21 @@ function editNatively(action: FocusedEdit): void {
     .then((done) => {
       if (!done && action !== "select-all") document.execCommand(action);
     });
+}
+
+/** The document's own editors: rich text and source mode. */
+const DOCUMENT_EDITOR = ".milkdown, .source-view";
+
+/** Whether the keyboard is in a field of its own outside the document (the
+ *  AI's box, a search, a rename, a plugin frame): a format key the menu
+ *  took then belongs to that field, not to the document's selection. */
+export function typingOutsideDocument(): boolean {
+  const focused = document.activeElement;
+  if (focused instanceof HTMLIFrameElement) return true;
+  if (!(focused instanceof HTMLElement)) return false;
+  const field =
+    focused instanceof HTMLInputElement ||
+    focused instanceof HTMLTextAreaElement ||
+    focused.isContentEditable;
+  return field && !focused.closest(DOCUMENT_EDITOR);
 }

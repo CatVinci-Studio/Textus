@@ -6,8 +6,7 @@ import { TextSelection } from "@milkdown/kit/prose/state";
 import type { EditorRunner } from "../../editor/useEditorRunner";
 import { revealPosition } from "../../editor/reveal-position";
 import { reviewNotesKey, type ReviewNote } from "./review-notes-plugin";
-import { setMarginAvailable } from "./margin-room";
-import { blockAt, holdBlock } from "../../engine/controls/hold-line";
+import { blockAt, holdBlock } from "../../engine/controls/scroll-hold";
 import type { AgentConversation } from "../chat/conversation/conversation-types";
 import type { AgentPanelFrame } from "../chat/panel/agent-panel";
 import { type usePendingEdits } from "../revision/usePendingEdits";
@@ -147,7 +146,6 @@ export function useReviewNotes({
   // No room for a margin: notes go behind badges and a rewrite's
   // replacements back into the text.
   function onNoMargin(next: boolean) {
-    setMarginAvailable(!next);
     if (next === noMarginRef.current) return;
     noMarginRef.current = next;
     setNoMargin(next);

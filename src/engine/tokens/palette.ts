@@ -1,4 +1,5 @@
 import { DOC_DEFAULTS } from "./doc-defaults";
+import { writeThemeStyle } from "./appearance";
 /** Derive application colors from an imported document theme. */
 export type RGB = readonly [number, number, number];
 const WHITE: RGB = [255, 255, 255];
@@ -68,15 +69,26 @@ export function chromePalette(background: RGB, foreground: RGB, accent: RGB) {
   };
 }
 
-/** The text column a theme's `#write { max-width }` asks for, or null. A
- *  length gets the column's side padding added; a percentage spans the pane
- *  and #write narrows itself. */
-export function themeColumnWidth(maxWidth: string): string | null {
+/** What a theme's `#write { max-width }` asks of the column. A length is
+ *  #write's own width, its padding inside as in Typora (both are
+ *  border-box): the editor's column puts its margins round it
+ *  (editor-column.css), and the split view and source mode, which read
+ *  `--content-width`, get it with the plain gutter on each side. A
+ *  percentage spans the pane and #write narrows itself. */
+export function themeColumnWidth(
+  maxWidth: string,
+): { name: string; value: string }[] {
   const value = maxWidth.trim();
-  if (!value || value === "none") return null;
-  if (value.endsWith("%")) return "100%";
-  if (/^\d+(\.\d+)?px$/.test(value)) return `calc(${value} + 3rem)`;
-  return null;
+  if (value.endsWith("%"))
+    return [{ name: "--theme-content-width", value: "100%" }];
+  if (!/^\d+(\.\d+)?px$/.test(value)) return [];
+  return [
+    { name: "--theme-text-width", value },
+    {
+      name: "--theme-content-width",
+      value: `calc(${value} + 2 * var(--doc-gutter, 1.75rem))`,
+    },
+  ];
 }
 
 /** Typora's interface variables, as the ones they stand for here. */
@@ -88,14 +100,27 @@ const TYPORA_INTERFACE: Record<string, string> = {
 
 /** Also the id of the boot script's first-frame copy, so applying here
  *  replaces that one. */
-const STYLE_ID = "textus-imported-chrome";
+export const CHROME_STYLE_ID = "textus-imported-chrome";
 export function clearThemeChrome() {
-  document.getElementById(STYLE_ID)?.remove();
+  document.getElementById(CHROME_STYLE_ID)?.remove();
 }
 
 /** Derived in an isolated document, so a reapply doesn't sample our own
  *  palette. Returns the stylesheet applied, or null when it couldn't derive one. */
 export function applyThemeChrome(css: string, dark: boolean): string | null {
+  const chrome = themeChromeCss(css, dark);
+  if (chrome === null) return null;
+  const style = document.createElement("style");
+  style.id = CHROME_STYLE_ID;
+  writeThemeStyle(style, chrome);
+  clearThemeChrome();
+  document.head.appendChild(style);
+  return chrome;
+}
+
+/** The interface colours an imported theme's page implies, as a `:root`
+ *  rule; null when they couldn't be derived. */
+export function themeChromeCss(css: string, dark: boolean): string | null {
   const frame = document.createElement("iframe");
   frame.hidden = true;
   frame.width = String(window.innerWidth);
@@ -166,8 +191,8 @@ export function applyThemeChrome(css: string, dark: boolean): string | null {
     // Typora themes size the text column with `#write { max-width }`, which our
     // column would otherwise cap. Published for the column while Text Width is
     // "Adaptive".
-    const themeWidth = themeColumnWidth(documentStyle.maxWidth);
-    if (themeWidth) palette["--theme-content-width"] = themeWidth;
+    for (const width of themeColumnWidth(documentStyle.maxWidth))
+      palette[width.name] = width.value;
     const rootStyle = view.getComputedStyle(doc.documentElement);
     // A Typora theme's own interface colours, where the text stays readable
     // on them.
@@ -185,14 +210,9 @@ export function applyThemeChrome(css: string, dark: boolean): string | null {
       const own = rootStyle.getPropertyValue(key).trim();
       if (own) palette[key] = own;
     }
-    const style = document.createElement("style");
-    style.id = STYLE_ID;
-    style.textContent = `:root { ${Object.entries(palette)
+    return `:root { ${Object.entries(palette)
       .map(([key, value]) => `${key}: ${value} !important;`)
       .join("\n")} }`;
-    clearThemeChrome();
-    document.head.appendChild(style);
-    return style.textContent;
   } finally {
     frame.remove();
   }

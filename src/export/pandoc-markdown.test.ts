@@ -167,6 +167,15 @@ describe("toPandocMarkdown", () => {
     );
   });
 
+  it("writes powers written with carets as text, as the editor reads them", () => {
+    expect(toPandocMarkdown("x^2+y^2, 2^10和3^5 and x^2^, H^+^")).toBe(
+      "x^2+y^2, 2^10和3^5 and x[2]{.textus-sup}, H[+]{.textus-sup}",
+    );
+    expect(toPandocMarkdown("Na^+^Cl^-^")).toBe(
+      "Na[+]{.textus-sup}Cl[-]{.textus-sup}",
+    );
+  });
+
   it("writes one tilde as a strikethrough where the editor reads it so", () => {
     const strike = { singleTilde: "strikethrough" } as const;
     expect(toPandocMarkdown("H~2~O, x^2^, ~gone~ and ~~old~~", strike)).toBe(
@@ -215,6 +224,24 @@ describe("toPandocMarkdown", () => {
     expect(toPandocMarkdown(md)).toBe(md);
     expect(toPandocMarkdown(md, { citations: true })).toBe(
       "As `[@doe99, p. 3]`{=textuscite} and `[see @a; @b]`{=textuscite} say; mail [x a@b.c].",
+    );
+  });
+
+  it("keeps a :name: glued to a word as text, as the editor does", () => {
+    expect(
+      toPandocMarkdown("at 10:100:00, x:smile: and :smile:! `a:b:c` \\:ok:"),
+    ).toBe("at 10\\:100:00, x\\:smile: and :smile:! `a:b:c` \\:ok:");
+  });
+
+  it("puts an <img>'s src in <…> when a space, parenthesis or angle bracket would end it", () => {
+    expect(toPandocMarkdown('<img src="a.png" width="10">')).toBe(
+      "![](a.png){width=10px}",
+    );
+    expect(toPandocMarkdown('<img src="pic (1).png" width="10">')).toBe(
+      "![](<pic (1).png>){width=10px}",
+    );
+    expect(toPandocMarkdown('<img src="a&lt;b&gt;.png" width="10">')).toBe(
+      "![](<a<b>.png>){width=10px}",
     );
   });
 });

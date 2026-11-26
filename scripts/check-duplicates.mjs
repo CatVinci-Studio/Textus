@@ -31,8 +31,6 @@ const COPIES_NOW = {
   "ai/rules/ja/notation.rs | ai/rules/zh/spacing.rs": 1,
   "ai/rules/ru.rs | ai/rules/tw.rs": 1,
   "ai/rules/tw.rs | ai/rules/zh/wording.rs": 1,
-  "ai/web/search.rs | ai/web/search.rs": 1,
-  "editor/images/obsidian-embed.ts | editor/markdown/wikilink.ts": 1,
   "editor/marks/enclosure-moves.ts | editor/marks/enclosure-moves.ts": 1,
 };
 

@@ -1,6 +1,5 @@
 import { useDeferredValue, useEffect, useRef } from "react";
 import { SplitPreview } from "./SplitPreview";
-import { useVaultLineBreaks } from "./useVaultLineBreaks";
 import { DocSourceEditor } from "./lazy-doc-source-editor";
 import { elasticOverscroll } from "../../engine/controls/elastic-overscroll";
 import "./SplitView.css";
@@ -34,7 +33,6 @@ export function SplitView({
   // Typing stays responsive on long documents: the preview renders the
   // deferred value and catches up a beat later.
   const deferred = useDeferredValue(content);
-  const breaks = useVaultLineBreaks(filePath);
   useEffect(() => {
     const scroller = previewRef.current;
     if (!scroller) return;
@@ -95,7 +93,7 @@ export function SplitView({
         />
         <div
           ref={previewRef}
-          className={`split-preview tx-scroll-reveal${breaks ? " split-preview-breaks" : ""}`}
+          className="split-preview tx-scroll-reveal"
           onScroll={(e) => {
             const source = sourceScroller();
             if (source) follow(e.currentTarget, source, "preview");

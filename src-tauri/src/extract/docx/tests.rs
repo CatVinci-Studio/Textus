@@ -106,15 +106,19 @@ fn tables_become_pipe_tables() {
                 <w:tr>{}{}</w:tr>
                 <w:tr><w:tc><w:tcPr><w:gridSpan w:val="2"/></w:tcPr><w:p><w:r><w:t>wide</w:t></w:r></w:p><w:p><w:r><w:t>cell</w:t></w:r></w:p></w:tc></w:tr>
                 <w:tr>{}{}</w:tr>
+                <w:customXml><w:tr><w:sdt><w:sdtContent>{}</w:sdtContent></w:sdt>{}</w:tr></w:customXml>
             </w:tbl>"#,
         cell("Name"),
         cell("Age"),
         cell("Ann"),
-        cell("41")
+        cell("41"),
+        cell("Bo"),
+        cell("7")
     );
+    // Rows and cells inside custom XML and content controls are looked through.
     assert_eq!(
         convert(&body, &[]),
-        "| Name | Age |\n| --- | --- |\n| wide<br>cell |  |\n| Ann | 41 |"
+        "| Name | Age |\n| --- | --- |\n| wide<br>cell |  |\n| Ann | 41 |\n| Bo | 7 |"
     );
 }
 

@@ -12,7 +12,7 @@ import { currentStrings } from "../../i18n/current";
 import { loadPlugins } from "../manager";
 import { pluginName, pluginRecord } from "./plugin-records";
 import { setPluginEnabled } from "../plugin-switches";
-import { runsHere } from "../plugin-platform";
+import { offeredHere } from "../plugin-platform";
 import { pluginMatches } from "./plugin-records";
 import { errorText } from "../../utils/error-text";
 import { compareNames } from "../../utils/name-order";
@@ -102,11 +102,11 @@ function item(entry: PluginCatalogEntry): CatalogItem | null {
   }
 }
 
-/** The catalog's plugins that run on this system. */
+/** The catalog's plugins that run on this system and do something there. */
 const items = (entries: PluginCatalogEntry[]) =>
   entries
     .map(item)
-    .filter((i): i is CatalogItem => i !== null && runsHere(i.manifest));
+    .filter((i): i is CatalogItem => i !== null && offeredHere(i.manifest));
 
 let fetching: Promise<void> | null = null;
 

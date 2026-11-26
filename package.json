@@ -1,7 +1,7 @@
 {
   "name": "textus",
   "private": true,
-  "version": "1.4.6-rc.4",
+  "version": "1.4.8-rc.4",
   "type": "module",
   "engines": {
     "node": ">=26"
@@ -34,7 +34,8 @@
     "screenshots:website": "playwright test -c playwright.shots.config.ts --project=website",
     "bench:motion": "playwright test -c playwright.bench.config.ts",
     "sync-models": "node scripts/sync-models.mjs",
-    "bindings": "node scripts/write-bindings.mjs"
+    "bindings": "node scripts/write-bindings.mjs",
+    "release": "node scripts/release.mjs"
   },
   "dependencies": {
     "@codemirror/commands": "^6.11.1",

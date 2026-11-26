@@ -1,3 +1,4 @@
+import { useIncomingTab } from "../../engine/controls/tabs/incoming-tab";
 import type { FormatBarSide } from "../../prefs/settings-values";
 import { isWindowPanel } from "./panel-pane";
 import { Island } from "../../engine/layout/Island";
@@ -15,6 +16,7 @@ import {
   canUseWindows,
 } from "../../platform/capabilities";
 import {
+  isConversationTab,
   showsStartPage,
   tabIsDirty,
   tabTitle,
@@ -44,6 +46,7 @@ import {
   tabPinned,
 } from "../../document/pinned";
 import { useTabsInBar } from "./tabs-in-bar";
+import { TabRowsShown } from "./tab-rows";
 import { pullTab } from "./tab-pull";
 import { addFromTabRow, newConversation } from "./ai-tabs";
 import { useDocumentsApart } from "./useDocumentsApart";
@@ -123,6 +126,8 @@ export function DocumentIslands({
   // Zen shows the tab in use alone; the split waits until Zen ends.
   const layout = useIslands(zen);
   const phone = usePhoneLayout();
+  // A file dragged in to open as a tab: its room in that island's row.
+  const incoming = useIncomingTab();
   const panes = panesOf(layout.root);
   // Each pane shows its tab in front; its place in reading order names it.
   const shownIn = new Map(
@@ -238,7 +243,13 @@ export function DocumentIslands({
           placeAmongPinned(index, !!tab && tabPinned(tab), pinned),
         );
       }}
-      previewTab={pane === panes[0]?.id ? previewTab : null}
+      previewTab={
+        incoming?.pane === pane
+          ? { title: incoming.title, dirty: false, x: incoming.x }
+          : pane === panes[0]?.id
+            ? previewTab
+            : null
+      }
       // Open beside and Move to New Window are drags (pullTab).
       menuFor={(id) => [
         ...pathItem(id, byId.get(id)?.path),
@@ -257,7 +268,10 @@ export function DocumentIslands({
       labels={{
         tabs: t.menuDocuments,
         close: t.menuCloseTab,
-        add: t.menuNewTab,
+        // Over a conversation the + starts another (addFromTabRow).
+        add: isConversationTab(byId.get(active))
+          ? t.chatNewConversation
+          : t.menuNewFile,
         unsaved: t.unsavedIndicator,
         all: t.menuAllTabs,
         readOnly: t.readOnlyLock,
@@ -316,25 +330,27 @@ export function DocumentIslands({
             t={t}
           />
         }
-        <DocumentViews
-          tabs={tabs}
-          activeTabId={activeTabId}
-          shownIn={shownIn}
-          styleOf={body}
-          onActivate={onActivate}
-          onChange={onChange}
-          typewriter={typewriter}
-          tour={tour}
-          // On every island's document in front; a phone's always, at its
-          // foot, over the keyboard while typing (format-bar.css).
-          above={(tab) =>
-            (formatBar || phone) &&
-            formatsShown(tab) && (
-              <FormatBar t={t} tabId={tab.id} side={formatBar ?? "top"} />
-            )
-          }
-          t={t}
-        />
+        <TabRowsShown.Provider value={tabsInBar}>
+          <DocumentViews
+            tabs={tabs}
+            activeTabId={activeTabId}
+            shownIn={shownIn}
+            styleOf={body}
+            onActivate={onActivate}
+            onChange={onChange}
+            typewriter={typewriter}
+            tour={tour}
+            // On every island's document in front; a phone's always, at its
+            // foot, over the keyboard while typing (format-bar.css).
+            above={(tab) =>
+              (formatBar || phone) &&
+              formatsShown(tab) && (
+                <FormatBar t={t} tabId={tab.id} side={formatBar ?? "top"} />
+              )
+            }
+            t={t}
+          />
+        </TabRowsShown.Provider>
       </>
     );
   };

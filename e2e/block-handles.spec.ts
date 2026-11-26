@@ -281,7 +281,7 @@ test("⋮⋮ alone in the margin turns its block into another kind or deletes it
   expect(await sourceOf(page)).toBe("## Middle\n\n- Omega");
 });
 
-test("the handles come with the fold caret over a block's line, stay away while typing, and are off in Settings", async ({
+test("the handles come with the fold caret over a block's line, and stay away while typing", async ({
   page,
 }) => {
   await openApp(page, { settings: { language: "en" } });
@@ -325,17 +325,6 @@ test("the handles come with the fold caret over a block's line, stay away while 
   await page.locator(editor).press("End");
   await page.keyboard.type(" more");
   await expect(page.locator(handle)).toBeHidden();
-  await openApp(page, { settings: { language: "en", blockHandles: false } });
-  await pasteMarkdown(page, "## Part one\n\nSome text");
-  const box = (await block(page, "Some text").boundingBox())!;
-  await page.mouse.move(box.x + 20, box.y + box.height / 2);
-  await settled(page);
-  await expect(page.locator(handle)).toBeHidden();
-  // A heading's fold caret still comes over its line, alone.
-  const title = (await block(page, "Part one").boundingBox())!;
-  await page.mouse.move(title.x + 6, title.y + 10);
-  await expect(page.locator(`${handle} .block-handle-fold`)).toBeVisible();
-  await expect(page.locator(`${handle} .block-handle-grip`)).toBeHidden();
 });
 
 test("selected text pulled moves where it is let go; with Option or Ctrl a copy goes", async ({

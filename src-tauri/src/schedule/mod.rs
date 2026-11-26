@@ -4,7 +4,8 @@
 //! or to a hidden one opened for it when no window is open. Desktop only.
 
 /// The hidden window that runs plugins' background code when no window is
-/// open. Outside the desktop gate: iOS builds name it too, as not an editor.
+/// open.
+#[cfg(desktop)]
 pub const HOST_LABEL: &str = "background-host";
 
 #[cfg(desktop)]

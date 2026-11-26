@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { pluginsCheckout } from "../vite.dev-plugins";
-import { emit, mockInvoke, openApp, sourceOf } from "./helpers";
+import { emit, mockInvoke, openApp, settled, sourceOf } from "./helpers";
 import {
   hasPlugin,
   minimalDocx,
@@ -188,9 +188,79 @@ test("a text file no plugin opens shows read-only, not as Markdown to rewrite", 
   // No catalog: no plugin to offer for it.
   await mockInvoke(page, { plugin_catalog: [], plugin_catalog_cached: [] });
   await openPath(page, "/work/all.base");
-  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  // Its own text in the source view, never the Markdown editor.
+  const editor = page.locator('[data-active-tab="true"] .cm-content');
   await expect(editor).toContainText("views");
-  await expect(editor).toHaveAttribute("contenteditable", "false");
+  await expect(editor).toHaveAttribute("aria-readonly", "true");
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toHaveCount(0);
+});
+
+test("a plugin's code language is coloured in the editor and source mode, by any of its names, and offered in the language menu", async ({
+  page,
+}) => {
+  const manifest = {
+    id: "example.cisco",
+    name: "Cisco",
+    version: "0.1.0",
+    publisher: "example",
+    engines: { textus: ">=1.4.6" },
+    contributes: {
+      codeLanguages: [{ id: "cisco", aliases: ["ios"], path: "cisco.json" }],
+    },
+  };
+  const grammar = JSON.stringify({
+    flags: "i",
+    rules: [
+      { token: "comment", match: "^\\s*!.*" },
+      { token: "keyword", match: "\\b(?:interface|shutdown)\\b" },
+    ],
+  });
+  await page.addInitScript(
+    ({ manifest, grammar }) => {
+      if (window.top !== window) return;
+      const w = window as unknown as Record<string, unknown>;
+      w.__devPlugins = [
+        {
+          id: manifest.id,
+          dir: `/plugins/${manifest.id}`,
+          manifest: JSON.stringify(manifest),
+          dev: false,
+          files: { "cisco.json": grammar },
+        },
+      ];
+      w.__devFs = {
+        "/work/r1.md": "```IOS\n! core\ninterface Gi0/1\n shutdown\n```\n",
+      };
+      w.__devPluginState = {
+        allOn: true,
+        plugins: { [manifest.id]: { enabled: true, granted: [] } },
+      };
+    },
+    { manifest, grammar },
+  );
+  await openApp(page);
+  await openPath(page, "/work/r1.md");
+  const code = page.locator('[data-active-tab="true"] .ProseMirror pre code');
+  await expect(code.locator(".token.keyword")).toHaveText([
+    "interface",
+    "shutdown",
+  ]);
+  await expect(code.locator(".token.comment")).toHaveText("! core");
+  const picker = page.locator(".code-block-language-select").first();
+  await page.locator(".code-block-wrapper").first().hover();
+  await picker.click();
+  await expect(
+    page.locator(".code-language-menu [role=option]", { hasText: /^cisco$/ }),
+  ).toHaveCount(1);
+  await page.keyboard.press("Escape");
+  // Source mode reads the same grammar: the keyword a token of its own.
+  await emit(page, "menu-toggle-source-mode");
+  const line = page.locator('[data-active-tab="true"] .source-view .cm-line', {
+    hasText: "interface Gi0/1",
+  });
+  await expect(line.locator("span", { hasText: /^interface$/ })).toHaveCount(1);
 });
 
 test("a plugin's page is in the UI's language, and changes with it; a board's list moves by its head", async ({
@@ -330,6 +400,116 @@ test("a plugin's block is on the page as a table is, its edge shown only while p
   await expect(block).not.toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
 });
 
+test("a plugin's block opened again starts at its page's height, not growing to it", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.function-plot"), "no plugins checkout");
+  await openWithPlugins(page, {
+    plugins: {
+      "catvinci.function-plot": permissions("catvinci.function-plot"),
+    },
+    folder: {
+      "/work/notes/plot.md": "# Plot\n\n```function-plot\ny = x^2\n```\n",
+      "/work/notes/other.md": "# Other\n",
+    },
+  });
+  // Another tab, so closing the block's leaves the window open.
+  await openPath(page, "/work/notes/other.md");
+  await openPath(page, "/work/notes/plot.md");
+  await expect(page.locator(".tab-pill")).toHaveCount(2);
+  const frame = page.locator(
+    '[data-active-tab="true"] .plugin-code-block .plugin-webview-frame',
+  );
+  await expect(frame).toBeVisible();
+  // The page has said how tall it is.
+  await expect
+    .poll(() => frame.evaluate((f) => (f as HTMLElement).style.height))
+    .not.toBe("");
+  const height = await frame.evaluate((f) => f.getBoundingClientRect().height);
+  await emit(page, "menu-close-tab");
+  await expect(frame).toHaveCount(0);
+  // Every frame's height of the block from the moment it is there again,
+  // until its page is in it and its height has held for a while.
+  const seen = page.evaluate(
+    () =>
+      new Promise<number[]>((done) => {
+        const heights: number[] = [];
+        let held = 0;
+        const sample = () => {
+          const holder = document.querySelector(
+            '[data-active-tab="true"] .plugin-code-holder',
+          );
+          const height = holder?.getBoundingClientRect().height;
+          if (height !== undefined) {
+            const same = height === heights[heights.length - 1];
+            held = same && holder!.querySelector("iframe") ? held + 1 : 0;
+            heights.push(height);
+          }
+          if (held >= 30 || heights.length > 600) done(heights);
+          else requestAnimationFrame(sample);
+        };
+        requestAnimationFrame(sample);
+      }),
+  );
+  await openPath(page, "/work/notes/plot.md");
+  const heights = await seen;
+  expect(heights.length).toBeGreaterThan(0);
+  expect(heights.filter((h) => Math.abs(h - height) > 1)).toEqual([]);
+});
+
+test("a block whose plugin asks for no frame, a base, shows no edge when pointed at, only its source button", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.database"), "no plugins checkout");
+  await openWithPlugins(page, {
+    plugins: { "catvinci.database": permissions("catvinci.database") },
+    folder: {
+      "/work/notes/Plan.md":
+        "# Plan\n\n```base\nviews:\n  - type: table\n    name: Table\n```\n",
+      "/work/notes/One.md": "---\ndue: 2026-11-23\n---\n",
+    },
+  });
+  await openPath(page, "/work/notes/Plan.md");
+  const block = page.locator('[data-active-tab="true"] .plugin-code-block');
+  await expect(block.locator(".plugin-webview-frame")).toBeVisible();
+  await block.hover();
+  await expect(block.locator(".plugin-code-edit")).toHaveCSS("opacity", "1");
+  await expect(block).toHaveCSS("border-top-color", "rgba(0, 0, 0, 0)");
+});
+
+test("a database's column heads centre their icon on their name, a Chinese one too", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.database"), "no plugins checkout");
+  await openWithPlugins(page, {
+    plugins: { "catvinci.database": permissions("catvinci.database") },
+    folder: {
+      "/work/notes/Plan.md":
+        "# Plan\n\n```base\nfilters:\n  and:\n    - file.inFolder(this.file.folder)\n    - file.path != this.file.path\nviews:\n  - type: table\n    name: Table\n    order: [file.name, due]\n```\n",
+      "/work/notes/One.md": "---\ndue: 2026-11-23\n---\n",
+    },
+    language: "zh",
+  });
+  await openPath(page, "/work/notes/Plan.md");
+  const heads = page
+    .frameLocator(
+      '[data-active-tab="true"] .plugin-code-block .plugin-webview-frame',
+    )
+    .locator("th[data-key]");
+  await expect(heads.first()).toContainText("页面");
+  for (const head of await heads.all()) {
+    const off = await head.evaluate((th) => {
+      const text = [...th.childNodes].find((n) => n.nodeType === 3)!;
+      const range = document.createRange();
+      range.selectNodeContents(text);
+      const name = range.getBoundingClientRect();
+      const icon = th.querySelector(".tx-icon")!.getBoundingClientRect();
+      return name.top + name.height / 2 - (icon.top + icon.height / 2);
+    });
+    expect(Math.abs(off)).toBeLessThanOrEqual(1.5);
+  }
+});
+
 test.describe("on a touch screen", () => {
   test.use({ hasTouch: true, isMobile: true });
 
@@ -378,6 +558,99 @@ test("a plugin reads the document in front as a save would write it", async ({
       }, "/src/plugins/app-bridge.ts"),
     )
     .toBe(file);
+});
+
+test("a plugin reads the document and hears it change in Source Mode and Source and Preview", async ({
+  page,
+}) => {
+  const manifest = {
+    id: "example.reader",
+    name: "Reader",
+    version: "0.1.0",
+    publisher: "example",
+    engines: { textus: ">=1.3.12" },
+    main: "host.js",
+    activationEvents: ["onStartupFinished"],
+    permissions: ["editor.read"],
+  };
+  // Each change it hears, with the path and text it then reads.
+  const host = `exports.activate = function (ctx) {
+    var seen = [];
+    textus.editor.onDidChange(async function () {
+      seen.push({ path: await textus.editor.getPath(), text: await textus.editor.getText() });
+      await ctx.storage.global.set("seen", seen);
+    });
+  };`;
+  await page.addInitScript(
+    ({ manifest, host }) => {
+      if (window.top !== window) return;
+      const w = window as unknown as Record<string, unknown>;
+      w.__devPlugins = [
+        {
+          id: manifest.id,
+          dir: `/plugins/${manifest.id}`,
+          manifest: JSON.stringify(manifest),
+          dev: false,
+          files: { "host.js": host },
+        },
+      ];
+      w.__devFs = { "/work/slides.md": "# Slides\n" };
+      w.__devPluginState = {
+        allOn: true,
+        plugins: {
+          [manifest.id]: { enabled: true, granted: manifest.permissions },
+        },
+      };
+    },
+    { manifest, host },
+  );
+  await openApp(page, { settings: { language: "en" } });
+  await openPath(page, "/work/slides.md");
+  await expect(
+    page.locator('[data-active-tab="true"] .ProseMirror'),
+  ).toContainText("Slides");
+  const lastSeen = () =>
+    page.evaluate(() => {
+      const stores = (window as unknown as Record<string, unknown>)
+        .__devPluginStore as
+        Record<string, { kv: Record<string, unknown> }> | undefined;
+      const seen = stores?.["example.reader|global|"]?.kv.seen as
+        { path: string | null; text: string | null }[] | undefined;
+      return seen?.at(-1) ?? null;
+    });
+  const source = page.locator('[data-active-tab="true"] .cm-content');
+  for (const [toggle, typed] of [
+    ["menu-toggle-source-mode", "one"],
+    ["menu-toggle-split-view", "two"],
+  ]) {
+    await emit(page, toggle);
+    await source.click();
+    await page.keyboard.press("ControlOrMeta+End");
+    await page.keyboard.type(typed);
+    await expect.poll(lastSeen).toEqual({
+      path: "/work/slides.md",
+      text: expect.stringContaining(typed),
+    });
+  }
+  // Changed in place as an open document, as files.process does.
+  await page.evaluate(async (url) => {
+    const open = (await import(/* @vite-ignore */ url)).openDocumentAt(
+      "/work/slides.md",
+    );
+    open.replaceText(`${open.text()}\n\nmore`, open.revision());
+  }, "/src/registry/open-documents.ts");
+  await expect(source).toContainText("more");
+  // Back in the rendered view, it alone answers.
+  await emit(page, "menu-toggle-split-view");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  await expect(editor).toContainText("more");
+  await editor.click();
+  await page.keyboard.press("ControlOrMeta+End");
+  await page.keyboard.type(" three");
+  await expect.poll(lastSeen).toEqual({
+    path: "/work/slides.md",
+    text: expect.stringMatching(/one[\s\S]*two[\s\S]*more three/),
+  });
 });
 
 test("Git marks the blocks changed since the last commit in the margin", async ({
@@ -451,6 +724,46 @@ test("a plugin's slip is underlined, explained on the slip card, and fixed from 
   await card.locator(".grammar-popover-apply").click();
   await expect(slip).toHaveCount(0);
   await expect.poll(() => sourceOf(page)).toBe("# A\n\n## Notes\n\nText");
+});
+
+test("a slip picked from the list off screen is scrolled to, its card staying open until the page is scrolled", async ({
+  page,
+}) => {
+  test.skip(!hasPlugin("catvinci.markdown-lint"), "no plugins checkout");
+  const lines = Array.from({ length: 80 }, (_, i) => `Line ${i}.`);
+  await openWithPlugins(page, {
+    plugins: {
+      "catvinci.markdown-lint": permissions("catvinci.markdown-lint"),
+    },
+    folder: {
+      "/work/notes/a.md": `# A\n\n## Notes:\n\n${lines.join("\n\n")}\n`,
+    },
+  });
+  await openPath(page, "/work/notes/a.md");
+  const editor = page.locator('[data-active-tab="true"] .ProseMirror');
+  const slip = editor.locator(".plugin-issue");
+  await expect(slip).toHaveCount(1);
+  const scroller = page.locator('[data-active-tab="true"] .editor-scroll');
+  // Just past it: still among the blocks near enough to be asked about
+  // again (rest-asking's AROUND), so it stays in the list once the page rests.
+  await slip.evaluate((el) => {
+    const s = el.closest(".editor-scroll")!;
+    s.scrollBy(
+      0,
+      el.getBoundingClientRect().bottom - s.getBoundingClientRect().top + 100,
+    );
+  });
+  await expect(slip).not.toBeInViewport();
+  await settled(page);
+  await page.locator(".slip-count").click();
+  await page.getByRole("menuitem", { name: /^Tidy: MD026/ }).click();
+  await expect(slip).toBeInViewport();
+  await settled(page);
+  const card = page.locator(".grammar-popover");
+  await expect(card).toBeVisible();
+  // The reader scrolling on: the card no longer points at its words.
+  await scroller.evaluate((s) => s.scrollBy(0, 200));
+  await expect(card).toBeHidden();
 });
 
 test("a plugin's inline syntax is shown as it means, its source back under the caret", async ({
@@ -575,4 +888,106 @@ test("a folder a plugin opens as one document: one row in the sidebar, its text 
   await expect(page.locator(".tab-pill").last()).toContainText(
     "Journey.textbundle",
   );
+});
+
+/** A plugin giving one file icon theme, "Test Icons" (`local.icons#test`):
+ *  Markdown files and a docs folder, Markdown in another icon when light. */
+async function withIconTheme(page: Page) {
+  const svg = (color: string) =>
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="${color}"/></svg>`;
+  const manifest = {
+    id: "local.icons",
+    name: "Test Icons",
+    version: "1.0.0",
+    publisher: "local",
+    engines: { textus: ">=1.4.0" },
+    permissions: [],
+    contributes: {
+      fileIconThemes: [{ id: "test", label: "Test Icons", path: "theme.json" }],
+    },
+  };
+  const theme = {
+    iconDefinitions: {
+      md: { iconPath: "icons/md.svg" },
+      mdLight: { iconPath: "icons/md-light.svg" },
+      docs: { iconPath: "icons/docs.svg" },
+    },
+    fileExtensions: { md: "md" },
+    folderNames: { docs: "docs" },
+    light: { fileExtensions: { md: "mdLight" } },
+  };
+  await page.addInitScript(
+    ({ manifest, files }) => {
+      if (window.top !== window) return;
+      const w = window as unknown as Record<string, unknown>;
+      w.__devPlugins = [
+        {
+          id: manifest.id,
+          dir: `/plugins/${manifest.id}`,
+          manifest: JSON.stringify(manifest),
+          dev: false,
+          files,
+        },
+      ];
+      w.__devFs = { "/work/notes.md": "# Notes\n", "/work/docs/a.md": "A\n" };
+      w.__devPluginState = {
+        allOn: true,
+        plugins: { [manifest.id]: { enabled: true, granted: [] } },
+      };
+      w.__devPickFolder = "/work";
+    },
+    {
+      manifest,
+      files: {
+        "theme.json": JSON.stringify(theme),
+        "icons/md.svg": svg("red"),
+        "icons/md-light.svg": svg("green"),
+        "icons/docs.svg": svg("blue"),
+      },
+    },
+  );
+}
+
+test("a plugin's file icon theme, picked in Settings, draws the sidebar's icons until Default is picked again", async ({
+  page,
+}) => {
+  await withIconTheme(page);
+  await openApp(page);
+  await emit(page, "menu-open-folder");
+  const note = page.locator('.tree-row[data-path="/work/notes.md"] .tree-icon');
+  const docs = page.locator('.tree-row[data-path="/work/docs"] .tree-icon');
+  await expect(note).toHaveJSProperty("tagName", "svg");
+
+  // Settings takes the sidebar; the rail's Files brings the tree back.
+  const pick = async (option: string) => {
+    await emit(page, "menu-settings");
+    await page.getByRole("button", { name: "外观" }).first().click();
+    await page.getByRole("combobox", { name: "文件图标" }).click();
+    await page.getByRole("option", { name: option }).click();
+    await page.getByRole("button", { name: "文件树" }).click();
+  };
+  await pick("Test Icons");
+  await expect(note).toHaveJSProperty("tagName", "IMG");
+  await expect(note).toHaveAttribute("src", /^data:image\/svg\+xml/);
+  await expect(docs).toHaveJSProperty("tagName", "IMG");
+
+  await pick("默认");
+  await expect(note).toHaveJSProperty("tagName", "svg");
+  await expect(docs).toHaveJSProperty("tagName", "svg");
+});
+
+test("a file icon theme chosen before the window opens draws as soon as its plugin loads, light and dark", async ({
+  page,
+}) => {
+  await withIconTheme(page);
+  await openApp(page, { settings: { fileIconTheme: "local.icons#test" } });
+  await emit(page, "menu-open-folder");
+  const note = page.locator('.tree-row[data-path="/work/notes.md"] .tree-icon');
+  await expect(note).toHaveJSProperty("tagName", "IMG");
+  const light = await note.getAttribute("src");
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect(note).not.toHaveAttribute("src", light!);
+  await expect(note).toHaveJSProperty("tagName", "IMG");
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect(note).toHaveAttribute("src", light!);
 });

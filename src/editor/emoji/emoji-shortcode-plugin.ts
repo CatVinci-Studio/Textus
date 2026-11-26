@@ -27,7 +27,9 @@ export const emojiNames = lazyModule("emoji-shortcodes", () =>
   import("./shortcodes.json").then((m) => m.default as Names),
 );
 
-const SHORTCODE = /:([a-z0-9_+-]+):/g;
+// Not glued to a letter or digit either side, so `10:100:00` and `a:b:c`
+// stay text.
+const SHORTCODE = /(?<![\p{L}\p{N}]):([a-z0-9_+-]+):(?![\p{L}\p{N}])/gu;
 
 /** A block whose text may hold shortcodes: any but code. */
 const isEmojiBlock = (node: ProseNode) =>

@@ -20,9 +20,7 @@ import {
   useCardActions,
   useMarginRoom,
 } from "./margin-layout";
-import { RevisionCard } from "./MarginCards";
-import { NoteCard } from "./NoteCards";
-import { MarginGroup } from "./MarginGroup";
+import { MarginCard, MarginGroup } from "./MarginGroup";
 import { asDrawn, zoomedRectScale } from "../../engine/zoom/zoomed-rects";
 
 /** The page's margin: review notes and a pending rewrite's changes, each card
@@ -280,13 +278,13 @@ export function ReviewMargin({
             />
           );
         }
-        return item.kind === "note" ? (
-          <NoteCard
+        return (
+          <MarginCard
             key={item.key}
-            itemKey={item.key}
-            note={item.note}
-            hot={hot === item.key}
-            picked={picked ? picked.has(item.note.id) : null}
+            item={item}
+            hot={hot}
+            focused={focused}
+            picked={picked}
             onPick={cardPick}
             cut={p.cut}
             chip={p.chip}
@@ -299,22 +297,6 @@ export function ReviewMargin({
             onDone={cardDone}
             onAsk={cardAsk}
             onEdit={cardEdit}
-            onHeight={onHeight}
-          />
-        ) : (
-          <RevisionCard
-            key={item.key}
-            item={item}
-            hot={hot === item.key}
-            focused={focused === item.key}
-            open={focused === item.key}
-            onOpen={cardOpen}
-            cut={p.cut}
-            chip={p.chip}
-            labels={labels}
-            top={p.top}
-            left={layout.left}
-            onHot={cardHot}
             onDecide={cardDecide}
             onHeight={onHeight}
           />

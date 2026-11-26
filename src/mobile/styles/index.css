@@ -1,7 +1,8 @@
 /* Every phone and tablet style, layered over the mouse-first desktop ones.
-   Each selector starts with :root[data-window-chrome="mobile"], which
-   outranks the desktop rule it replaces regardless of load order. Phone forms
-   sit inside @media (max-width: 760px), the width the components switch at. */
+   A phone's start with :root[data-window-chrome="mobile"] (the phone's
+   layout, upright or on its side), which outranks the desktop rule it
+   replaces regardless of load order; a touch tablet's sit under
+   (pointer: coarse) with the platform named. */
 @import "./base.css";
 @import "./sidebar.css";
 @import "./chrome.css";

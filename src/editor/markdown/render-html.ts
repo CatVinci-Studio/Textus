@@ -18,6 +18,10 @@ import { sanitizeNodes } from "../html/html-policy";
 import { readImagePresentation } from "../images/image-html";
 import { katexNow, mathSourceHtml } from "../math/katex-loader";
 import { renderFormula } from "../math/matrix-rows";
+import { BACKTICK_MATH, DOLLAR_MATH } from "../math/inline-math-rule";
+
+const BACKTICK_AT_START = new RegExp(`^${BACKTICK_MATH}`);
+const DOLLAR_AT_START = new RegExp(`^${DOLLAR_MATH}`);
 
 function renderMath(source: string, displayMode: boolean): string {
   const katex = katexNow();
@@ -40,7 +44,9 @@ function mathHtml(source: string, display: boolean, block: boolean): string {
 
 // `$$...$$` on its own lines and `$...$` inside text, as the editor's math
 // schema reads them. Inline `$` needs a non-space just inside each delimiter
-// and no digit after the closing one, so "$5 and $10" stays text.
+// and no digit after the closing one, so "$5 and $10" stays text. GitHub's
+// $`...`$ holds anything but a backtick; any other "$`" is a dollar before
+// code.
 function mathExtensions(
   render: (source: string, display: boolean, block: boolean) => string,
 ): TokenizerAndRendererExtension[] {
@@ -69,7 +75,7 @@ function mathExtensions(
           text: display[1],
           display: true,
         };
-      const match = /^\$(?!\s)([^$\n]+?)(?<!\s)\$(?!\d)/.exec(src);
+      const match = BACKTICK_AT_START.exec(src) ?? DOLLAR_AT_START.exec(src);
       if (match)
         return {
           type: "mathInline",

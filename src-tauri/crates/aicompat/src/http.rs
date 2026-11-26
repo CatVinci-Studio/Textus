@@ -195,6 +195,20 @@ fn ends_stream(data: &str) -> bool {
     })
 }
 
+/// The response when it succeeded; otherwise `"{what} ({status}): {body}"`,
+/// the shape error_kind and the frontend read the status out of.
+pub(crate) async fn succeeded(
+    res: reqwest::Response,
+    what: &str,
+) -> Result<reqwest::Response, String> {
+    if res.status().is_success() {
+        return Ok(res);
+    }
+    let status = res.status();
+    let text = res.text().await.unwrap_or_default();
+    Err(format!("{what} ({status}): {text}"))
+}
+
 /// Consumes an SSE body, calling `on_data` with each complete `data:` payload.
 /// Returns the error body as Err when the status isn't a success.
 pub(crate) async fn read_sse(
@@ -204,14 +218,7 @@ pub(crate) async fn read_sse(
 ) -> Result<(), String> {
     use futures_util::StreamExt;
 
-    if !res.status().is_success() {
-        let status = res.status();
-        let text = res.text().await.unwrap_or_default();
-        return Err(format!(
-            "{provider_label} request failed ({status}): {text}"
-        ));
-    }
-
+    let res = succeeded(res, &format!("{provider_label} request failed")).await?;
     let mut stream = res.bytes_stream();
     let mut lines = SseLineBuffer::default();
     let mut last_event = std::time::Instant::now();

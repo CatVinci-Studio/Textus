@@ -287,8 +287,21 @@ pub async fn plugin_fs_rename(
         .map_err(|e| e.to_string())
 }
 
+/// `path` as plugin `id` may move it to the Trash: granted `files.write`,
+/// inside `root` and not `root` itself or a folder holding it.
+pub(super) fn trash_path(
+    state: &PluginsState,
+    id: &str,
+    root: &str,
+    path: &str,
+) -> Result<PathBuf, String> {
+    let path = folder_path(state, id, "files.write", root, path)?;
+    crate::atomic::may_trash(&path, Some(Path::new(root)))?;
+    Ok(path)
+}
+
 /// Moves a file or folder in the folder to the system Trash - never a
-/// delete the user can't undo.
+/// delete the user can't undo. Refused with `noTrash` where there is none.
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub async fn plugin_fs_trash(
@@ -297,12 +310,27 @@ pub async fn plugin_fs_trash(
     root: String,
     path: String,
 ) -> Result<(), String> {
-    let path = granted_path(&app, &id, "files.write", &root, &path)?;
+    let path = plugin_fs_trash_path(app, id, root.clone(), path).await?;
     tauri::async_runtime::spawn_blocking(move || {
-        crate::atomic::user_file_to_trash(&path, Some(Path::new(&root)))
+        crate::atomic::user_file_to_trash(Path::new(&path), Some(Path::new(&root)))
     })
     .await
     .map_err(|e| e.to_string())?
+}
+
+/// The checks of [`plugin_fs_trash`] alone, and the file they allow: iOS
+/// moves it to Recently Deleted through the native plugin, as the sidebar does.
+#[tauri::command]
+#[cfg_attr(test, specta::specta)]
+pub async fn plugin_fs_trash_path(
+    app: tauri::AppHandle,
+    id: String,
+    root: String,
+    path: String,
+) -> Result<String, String> {
+    let path = trash_path(&state::read(&app), &id, &root, &path)?;
+    require_not_app_data(&app, &path)?;
+    Ok(path.to_string_lossy().into_owned())
 }
 
 /// Makes a folder (and the folders it is in) in the folder.

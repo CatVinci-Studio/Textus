@@ -21,7 +21,7 @@ import {
 import { useSettings } from "../prefs/SettingsContext";
 import { SearchField } from "../engine/controls/SearchField";
 import { PathText } from "../engine/controls/PathText";
-import { fileIconFor } from "../engine/controls/file-icons";
+import { FileIcon } from "../engine/controls/file-icons";
 import { localeOf } from "../i18n/langs";
 import { nameCollator } from "../utils/name-order";
 import { matchFiles, searchEntries, type SearchEntry } from "./file-search";
@@ -236,37 +236,34 @@ export function FileSearch({
           role="listbox"
           aria-label={t.searchNamesHeading}
         >
-          {matches.map((entry, i) => {
-            const Icon = fileIconFor(entry.name);
-            return (
-              <button
-                key={entry.path}
-                id={`${listId}-${i}`}
-                role="option"
-                aria-selected={i === active}
-                tabIndex={-1}
-                className={`tree-row file-search-row ${i === active ? "tree-row-active" : ""}`}
-                title={entry.rel}
-                // Keeps the keyboard in the box, so ↑/↓ and Enter go on
-                // working after a click.
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  setSelected(i);
-                  open(entry);
-                }}
-              >
-                <Icon className="tree-icon" />
-                <span className="file-search-text">
-                  <span className="tx-truncate tree-label">{entry.name}</span>
-                  {entry.folder && (
-                    <span className="file-search-folder">
-                      <PathText path={entry.folder} />
-                    </span>
-                  )}
-                </span>
-              </button>
-            );
-          })}
+          {matches.map((entry, i) => (
+            <button
+              key={entry.path}
+              id={`${listId}-${i}`}
+              role="option"
+              aria-selected={i === active}
+              tabIndex={-1}
+              className={`tree-row file-search-row ${i === active ? "tree-row-active" : ""}`}
+              title={entry.rel}
+              // Keeps the keyboard in the box, so ↑/↓ and Enter go on
+              // working after a click.
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                setSelected(i);
+                open(entry);
+              }}
+            >
+              <FileIcon name={entry.name} className="tree-icon" />
+              <span className="file-search-text">
+                <span className="tx-truncate tree-label">{entry.name}</span>
+                {entry.folder && (
+                  <span className="file-search-folder">
+                    <PathText path={entry.folder} />
+                  </span>
+                )}
+              </span>
+            </button>
+          ))}
           <SearchNote index={index} matched={matches.length > 0} t={t} />
         </div>
       )}

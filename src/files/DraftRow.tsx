@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { type DirEntryInfo } from "../platform/bindings/files";
 import { useSettings } from "../prefs/SettingsContext";
-import { FolderIcon } from "../engine/controls/icons";
-import { fileIconFor } from "../engine/controls/file-icons";
+import { FileIcon, FolderEntryIcon } from "../engine/controls/file-icons";
 import { useTree } from "./tree-shared";
+import { NameField } from "./NameField";
 
 /** A name nothing in the folder has yet: "Untitled", then "Untitled 2"…
  *  A document's name is checked with the .md the backend adds. */
@@ -21,7 +21,7 @@ function freeName(
 }
 
 /** The row a new document or folder is named in, in place, as in a file
- *  manager: Enter or leaving it makes it, Escape or an empty name doesn't. */
+ *  manager (NameField). */
 export function DraftRow({
   kind,
   depth,
@@ -34,49 +34,30 @@ export function DraftRow({
   const { t } = useSettings();
   const tree = useTree();
   const doc = kind === "document";
-  const [name, setName] = useState(() =>
+  const [name] = useState(() =>
     freeName(
       doc ? t.treeNewDocumentDefault : t.treeNewFolderDefault,
       kind,
       entries,
     ),
   );
-  const input = useRef<HTMLInputElement>(null);
-  const done = useRef(false);
-  const finish = (value: string | null) => {
-    if (done.current) return;
-    done.current = true;
-    tree.finishDraft(value?.trim() ? value.trim() : null);
-  };
-  useEffect(() => {
-    input.current?.focus();
-    input.current?.select();
-  }, []);
-  const Icon = doc ? fileIconFor(".md") : FolderIcon;
   return (
     <div
       className={`tree-row tree-row-draft${doc ? " tree-row-file" : ""}`}
       style={{ "--depth": depth } as CSSProperties}
     >
-      <Icon className="tree-icon" />
-      <input
-        ref={input}
-        className="tree-draft-input"
-        aria-label={doc ? t.treeNewDocumentPrompt : t.treeNewFolderPrompt}
-        value={name}
-        spellCheck={false}
-        onChange={(e) => setName(e.target.value)}
-        onKeyDown={(e) => {
-          // The tree's arrow keys and type-ahead stay out of the name.
-          e.stopPropagation();
-          if (e.nativeEvent.isComposing) return;
-          if (e.key !== "Enter" && e.key !== "Escape") return;
-          // Or the key goes on to the button of a notice this opens.
-          e.preventDefault();
-          finish(e.key === "Enter" ? name : null);
-        }}
-        onBlur={() => finish(name)}
-        onDoubleClick={(e) => e.stopPropagation()}
+      {doc ? (
+        <FileIcon name=".md" className="tree-icon" />
+      ) : (
+        <FolderEntryIcon name={name} className="tree-icon" />
+      )}
+      <NameField
+        initial={name}
+        isDir
+        fresh
+        label={doc ? t.treeNewDocumentPrompt : t.treeNewFolderPrompt}
+        commit={(typed, byKey) => tree.finishDraft(typed, byKey)}
+        cancel={(byKey) => void tree.finishDraft(null, byKey)}
       />
     </div>
   );

@@ -21,6 +21,7 @@ import { setTabJump } from "../editor/tab-jump";
 import { lastCaret, lastScroll } from "./last-places";
 import { keptTabsRestored, readKeptTabs, type KeptTab } from "./reload-tabs";
 import { takeWindowSession } from "./launch-window";
+import { bootDetachedTab } from "./first-tab";
 import { savedFront } from "../engine/layout/saved";
 import { readTabOrder } from "./tab-order";
 import { documentsDir } from "../platform/documents-path";
@@ -145,7 +146,7 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       opts.setTabs((prev) =>
         prev.map((tab) =>
           tab.id === opts.activeTabId
-            ? { ...tab, ...doc, reloadKey: tab.reloadKey + 1 }
+            ? { ...tab, start: false, ...doc, reloadKey: tab.reloadKey + 1 }
             : tab,
         ),
       );
@@ -181,6 +182,7 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
               return [
                 {
                   ...initial,
+                  start: false,
                   ...(doc ?? {}),
                   reloadKey: initial.reloadKey + 1,
                 },
@@ -208,7 +210,9 @@ export function useStartupRestore(options: StartupRestoreOptions): void {
       const detached = canUseWindows ? await windowIpc.takeDetachedTab() : null;
       if (detached) {
         opts.stopTutorial();
-        loadIntoInitialTab(detached);
+        // Taken all the same, so the drafts below don't bring it back;
+        // already the first tab where the boot snapshot handed it over.
+        if (!bootDetachedTab()) loadIntoInitialTab(detached);
         return;
       }
       // Recovered drafts from a crash or forced quit, added as extra tabs

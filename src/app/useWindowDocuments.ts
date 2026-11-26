@@ -2,10 +2,8 @@ import { canUseWindows } from "../platform/capabilities";
 import { writingProviderOf } from "../prefs/settings-types";
 import { openingDocuments, useProjectTabs } from "./start-project";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  registerNoteCompletion,
-  setNoteCompletionRoot,
-} from "../files/note-completion";
+import { registerNoteCompletion } from "../files/note-completion";
+import { registerPathCompletion } from "../files/path-completion";
 import { useTabDragMerge } from "./tabs/useTabDragMerge";
 import { useAutosave } from "../document/autosave";
 import { useLastPlaces } from "../document/last-places";
@@ -134,9 +132,16 @@ function useOpening(
     onWordDocumentOpened: shell.wordImported.opened,
   });
   useEffect(() => {
-    setNoteCompletionRoot(folderRoot);
-    return registerNoteCompletion(() => t.completionNotes);
-  }, [folderRoot, t]);
+    const stopNotes = registerNoteCompletion(() => t.completionNotes);
+    const stopPaths = registerPathCompletion({
+      image: () => t.completionImages,
+      link: () => t.completionFiles,
+    });
+    return () => {
+      stopNotes();
+      stopPaths();
+    };
+  }, [t]);
   usePluginWindow({
     t,
     language: settings.language,

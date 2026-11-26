@@ -128,18 +128,9 @@ impl Service {
         question: &str,
     ) -> Result<Vec<Hit>, String> {
         let client = http_client()?;
-        let response = self
-            .request(&client, query, count, question)
-            .send()
-            .await
-            .map_err(|e| self.unreachable(e))?;
-        let status = response.status();
-        let body = response.text().await.unwrap_or_default();
-        if !status.is_success() {
-            return Err(self.refused(status, &body));
-        }
-        let value: Value = serde_json::from_str(&body)
-            .map_err(|_| format!("{} sent an answer that isn't JSON.", self.backend.label()))?;
+        let value = self
+            .answer(self.request(&client, query, count, question))
+            .await?;
         let mut hits = parse(self.backend, &value)?;
         hits.retain(|h| h.url.starts_with("http"));
         hits.truncate(count);
@@ -206,6 +197,19 @@ impl Service {
         }
     }
 
+    /// Sends `request` and reads the answer as JSON; a failure in words the
+    /// model can pass on.
+    async fn answer(&self, request: reqwest::RequestBuilder) -> Result<Value, String> {
+        let response = request.send().await.map_err(|e| self.unreachable(e))?;
+        let status = response.status();
+        let body = response.text().await.unwrap_or_default();
+        if !status.is_success() {
+            return Err(self.refused(status, &body));
+        }
+        serde_json::from_str(&body)
+            .map_err(|_| format!("{} sent an answer that isn't JSON.", self.backend.label()))
+    }
+
     fn unreachable(&self, e: reqwest::Error) -> String {
         if e.is_timeout() {
             format!("{} took too long to answer.", self.backend.label())
@@ -248,20 +252,14 @@ impl Service {
             Err(e) => return Some(Err(e)),
         };
         let answer = async {
-            let response = client
-                .post(url)
-                .bearer_auth(&self.credential)
-                .json(&json!({ "url": page }))
-                .send()
-                .await
-                .map_err(|e| self.unreachable(e))?;
-            let status = response.status();
-            let body = response.text().await.unwrap_or_default();
-            if !status.is_success() {
-                return Err(self.refused(status, &body));
-            }
-            let value: Value = serde_json::from_str(&body)
-                .map_err(|_| "DeepSeek sent an answer that isn't JSON.".to_string())?;
+            let value = self
+                .answer(
+                    client
+                        .post(url)
+                        .bearer_auth(&self.credential)
+                        .json(&json!({ "url": page })),
+                )
+                .await?;
             let content = without_escapes(&text(&value, "content"));
             if content.trim().is_empty() {
                 return Err("DeepSeek found no readable text on that page.".to_string());

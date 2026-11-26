@@ -147,7 +147,13 @@ test("a middle click closes a tab, and the tab menu closes those to its right, l
   page,
 }) => {
   await openApp(page, {
-    settings: { language: "en", newDocumentMode: "tab" },
+    // No ghost text: the dev shim's suggestion turned up after the caret
+    // between the two reads on a slow runner, and read as a paste.
+    settings: {
+      language: "en",
+      newDocumentMode: "tab",
+      enableCompletion: false,
+    },
   });
   await openFiles(page, ["a.md", "b.md", "c.md", "d.md", "e.md"]);
   // Text selected in a field, then the caret at e.md's end: Linux pastes
@@ -173,11 +179,9 @@ test("a middle click closes a tab, and the tab menu closes those to its right, l
     "c.md",
     "e.md",
   ]);
-  // It closed d.md and pasted nothing into e.md. WebKit can leave a
-  // trailing blank line in innerText after the click (it does on main
-  // too): the assertion is about the text, not blank lines.
+  // It closed d.md and pasted nothing into e.md.
   await settled(page);
-  expect((await front.innerText()).trimEnd()).toBe(was.trimEnd());
+  expect(await front.innerText()).toBe(was);
   await fromMenu(page, "c.md", "Close Tabs to the Right");
   await expect(page.locator(titles)).toHaveText(["a.md", "b.md", "c.md"]);
   await fromMenu(page, "b.md", "Close Tabs to the Left");

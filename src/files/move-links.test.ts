@@ -1,9 +1,9 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { fs } from "../platform/ipc";
-import { showConfirm } from "../engine/controls/app-dialog";
+import { showConfirm, showMessage } from "../engine/controls/app-dialog";
 import { unsavedDocumentAt } from "../registry/open-documents";
 import { resolveStrings } from "../i18n/strings";
-import { updateLinksAfterMove } from "./move-links";
+import { revertEdits, updateLinksAfterMove } from "./move-links";
 
 vi.mock("../platform/ipc", () => ({
   fs: {
@@ -20,6 +20,10 @@ vi.mock("../engine/controls/app-dialog", () => ({
   showMessage: vi.fn(),
 }));
 vi.mock("../registry/open-documents", () => ({ unsavedDocumentAt: vi.fn() }));
+vi.mock("../utils/events", () => ({
+  FILE_WRITTEN_EVENT: "file-written",
+  sendAppEvent: vi.fn(),
+}));
 
 const t = resolveStrings("en");
 // After /w/plan.md became /w/archive/plan.md; CRLF and a BOM must survive.
@@ -127,4 +131,36 @@ it("does nothing in a folder too broad to search", async () => {
   vi.mocked(fs.indexFolder).mockRejectedValue("Too broad. [tooBroad]");
   await updateLinksAfterMove("/plan.md", "/a/plan.md", "/", t);
   expect(showConfirm).not.toHaveBeenCalled();
+});
+
+it("returns what it wrote, which an undo takes back where it is unchanged since", async () => {
+  vi.mocked(showConfirm).mockResolvedValue(true);
+  const edits = await updateLinksAfterMove(
+    "/w/plan.md",
+    "/w/archive/plan.md",
+    "/w",
+    t,
+  );
+  expect(edits.map((e) => e.path)).toEqual([
+    "/w/index.md",
+    "/w/archive/plan.md",
+  ]);
+  // Moved back: the moved document's edit is found where it went back to;
+  // one typed in since is left as it is, and said.
+  const now: Record<string, string> = {
+    "/w/index.md": edits[0]!.after,
+    "/w/plan.md": "typed since",
+  };
+  vi.mocked(fs.readTextFile).mockImplementation(async (p) => now[p]!);
+  vi.mocked(fs.writeTextFile).mockClear();
+  const back = await revertEdits(
+    edits,
+    [{ from: "/w/plan.md", to: "/w/archive/plan.md" }],
+    t,
+  );
+  expect(written()).toEqual({ "/w/index.md": disk["/w/index.md"] });
+  expect(back).toEqual([
+    { path: "/w/index.md", before: edits[0]!.after, after: edits[0]!.before },
+  ]);
+  expect(showMessage).toHaveBeenCalledOnce();
 });

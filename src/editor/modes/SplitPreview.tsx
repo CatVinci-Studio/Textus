@@ -15,6 +15,8 @@ export function SplitPreview({
   const settingsRef = useLatest(settings);
   return (
     <EditorPreview
+      // Drawn afresh for a new line-break setting (line-breaks-plugin).
+      key={settings.singleNewline}
       markdown={markdown}
       docPath={filePath}
       label={t.splitPreview}

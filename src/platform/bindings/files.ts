@@ -63,6 +63,29 @@ export const commands = {
 	 */
 	save_pasted_image: (docPath: string | null, dataBase64: string, ext: string, folder: string) => __TAURI_INVOKE<SavedImage_Serialize>("save_pasted_image", { docPath, dataBase64, ext, folder }),
 	/**
+	 *  Copies `source` into the folder a pasted picture of `doc_path` would go
+	 *  to (a vault's attachment folder, else Settings > Images > Folder), under
+	 *  its own name - numbered when another file has it, the same one if it is
+	 *  there already - and returns the link to write. Its TypeScript side is
+	 *  `copiedFileLink` in src/app/file-drop/dropped-markdown.ts.
+	 */
+	save_dropped_file: (docPath: string, source: string, folder: string) => __TAURI_INVOKE<SavedImage_Serialize>("save_dropped_file", { docPath, source, folder }),
+	/**
+	 *  The file tree's copy (a paste, Duplicate, a drag with ⌥ or Ctrl): the
+	 *  file or folder `path` copied into the folder `into`, named as `naming`
+	 *  says. Returns the copy's path in `into`'s spelling. Its TypeScript side
+	 *  is `fs.copyEntry` in src/platform/ipc-files.ts.
+	 */
+	tree_copy_entry: (path: string, into: string, naming: CopyNaming) => __TAURI_INVOKE<string>("tree_copy_entry", { path, into, naming }),
+	/**
+	 *  Starts the system's drag of `paths` from this window, as copies (a move
+	 *  would take files from under open tabs with nothing to undo it). Resolves
+	 *  once the drag ends: true when something took it. Nothing starts once the
+	 *  button is already up. Its TypeScript side is `fs.dragOut` in
+	 *  src/platform/ipc-files.ts.
+	 */
+	start_file_drag_out: (paths: string[]) => __TAURI_INVOKE<boolean>("start_file_drag_out", { paths }),
+	/**
 	 *  Brings a document's images into the image folder of the file it was just
 	 *  saved as, rewriting each `src`: a draft's pasted images are moved, and on Save
 	 *  As images relative to the old document are copied. Anything else is left alone.
@@ -93,22 +116,49 @@ export const commands = {
 	 *  refused as tooBroad for the frontend to explain.
 	 */
 	pick_open_folder: () => __TAURI_INVOKE<string | null>("pick_open_folder"),
-	/**  Creates an empty Markdown document in `dir`. Returns its path. */
-	tree_create_document: (dir: string, name: string) => __TAURI_INVOKE<string>("tree_create_document", { dir, name }),
-	/**  Creates a folder in `dir`. Returns its path. */
-	tree_create_folder: (dir: string, name: string) => __TAURI_INVOKE<string>("tree_create_folder", { dir, name }),
-	/**  Moves a file or folder into the folder `into`. Returns its new path. */
-	tree_move_entry: (path: string, into: string) => __TAURI_INVOKE<string>("tree_move_entry", { path, into }),
+	/**
+	 *  Creates an empty Markdown document in `dir`, and the folders on the way
+	 *  a name with slashes gives.
+	 */
+	tree_create_document: (dir: string, name: string) => __TAURI_INVOKE<Created>("tree_create_document", { dir, name }),
+	/**
+	 *  Creates a folder in `dir`, and the folders on the way a name with
+	 *  slashes gives.
+	 */
+	tree_create_folder: (dir: string, name: string) => __TAURI_INVOKE<Created>("tree_create_folder", { dir, name }),
+	/**
+	 *  Moves a file or folder into the folder `into`, under its own name or
+	 *  `name` exactly as given (an undo putting it back as it was). With
+	 *  `keep_both`, a name taken there is numbered (`plan 2.md`), as a file
+	 *  manager keeps both; else it is refused. Returns its new path.
+	 */
+	tree_move_entry: (path: string, into: string, name: string | null, keepBoth: boolean) => __TAURI_INVOKE<string>("tree_move_entry", { path, into, name, keepBoth }),
 	/**
 	 *  Gives a file or folder a new name in its folder. A document renamed without
 	 *  an extension gets `.md`; a folder takes the name as typed. Returns its new path.
 	 */
 	tree_rename_entry: (path: string, name: string) => __TAURI_INVOKE<string>("tree_rename_entry", { path, name }),
 	/**
-	 *  Moves a file or folder to the system's Trash (Recycle Bin), never
-	 *  deleting it, and refuses the folder the tree is showing.
+	 *  Moves files and folders to the system's Trash (Recycle Bin) in turn, up
+	 *  to one that can't go, never deleting them, and refuses the folder the
+	 *  tree is showing. Says where the Trash keeps each, for `tree_put_back`,
+	 *  when the system says. A phone has no Trash: there a document is
+	 *  deleted, a folder never.
 	 */
-	tree_trash_entry: (path: string, root: string) => __TAURI_INVOKE<null>("tree_trash_entry", { path, root }),
+	tree_trash_entries: (paths: string[], root: string) => __TAURI_INVOKE<Trashing_Serialize>("tree_trash_entries", { paths, root }),
+	/**
+	 *  What `tree_trash_entries` sent to the Trash (kept at `place`) put back at
+	 *  `path`, never over anything there.
+	 */
+	tree_put_back: (place: string, path: string) => __TAURI_INVOKE<null>("tree_put_back", { place, path }),
+	/**
+	 *  Watches `dirs`, the folders open in this window's tree, in place of what
+	 *  it watched before; none stops. `seq` numbers the window's calls, which
+	 *  can arrive out of order: an older one than the last is passed over. False
+	 *  when one couldn't be watched (the system's limit on watches), or the
+	 *  window is gone: the tree then reads its folders on focus.
+	 */
+	tree_watch: (dirs: string[], seq: number | null) => __TAURI_INVOKE<boolean>("tree_watch", { dirs, seq }),
 	/**
 	 *  Where an Obsidian image embed's file is, as an absolute path for the asset
 	 *  protocol; None when it isn't an image or isn't in the vault.
@@ -211,7 +261,8 @@ export const commands = {
 	ui_state_get: () => __TAURI_INVOKE<Value>("ui_state_get"),
 	/**
 	 *  Same top-level merge as settings. Not broadcast: remembered for the next
-	 *  window or launch only.
+	 *  window or launch only. An imported theme's chrome lands after the
+	 *  settings that picked it: the windows' backgrounds follow it then.
 	 */
 	ui_state_patch: (patch: { [key in string]: Value }) => __TAURI_INVOKE<void>("ui_state_patch", { patch }),
 	/**
@@ -337,6 +388,26 @@ export type Conventions_Serialize = {
 	 *  They never apply by themselves.
 	 */
 	detected: Conventions_Serialize | null,
+};
+
+/**
+ *  How a copy is named: as itself, refused when that is taken; numbered
+ *  when taken (`report 2.pdf`), as a file manager keeps both; or as a copy
+ *  beside the original in the words of the pattern, as Finder names one
+ *  ("{name} copy": `report copy.pdf`, then `report copy 2.pdf`).
+ *  Its TypeScript side is `CopyNaming` in src/platform/bindings/files.ts.
+ */
+export type CopyNaming = "own" | "numbered" | { beside: string };
+
+/**
+ *  What a new document or folder made: its path, and the topmost entry
+ *  made for it (the first folder on the way that wasn't there, else the
+ *  entry itself), which an undo takes away. Shape shared with
+ *  `fs.createDocument` in src/platform/ipc-files.ts.
+ */
+export type Created = {
+	path: string,
+	made: string,
 };
 
 export type Daily = Daily_Serialize | Daily_Deserialize;
@@ -677,6 +748,33 @@ export type TemplateFormats_Deserialize = {
 export type TemplateFormats_Serialize = {
 	date: string | null,
 	time: string | null,
+};
+
+/**
+ *  What `tree_trash_entries` did: where the Trash keeps each entry that went
+ *  (None where the system doesn't say), and why the next one didn't go.
+ *  Shape shared with `fs.trashEntries` in src/platform/ipc-files.ts.
+ */
+export type Trashing = Trashing_Serialize | Trashing_Deserialize;
+
+/**
+ *  What `tree_trash_entries` did: where the Trash keeps each entry that went
+ *  (None where the system doesn't say), and why the next one didn't go.
+ *  Shape shared with `fs.trashEntries` in src/platform/ipc-files.ts.
+ */
+export type Trashing_Deserialize = {
+	places: (string | null)[],
+	error?: string | null,
+};
+
+/**
+ *  What `tree_trash_entries` did: where the Trash keeps each entry that went
+ *  (None where the system doesn't say), and why the next one didn't go.
+ *  Shape shared with `fs.trashEntries` in src/platform/ipc-files.ts.
+ */
+export type Trashing_Serialize = {
+	places: (string | null)[],
+	error: string | null,
 };
 
 export type UploadedImage = {

@@ -246,17 +246,18 @@ export function paginateDocument(
   for (const child of Array.from(root.children)) place(child);
 
   // Fill the last sheet to an exact page multiple, or it ends in a white
-  // band.
-  const body = doc.body;
-  const height = doc.documentElement.scrollHeight;
-  const fill = Math.ceil(height / pageHeight) * pageHeight - height;
-  if (fill > 0) {
-    const tail = doc.createElement("div");
-    tail.className = SPACER_CLASS;
-    tail.setAttribute("aria-hidden", "true");
-    tail.style.cssText = `height:${fill}px`;
-    body.appendChild(tail);
-  }
+  // band. Measured from where the content ends to the 1/64 px, never past
+  // the seam: scrollHeight is rounded, and a fraction over opens a blank
+  // page (#736).
+  // Below any float, and with no box of its own a theme could size.
+  const tail = makeSpacer(doc);
+  tail.style.clear = "both";
+  doc.body.appendChild(tail);
+  const end = top(tail);
+  const fill =
+    Math.floor((Math.ceil(end / pageHeight) * pageHeight - end) * 64) / 64;
+  if (fill > 0) tail.style.height = `${fill}px`;
+  else tail.remove();
   return inserted;
 }
 
@@ -272,6 +273,9 @@ export async function paginateHtml(
   frame.setAttribute("aria-hidden", "true");
   // Read from here, never run: a plugin's export may have changed the page.
   frame.setAttribute("sandbox", "allow-same-origin");
+  // No scrollbar: a classic one (Windows) narrows the text and every
+  // page after drifts up from the printed sheet's seams (#736).
+  frame.setAttribute("scrolling", "no");
   frame.tabIndex = -1;
   frame.style.cssText = `position:fixed;left:-${page.width * 4}px;top:0;width:${page.width}px;height:${page.height}px;border:0;visibility:hidden;pointer-events:none`;
   try {

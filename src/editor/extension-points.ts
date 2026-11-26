@@ -45,6 +45,8 @@ export {
   type EmbedKind,
 } from "./embeds/embed-sources";
 
+export { addCodeLanguage } from "./code/code-languages";
+
 import type { VerbatimRules } from "./markdown/verbatim-rules";
 
 interface EditorExtensions {

@@ -41,6 +41,12 @@ const SEVERITY_TEXT: Record<ReportChoice["severity"], TextKey> = {
   minor: "reportSeverityMinor",
 };
 
+/** A crash the report is about: its message, and what broke where. */
+export interface ReportCrash {
+  message: string;
+  details: string;
+}
+
 /**
  * What went wrong, in the user's words, with what Textus fills in shown
  * below it: sent to be filed as an issue, opened in GitHub's form, or
@@ -51,11 +57,15 @@ export function ReportProblemDialog({
   settings,
   open,
   onClose,
+  crash,
 }: {
   t: Strings;
   settings: Settings;
   open: boolean;
   onClose: () => void;
+  /** The window's crash (AppErrorBoundary): its trace is in the details,
+   *  and its message says what happened when the user writes nothing. */
+  crash?: ReportCrash;
 }) {
   const [facts, setFacts] = useState<ReportFacts | null>(null);
   useEffect(() => {
@@ -89,7 +99,7 @@ export function ReportProblemDialog({
         aria-label={t.reportTitle}
       >
         <h2 className="app-dialog-title app-dialog-info">{t.reportTitle}</h2>
-        <ReportForm t={t} facts={facts} close={close} />
+        <ReportForm t={t} facts={facts} close={close} crash={crash} />
       </div>
     </div>
   );
@@ -104,10 +114,12 @@ function ReportForm({
   t,
   facts,
   close,
+  crash,
 }: {
   t: Strings;
   facts: ReportFacts | null;
   close: () => void;
+  crash?: ReportCrash;
 }) {
   const [text, setText] = useState("");
   const [contact, setContact] = useState("");
@@ -117,8 +129,12 @@ function ReportForm({
     severity: "major",
   });
   const [phase, setPhase] = useState<Phase>({ state: "idle" });
-  const details = facts ? reportDetails(facts) : "";
-  const ready = !!facts && text.trim().length >= 5;
+  const details = facts
+    ? [crash?.details, reportDetails(facts)].filter(Boolean).join("\n")
+    : "";
+  // What happened: the user's words, else the crash's message.
+  const said = text.trim() || crash?.message || "";
+  const ready = !!facts && said.length >= 5;
 
   if (phase.state === "sent")
     return (
@@ -148,7 +164,7 @@ function ReportForm({
     setPhase({ state: "sending" });
     try {
       const sent = await systemIpc.sendReport(
-        reportPayload(facts, choice, text, details, contact),
+        reportPayload(facts, choice, said, details, contact),
       );
       setPhase({ state: "sent", ...sent });
     } catch (err) {
@@ -248,7 +264,7 @@ function ReportForm({
           disabled={!facts}
           onClick={() => {
             if (!facts) return;
-            void links.openWebLink(reportUrl(facts, text, details));
+            void links.openWebLink(reportUrl(facts, said, details));
             close();
           }}
         >

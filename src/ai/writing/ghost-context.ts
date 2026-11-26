@@ -100,9 +100,53 @@ export function hasProse(prose: string): boolean {
   return /\p{L}/u.test(prose);
 }
 
+/** The text between two positions, less the source of blocks drawn in its
+ *  place (`drawn`: a base's query, a plot's data), which the writer never
+ *  reads as text: a heading over a base was continued as iCalendar code
+ *  ("2026 Calendar" -> "::VEVENT") from the YAML under it. The block the
+ *  caret is in, if any, stays. */
+function contextText(
+  doc: ProseNode,
+  from: number,
+  to: number,
+  cursorPos: number,
+  drawn: (language: string) => boolean,
+): string {
+  const parts: string[] = [];
+  let start = from;
+  // The text between two drawn blocks, kept while it holds a textblock even
+  // an empty one (the caret's, at its end): its break from the next part is
+  // the paragraph break the drawn block stood between.
+  const part = (a: number, b: number) => {
+    let block = false;
+    if (a < b)
+      doc.nodesBetween(a, b, (node) => {
+        block ||= node.isTextblock;
+        return !block && !node.isTextblock;
+      });
+    const text = doc.textBetween(a, b, "\n\n");
+    if (text || block) parts.push(text);
+  };
+  doc.nodesBetween(from, to, (node, pos) => {
+    if (!node.type.spec.code || !node.isTextblock) return true;
+    const end = pos + node.nodeSize;
+    const language = String(node.attrs.language ?? "").toLowerCase();
+    if (cursorPos > pos && cursorPos < end) return false;
+    if (!language || !drawn(language)) return false;
+    part(start, Math.max(start, pos));
+    start = Math.min(end, to);
+    return false;
+  });
+  part(start, to);
+  return parts.join("\n\n");
+}
+
 export function completionContext(
   doc: ProseNode,
   cursorPos: number,
+  /** Whether a fenced block in this language is drawn rather than shown as
+   *  code: its source is left out of the text around the caret. */
+  drawn: (language: string) => boolean = () => false,
 ): { before: string; after: string; prose: string } {
   // A bounded window, as this runs on every keystroke before the debounce.
   // The 4x margin covers block boundaries, which take positions but no text.
@@ -111,8 +155,8 @@ export function completionContext(
     doc.content.size,
     cursorPos + 4 * MAX_AFTER_CONTEXT_CHARS,
   );
-  const before = doc.textBetween(from, cursorPos, "\n\n");
-  const after = doc.textBetween(cursorPos, to, "\n\n");
+  const before = contextText(doc, from, cursorPos, cursorPos, drawn);
+  const after = contextText(doc, cursorPos, to, cursorPos, drawn);
   const proseBefore = proseText(doc, from, cursorPos);
   const proseAfter = proseText(doc, cursorPos, to);
   return {
