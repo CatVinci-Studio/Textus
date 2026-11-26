@@ -278,7 +278,7 @@ export function FileTree({
                     >
                       <button
                         type="button"
-                        className="tx-icon-button tree-tool"
+                        className="tx-icon-button tree-tool tree-tool-kept"
                         aria-label={t.treeOpenAsFolder}
                         onClick={() => onOpenAsFolder(root)}
                       >

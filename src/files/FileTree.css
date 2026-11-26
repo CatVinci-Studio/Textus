@@ -216,10 +216,11 @@
 }
 
 /* Out of the way until wanted: shown while the pointer is over the panel
-   or focus is in it, as VS Code's explorer does. Touch has no hover. */
+   or focus is in it, as VS Code's explorer does. Touch has no hover. Open
+   This Folder stays: while the tree follows the document, it says so. */
 @media (any-hover: hover) {
   /* Hidden, they take no room: the folder's name has the whole line. */
-  .file-tree:not(:hover, :focus-within) .tree-tool {
+  .file-tree:not(:hover, :focus-within) .tree-tool:not(.tree-tool-kept) {
     display: none;
   }
 }
