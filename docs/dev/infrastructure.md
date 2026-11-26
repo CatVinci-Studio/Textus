@@ -52,6 +52,14 @@ Elsewhere:
 - Homebrew's bot bumps the official `textus` cask
   (`Casks/t/textus.rb` in `Homebrew/homebrew-cask`) after each stable
   release; nothing here pushes to it.
+- Windows package managers, submitted by community members and waiting
+  for review (#821): winget (`CatVinci.Textus`, one pull request to
+  `microsoft/winget-pkgs` per release, for example with Komac) and Scoop's
+  Extras bucket (`extras/textus`, which its Excavator bot bumps from the
+  manifest's `autoupdate`). Both build on the release assets' names
+  (`Textus_<version>_{x64,arm64}-setup.exe`, `…-portable.zip`), so keep
+  them. When each goes live, add its command to the README's install table
+  and the download page.
 - Two webhooks on this repository post to the studio's Discord server: new
   releases to `#textus-releases`; issues, pull requests and stars to
   `#textus-github`.

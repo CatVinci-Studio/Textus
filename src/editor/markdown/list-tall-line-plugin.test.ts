@@ -56,13 +56,7 @@ describe("a list item whose first line holds maths", () => {
     const tall = marked(view)
       .filter(([, on]) => on)
       .map(([text]) => text.split(" ")[0]);
-    expect(tall).toEqual([
-      "with",
-      "nested",
-      "numbered",
-      "task",
-      "bold",
-    ]);
+    expect(tall).toEqual(["with", "nested", "numbered", "task", "bold"]);
     expect(marked(view).find(([t]) => t === "nested plain")?.[1]).toBe(false);
     expect(marked(view).find(([t]) => t === "first plain")?.[1]).toBe(false);
     // A picture can wrap to a line of its own; WebKit then set the whole
