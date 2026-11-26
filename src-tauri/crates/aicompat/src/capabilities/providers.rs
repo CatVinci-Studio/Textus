@@ -213,6 +213,8 @@ pub(crate) const PROVIDERS: &[(&str, ProviderCaps)] = &[
             ..DEFAULT_CAPS
         },
     ),
+    // Magpie's gateway: OpenAI-compatible, the models it pools behind it.
+    ("magpie", DEFAULT_CAPS),
     ("custom", DEFAULT_CAPS),
 ];
 

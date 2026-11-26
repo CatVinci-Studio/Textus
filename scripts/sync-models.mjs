@@ -35,7 +35,7 @@ const PROVIDERS = {
   minimax: "minimax-cn",
   "minimax-intl": "minimax",
 };
-const UNMAPPED = ["openrouter", "opencode-go", "ollama", "custom"];
+const UNMAPPED = ["openrouter", "opencode-go", "ollama", "magpie", "custom"];
 
 function arg(name) {
   const i = process.argv.indexOf(name);
