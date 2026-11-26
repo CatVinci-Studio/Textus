@@ -1,8 +1,16 @@
 import { provideAiFileMarks } from "../ai/revision/file-marks";
 import { useTabsInBar } from "./islands/tabs-in-bar";
-import { showsStartPage, tabTitle } from "../document/doc-tabs";
+import {
+  isConversationTab,
+  showsStartPage,
+  tabTitle,
+} from "../document/doc-tabs";
 import { useWindowAi } from "./islands/useWindowAi";
-import { conversationIn } from "./islands/ai-tabs";
+import {
+  addFromTabRow,
+  conversationIn,
+  newConversation,
+} from "./islands/ai-tabs";
 import { ConventionsCard } from "./ConventionsCard";
 import { CornerStacks } from "../engine/controls/CornerToast";
 import { Suspense } from "react";
@@ -33,6 +41,7 @@ import { useWindowShell } from "./useWindowShell";
 import { useWindowDocuments } from "./useWindowDocuments";
 import { useWindowWiring } from "./useWindowWiring";
 import { Sidebar } from "./frame/Sidebar";
+import { documentTabMenu } from "./tabs/tab-menu-items";
 import { DocumentIslands } from "./islands/DocumentIslands";
 import { ClosePrompt } from "./ClosePrompt";
 import { DraftRestoredToast, WordImportNotice, ZenExit } from "./AppNotices";
@@ -69,6 +78,7 @@ const phoneParts = lazyModule(
 );
 const DocumentList = lazyComponent(phoneParts, (m) => m.DocumentList);
 const DocumentMenu = lazyComponent(phoneParts, (m) => m.DocumentMenu);
+const TabSwitcher = lazyComponent(phoneParts, (m) => m.TabSwitcher);
 
 /**
  * One window: its tabs, the panels around them, and the prompts and notices
@@ -121,7 +131,9 @@ function App() {
   // Whether the documents lie on islands: their tabs in the window bar's
   // row (or the row under a bar of its own), or one sheet alone under the
   // title's row - else a clean sheet (Zen), or the phone's own bar.
-  const tabsInBar = useTabsInBar(zenMode, showTabBar);
+  // A phone draws no tab row: its tabs are behind the document's name
+  // (TabSwitcher). The desktop keeps the row.
+  const tabsInBar = useTabsInBar(zenMode, showTabBar) && !phone;
   const tabRow = tabsInBar || !zenMode ? "bar" : undefined;
 
   // What Settings needs, as a sheet or as a tab.
@@ -190,6 +202,41 @@ function App() {
             agentShortcut={formatCombo(settings.shortcuts.toggleAgentPanel)}
             onToggleAgent={toggleAgentPanel}
             onToggleReadOnly={() => toggleReadOnly()}
+            tabSwitcher={
+              phone ? (
+                <TabSwitcher
+                  tabs={tabs}
+                  activeTabId={activeTabId}
+                  zen={zenMode}
+                  onActivate={setActiveTabId}
+                  // The tab row's +, which a phone does not draw: over a
+                  // conversation, another one.
+                  add={{
+                    label: isConversationTab(activeTab)
+                      ? t.chatNewConversation
+                      : t.menuNewFile,
+                    onSelect: () =>
+                      addFromTabRow(
+                        activeTab,
+                        settings.addTabShowsStartPage
+                          ? addStartTab
+                          : addBlankTab,
+                        newConversation,
+                      ),
+                  }}
+                  menuFor={documentTabMenu({
+                    tabs,
+                    activeTabId,
+                    onActivate: setActiveTabId,
+                    onClose: requestCloseTab,
+                    onToggleReadOnly: toggleReadOnly,
+                    onPin: (id, pinned) =>
+                      shell.tabState.updateTab(id, { pinned }),
+                    t,
+                  })}
+                />
+              ) : undefined
+            }
             documentMenu={
               phone && !activeTab.view && !showsStartPage(activeTab) ? (
                 <DocumentMenu

@@ -56,6 +56,7 @@ export function WindowBar({
   onToggleAgent,
   onToggleReadOnly,
   documentMenu,
+  tabSwitcher,
 }: {
   menuChecks: MenuChecks;
   title: string;
@@ -75,6 +76,9 @@ export function WindowBar({
   /** A phone's document menu (its ⋯), beside the AI toggle; none on a
    *  desktop, where the tabs and menus hold the document's actions. */
   documentMenu?: ReactNode;
+  /** A phone's tabs, behind the document's name in the bar; none on a
+   *  desktop, which keeps its tab row. */
+  tabSwitcher?: ReactNode;
 }) {
   const { t, settings } = useSettings();
   const bar = useBarLayout({
@@ -138,7 +142,7 @@ export function WindowBar({
         })}
         <WindowTitle
           placed={bar.rows === 1 && !bar.lead.includes("menu-bar") && !phone}
-          title={title}
+          title={tabSwitcher ?? title}
           dirty={dirty}
           readOnly={!!menuChecks.readOnly}
           onToggleReadOnly={onToggleReadOnly}
@@ -177,7 +181,8 @@ function WindowTitle({
   onToggleReadOnly,
 }: {
   placed: boolean;
-  title: string;
+  /** Its name, or a phone's tab switcher in its place. */
+  title: ReactNode;
   dirty: boolean;
   readOnly: boolean;
   onToggleReadOnly: () => void;
@@ -186,7 +191,10 @@ function WindowTitle({
   const titleRef = useTitleRoom(placed);
   // The unsaved dot leads the title, as a native edited title does.
   return (
-    <span className="window-bar-title" ref={titleRef}>
+    <span
+      className={`window-bar-title${typeof title === "string" ? "" : " window-bar-title-tabs"}`}
+      ref={titleRef}
+    >
       {dirty && (
         <Tooltip text={t.unsavedIndicator}>
           <span
@@ -196,7 +204,11 @@ function WindowTitle({
           />
         </Tooltip>
       )}
-      <span className="tx-truncate window-bar-title-text">{title}</span>
+      {typeof title === "string" ? (
+        <span className="tx-truncate window-bar-title-text">{title}</span>
+      ) : (
+        title
+      )}
       {readOnly && (
         <Tooltip text={t.readOnlyLock}>
           <button

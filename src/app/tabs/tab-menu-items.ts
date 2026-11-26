@@ -1,7 +1,9 @@
 import type { DocTab } from "../../document/doc-tabs";
 import { tabIsDirty } from "../../document/doc-tabs";
 import { tabReadOnly } from "../../document/read-only";
-import { tabPinned } from "../../document/pinned";
+import { keepPinned, tabPinned } from "../../document/pinned";
+import type { ContextMenuEntry } from "../../engine/controls/ContextMenu";
+import { contributedContextItems } from "../../registry/context-menu-items";
 import { pathItems } from "../../clipboard/copy-path";
 import { windowFolder } from "../../platform/window-folder";
 import { isWithin } from "../../utils/path";
@@ -70,6 +72,7 @@ export function tabMenuItems({
       {
         label: t.menuToggleReadOnly,
         checked: tabReadOnly(tab),
+        toggle: true,
         onSelect: () => onToggleReadOnly(id),
       },
     ];
@@ -99,4 +102,54 @@ export function tabMenuItems({
     ];
   };
   return { pathItem, readOnlyItem, closeManyItems };
+}
+
+/** Plugins' items for a tab's file ("tab/context"). */
+function pluginTabItems(path: string | null): ContextMenuEntry[] {
+  const added = contributedContextItems("tab/context", { path });
+  return added.length ? ["separator", ...added] : [];
+}
+
+/**
+ * A document tab's whole menu, the same wherever it opens: a tab's own in
+ * its row, or the tab in front's on a phone's list of tabs. `row` is the
+ * tabs it closes others among.
+ */
+export function documentTabMenu(
+  options: Parameters<typeof tabMenuItems>[0] & {
+    /** Pin Tab / Unpin Tab: kept by its file's path, as Read Only is. */
+    onPin: (tabId: string, pinned: boolean) => void;
+  },
+): (id: string, row: DocTab[]) => ContextMenuEntry[] {
+  const { tabs, onClose, onPin, t } = options;
+  const byId = new Map(tabs.map((tab) => [tab.id, tab]));
+  const { pathItem, readOnlyItem, closeManyItems } = tabMenuItems(options);
+  const pinItem = (id: string) => {
+    const tab = byId.get(id);
+    if (!tab) return [];
+    const pinned = tabPinned(tab);
+    return [
+      {
+        label: pinned ? t.menuUnpinTab : t.menuPinTab,
+        onSelect: () => {
+          if (tab.path) keepPinned(tab.path, !pinned);
+          onPin(id, !pinned);
+        },
+      },
+    ];
+  };
+  return (id, row) => [
+    ...pathItem(id, byId.get(id)?.path),
+    ...readOnlyItem(id),
+    ...pinItem(id),
+    "separator",
+    {
+      label: t.menuCloseTab,
+      // A pinned tab is unpinned first.
+      disabled: tabPinned(byId.get(id)),
+      onSelect: () => onClose(id),
+    },
+    ...closeManyItems(row, id),
+    ...pluginTabItems(byId.get(id)?.path ?? null),
+  ];
 }

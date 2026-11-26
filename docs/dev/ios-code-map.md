@@ -27,8 +27,11 @@ what the system can do follows the platform.**
   with `offPhone` (`app/frame/sidebar-tabs.tsx`: Outline, Plugins,
   Settings' gear) is not among a phone's drawer tabs (a phone has no rail:
   the sidebar comes in as the drawer, its panels' tabs in its header); and
-  an empty Files panel says ☰ opens files instead of repeating its rows. A tablet has no ⋯: its ☰
-  is the desktop's whole menu, its rail the desktop's.
+  an empty Files panel says ☰ opens files instead of repeating its rows. A
+  phone has no tab row either: the document's name in the bar opens its
+  tabs (`mobile/TabSwitcher.tsx`), each tab's menu the one its row would
+  show (`documentTabMenu`). A tablet has no ⋯: its ☰ is the desktop's
+  whole menu, its rail and tab row the desktop's.
 
 Contributions for phones are reviewed against this section.
 
