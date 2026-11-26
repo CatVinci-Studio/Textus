@@ -478,7 +478,8 @@ test("the AI's edge stepped past what the window can show stops there, and steps
   // The composer takes the focus as the panel opens; the keys go to the
   // divider after that.
   await expect(page.locator(".inline-chat-input").first()).toBeFocused();
-  const divider = page.getByRole("separator").first();
+  // The islands' divider, not the composer's grip.
+  const divider = page.locator(".split-divider");
   await divider.focus();
   for (let i = 0; i < 20; i++) await page.keyboard.press("ArrowLeft");
   // Read once it has glided there.
