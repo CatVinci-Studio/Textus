@@ -46,9 +46,10 @@ test("empty panels say what is so in the list's own text, with Open Folder where
   await rail.getByRole("button", { name: "Files" }).click();
   await expect(sidebar).toContainText("No folder is open yet.");
   const note = sidebar.locator(".tx-pane-empty");
-  await expect(
-    note.getByRole("button", { name: "Open Folder…" }),
-  ).toBeVisible();
+  // The three ways to begin, as the start page has them; Search has only
+  // Open Folder.
+  for (const name of ["New File", "Open…", "Open Folder…"])
+    await expect(note.getByRole("button", { name, exact: true })).toBeVisible();
   // The list's text, not a footnote.
   const sizes = await note.evaluate((el) => {
     const probe = document.createElement("span");
