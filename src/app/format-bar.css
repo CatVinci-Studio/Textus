@@ -73,6 +73,30 @@
   display: none;
 }
 
+/* A tablet's bar is a finger's height, each button a finger wide; what
+   then has no room folds behind "⋯" as on the desktop. */
+@media (pointer: coarse) {
+  :root:is([data-platform="ios"], [data-platform="android"]):not(
+      [data-window-chrome="mobile"]
+    ) {
+    --format-bar-height: calc(var(--touch-target) + var(--format-bar-bleed));
+  }
+  :root:is([data-platform="ios"], [data-platform="android"]):not(
+      [data-window-chrome="mobile"]
+    )
+    .format-bar
+    .tx-icon-button {
+    min-width: var(--touch-target);
+    min-height: var(--touch-target);
+  }
+  :root:is([data-platform="ios"], [data-platform="android"]):not(
+      [data-window-chrome="mobile"]
+    )
+    :is(.format-bar-row, .format-bar-group) {
+    gap: 0;
+  }
+}
+
 .format-bar .tx-icon-button[aria-pressed="true"] {
   background: var(--ui-hover);
   color: var(--ui-text);

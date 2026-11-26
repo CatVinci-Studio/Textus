@@ -1520,6 +1520,8 @@ utiliser une.
   uiTextSmall: "Petite",
   uiTextMedium: "Moyenne",
   uiTextLarge: "Grande",
+  uiTextXLarge: "Très grande",
+  uiTextXXLarge: "Maximale",
   startPageTab: "Accueil",
   startupOpenLabel: "À l'ouverture, afficher",
   startupOpenSession: "Les derniers documents",

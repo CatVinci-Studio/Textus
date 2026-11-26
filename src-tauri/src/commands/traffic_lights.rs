@@ -18,11 +18,12 @@ static BARS: Mutex<Option<HashMap<usize, f64>>> = Mutex::new(None);
 #[cfg(target_os = "macos")]
 static TRANSIT: Mutex<Option<std::collections::HashSet<usize>>> = Mutex::new(None);
 
-/// The window bar row for each Interface Size step (small, medium, large),
-/// as `src/engine/tokens/ui-sizes.css` sets `--window-bar-row`: a window's
+/// The window bar row for each Interface Size step (small, medium, large,
+/// and the touch screens' two larger, which keep Large's bar), as
+/// `src/engine/tokens/ui-sizes.css` sets `--window-bar-row`: a window's
 /// lights go in place as it opens, before its page can say.
 #[cfg(any(target_os = "macos", test))]
-const BAR_ROWS: [f64; 3] = [36.0, 40.0, 48.0];
+const BAR_ROWS: [f64; 5] = [36.0, 40.0, 48.0, 48.0, 48.0];
 
 /// The bar row Interface Size gives, from the settings as saved: the page's
 /// own steps (src/prefs/appearance-tables.json), old scales mapped on.

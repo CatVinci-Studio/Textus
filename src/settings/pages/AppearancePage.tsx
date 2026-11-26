@@ -1,14 +1,10 @@
 import type { SettingsPageProps } from "./types";
 import { SettingsGroup } from "./SettingsGroup";
-import {
-  UI_TEXT_SCALES,
-  type ContentWidth,
-  type UiTextScale,
-  type Settings,
-} from "../../prefs/SettingsContext";
+import { type ContentWidth, type Settings } from "../../prefs/SettingsContext";
 import { classicLookChange, isClassicLook } from "../../prefs/classic-look";
 import { SettingRow, ToggleRow } from "../sections/controls";
 import { DocTextFold } from "../sections/text-font";
+import { InterfaceSizeRow } from "../sections/interface-size";
 import { ThemeSection, ThemesTab } from "../sections/theme";
 import { Select } from "../../engine/controls/Select";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
@@ -19,11 +15,6 @@ import { useFileIconThemes } from "../../plugins/contributions/file-icon-themes"
  *  one, the interface's size, file icons; then the window's layout, its rail, title row
  *  and menu bar, and a button back to the look from before 1.4; one's own CSS
  *  under Advanced. */
-const SIZE_NAMES = {
-  0.85: "uiTextSmall",
-  1: "uiTextMedium",
-  1.25: "uiTextLarge",
-} as const satisfies Record<UiTextScale, string>;
 
 export function AppearancePage({
   t,
@@ -34,24 +25,7 @@ export function AppearancePage({
     <>
       <SettingsGroup title={t.navAppearance}>
         <ThemeSection t={t} />
-        <SettingRow label={t.uiTextScaleLabel}>
-          <Select
-            className="settings-select"
-            aria-label={t.uiTextScaleLabel}
-            value={String(settings.uiTextScale)}
-            onChange={(e) =>
-              setSettings({
-                uiTextScale: Number(e.target.value) as UiTextScale,
-              })
-            }
-          >
-            {UI_TEXT_SCALES.map((scale) => (
-              <option key={scale} value={String(scale)}>
-                {t[SIZE_NAMES[scale]]}
-              </option>
-            ))}
-          </Select>
-        </SettingRow>
+        <InterfaceSizeRow t={t} settings={settings} setSettings={setSettings} />
         <FileIconThemeRow t={t} settings={settings} setSettings={setSettings} />
       </SettingsGroup>
       {/* How a document's text is set: its own, whatever the theme. */}

@@ -43,6 +43,7 @@ export function ResizeHandle({
     <div
       className={`resize-handle tx-grip ${className}${grip.gripped ? " resize-handle-active" : ""}`}
       data-gripped={grip.gripped || undefined}
+      data-edge={edge}
       role="separator"
       aria-orientation={across ? "horizontal" : "vertical"}
       aria-label={label}

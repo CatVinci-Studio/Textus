@@ -50,7 +50,6 @@ export {
   type DocLetterSpacing,
   type DocTextSize,
   type DocLineSpacing,
-  type UiTextScale,
   type DiagramEngine,
   type ColorSwatchMode,
   REVISION_DISPLAYS,

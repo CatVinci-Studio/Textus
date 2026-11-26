@@ -243,6 +243,10 @@ export interface Settings {
   /// The size of the app's own UI text (not the document) as a factor on the
   /// type scale, for every window.
   uiTextScale: UiTextScale;
+  /** Interface Size taken from the system's text size (iOS's Text Size,
+   *  Android's font size) instead of uiTextScale; where there is none to
+   *  follow (a desktop), uiTextScale. */
+  uiSizeFollowsSystem: boolean;
   /** The reader's own document text size and line spacing, over the
    *  theme's; "auto" keeps the theme's. */
   docTextSize: DocTextSize;
@@ -408,6 +412,7 @@ export const DEFAULT_SETTINGS: Settings = {
   customCss: "",
   zoom: 1,
   uiTextScale: 1,
+  uiSizeFollowsSystem: true,
   docTextSize: "auto",
   docLineSpacing: "auto",
   docFont: "",

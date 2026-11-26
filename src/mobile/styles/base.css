@@ -211,7 +211,7 @@
     height: var(--touch-target);
   }
   :root:is([data-platform="ios"], [data-platform="android"])
-    :is(.tree-row, .tx-list-item, .context-menu-item) {
+    :is(.tree-row, .tx-list-item, .context-menu-item, .settings-row) {
     min-height: var(--touch-target);
   }
 
@@ -239,12 +239,22 @@
     z-index: 1;
   }
 
+  /* A "?" beside a row's control: its target over the control's where
+     they meet, the smaller one's. */
+  :root:is([data-platform="ios"], [data-platform="android"]) .info-tip-button {
+    z-index: 1;
+  }
   /* Pills, "?" and switches keep their look; a finger gets 44pt around
      whatever is shorter or narrower than that. */
-  :root:is([data-platform="ios"], [data-platform="android"]) .tx-button {
+  :root:is([data-platform="ios"], [data-platform="android"])
+    :is(.tx-button, .tx-select, .ui-select) {
     position: relative;
   }
-  :root:is([data-platform="ios"], [data-platform="android"]) .tx-button::after,
+  :root:is([data-platform="ios"], [data-platform="android"])
+    :is(.tx-button, .tx-select)::after,
+  /* A dropdown's ::after is its chevron. */
+  :root:is([data-platform="ios"], [data-platform="android"])
+    .ui-select::before,
   :root[data-window-chrome="mobile"] .tree-toolbar .tree-tool::after,
   :root:is([data-platform="ios"], [data-platform="android"])
     .info-tip-button::after,
@@ -253,6 +263,16 @@
     content: "";
     position: absolute;
     inset: min(0px, calc((100% - var(--touch-target)) / 2));
+  }
+}
+
+/* A search box a finger tall, the text field all of it. */
+@media (pointer: coarse) {
+  :root:is([data-platform="ios"], [data-platform="android"]) .tx-search {
+    height: max(var(--control-height-sm), var(--touch-target) + 2px);
+  }
+  :root:is([data-platform="ios"], [data-platform="android"]) .tx-search-input {
+    align-self: stretch;
   }
 }
 

@@ -75,7 +75,7 @@
   --chrome-scale: var(--ui-text-scale, 1);
   /* The app's own text, by role: a component names what its text is,
      never a size. The desktop's sizes are the presets' (ui-sizes below),
-     the phone's (iOS's text styles) under [data-window-chrome="mobile"].
+     the phone's (iOS's text styles) its own steps there too.
      The document's own text is the theme's, in em. */
   --text-footnote: var(--text-caption);
   --text-secondary: var(--text-body);
@@ -166,24 +166,15 @@
   );
 }
 
-/* iOS's text styles at their default size, and its control sizes. Hit
-   areas reach 44 on their own (mobile/styles). */
+/* The phone's control sizes. Hit areas reach 44 on their own
+   (mobile/styles). */
 :root[data-window-chrome="mobile"] {
   /* The phone's icons at their design size, under its chrome's step. */
   --icon-scale: 1.1;
   --text-list: var(--text-body);
   --control-height-sm: 36px;
   --control-height: 40px;
-  /* The phone keeps its first design, a step under the desktop's. */
-  --chrome-scale: calc(10 / 11);
-  --text-caption: calc(12px * var(--ui-text-scale, 1));
-  --text-footnote: calc(13px * var(--ui-text-scale, 1));
-  --text-secondary: calc(15px * var(--ui-text-scale, 1));
-  --text-control: calc(15px * var(--ui-text-scale, 1));
-  --text-body: calc(17px * var(--ui-text-scale, 1));
-  --text-body-large: calc(17px * var(--ui-text-scale, 1));
-  --text-title: calc(17px * var(--ui-text-scale, 1));
-  --text-large-title: calc(34px * var(--ui-text-scale, 1));
+  /* Its text and --chrome-scale, each step's: ui-sizes.css. */
 }
 
 @media (prefers-color-scheme: dark) {

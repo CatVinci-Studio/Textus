@@ -27,6 +27,24 @@ window.__textusBoot = function (boot, themeCss) {
   // The settings' values as the frontend has them (prefs/appearance-tables.json).
   var tables = boot.tables || {};
 
+  // The system's text size and the bounds of its steps: Android's font
+  // scale, iOS's body text; null on a desktop.
+  function systemSize(root) {
+    var sizes = tables.uiSystemSizes || {};
+    if (window.TextusAndroid && window.TextusAndroid.fontScale)
+      return { size: window.TextusAndroid.fontScale(), bounds: sizes.android };
+    var ios =
+      /^(iPhone|iPad|iPod)/.test(navigator.platform) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (!ios || !sizes.ios) return null;
+    var probe = document.createElement("span");
+    probe.style.font = "-apple-system-body";
+    root.appendChild(probe);
+    var size = parseFloat(window.getComputedStyle(probe).fontSize);
+    root.removeChild(probe);
+    return size > 0 ? { size: size, bounds: sizes.ios } : null;
+  }
+
   function apply(root) {
     // As localeOf() in src/i18n/langs.ts: a UI language, with Chinese given
     // the region that picks its glyphs.
@@ -59,6 +77,19 @@ window.__textusBoot = function (boot, themeCss) {
     var scale =
       (tables.uiTextScalesBefore || {})[String(settings.uiTextScale)] ||
       settings.uiTextScale;
+    // Or the system's text size's step on a phone or tablet
+    // (theme/system-text-size.ts; the default, settings-normalise.ts).
+    var follows =
+      settings.uiSizeFollowsSystem === true ||
+      (settings.uiSizeFollowsSystem === undefined &&
+        (settings.uiTextScale === undefined || settings.uiTextScale === 1));
+    var system = follows ? systemSize(root) : null;
+    if (system !== null) {
+      var bounds = system.bounds;
+      var at = 0;
+      while (at < bounds.length && system.size > bounds[at]) at++;
+      scale = (tables.uiTextScales || [])[at];
+    }
     var step = (tables.uiTextScales || []).indexOf(scale);
     if (scale !== 1 && step >= 0) {
       root.style.setProperty("--ui-text-scale", String(scale));

@@ -1434,6 +1434,8 @@ type /name in a conversation to use one.
   uiTextSmall: "Small",
   uiTextMedium: "Medium",
   uiTextLarge: "Large",
+  uiTextXLarge: "Extra Large",
+  uiTextXXLarge: "Largest",
   startPageTab: "Start",
   startupOpenLabel: "On launch, open",
   startupOpenSession: "Last documents",

@@ -423,6 +423,26 @@ describe("interface text size", () => {
     expect(root.style.getPropertyValue("--ui-text-scale")).toBe("");
   });
 
+  it("takes the system's text size's step where there is one, until a size is picked", () => {
+    const bridge = window as { TextusAndroid?: unknown };
+    bridge.TextusAndroid = { fontScale: () => 2, setAppearance: () => {} };
+    try {
+      boot({ languageChosen: true });
+      render(
+        <SettingsProvider>
+          <AppearanceSync />
+          <Probe />
+        </SettingsProvider>,
+      );
+      const root = document.documentElement;
+      expect(root.dataset.uiSize).toBe("xxlarge");
+      act(() => lastSet({ uiSizeFollowsSystem: false, uiTextScale: 0.85 }));
+      expect(root.dataset.uiSize).toBe("small");
+    } finally {
+      delete bridge.TextusAndroid;
+    }
+  });
+
   it("is applied by the boot script for the same sizes", () => {
     // The table the boot script is handed (settings/app.rs) is this one.
     expect(TABLES.uiTextScales).toEqual([...UI_TEXT_SCALES]);

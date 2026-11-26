@@ -1522,6 +1522,8 @@ export default {
   uiTextSmall: "Мелкий",
   uiTextMedium: "Средний",
   uiTextLarge: "Крупный",
+  uiTextXLarge: "Очень крупный",
+  uiTextXXLarge: "Максимальный",
   startPageTab: "Начало",
   startupOpenLabel: "При запуске открывать",
   startupOpenSession: "Последние документы",

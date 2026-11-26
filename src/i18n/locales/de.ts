@@ -1466,6 +1466,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   uiTextSmall: "Klein",
   uiTextMedium: "Mittel",
   uiTextLarge: "Groß",
+  uiTextXLarge: "Sehr groß",
+  uiTextXXLarge: "Maximal",
   startPageTab: "Start",
   startupOpenLabel: "Beim Start öffnen",
   startupOpenSession: "Die letzten Dokumente",

@@ -32,8 +32,9 @@
   position: absolute;
   top: 0;
   right: 4px;
-  width: 48px;
-  height: 48px;
+  /* A finger's at the smallest step too, where 48 is drawn smaller. */
+  width: max(var(--touch-target), 48px);
+  height: max(var(--touch-target), 48px);
 }
 
 /* The bar's symbol size, as the title row's. */
@@ -113,7 +114,7 @@
   justify-content: space-between;
   gap: 12px;
   width: 100%;
-  min-height: 48px;
+  min-height: max(var(--touch-target), 48px);
   position: relative;
   padding: 0 16px;
   border-radius: 0;

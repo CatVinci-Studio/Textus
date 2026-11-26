@@ -1323,6 +1323,8 @@ export default {
   uiTextSmall: "小",
   uiTextMedium: "中",
   uiTextLarge: "大",
+  uiTextXLarge: "特大",
+  uiTextXXLarge: "最大",
   startPageTab: "起始页",
   startupOpenLabel: "启动时打开",
   startupOpenSession: "上次的文档",

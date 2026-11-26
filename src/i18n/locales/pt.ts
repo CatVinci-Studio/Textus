@@ -1493,6 +1493,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   uiTextSmall: "Pequeno",
   uiTextMedium: "Médio",
   uiTextLarge: "Grande",
+  uiTextXLarge: "Muito grande",
+  uiTextXXLarge: "Máximo",
   startPageTab: "Início",
   startupOpenLabel: "Ao abrir, mostrar",
   startupOpenSession: "Os últimos documentos",

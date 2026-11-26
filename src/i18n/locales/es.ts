@@ -1510,6 +1510,8 @@ para usar una.
   uiTextSmall: "Pequeño",
   uiTextMedium: "Mediano",
   uiTextLarge: "Grande",
+  uiTextXLarge: "Muy grande",
+  uiTextXXLarge: "Máximo",
   startPageTab: "Inicio",
   startupOpenLabel: "Al abrir, mostrar",
   startupOpenSession: "Los últimos documentos",

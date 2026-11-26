@@ -1393,6 +1393,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   uiTextSmall: "小",
   uiTextMedium: "中",
   uiTextLarge: "大",
+  uiTextXLarge: "特大",
+  uiTextXXLarge: "最大",
   startPageTab: "スタート",
   startupOpenLabel: "起動時に開く",
   startupOpenSession: "前回の書類",

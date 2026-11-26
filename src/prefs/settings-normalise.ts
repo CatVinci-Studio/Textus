@@ -232,6 +232,11 @@ function readSettings(parsed: Raw | null): Settings {
         ? (parsed.uiTextScale as UiTextScale)
         : (UI_TEXT_SCALES_BEFORE[String(parsed.uiTextScale)] ??
           DEFAULT_SETTINGS.uiTextScale),
+      // A size picked before there was a system's to follow stays picked.
+      uiSizeFollowsSystem:
+        typeof parsed.uiSizeFollowsSystem === "boolean"
+          ? parsed.uiSizeFollowsSystem
+          : parsed.uiTextScale === undefined || parsed.uiTextScale === 1,
       docTextSize: DOC_TEXT_SIZES.includes(parsed.docTextSize as DocTextSize)
         ? (parsed.docTextSize as DocTextSize)
         : DEFAULT_SETTINGS.docTextSize,
