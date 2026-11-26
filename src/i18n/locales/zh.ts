@@ -1106,6 +1106,8 @@ export default {
   menuExit: "退出",
   menuNewFile: "新建文件",
   menuOpenFile: "打开…",
+  startOpenFile: "打开文件",
+  startOpenFolder: "打开文件夹",
   menuOpenRecent: "最近打开",
   menuRecentNone: "还没有最近文件",
   menuRecentClear: "清空列表",

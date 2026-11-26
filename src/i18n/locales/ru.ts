@@ -1298,6 +1298,8 @@ export default {
   menuExit: "Выход",
   menuNewFile: "Новый файл",
   menuOpenFile: "Открыть…",
+  startOpenFile: "Открыть файл",
+  startOpenFolder: "Открыть папку",
   menuOpenRecent: "Открыть недавние",
   menuRecentNone: "Нет недавних файлов",
   menuRecentClear: "Очистить меню",

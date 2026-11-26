@@ -1108,6 +1108,8 @@ export default {
   menuExit: "結束",
   menuNewFile: "新增檔案",
   menuOpenFile: "開啟…",
+  startOpenFile: "開啟檔案",
+  startOpenFolder: "開啟資料夾",
   menuOpenRecent: "最近使用的檔案",
   menuRecentNone: "還沒有最近的檔案",
   menuRecentClear: "清除選單",

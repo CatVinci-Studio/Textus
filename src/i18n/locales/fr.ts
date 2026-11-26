@@ -1295,6 +1295,8 @@ utiliser une.
   menuExit: "Quitter",
   menuNewFile: "Nouveau fichier",
   menuOpenFile: "Ouvrir…",
+  startOpenFile: "Ouvrir un fichier",
+  startOpenFolder: "Ouvrir un dossier",
   menuOpenRecent: "Ouvrir l'élément récent",
   menuRecentNone: "Aucun fichier récent",
   menuRecentClear: "Effacer le menu",

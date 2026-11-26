@@ -125,7 +125,7 @@ for (const { name, device } of TOUCH_DEVICES)
       // A phone: a line saying ☰ opens files. A tablet: no folder, and the
       // Open Folder button.
       await expect
-        .soft(sidebar.getByRole("button", { name: "Open Folder…" }))
+        .soft(sidebar.getByRole("button", { name: "Open Folder" }))
         .toHaveCount(phone ? 0 : 1);
       await expect
         .soft(sidebar)

@@ -1173,6 +1173,8 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuExit: "終了",
   menuNewFile: "新規ファイル",
   menuOpenFile: "開く…",
+  startOpenFile: "ファイルを開く",
+  startOpenFolder: "フォルダーを開く",
   menuOpenRecent: "最近使った項目",
   menuRecentNone: "最近使ったファイルはありません",
   menuRecentClear: "メニューを消去",

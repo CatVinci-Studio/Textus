@@ -1285,6 +1285,8 @@ para usar una.
   menuExit: "Salir",
   menuNewFile: "Nuevo archivo",
   menuOpenFile: "Abrir…",
+  startOpenFile: "Abrir archivo",
+  startOpenFolder: "Abrir carpeta",
   menuOpenRecent: "Abrir recientes",
   menuRecentNone: "No hay archivos recientes",
   menuRecentClear: "Borrar menú",

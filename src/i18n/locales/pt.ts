@@ -1268,6 +1268,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuExit: "Sair",
   menuNewFile: "Novo Arquivo",
   menuOpenFile: "Abrir…",
+  startOpenFile: "Abrir Arquivo",
+  startOpenFolder: "Abrir Pasta",
   menuOpenRecent: "Abrir Recente",
   menuRecentNone: "Nenhum Arquivo Recente",
   menuRecentClear: "Limpar Menu",

@@ -1242,6 +1242,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuExit: "Beenden",
   menuNewFile: "Neue Datei",
   menuOpenFile: "Öffnen…",
+  startOpenFile: "Datei öffnen",
+  startOpenFolder: "Ordner öffnen",
   menuOpenRecent: "Zuletzt geöffnet",
   menuRecentNone: "Keine zuletzt geöffneten Dateien",
   menuRecentClear: "Menü leeren",

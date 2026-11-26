@@ -1160,6 +1160,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuExit: "끝내기",
   menuNewFile: "새 파일",
   menuOpenFile: "열기…",
+  startOpenFile: "파일 열기",
+  startOpenFolder: "폴더 열기",
   menuOpenRecent: "최근 사용 항목 열기",
   menuRecentNone: "최근 파일 없음",
   menuRecentClear: "메뉴 지우기",

@@ -1210,6 +1210,8 @@ type /name in a conversation to use one.
   menuExit: "Exit",
   menuNewFile: "New File",
   menuOpenFile: "Open…",
+  startOpenFile: "Open File",
+  startOpenFolder: "Open Folder",
   menuOpenRecent: "Open Recent",
   menuRecentNone: "No Recent Files",
   menuRecentClear: "Clear Menu",
