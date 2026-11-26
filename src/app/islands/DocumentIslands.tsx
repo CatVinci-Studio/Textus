@@ -28,7 +28,7 @@ import type { Strings } from "../../i18n/strings";
 import type { TourAi } from "../../utils/events";
 import type { AgentMode } from "../../prefs/SettingsContext";
 import { TabBar } from "../../engine/controls/tabs/TabBar";
-import { tabMenuItems } from "../tabs/tab-menu-items";
+import { documentTabMenu } from "../tabs/tab-menu-items";
 import { FormatBar } from "../FormatBar";
 import { useIslands } from "../../engine/layout/useIslands";
 import { panesOf, type Pane } from "../../engine/layout/tree";
@@ -40,7 +40,6 @@ import {
   windowTabs,
 } from "../../engine/layout/store";
 import {
-  keepPinned,
   pinnedFirst,
   placeAmongPinned,
   tabPinned,
@@ -50,17 +49,8 @@ import { TabRowsShown } from "./tab-rows";
 import { pullTab } from "./tab-pull";
 import { addFromTabRow, newConversation } from "./ai-tabs";
 import { useDocumentsApart } from "./useDocumentsApart";
-import type { ContextMenuItem } from "../../engine/controls/ContextMenu";
-import { contributedContextItems } from "../../registry/context-menu-items";
 
 type TabBarProps = ComponentProps<typeof TabBar>;
-
-function pluginTabItems(
-  path: string | null,
-): (ContextMenuItem | "separator")[] {
-  const added = contributedContextItems("tab/context", { path });
-  return added.length ? ["separator", ...added] : [];
-}
 
 /** Panes named in reading order, for tests and styles to find. */
 const ORDINALS = ["first", "second", "third", "fourth", "fifth", "sixth"];
@@ -144,21 +134,6 @@ export function DocumentIslands({
   // its row, the sheet reaches up into the bar's.
   const cells = new Map<string, CSSProperties | undefined>();
   const body = (id: string) => cells.get(id);
-  // Pin Tab / Unpin Tab: kept by its file's path, as Read Only is.
-  const pinItem = (id: string) => {
-    const tab = byId.get(id);
-    if (!tab) return [];
-    const pinned = tabPinned(tab);
-    return [
-      {
-        label: pinned ? t.menuUnpinTab : t.menuPinTab,
-        onSelect: () => {
-          if (tab.path) keepPinned(tab.path, !pinned);
-          onPin(id, !pinned);
-        },
-      },
-    ];
-  };
   // Each row with its pinned tabs first, whatever put them elsewhere (a
   // pin, a tab come from another island).
   const order = panes
@@ -177,12 +152,13 @@ export function DocumentIslands({
       if (sorted.some((id, i) => id !== p.tabs[i])) setTabOrder(p.id, sorted);
     }
   }, [order]);
-  const { pathItem, readOnlyItem, closeManyItems } = tabMenuItems({
+  const menuFor = documentTabMenu({
     tabs,
     activeTabId,
     onActivate,
     onClose,
     onToggleReadOnly,
+    onPin,
     t,
   });
   // A document opened from a panel's island goes apart from its pages.
@@ -251,20 +227,7 @@ export function DocumentIslands({
             : null
       }
       // Open beside and Move to New Window are drags (pullTab).
-      menuFor={(id) => [
-        ...pathItem(id, byId.get(id)?.path),
-        ...readOnlyItem(id),
-        ...pinItem(id),
-        "separator",
-        {
-          label: t.menuCloseTab,
-          // A pinned tab is unpinned first.
-          disabled: tabPinned(byId.get(id)),
-          onSelect: () => onClose(id),
-        },
-        ...closeManyItems(list, id),
-        ...pluginTabItems(byId.get(id)?.path ?? null),
-      ]}
+      menuFor={(id) => menuFor(id, list)}
       labels={{
         tabs: t.menuDocuments,
         close: t.menuCloseTab,
