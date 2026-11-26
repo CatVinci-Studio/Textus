@@ -52,8 +52,8 @@ test.describe("a phone on its side", () => {
     // Its whole width shows, a margin short of the corner's room.
     expect(island.x + island.width).toBeLessThan(844 - 47);
     await page.locator(".window-bar-sidebar-toggle").tap();
-    const drawer = (await page.locator(".sidebar").boundingBox())!;
-    expect(drawer.x).toBeGreaterThanOrEqual(47);
+    const rail = (await page.locator(".activity-rail").boundingBox())!;
+    expect(rail.x).toBeGreaterThanOrEqual(47);
     await page.locator(".window-bar-sidebar-toggle").tap();
     await page.locator(".window-menu-button").tap();
     await page.getByRole("menuitem", { name: /设置/ }).tap();
@@ -102,17 +102,14 @@ for (const { name, device } of TOUCH_DEVICES)
   test.describe(`on ${name}`, () => {
     test.use(device);
 
-    test("a command has one way in: the rail or drawer, the empty sidebar and ☰ don't repeat another's", async ({
+    test("a command has one way in: the rail, the empty sidebar and ☰ don't repeat another's", async ({
       page,
     }) => {
       await openApp(page, { settings: { language: "en" } });
       const phone = name === "a phone";
       const toggle = page.locator(".window-bar-sidebar-toggle:visible");
       if (phone) await toggle.tap();
-      // A phone's panel tabs are the drawer's header; a tablet's the rail.
-      const rail = page.getByRole(phone ? "toolbar" : "navigation", {
-        name: "Activity bar",
-      });
+      const rail = page.getByRole("navigation", { name: "Activity bar" });
       await expect(rail.getByRole("button", { name: "Files" })).toBeVisible();
       // A phone's outline is ⋯'s, its Settings ☰'s; a tablet's are the
       // desktop's.
@@ -195,11 +192,10 @@ for (const { name, device } of TOUCH_DEVICES)
       ]);
       await emit(page, "menu-open-folder");
       await expect(page.locator(".tree-row").first()).toBeVisible();
-      // A phone's panels are the drawer's tabs, its Settings ☰'s: no rail.
       await big([
-        ...(phone
-          ? [".sidebar-tab"]
-          : [".activity-rail-item", ".activity-rail-settings"]),
+        ".activity-rail-item",
+        // A phone's Settings is ☰'s: no gear.
+        ...(phone ? [] : [".activity-rail-settings"]),
         ".tree-tool",
         ".tree-row",
       ]);
@@ -274,7 +270,7 @@ test.describe("a phone's bar buttons", () => {
     await openApp(page, { settings: { language: "en" } });
     const toggle = page.locator(".window-bar-sidebar-toggle:visible");
     await toggle.tap();
-    await expect(page.locator(".sidebar-tab").first()).toBeVisible();
+    await expect(page.locator(".activity-rail")).toBeVisible();
     // Closed again by the toggle, the last thing tapped.
     await toggle.tap();
     await expect(toggle).toHaveAttribute("aria-pressed", "false");

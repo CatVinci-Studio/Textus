@@ -153,19 +153,15 @@ for (const device of DEVICES)
         "A first line",
       );
 
-      // The phone keeps its library out of sight until asked; it comes in
-      // pushing the island aside, its panel tabs in the drawer's header.
+      // The phone keeps its rail and sidebar out of sight until asked; they
+      // come in pushing the island aside.
       const toggle = page.locator(".window-bar-sidebar-toggle:visible");
       if (await toggle.count()) await toggle.tap();
+      await expect(page.locator(".activity-rail")).toBeVisible();
+      await fitsTheScreen(page, ".activity-rail");
+      // A phone's Settings is ☰'s, a sheet over the window; a tablet's the
+      // rail's gear and a tab, as on the desktop.
       if (device.name === "a phone") {
-        // No rail: the drawer's header has the panels a phone shows (Files,
-        // Search; Outline is the document's ⋯, Settings ☰'s).
-        await expect(page.locator(".activity-rail")).toHaveCount(0);
-        await expect(page.locator(".sidebar-tab")).toHaveCount(2);
-        await fitsTheScreen(page, ".sidebar");
-        // Settings is the menu's, a sheet over the window: the drawer goes
-        // first, as a tap beside it does.
-        await toggle.tap();
         await page.locator(".window-menu-button").tap();
         await page.getByRole("menuitem", { name: /设置/ }).tap();
         const dialog = page.getByRole("dialog", { name: "设置" });
@@ -174,9 +170,6 @@ for (const device of DEVICES)
         ).toBeVisible();
         await fitsTheScreen(page, '[role="dialog"]');
       } else {
-        // A tablet keeps the rail, its gear opening Settings as a tab.
-        await expect(page.locator(".activity-rail")).toBeVisible();
-        await fitsTheScreen(page, ".activity-rail");
         await page.locator(".activity-rail-settings").tap();
         await expect(page.locator(".settings-tab-page")).toBeVisible();
         // Its sidebar opens with it: the sheet takes the room left in the
@@ -222,7 +215,7 @@ test.describe("searching on a phone", () => {
     await openPath(page, "/w/b.md");
     const toggle = page.locator(".window-bar-sidebar-toggle:visible");
     if (await toggle.count()) await toggle.tap();
-    await page.locator('[data-sidebar-tab="search"]').tap();
+    await page.locator('[data-rail-id="search"]').tap();
     await page.locator(".search-panel input").first().fill("needle");
     await page.locator(".search-text-line").first().tap();
     const hit = page.locator(".ProseMirror:visible p", {
