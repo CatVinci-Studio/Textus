@@ -80,7 +80,7 @@
   padding-left: 1.5em;
 }
 
-/* A first line taller than its text - a matrix or a picture in it: the
+/* A first line taller than its text - a matrix in it: the
    marker stands on that line's baseline, not at its top. The item is a grid
    so the marker and the first block align by baseline; a zero-width space
    gives a drawn marker a baseline, and its drop below the line's top moves
