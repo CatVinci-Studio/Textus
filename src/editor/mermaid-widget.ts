@@ -18,6 +18,8 @@ export function diagramWidget(
   at: {
     /** What its fold is kept under. */
     fold: string;
+    /** The diagram's source: a strip keeps its scale, the rest fits. */
+    source: string;
   },
 ): HTMLElement {
   // The block, which folds to a line; the drawing's box inside it
@@ -38,7 +40,7 @@ export function diagramWidget(
     view.dom,
     () => {
       container.innerHTML = svg;
-      keepReadable(container);
+      keepReadable(container, at.source);
       container.append(zoomButton(container));
     },
     () => container.replaceChildren(),
