@@ -25,8 +25,9 @@ what the system can do follows the platform.**
   replace, source mode, share). Each command has one way in: the sidebar
   and Textus AI are the bar's buttons, so ☰ has no rows for them; a tab
   with `offPhone` (`app/frame/sidebar-tabs.tsx`: Outline, Plugins,
-  Settings' gear) is not on a phone's rail; and an empty Files panel says
-  ☰ opens files instead of repeating its rows. A tablet has no ⋯: its ☰
+  Settings' gear) is not among a phone's drawer tabs (a phone has no rail:
+  the sidebar comes in as the drawer, its panels' tabs in its header); and
+  an empty Files panel says ☰ opens files instead of repeating its rows. A tablet has no ⋯: its ☰
   is the desktop's whole menu, its rail the desktop's.
 
 Contributions for phones are reviewed against this section.

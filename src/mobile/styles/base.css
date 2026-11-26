@@ -166,7 +166,7 @@
     .window-bar-sidebar-toggle,
     .window-bar-toggle,
     .tab-bar-add,
-    .activity-rail-item,
+    .sidebar-tab,
     .agent-panel-actions .inline-chat-header-button
   ) {
   --icon-scale: 1.35;
