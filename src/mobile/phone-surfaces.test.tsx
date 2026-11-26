@@ -27,7 +27,7 @@ const { Select } = await import("../engine/controls/Select");
 const { ColorField } = await import("../engine/controls/ColorField");
 
 describe("on a phone", () => {
-  it("a menu is the desktop's, and takes the focus from a field", () => {
+  it("a menu is the desktop's, takes the focus from a field and gives it back", () => {
     const share = vi.fn();
     const onClose = vi.fn();
     // Typing in a document: the menu takes the focus from it.
@@ -52,9 +52,37 @@ describe("on a phone", () => {
     );
     expect(document.querySelector(".sheet-scrim")).toBeNull();
     expect(doc).not.toHaveFocus();
-    doc.remove();
     fireEvent.click(screen.getByRole("menuitem", { name: "Share" }));
     expect(share).toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalled();
+    expect(doc).toHaveFocus();
+    doc.remove();
+  });
+
+  it("a menu's open group folds on Escape (Android's Back) before the menu closes", () => {
+    const onClose = vi.fn();
+    render(
+      <ContextMenu
+        x={0}
+        y={0}
+        title="notes.md"
+        items={[
+          {
+            label: "Copy Path",
+            items: [{ label: "Relative", onSelect: () => {} }],
+          },
+        ]}
+        onClose={onClose}
+      />,
+    );
+    fireEvent.click(screen.getByRole("menuitem", { name: "Copy Path" }));
+    const row = screen.getByRole("menuitem", { name: "Relative" });
+    fireEvent.keyDown(row, { key: "Escape" });
+    expect(screen.queryByRole("menuitem", { name: "Relative" })).toBeNull();
+    expect(onClose).not.toHaveBeenCalled();
+    fireEvent.keyDown(screen.getByRole("menuitem", { name: "Copy Path" }), {
+      key: "Escape",
+    });
     expect(onClose).toHaveBeenCalled();
   });
 

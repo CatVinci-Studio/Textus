@@ -103,6 +103,14 @@ export function MenuPanel({
   );
 
   function keyDown(e: KeyboardEvent<HTMLDivElement>) {
+    // Escape, Android's Back, folds a phone's open group before it closes
+    // the menu.
+    if (e.key === "Escape" && inline && open) {
+      e.preventDefault();
+      e.stopPropagation();
+      setOpen(null);
+      return;
+    }
     const next = menuKeyStep(e.key, ref.current, MENU_ROWS);
     if (next) {
       e.preventDefault();
