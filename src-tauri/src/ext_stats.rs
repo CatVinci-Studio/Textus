@@ -116,9 +116,11 @@ pub fn counted_url(app: &AppHandle, d: &Download) -> Option<String> {
 /// redirects to (a page where no endpoint is deployed, say).
 pub fn check_redirected(response: &reqwest::Response) -> Result<(), String> {
     match endpoint() {
-        Some(base) if is_endpoint(response.url(), &base) => {
-            Err("the install counter didn't redirect".into())
-        }
+        Some(base) if is_endpoint(response.url(), &base) => Err(format!(
+            "the install counter didn't redirect (still at {}, proxy: {})",
+            response.url(),
+            aicompat::system_proxy::proxy_display()
+        )),
         _ => Ok(()),
     }
 }
@@ -148,6 +150,9 @@ where
 
 /// Whether a redirect to `next` is followed: from the endpoint `base` only
 /// to `direct`, the package asked for; anywhere else as `then` allows.
+/// The endpoint may redirect to a mirror host that serves the same path
+/// (textus.md → textus.catvinci.com), so a path match on a trusted host is
+/// accepted too.
 fn may_follow(
     previous: &[Url],
     next: &Url,
@@ -161,10 +166,17 @@ fn may_follow(
         .is_some_and(|(from, base)| is_endpoint(from, base));
     previous.len() < 5
         && if from_endpoint {
-            next.as_str() == direct
+            next.as_str() == direct || same_package(next, direct, then)
         } else {
             then(next)
         }
+}
+
+/// Whether `next` is the same package as `direct` on a trusted host: the
+/// endpoint may redirect across mirror hosts (textus.md ↔ textus.catvinci.com)
+/// that serve the same paths.
+fn same_package(next: &Url, direct: &str, then: fn(&Url) -> bool) -> bool {
+    then(next) && Url::parse(direct).is_ok_and(|direct| next.path() == direct.path())
 }
 
 /// A redirect policy for downloading `direct`, perhaps through the endpoint.
@@ -305,6 +317,25 @@ mod tests {
         let package = [Url::parse(DIRECT).unwrap()];
         assert!(may_follow(&package, &other, DIRECT, base, |_| true));
         assert!(!may_follow(&package, &other, DIRECT, base, elsewhere));
+    }
+
+    #[test]
+    fn from_the_endpoint_a_mirror_host_serving_the_same_path_is_followed() {
+        let base = Some(ENDPOINT);
+        let from = [Url::parse(&format!("{ENDPOINT}download?id=a.b")).unwrap()];
+        let download_host = |url: &Url| {
+            url.scheme() == "https"
+                && matches!(url.host_str(), Some("textus.md" | "textus.catvinci.com"))
+        };
+        // The endpoint redirects to the other mirror host, same path.
+        let mirror =
+            Url::parse("https://textus.catvinci.com/plugin-release/a.b-v1.0.0/a.b-1.0.0.zip")
+                .unwrap();
+        assert!(may_follow(&from, &mirror, DIRECT, base, download_host));
+        // A different path on a trusted host is not the package asked for.
+        let wrong_path =
+            Url::parse("https://textus.catvinci.com/plugin-release/other/other.zip").unwrap();
+        assert!(!may_follow(&from, &wrong_path, DIRECT, base, download_host));
     }
 
     #[test]
