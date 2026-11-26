@@ -672,7 +672,7 @@ test.describe("reordering tabs on a phone", () => {
 test.describe("a phone's tab row", () => {
   test.use(PHONE);
 
-  test("lists every tab by its whole name from the second on", async ({
+  test("lists every tab by its whole name from the second on, how many, and the open tab's menu", async ({
     page,
   }) => {
     await page.addInitScript(() => {
@@ -686,7 +686,13 @@ test.describe("a phone's tab row", () => {
     await openPath(page, "/w/b.md");
     const list = page.locator(".tab-bar-list:visible");
     await expect(list).toHaveCount(1);
+    await expect(list).toHaveText("2");
     await list.tap();
     await expect(page.getByRole("menuitemradio")).toHaveCount(2);
+    // The open tab's own menu under the list: a long press on a narrow
+    // row's tab is easy to miss.
+    await expect(
+      page.getByRole("menuitem", { name: "固定标签" }),
+    ).toBeVisible();
   });
 });

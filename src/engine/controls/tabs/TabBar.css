@@ -278,8 +278,16 @@
   }
 }
 
-.tab-bar-list svg {
-  rotate: 90deg;
+/* How many tabs: a figure in a quiet capsule, as a count reads. */
+.tab-bar-list-count {
+  min-width: 1.6em;
+  padding: 0 0.4em;
+  border-radius: var(--shape-pill);
+  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  line-height: 1.6;
+  font-variant-numeric: tabular-nums;
 }
 
 .word-count {

@@ -2,7 +2,7 @@ import { onAppearance } from "../../tokens/appearance";
 import { useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { flushSync } from "react-dom";
 import { useMenuButton } from "../useMenuButton";
-import { ChevronIcon } from "../icons";
+import type { ContextMenuEntry } from "../ContextMenu";
 import { Tooltip } from "../Tooltip";
 import { onFontsChange } from "../text-measure";
 import type { TabInfo } from "./TabPill";
@@ -107,26 +107,35 @@ export function useTabFit(
   );
 }
 
-/** The row's list of every tab, the open one ticked; picking one shows it. */
+/**
+ * The row's list of every tab by its whole name, the open one ticked;
+ * picking one shows it. The button says how many there are; under the
+ * list, the open tab's own menu, which a long press on a narrow row's
+ * tab hides.
+ */
 export function TabListButton({
   tabs,
   activeTabId,
   onActivate,
   label,
+  activeMenu,
 }: {
   tabs: TabInfo[];
   activeTabId: string;
   onActivate: (id: string) => void;
   label: string;
+  activeMenu?: () => ContextMenuEntry[];
 }) {
   const list = useMenuButton(
-    () =>
-      tabs.map((tab) => ({
+    () => [
+      ...tabs.map((tab) => ({
         // Its unsaved dot too, as on the tab; an Untitled one by its tip.
         label: `${tab.tip && !tab.path ? `${tab.title} · ${tab.tip}` : tab.title}${tab.dirty ? " •" : ""}`,
         checked: tab.id === activeTabId,
         onSelect: () => onActivate(tab.id),
       })),
+      ...(activeMenu ? ["separator" as const, ...activeMenu()] : []),
+    ],
     { alignEnd: true },
   );
   return (
@@ -138,7 +147,7 @@ export function TabListButton({
           aria-label={label}
           {...list.button}
         >
-          <ChevronIcon />
+          <span className="tab-bar-list-count">{tabs.length}</span>
         </button>
       </Tooltip>
       {list.menu}
