@@ -14,6 +14,11 @@ what the system can do follows the platform.**
   gets the desktop's interface with touch adjustments. iPhone and Android
   phones look and behave the same: the same menus, sheets, Settings sheet
   and document page.
+- **One design:** the phone layout adapts the desktop's own parts - the
+  activity rail, the tab row, the sidebar, the islands - to the width and
+  to touch (sizes, spacing, where a menu opens). It doesn't swap them for
+  another navigation: no drawer in place of the rail, no tab switcher in
+  place of the tab row (#772 and #774 were taken back in 1.4.8 for this).
 - **Capability:** what differs by system is asked only through
   `src/platform/capabilities.ts` (`hasSystemBack`, `canPickImageFile`,
   `hasTextusAi`, the safe area...). `isAndroidApp` isn't exported, and the
