@@ -2,13 +2,34 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import { DIAGRAM_LANGUAGES } from "./diagram-languages";
 import type { DrawnDiagram } from "./diagram-engine";
 
-/** The smallest a diagram is scaled down to fit the column; one wider than
- *  that keeps this scale and scrolls, so a long timeline stays readable. */
+/** The smallest a strip diagram is scaled down to fit the column; one wider
+ *  than that keeps this scale and scrolls, so a long timeline stays readable. */
 const MIN_SCALE = 0.65;
 
+/** The diagrams laid out as one long strip, told by their type keyword:
+ *  their SVG carries no class to tell them by. */
+const STRIPS = ["gantt", "timeline", "gitGraph", "journey"];
+
+/** The source's type keyword: past a front-matter block, `%%` comments and
+ *  a `%%{init}%%` directive over several lines. */
+function diagramType(source: string): string {
+  const text = source
+    .replace(/^\s*---\n[\s\S]*?\n---[^\n]*(\n|$)/, "")
+    .replace(/%%\{[\s\S]*?\}%%/g, "");
+  for (const line of text.split("\n")) {
+    const head = line.trim();
+    if (head && !head.startsWith("%%")) return head.split(/[\s:]/)[0];
+  }
+  return "";
+}
+
 /** `container`'s drawing given the least width it can be read at, from its
- *  viewBox. One laid out for the column, as a chart is, is never held. */
-export function keepReadable(container: HTMLElement) {
+ *  viewBox. A strip keeps this scale and scrolls; anything else — an ER's
+ *  entities, a flowchart's nodes — is a closed layout that must be seen
+ *  whole, so it fits the column and its zoom button shows it large. One
+ *  laid out for the column, as a chart is, is never held. */
+export function keepReadable(container: HTMLElement, source: string) {
+  if (!STRIPS.includes(diagramType(source))) return;
   const svg = container.querySelector("svg");
   const width = svg?.viewBox?.baseVal?.width;
   if (!svg || !width) return;

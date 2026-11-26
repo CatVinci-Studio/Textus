@@ -94,6 +94,26 @@ test("a diagram folds to its line, its source kept, and stays folded", async ({
   await expect(doc.locator(".mermaid-preview svg")).toBeVisible();
 });
 
+// #801: a diagram first in a document sat under the caret the document
+// opened with, and showed only its source.
+test("a diagram first in a document is drawn as it opens, its source a click away", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __devFiles: Record<string, string> }).__devFiles = {
+      "/work/d.md": "```mermaid\ngraph LR\n  A --> B\n```\n\nafter\n",
+    };
+  });
+  await openApp(page);
+  await openPath(page, "/work/d.md");
+  const doc = page.locator('[data-active-tab="true"] .ProseMirror');
+  const drawing = doc.locator(".mermaid-preview svg");
+  await expect(drawing).toBeVisible();
+  await expect(doc.locator(".mermaid-source-hidden")).toHaveCount(1);
+  await drawing.click();
+  await expect(doc.locator(".mermaid-source-hidden")).toHaveCount(0);
+});
+
 test("a heading folds its section away, keeps the text, and opens for a caret", async ({
   page,
 }) => {
@@ -199,4 +219,40 @@ test("a diagram drawn above the screen doesn't move what is on screen", async ({
   });
   await settled(page);
   expect(Math.abs((await read.boundingBox())!.y - before)).toBeLessThan(1);
+});
+
+// #815: a picture after a list item's text wraps to a line of its own; the
+// item is as tall as its lines, with no gap above them (WebKit's was).
+test("a wide picture after a list item's text leaves no gap above the item", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __devFiles: Record<string, string> }).__devFiles = {
+      "/work/a.md": "- one\n- two, then a picture![](wide.svg)\n\nAfter\n",
+      "/work/wide.svg": "",
+    };
+  });
+  await page.route("http://asset.localhost/**", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400"><rect width="600" height="400" fill="red"/></svg>',
+    }),
+  );
+  await openApp(page);
+  await openPath(page, "/work/a.md");
+  const item = page.locator('[data-active-tab="true"] .ProseMirror li').last();
+  await expect
+    .poll(() =>
+      item
+        .locator("img")
+        .first()
+        .evaluate((img) => img.clientHeight),
+    )
+    .toBeGreaterThan(100);
+  const gap = await item.evaluate(
+    (li) =>
+      li.querySelector("p")!.getBoundingClientRect().top -
+      li.getBoundingClientRect().top,
+  );
+  expect(gap).toBeLessThan(2);
 });

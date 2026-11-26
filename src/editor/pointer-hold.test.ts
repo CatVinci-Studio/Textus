@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it } from "vitest";
 import { closeViews, openView, type TestView } from "./editor-view-kit";
+import { createTestEditor } from "./editor-test-kit";
 
 // A drag selection begun on bold text or a heading selected nothing: the
 // caret arriving drew the span's `**` or the heading's `#` under the
@@ -123,4 +124,17 @@ it("puts the caret again where it is once a link's source shows around it", asyn
   } finally {
     selection.addRange = add;
   }
+});
+
+// A document just opened: its caret placed by no one, so a block first in it
+// (a diagram, a formula) stays drawn, and the first key shows the source
+// before it types into it (#801).
+it("nothing shows as source until a key, a click or a touch", async () => {
+  const t = await openView("# Title\n\nWords.", {}, (markdown, settings) =>
+    createTestEditor(markdown, settings, null, { untouched: true }),
+  );
+  t.select(t.caretAt("Title", 2));
+  expect(marks(t)).toEqual([]);
+  t.view.dom.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true }));
+  expect(marks(t)).toEqual(["# "]);
 });

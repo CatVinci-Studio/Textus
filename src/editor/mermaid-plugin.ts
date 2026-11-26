@@ -123,6 +123,7 @@ export function createMermaidPreviewPlugin(options: {
           (view: EditorView, getPos: () => number | undefined) =>
             diagramWidget(view, getPos, svg, {
               fold: `${options.path() ?? ""}\ndiagram:${fnv1a(code).toString(36)}`,
+              source: node.textContent,
             }),
           // ProseMirror reuses a widget's DOM while its key is unchanged, so the
           // source is part of the key; the position isn't, or typing above a diagram

@@ -94,6 +94,9 @@ export function showDocImage(
   stillWanted: () => boolean = () => true,
 ): void {
   img.decoding = "async";
+  // No referrer, as a browser opening the picture sends: hosts that guard
+  // against hotlinking answer 403 to our origin (#816).
+  img.referrerPolicy = "no-referrer";
   // Loaded only as it comes near the screen (set before the src, or it
   // loads at once): a short note can hold many large photos.
   img.loading = "lazy";
@@ -112,6 +115,8 @@ export function showDocImage(
       })
       .catch(() => {});
   } else {
+    // A raw <img> may have started loading with the old policy: start over.
+    img.removeAttribute("src");
     img.src = resolveImageSrc(src, doc);
   }
   img.dataset.docSrc = src;

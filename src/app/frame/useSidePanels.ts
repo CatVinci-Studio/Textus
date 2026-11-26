@@ -33,14 +33,14 @@ function subscribeWindowResize(onChange: () => void) {
 }
 
 /** Whether the window shows the activity rail: on in Settings, or turned
- *  off but with the sidebar open. A phone's is always there, under the
- *  page with the sidebar, both shown as the page is pushed aside. */
+ *  off but with the sidebar open. A phone has none: its library comes in
+ *  as the drawer, the panels' tabs in its header (Sidebar.tsx). */
 export function railShown(
   settings: Pick<Settings, "activityRail">,
   open: boolean,
   phone: boolean,
 ): boolean {
-  return settings.activityRail || phone || open;
+  return !phone && (settings.activityRail || open);
 }
 
 type SetOpen = Dispatch<SetStateAction<boolean>>;

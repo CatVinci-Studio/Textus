@@ -56,10 +56,7 @@ pub(super) async fn fetch() -> Result<String, String> {
             )
         })?;
         if !response.status().is_success() {
-            return Err(format!(
-                "The plugin catalog answered {}.",
-                response.status()
-            ));
+            return Err(format!("The plugin catalog {}", answered(&response)));
         }
         let body = crate::net::read_limited(response, MAX_CATALOG_BYTES)
             .await
@@ -71,6 +68,23 @@ pub(super) async fn fetch() -> Result<String, String> {
 }
 
 /// A slow or dropped connection often holds on a second try.
+/// What a failed answer was and where it came from: an intercepting proxy
+/// answers with its own redirect, and "the mirror failed" against "the
+/// proxy's portal answered" is the whole diagnosis.
+fn answered(response: &reqwest::Response) -> String {
+    let pointed = response
+        .headers()
+        .get(reqwest::header::LOCATION)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("-");
+    format!(
+        "answered {} from {} (pointed at {pointed}; proxy: {}).",
+        response.status(),
+        response.url(),
+        aicompat::system_proxy::proxy_display()
+    )
+}
+
 async fn twice<T, F, Fut>(attempt: F) -> Result<T, String>
 where
     F: Fn() -> Fut,
@@ -141,10 +155,7 @@ pub(super) async fn download_with(
             .map_err(|e| format!("Couldn't download {what}: {}", crate::net::error_text(&e)))?;
         ext_stats::check_redirected(&response)?;
         if !response.status().is_success() {
-            return Err(format!(
-                "The download of {what} answered {}.",
-                response.status()
-            ));
+            return Err(format!("The download of {what} {}", answered(&response)));
         }
         crate::net::read_limited(response, super::MAX_PACKAGE as usize)
             .await

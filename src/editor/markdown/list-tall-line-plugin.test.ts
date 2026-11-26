@@ -35,13 +35,13 @@ function paragraphAt(view: EditorView, text: string): number {
   return at;
 }
 
-describe("a list item whose first line holds maths or a picture", () => {
+describe("a list item whose first line holds maths", () => {
   it("is marked, nested ones and tasks too, the rest not", async () => {
     const view = await open(
       [
         "- plain",
         "- with $x^2$ maths",
-        "  - nested ![p](p.png)",
+        "  - nested $n$",
         "  - nested plain",
         "1. numbered $y$",
         "- [ ] task $z$",
@@ -56,16 +56,12 @@ describe("a list item whose first line holds maths or a picture", () => {
     const tall = marked(view)
       .filter(([, on]) => on)
       .map(([text]) => text.split(" ")[0]);
-    expect(tall).toEqual([
-      "with",
-      "nested",
-      "numbered",
-      "task",
-      "bold",
-      "embed",
-    ]);
+    expect(tall).toEqual(["with", "nested", "numbered", "task", "bold"]);
     expect(marked(view).find(([t]) => t === "nested plain")?.[1]).toBe(false);
     expect(marked(view).find(([t]) => t === "first plain")?.[1]).toBe(false);
+    // A picture can wrap to a line of its own; WebKit then set the whole
+    // item that much lower (#815).
+    expect(marked(view).find(([t]) => t.startsWith("embed"))?.[1]).toBe(false);
   });
 
   it("follows an edit to the item", async () => {
