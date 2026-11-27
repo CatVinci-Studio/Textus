@@ -6,6 +6,7 @@ import {
   linkPath,
   noteStem,
   relativePath,
+  realSlashed,
   slashed,
 } from "../utils/path";
 import { pathIndex, resolveTarget, type PathIndex } from "./link-resolve";
@@ -49,7 +50,7 @@ const isRelative = (link: string) => /^\.\.?\//.test(link);
 /** `link` from the folder `dir`, `.` and `..` folded (utils' joinPath keeps
  *  them). */
 function join(dir: string, link: string): string {
-  const parts = slashed(dir).split("/");
+  const parts = realSlashed(dir).split("/");
   for (const part of slashed(link).split("/")) {
     if (part === "" || part === ".") continue;
     if (part === "..") parts.pop();
@@ -86,14 +87,15 @@ interface Context {
 function contextOf(move: LinkMove): Context {
   const moved = (path: string) => {
     const to = move.moved(path);
-    return to === null ? null : slashed(to);
+    return to === null ? null : realSlashed(to);
   };
-  const files = move.files.map(slashed);
-  const root = slashed(move.root).replace(/\/+$/, "") || "/";
+  const files = move.files.map(realSlashed);
+  const root = realSlashed(move.root).replace(/\/+$/, "") || "/";
   const linkRoot = move.linkRoot === undefined ? root : move.linkRoot;
   return {
     root,
-    linkRoot: linkRoot === null ? null : slashed(linkRoot).replace(/\/+$/, ""),
+    linkRoot:
+      linkRoot === null ? null : realSlashed(linkRoot).replace(/\/+$/, ""),
     before: pathIndex(root, files),
     after: pathIndex(
       root,
@@ -133,7 +135,7 @@ function rewriteWith(
   ctx: Context,
 ): { text: string; count: number } {
   const { before, after, moved, root } = ctx;
-  const oldDoc = slashed(doc);
+  const oldDoc = realSlashed(doc);
   const newDoc = moved(oldDoc) ?? oldDoc;
   const docMoved = newDoc !== oldDoc;
   const oldDir = dirOf(oldDoc);
@@ -262,10 +264,10 @@ function rewriteWith(
 
 /** Where `path` went when `from` became `to` (a file, or a folder and all in it). */
 export function movedBy(from: string, to: string) {
-  const a = slashed(from);
-  const b = slashed(to);
+  const a = realSlashed(from);
+  const b = realSlashed(to);
   return (path: string): string | null => {
-    const p = slashed(path);
+    const p = realSlashed(path);
     if (p === a) return b;
     return p.startsWith(`${a}/`) ? b + p.slice(a.length) : null;
   };
@@ -295,8 +297,8 @@ export function linkPlanner(
   plan: LinkPlan,
 ): (doc: { path: string; text: string }) => LinkUpdate | null {
   const back = movedBy(plan.to, plan.from);
-  const oldFiles = files.map((f) => back(f) ?? slashed(f));
-  const from = slashed(plan.from);
+  const oldFiles = files.map((f) => back(f) ?? realSlashed(f));
+  const from = realSlashed(plan.from);
   // A hidden or ignored file isn't indexed, but its links still count.
   if (!oldFiles.some((f) => f === from || f.startsWith(`${from}/`)))
     oldFiles.push(from);
@@ -307,7 +309,7 @@ export function linkPlanner(
     linkRoot: plan.linkRoot,
   });
   return (doc) => {
-    const oldPath = back(doc.path) ?? slashed(doc.path);
+    const oldPath = back(doc.path) ?? realSlashed(doc.path);
     const { text, count } = rewriteWith(doc.text, oldPath, ctx);
     return count > 0 ? { path: doc.path, text, count } : null;
   };

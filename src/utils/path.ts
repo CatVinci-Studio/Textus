@@ -239,6 +239,11 @@ export function hasUrlScheme(src: string): boolean {
 /** `path` with "/" between its parts, as links and the folder index keep it. */
 export const slashed = (path: string): string => path.replace(/\\/g, "/");
 
+/** A real file's path with "/": a Windows path's "\\" is a separator, but
+ *  on macOS and Linux it is part of a name (`a\\b.md` is one file). */
+export const realSlashed = (path: string): string =>
+  /^(?:[A-Za-z]:|\\\\)/.test(path) ? slashed(path) : path;
+
 const NOTE_FILE = new RegExp(`\\.(${MARKDOWN_EXTENSIONS.join("|")})$`, "i");
 
 /** A note: a Markdown file, which a wikilink names without its extension. */
