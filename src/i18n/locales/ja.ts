@@ -539,6 +539,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   searchPlaceholder: "ファイル名と本文を検索",
   searchNamesHeading: "ファイル",
   searchTextHeading: "本文",
+  searchHeadingsHeading: "この文書の見出し",
   searchTextCapped: "最初の一部の結果だけを表示しています。",
   searchTextNone: "本文に一致するものはありません。",
   searchNoFolder: "フォルダーを開くと、その中の文書をすべて検索できます。",

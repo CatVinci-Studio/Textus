@@ -562,6 +562,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   searchPlaceholder: "Namen und Text suchen",
   searchNamesHeading: "Dateien",
   searchTextHeading: "In Dokumenten",
+  searchHeadingsHeading: "In diesem Dokument",
   searchTextCapped: "Nur die ersten Treffer werden gezeigt.",
   searchTextNone: "Kein Text passt.",
   searchNoFolder: "Öffne einen Ordner, um alle seine Dokumente zu durchsuchen.",

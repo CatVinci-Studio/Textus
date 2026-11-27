@@ -502,6 +502,7 @@ export default {
   searchPlaceholder: "搜尋檔名和內容",
   searchNamesHeading: "檔案",
   searchTextHeading: "文件內容",
+  searchHeadingsHeading: "本文標題",
   searchTextCapped: "只顯示了前面一部分結果。",
   searchTextNone: "內容裡沒有找到。",
   searchNoFolder: "開啟資料夾後，可以搜尋裡面的所有文件。",

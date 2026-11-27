@@ -584,6 +584,7 @@ export default {
   searchPlaceholder: "Поиск по именам и тексту",
   searchNamesHeading: "Файлы",
   searchTextHeading: "В документах",
+  searchHeadingsHeading: "В этом документе",
   searchTextCapped: "Показаны только первые совпадения.",
   searchTextNone: "В тексте ничего не найдено.",
   searchNoFolder: "Откройте папку, чтобы искать по всем её документам.",

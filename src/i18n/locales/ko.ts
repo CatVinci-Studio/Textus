@@ -529,6 +529,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   searchPlaceholder: "파일 이름과 내용 검색",
   searchNamesHeading: "파일",
   searchTextHeading: "본문",
+  searchHeadingsHeading: "이 문서의 제목",
   searchTextCapped: "앞부분 결과만 표시합니다.",
   searchTextNone: "본문에서 찾지 못했습니다.",
   searchNoFolder: "폴더를 열면 그 안의 모든 문서를 검색할 수 있습니다.",

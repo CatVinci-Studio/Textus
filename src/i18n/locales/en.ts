@@ -554,6 +554,7 @@ type /name in a conversation to use one.
   searchPlaceholder: "Search names and text",
   searchNamesHeading: "Files",
   searchTextHeading: "In documents",
+  searchHeadingsHeading: "In this document",
   searchTextCapped: "Showing the first matches only.",
   searchTextNone: "No text matches.",
   searchNoFolder: "Open a folder to search all its documents.",

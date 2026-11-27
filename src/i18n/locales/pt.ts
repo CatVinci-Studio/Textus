@@ -572,6 +572,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   searchPlaceholder: "Pesquisar nomes e texto",
   searchNamesHeading: "Arquivos",
   searchTextHeading: "Nos documentos",
+  searchHeadingsHeading: "Neste documento",
   searchTextCapped: "Mostrando só os primeiros resultados.",
   searchTextNone: "Nenhum texto corresponde.",
   searchNoFolder: "Abra uma pasta para pesquisar em todos os seus documentos.",

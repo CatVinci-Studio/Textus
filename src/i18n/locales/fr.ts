@@ -584,6 +584,7 @@ utiliser une.
   searchPlaceholder: "Rechercher noms et texte",
   searchNamesHeading: "Fichiers",
   searchTextHeading: "Dans les documents",
+  searchHeadingsHeading: "Dans ce document",
   searchTextCapped: "Seuls les premiers résultats sont affichés.",
   searchTextNone: "Aucun texte ne correspond.",
   searchNoFolder: "Ouvrez un dossier pour chercher dans tous ses documents.",
