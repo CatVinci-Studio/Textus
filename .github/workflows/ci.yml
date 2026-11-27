@@ -508,14 +508,11 @@ jobs:
   # iOS: proves the shared code and the #[cfg(desktop)] gating compile for
   # the iOS simulator (docs/dev/ios-code-map.md). No secrets and no signing: the
   # Xcode project is generated fresh (gen/apple is not committed) and the
-  # simulator build is unsigned (--no-sign). Not a required check while the
-  # iOS port is young.
+  # simulator build is unsigned (--no-sign). The App Store ships iOS now,
+  # so a failure here fails the run and the release that calls it.
   ios:
     needs: changes
     if: needs.changes.outputs.full == 'true'
-    # Not required: its failure shows here without failing the run (or
-    # the release that calls it).
-    continue-on-error: true
     runs-on: xcode-27
     timeout-minutes: 60
     env:
