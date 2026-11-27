@@ -227,9 +227,10 @@
   z-index: 1;
 }
 
-/* A "?" beside a row's control: its target over the control's where
-   they meet, the smaller one's. */
-:root[data-touch] .info-tip-button {
+/* A row's "?" over its own control's target where the two meet (a row
+   stacked at a large size puts the control right under it); only in the
+   row: a heading's "?" lies over nothing of its own. */
+:root[data-touch] .settings-row .info-tip-button {
   z-index: 1;
 }
 /* Pills, "?" and switches keep their look; a finger gets 44pt around
