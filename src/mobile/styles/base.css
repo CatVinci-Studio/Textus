@@ -146,10 +146,8 @@
 
 /* Focus rings are for keyboards. WebKit counts a focus the app moves itself
    as "visible", boxing whatever was just tapped. Text fields keep theirs. */
-@media (pointer: coarse) {
-  :root[data-window-chrome="mobile"] :focus-visible {
-    outline: none;
-  }
+:root[data-window-chrome="mobile"] :focus-visible {
+  outline: none;
 }
 
 /* The desktop's 12-15px glyphs read as specks in a 44pt button; iOS draws
@@ -168,92 +166,90 @@
 
 /* Small bar buttons keep their look; a finger gets a 44pt target around
    them, the AI's header buttons spaced so no target covers the next. */
-@media (pointer: coarse) {
-  :root[data-window-chrome="mobile"]
-    :is(.inline-chat-header-actions, .agent-island-tools) {
-    gap: 16px;
-  }
-  :root[data-window-chrome="mobile"] .inline-chat-header-button,
-  :root[data-touch] .window-menu-button {
-    position: relative;
-  }
-  /* The + is sticky at the row's end (TabBar.css), its own containing
-     block; a finger wide, as the scroller clips what reaches past it. A
-     tab's x keeps its size on a tablet: in a 32px tab a fingertip's target
-     would take the taps meant for the tab. */
-  :root[data-touch] .tab-bar-add {
-    min-width: var(--touch-target);
-  }
-  :root[data-window-chrome="mobile"]
-    :is(.inline-chat-header-button, .tab-bar-list)::after,
-  :root[data-touch] :is(.window-menu-button, .tab-bar-add)::after {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: var(--touch-target);
-    height: var(--touch-target);
-    transform: translate(-50%, -50%);
-  }
+:root[data-window-chrome="mobile"]
+  :is(.inline-chat-header-actions, .agent-island-tools) {
+  gap: 16px;
+}
+:root[data-window-chrome="mobile"] .inline-chat-header-button,
+:root[data-touch] .window-menu-button {
+  position: relative;
+}
+/* The + is sticky at the row's end (TabBar.css), its own containing
+   block; a finger wide, as the scroller clips what reaches past it. A
+   tab's x keeps its size on a tablet: in a 32px tab a fingertip's target
+   would take the taps meant for the tab. */
+:root[data-touch] .tab-bar-add {
+  min-width: var(--touch-target);
+}
+:root[data-window-chrome="mobile"]
+  :is(.inline-chat-header-button, .tab-bar-list)::after,
+:root[data-touch] :is(.window-menu-button, .tab-bar-add)::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  transform: translate(-50%, -50%);
+}
 
-  /* Bare glyphs and rows, a tablet's too: the box itself a finger wide. */
-  :root[data-touch] :is(.activity-rail-item, .tree-tool) {
-    width: var(--touch-target);
-    height: var(--touch-target);
-  }
-  :root[data-touch]
-    :is(.tree-row, .tx-list-item, .context-menu-item, .settings-row) {
-    min-height: var(--touch-target);
-  }
+/* Bare glyphs and rows, a tablet's too: the box itself a finger wide. */
+:root[data-touch] :is(.activity-rail-item, .tree-tool) {
+  width: var(--touch-target);
+  height: var(--touch-target);
+}
+:root[data-touch]
+  :is(.tree-row, .tx-list-item, .context-menu-item, .settings-row) {
+  min-height: var(--touch-target);
+}
 
-  /* A phone's folder tools stay small, leaving the name its room; each
-     44pt target overlaps the next one's, which it lies over. */
-  :root[data-window-chrome="mobile"] .tree-toolbar {
-    min-height: var(--touch-target);
-    gap: var(--space-2);
-    padding-right: calc((var(--touch-target) - var(--icon-button-s)) / 2);
-  }
-  :root[data-window-chrome="mobile"] .tree-toolbar .tree-tool {
-    position: relative;
-    z-index: 3;
-    width: var(--icon-button-s);
-    height: var(--icon-button-s);
-  }
-  :root[data-window-chrome="mobile"] .tree-toolbar .tree-tool ~ .tree-tool {
-    z-index: 2;
-  }
-  :root[data-window-chrome="mobile"]
-    .tree-toolbar
-    .tree-tool
-    ~ .tree-tool
-    ~ .tree-tool {
-    z-index: 1;
-  }
+/* A phone's folder tools stay small, leaving the name its room; each
+   44pt target overlaps the next one's, which it lies over. */
+:root[data-window-chrome="mobile"] .tree-toolbar {
+  min-height: var(--touch-target);
+  gap: var(--space-2);
+  padding-right: calc((var(--touch-target) - var(--icon-button-s)) / 2);
+}
+:root[data-window-chrome="mobile"] .tree-toolbar .tree-tool {
+  position: relative;
+  z-index: 3;
+  width: var(--icon-button-s);
+  height: var(--icon-button-s);
+}
+:root[data-window-chrome="mobile"] .tree-toolbar .tree-tool ~ .tree-tool {
+  z-index: 2;
+}
+:root[data-window-chrome="mobile"]
+  .tree-toolbar
+  .tree-tool
+  ~ .tree-tool
+  ~ .tree-tool {
+  z-index: 1;
+}
 
-  /* A "?" beside a row's control: its target over the control's where
-     they meet, the smaller one's. */
-  :root[data-touch] .info-tip-button {
-    z-index: 1;
-  }
-  /* Pills, "?" and switches keep their look; a finger gets 44pt around
-     whatever is shorter or narrower than that. */
-  :root[data-touch] :is(.tx-button, .tx-select, .ui-select) {
-    position: relative;
-  }
-  :root[data-touch]
-    :is(.tx-button, .tx-select)::after,
-  /* A dropdown's ::after is its chevron. */
-  :root[data-touch]
-    .ui-select::before,
-  :root[data-window-chrome="mobile"] .tree-toolbar .tree-tool::after,
-  :root[data-touch]
-    .info-tip-button::after,
-  :root[data-touch]
-    input[type="checkbox"].tx-switch::before {
-    content: "";
-    position: absolute;
-    inset: min(0px, calc((100% - var(--touch-target)) / 2));
-  }
+/* A "?" beside a row's control: its target over the control's where
+   they meet, the smaller one's. */
+:root[data-touch] .info-tip-button {
+  z-index: 1;
+}
+/* Pills, "?" and switches keep their look; a finger gets 44pt around
+   whatever is shorter or narrower than that. */
+:root[data-touch] :is(.tx-button, .tx-select, .ui-select) {
+  position: relative;
+}
+:root[data-touch]
+  :is(.tx-button, .tx-select)::after,
+/* A dropdown's ::after is its chevron. */
+:root[data-touch]
+  .ui-select::before,
+:root[data-window-chrome="mobile"] .tree-toolbar .tree-tool::after,
+:root[data-touch]
+  .info-tip-button::after,
+:root[data-touch]
+  input[type="checkbox"].tx-switch::before {
+  content: "";
+  position: absolute;
+  inset: min(0px, calc((100% - var(--touch-target)) / 2));
 }
 
 /* A search box a finger tall, the text field all of it. */

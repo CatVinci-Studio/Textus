@@ -86,9 +86,9 @@
 }
 
 /* A finger's grip on a touch screen: 44pt, the strip itself still a
-   line's width. It reaches into the panel it sizes, not over the page
-   beside it (a format bar's first button), nor down over the composer's
-   text. */
+   line's width. A side panel's reaches into the panel it sizes, not over
+   the page beside it (a format bar's first button); a top edge's reaches
+   up, not down over the composer's text. */
 :root[data-touch] .resize-handle::before {
   content: "";
   position: absolute;

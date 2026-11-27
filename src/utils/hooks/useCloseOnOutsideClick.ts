@@ -98,7 +98,9 @@ function isInside(target: Node, inside: string | HTMLElement | null): boolean {
   );
 }
 
-/** Drops the click the current tap is about to make. */
+/** Drops the click the current tap is about to make, and no other: a
+ *  press that turned into a scroll makes none, and the next tap's own
+ *  press ends the wait. */
 function swallowClick() {
   const drop = (e: MouseEvent) => {
     e.preventDefault();
@@ -107,10 +109,12 @@ function swallowClick() {
   };
   const done = () => {
     window.removeEventListener("click", drop, true);
+    window.removeEventListener("pointerdown", next, true);
     clearTimeout(timer);
   };
+  // Added after this press's own listeners have run.
+  const next = () => done();
   window.addEventListener("click", drop, true);
-  // A tap's click follows its lift at once; a press held into a scroll makes
-  // none, and the next tap must not lose its own.
-  const timer = setTimeout(done, 600);
+  setTimeout(() => window.addEventListener("pointerdown", next, true), 0);
+  const timer = setTimeout(done, 2000);
 }

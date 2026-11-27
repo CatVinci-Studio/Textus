@@ -407,6 +407,8 @@ describe("interface text size", () => {
   it("reads a size it no longer offers as the nearest of small, medium and large", () => {
     expect(normaliseSettings({ uiTextScale: 0.9 }).uiTextScale).toBe(0.85);
     expect(normaliseSettings({ uiTextScale: 1.1 }).uiTextScale).toBe(1);
+    // A touch screen's step past Large, brought to a desktop, reads as Large.
+    expect(normaliseSettings({ uiTextScale: 1.75 }).uiTextScale).toBe(1.25);
   });
 
   it("puts the size on the page for the UI's type scale, and takes it off at 100%", () => {

@@ -7,7 +7,7 @@
    (ui-sizes-phone.css). */
 :root {
   /* The document's margins grow with the interface up to Large's, the
-     rest of a larger step going to the text. */
+     rest of a larger step going to the text (UI_LARGE, settings-values.ts). */
   --margin-scale: min(var(--chrome-scale, 1), 1.25);
   /* The bar's own row; on a phone or tablet the status bar sits above it,
      inside the bar (--safe-top, mobile/styles/base.css). */

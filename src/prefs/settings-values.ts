@@ -51,7 +51,13 @@ export type UiTextScale = 0.85 | 1 | 1.25 | 1.5 | 1.75;
  *  and Largest are a touch screen's (iOS and Android), for the system's
  *  larger text; a desktop offers the first three. */
 export const UI_TEXT_SCALES = TABLES.uiTextScales as readonly UiTextScale[];
-export const DESKTOP_UI_TEXT_SCALES = UI_TEXT_SCALES.slice(0, 3);
+/** Large: the last step a desktop offers, where the bars and the
+ *  document's margins stop growing (ui-sizes.css's --margin-scale) and past
+ *  which an upright tablet takes the phone's layout. */
+export const UI_LARGE: UiTextScale = 1.25;
+export const DESKTOP_UI_TEXT_SCALES = UI_TEXT_SCALES.filter(
+  (scale) => scale <= UI_LARGE,
+);
 /** The system's text size each step reaches up to: iOS's body text in pt,
  *  Android's font scale. Past the last bound, the last step. */
 export const UI_SYSTEM_SIZES = TABLES.uiSystemSizes as {

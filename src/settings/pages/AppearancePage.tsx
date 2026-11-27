@@ -15,7 +15,6 @@ import { useFileIconThemes } from "../../plugins/contributions/file-icon-themes"
  *  one, the interface's size, file icons; then the window's layout, its rail, title row
  *  and menu bar, and a button back to the look from before 1.4; one's own CSS
  *  under Advanced. */
-
 export function AppearancePage({
   t,
   settings,

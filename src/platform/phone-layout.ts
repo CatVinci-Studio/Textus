@@ -1,5 +1,9 @@
 import { isMobileApp } from "./capabilities";
-import { UI_SIZE_NAMES, UI_TEXT_SCALES } from "../prefs/settings-values";
+import {
+  UI_LARGE,
+  UI_SIZE_NAMES,
+  UI_TEXT_SCALES,
+} from "../prefs/settings-values";
 
 /** The width at which a phone or tablet app takes the phone's layout: one
  *  island, the rail and sidebar pushed in from the left. Wider (a tablet,
@@ -17,7 +21,7 @@ const PHONE_SHORT_SIDE = 600;
 function grown(): number {
   const step = document.documentElement.dataset.uiSize ?? "";
   const scale = UI_TEXT_SCALES[UI_SIZE_NAMES.indexOf(step)] ?? 1;
-  return scale > 1.25 ? scale : 1;
+  return scale > UI_LARGE ? scale : 1;
 }
 
 /** Whether the phone's layout is in use now. Never on a desktop: a narrow
@@ -35,6 +39,8 @@ export function isPhoneLayout(): boolean {
 /** Calls `changed` as the layout crosses the phone's: rotation, split
  *  screen, a foldable opened, an Interface Size step; returns the stop. */
 export function onPhoneLayout(changed: () => void): () => void {
+  // A desktop's answer never changes.
+  if (!isMobileApp) return () => {};
   let was = isPhoneLayout();
   const check = () => {
     const now = isPhoneLayout();
