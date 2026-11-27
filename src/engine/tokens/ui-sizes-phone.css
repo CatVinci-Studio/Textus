@@ -49,6 +49,12 @@
   --text-body-large: 20px;
   --text-title: 20px;
   --text-large-title: 40px;
+  --text-xs: 14px;
+  --text-sm: 15px;
+  --text-md: 20px;
+  --text-lg: 20px;
+  --text-xl: 20px;
+  --text-2xl: 40px;
 }
 
 :root[data-window-chrome="mobile"][data-ui-size="xlarge"] {
