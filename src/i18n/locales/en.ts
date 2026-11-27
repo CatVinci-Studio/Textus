@@ -921,10 +921,6 @@ type /name in a conversation to use one.
   providerAddressLabel: "{name} address",
   providerAddressHint:
     "Where {name} answers on this computer or your network, if not at its usual address ({address}). Leave empty for the usual one.",
-  magpieFound:
-    "Magpie is running on this computer. Textus's AI can use the plans and keys it pools.",
-  magpieUse: "Use Magpie",
-  magpieDismiss: "Hide",
   apiKeyOptionalHintTemplate:
     "No API key is required; add one only if {name} is protected.",
   providerNoKeyRequired: "No key required",

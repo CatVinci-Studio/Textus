@@ -987,10 +987,6 @@ export default {
   providerAddressLabel: "Адрес {name}",
   providerAddressHint:
     "Где {name} отвечает на этом компьютере или в вашей сети, если не по обычному адресу ({address}). Оставьте пустым для обычного.",
-  magpieFound:
-    "На этом компьютере запущен Magpie. ИИ Textus может использовать собранные в нём подписки и ключи.",
-  magpieUse: "Использовать Magpie",
-  magpieDismiss: "Скрыть",
   apiKeyOptionalHintTemplate:
     "API-ключ не обязателен: укажите его, только если доступ к {name} защищён.",
   providerNoKeyRequired: "Ключ не нужен",

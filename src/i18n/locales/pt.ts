@@ -962,10 +962,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   providerAddressLabel: "Endereço do {name}",
   providerAddressHint:
     "Onde o {name} responde neste computador ou na sua rede, se não estiver no endereço habitual ({address}). Deixe vazio para o habitual.",
-  magpieFound:
-    "O Magpie está em execução neste computador. A IA do Textus pode usar as assinaturas e chaves que ele reúne.",
-  magpieUse: "Usar o Magpie",
-  magpieDismiss: "Ocultar",
   apiKeyOptionalHintTemplate:
     "Não é preciso chave de API; adicione uma só se o provedor {name} exigir autenticação.",
   providerNoKeyRequired: "Não requer chave",

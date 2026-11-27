@@ -837,10 +837,6 @@ export default {
   providerAddressLabel: "{name} 位址",
   providerAddressHint:
     "{name} 不在預設位址（{address}）時，填它在本機或區域網路裡的位址；留空使用預設位址。",
-  magpieFound:
-    "偵測到本機正在執行 Magpie。Textus 的 AI 可以直接使用它裡面的訂閱和金鑰。",
-  magpieUse: "使用 Magpie",
-  magpieDismiss: "不再提示",
   apiKeyOptionalHintTemplate:
     "不需要 API 金鑰；只有在 {name} 啟用驗證時才需要填寫。",
   providerNoKeyRequired: "不需金鑰",

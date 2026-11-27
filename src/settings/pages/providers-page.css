@@ -63,11 +63,3 @@
 .providers-detail .api-key-input {
   max-width: none;
 }
-
-/* Magpie found running: the line, and its two buttons at its end. */
-.magpie-note-actions {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: var(--space-2);
-}

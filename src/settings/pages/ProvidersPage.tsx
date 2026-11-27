@@ -15,7 +15,6 @@ import { ModelListRow, useModelListShown } from "../sections/agent";
 import { SettingsGroup } from "./SettingsGroup";
 import "./providers-page.css";
 import { ModelChoices } from "./ModelChoices";
-import { MagpieNote } from "../sections/magpie-note";
 import { PlusIcon } from "../../engine/controls/icons";
 import { isCustomEntry, useCustomEndpoints } from "../../ai/custom-endpoints";
 
@@ -41,7 +40,6 @@ export function ProvidersPage({ t, settings }: SettingsPageProps) {
     : (catalog.find((e) => e.id === picked) ?? catalog[0]);
   return (
     <>
-      <MagpieNote t={t} />
       <ModelChoices t={t} />
       {/* One panel: the list on the left, the picked one's sign-in and
           models on the right, nothing boxed inside it. */}

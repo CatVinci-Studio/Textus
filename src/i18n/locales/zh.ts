@@ -836,10 +836,6 @@ export default {
   providerAddressLabel: "{name} 地址",
   providerAddressHint:
     "{name} 不在默认地址（{address}）时，填它在本机或局域网里的地址；留空用默认地址。",
-  magpieFound:
-    "检测到本机正在运行 Magpie。Textus 的 AI 可以直接用它里面的订阅和 Key。",
-  magpieUse: "使用 Magpie",
-  magpieDismiss: "不再提示",
   apiKeyOptionalHintTemplate: "无需 API Key；仅在 {name} 启用了鉴权时填写。",
   providerNoKeyRequired: "无需密钥",
   apiKeyPlaceholder: "sk-…",

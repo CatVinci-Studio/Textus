@@ -57,11 +57,6 @@ const LOCAL: {
     decode: (raw) => Number(raw),
     encode: (value) => String(Math.round(value)),
   },
-  magpieNoteDismissed: {
-    key: "textus-magpie-note-dismissed",
-    decode: (raw) => raw === "1",
-    encode: (value) => (value ? "1" : "0"),
-  },
   panelWidth: {
     key: "textus-panel-width",
     decode: (raw) => Number(raw),

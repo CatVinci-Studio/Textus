@@ -978,10 +978,6 @@ para usar una.
   providerAddressLabel: "Dirección de {name}",
   providerAddressHint:
     "Dónde responde {name} en este equipo o en tu red, si no está en su dirección habitual ({address}). Déjalo vacío para la habitual.",
-  magpieFound:
-    "Magpie se está ejecutando en este equipo. La IA de Textus puede usar los planes y claves que reúne.",
-  magpieUse: "Usar Magpie",
-  magpieDismiss: "Ocultar",
   apiKeyOptionalHintTemplate:
     "No hace falta una clave de API; añade una solo si {name} está protegido.",
   providerNoKeyRequired: "No requiere clave",

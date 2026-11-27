@@ -894,10 +894,6 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   providerAddressLabel: "{name} のアドレス",
   providerAddressHint:
     "{name} が通常のアドレス（{address}）以外で動いているときの、このコンピュータまたはネットワーク上のアドレス。空欄なら通常のアドレス。",
-  magpieFound:
-    "このコンピュータで Magpie が動いています。Textus の AI は Magpie にまとめたプランやキーを使えます。",
-  magpieUse: "Magpie を使う",
-  magpieDismiss: "非表示",
   apiKeyOptionalHintTemplate:
     "APIキーは不要です。{name}で認証を有効にした場合のみ入力します。",
   providerNoKeyRequired: "キー不要",

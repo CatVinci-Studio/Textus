@@ -882,10 +882,6 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   providerAddressLabel: "{name} 주소",
   providerAddressHint:
     "{name}가 기본 주소({address})가 아닌 곳에서 실행될 때, 이 컴퓨터나 네트워크에서의 주소입니다. 비워 두면 기본 주소를 씁니다.",
-  magpieFound:
-    "이 컴퓨터에서 Magpie가 실행 중입니다. Textus의 AI가 Magpie에 모아 둔 구독과 키를 쓸 수 있어요.",
-  magpieUse: "Magpie 사용",
-  magpieDismiss: "숨기기",
   apiKeyOptionalHintTemplate:
     "API 키가 필요하지 않습니다. {name}에 인증을 설정한 경우에만 입력하세요.",
   providerNoKeyRequired: "키 필요 없음",
