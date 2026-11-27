@@ -977,6 +977,13 @@ utiliser une.
   tableToMarkdownBlocks:
     "Convertir en tableau Markdown (une cellule contient des listes ou des paragraphes)",
   apiKeyLabelTemplate: "Clé API {name}",
+  providerAddressLabel: "Adresse de {name}",
+  providerAddressHint:
+    "Où {name} répond sur cet ordinateur ou votre réseau, s’il n’est pas à son adresse habituelle ({address}). Laissez vide pour l’habituelle.",
+  magpieFound:
+    "Magpie tourne sur cet ordinateur. L’IA de Textus peut utiliser les abonnements et les clés qu’il regroupe.",
+  magpieUse: "Utiliser Magpie",
+  magpieDismiss: "Masquer",
   apiKeyOptionalHintTemplate:
     "Aucune clé API n'est requise\u202f; ajoutez-en une seulement si {name} est protégé.",
   providerNoKeyRequired: "Aucune clé requise",

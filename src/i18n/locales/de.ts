@@ -937,6 +937,13 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   tableToMarkdownBlocks:
     "In Markdown-Tabelle umwandeln (eine Zelle enthält Listen oder Absätze)",
   apiKeyLabelTemplate: "API-Schlüssel von {name}",
+  providerAddressLabel: "Adresse von {name}",
+  providerAddressHint:
+    "Wo {name} auf diesem Computer oder in deinem Netzwerk antwortet, wenn nicht unter der üblichen Adresse ({address}). Leer lassen für die übliche.",
+  magpieFound:
+    "Magpie läuft auf diesem Computer. Die KI von Textus kann die darin gesammelten Abos und Schlüssel nutzen.",
+  magpieUse: "Magpie verwenden",
+  magpieDismiss: "Ausblenden",
   apiKeyOptionalHintTemplate:
     "Kein API-Schlüssel nötig – gib nur einen ein, wenn {name} geschützt ist.",
   providerNoKeyRequired: "Kein Schlüssel nötig",

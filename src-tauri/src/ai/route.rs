@@ -56,6 +56,21 @@ pub async fn resolve_anthropic_auth(app: &AppHandle) -> Result<AnthropicAuth, St
     Ok(AnthropicAuth::ApiKey(key))
 }
 
+/// A service on this computer at another address than its usual one
+/// (Magpie on another port, Ollama on another machine): the settings'
+/// `providerAddresses`, by provider id, else the catalog's.
+pub fn address(app: &AppHandle, provider: &str, usual: &str) -> String {
+    crate::settings::read_setting(app, "providerAddresses")
+        .and_then(|all| {
+            all.get(provider)?
+                .as_str()
+                .map(str::trim)
+                .map(str::to_string)
+        })
+        .filter(|at| at.starts_with("http://") || at.starts_with("https://"))
+        .unwrap_or_else(|| usual.to_string())
+}
+
 /// Resolves an `openai-chat-completions` provider to (base_url, api_key,
 /// default_model). A custom endpoint is entirely user-supplied, found by
 /// `provider`, its own id.
@@ -69,7 +84,7 @@ pub async fn resolve_chat_completions(
             .ok_or_else(|| NOT_CONFIGURED.to_string())?;
         return Ok((config.base_url, config.api_key, Some(config.model)));
     };
-    let base_url = base_url.to_string();
+    let base_url = address(app, entry.id, base_url);
     let key = crate::auth::keys::load_provider_key(app, entry.id)?;
     if key.is_none() && !entry.key_optional {
         return Err(NOT_CONFIGURED.to_string());

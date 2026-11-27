@@ -554,3 +554,42 @@ fn a_name_or_password_change_reapplies_the_proxy() {
     assert!(proxy_keys_changed(&obj(json!({ "proxyType": "http" }))));
     assert!(!proxy_keys_changed(&obj(json!({ "theme": "dark" }))));
 }
+
+/// Another program's edit of settings.json: its fields, the rest as they are.
+fn edit_file(path: &Path, change: impl FnOnce(&mut Map<String, Value>)) {
+    let mut file = read_file(path);
+    change(file["settings"].as_object_mut().unwrap());
+    std::fs::write(path, serde_json::to_string_pretty(&file).unwrap()).unwrap();
+}
+
+#[test]
+fn a_field_another_program_changed_in_the_file_is_taken_in() {
+    let dir = temp_dir();
+    let path = settings_path(&dir);
+    let stores = Stores::load(&dir, &dir);
+    stores.patch_settings(&obj(json!({ "theme": "dark", "zoom": 1.2 })));
+    stores.flush_all();
+    // Our own write: nothing changed outside.
+    assert!(stores.settings.take_outside_changes().is_none());
+    // A tool sets the AI service and drops a field.
+    edit_file(&path, |s| {
+        s.insert("aiProvider".into(), json!("magpie"));
+        s.remove("zoom");
+    });
+    // Meanwhile a window changed another field, not yet written.
+    stores.patch_settings(&obj(json!({ "language": "zh" })));
+    let (patch, _) = stores.settings.take_outside_changes().unwrap();
+    assert_eq!(patch, obj(json!({ "aiProvider": "magpie", "zoom": null })));
+    let live = stores.settings.snapshot().0;
+    assert_eq!(live["aiProvider"], "magpie");
+    assert_eq!(live["theme"], "dark");
+    assert_eq!(live["language"], "zh");
+    assert!(live.get("zoom").is_none());
+    // Written back with both: the window's change and the tool's.
+    stores.flush_all();
+    let file = read_file(&path);
+    assert_eq!(file["settings"]["aiProvider"], "magpie");
+    assert_eq!(file["settings"]["language"], "zh");
+    // Read again, the same file changes nothing.
+    assert!(stores.settings.take_outside_changes().is_none());
+}

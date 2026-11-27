@@ -10,6 +10,8 @@ export interface UiState {
   sidebarPx: number;
   /** The AI composer's box as last dragged taller; 0 grows by its text. */
   composerPx: number;
+  /** Settings › AI's "Magpie is running" note put away. */
+  magpieNoteDismissed: boolean;
   /** Both as kept before 1.4.1, in the first design's pixels. */
   panelWidth: number;
   sidebarWidth: number;

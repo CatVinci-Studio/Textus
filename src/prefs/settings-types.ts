@@ -150,6 +150,10 @@ export interface Settings {
   researchCheckClaims: boolean;
   /// The MCP servers Textus AI may use; Rust reads them from the settings file.
   mcpServers: McpServer[];
+  /** A service on this computer at another address than its usual one
+   *  (Magpie on another port), by provider id; read by the backend
+   *  (ai/route.rs address). */
+  providerAddresses: Record<string, string>;
   /// Each plugin's settings, by plugin id; a project's `.textus/settings.json`
   /// holds the same, over these.
   plugins: Record<string, Record<string, unknown>>;
@@ -377,6 +381,7 @@ export const DEFAULT_SETTINGS: Settings = {
   researchSubHelpers: false,
   researchCheckClaims: false,
   mcpServers: [],
+  providerAddresses: {},
   plugins: {},
   pinAgentWindow: false,
   agentWorkspaceRoot: "",
