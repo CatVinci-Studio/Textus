@@ -539,6 +539,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   searchPlaceholder: "ファイル名と本文を検索",
   searchNamesHeading: "ファイル",
   searchTextHeading: "本文",
+  searchHeadingsHeading: "この文書の見出し",
   searchTextCapped: "最初の一部の結果だけを表示しています。",
   searchTextNone: "本文に一致するものはありません。",
   searchNoFolder: "フォルダーを開くと、その中の文書をすべて検索できます。",
@@ -563,6 +564,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuRemoveLink: "リンクを外す",
   menuCopyRelativePath: "相対パスをコピー",
   menuRevealInTree: "「ファイル」で表示",
+  menuFileLocation: "ファイルの場所",
   menuCloseSaved: "保存済みを閉じる",
   menuCloseAll: "すべて閉じる",
   menuCopyAsMarkdown: "Markdown としてコピー",
@@ -889,6 +891,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   tableToMarkdownMerged: "Markdown の表に変換（結合されたセルがあります）",
   tableToMarkdownBlocks: "Markdown の表に変換（セルにリストや段落があります）",
   apiKeyLabelTemplate: "{name}のAPIキー",
+  providerAddressLabel: "{name} のアドレス",
+  providerAddressHint:
+    "{name} が通常のアドレス（{address}）以外で動いているときの、このコンピュータまたはネットワーク上のアドレス。空欄なら通常のアドレス。",
   apiKeyOptionalHintTemplate:
     "APIキーは不要です。{name}で認証を有効にした場合のみ入力します。",
   providerNoKeyRequired: "キー不要",

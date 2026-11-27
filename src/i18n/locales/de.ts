@@ -562,6 +562,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   searchPlaceholder: "Namen und Text suchen",
   searchNamesHeading: "Dateien",
   searchTextHeading: "In Dokumenten",
+  searchHeadingsHeading: "In diesem Dokument",
   searchTextCapped: "Nur die ersten Treffer werden gezeigt.",
   searchTextNone: "Kein Text passt.",
   searchNoFolder: "Öffne einen Ordner, um alle seine Dokumente zu durchsuchen.",
@@ -586,6 +587,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuRemoveLink: "Link entfernen",
   menuCopyRelativePath: "Relativen Pfad kopieren",
   menuRevealInTree: "In „Dateien“ zeigen",
+  menuFileLocation: "Speicherort",
   menuCloseSaved: "Gespeicherte schließen",
   menuCloseAll: "Alle schließen",
   menuCopyAsMarkdown: "Als Markdown kopieren",
@@ -937,6 +939,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   tableToMarkdownBlocks:
     "In Markdown-Tabelle umwandeln (eine Zelle enthält Listen oder Absätze)",
   apiKeyLabelTemplate: "API-Schlüssel von {name}",
+  providerAddressLabel: "Adresse von {name}",
+  providerAddressHint:
+    "Wo {name} auf diesem Computer oder in deinem Netzwerk antwortet, wenn nicht unter der üblichen Adresse ({address}). Leer lassen für die übliche.",
   apiKeyOptionalHintTemplate:
     "Kein API-Schlüssel nötig – gib nur einen ein, wenn {name} geschützt ist.",
   providerNoKeyRequired: "Kein Schlüssel nötig",

@@ -529,6 +529,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   searchPlaceholder: "파일 이름과 내용 검색",
   searchNamesHeading: "파일",
   searchTextHeading: "본문",
+  searchHeadingsHeading: "이 문서의 제목",
   searchTextCapped: "앞부분 결과만 표시합니다.",
   searchTextNone: "본문에서 찾지 못했습니다.",
   searchNoFolder: "폴더를 열면 그 안의 모든 문서를 검색할 수 있습니다.",
@@ -553,6 +554,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuRemoveLink: "링크 제거",
   menuCopyRelativePath: "상대 경로 복사",
   menuRevealInTree: "'파일'에서 보기",
+  menuFileLocation: "파일 위치",
   menuCloseSaved: "저장된 탭 닫기",
   menuCloseAll: "모두 닫기",
   menuCopyAsMarkdown: "Markdown으로 복사",
@@ -877,6 +879,9 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   tableToMarkdownMerged: "Markdown 표로 변환 (병합된 셀이 있음)",
   tableToMarkdownBlocks: "Markdown 표로 변환 (셀에 목록이나 문단이 있음)",
   apiKeyLabelTemplate: "{name} API 키",
+  providerAddressLabel: "{name} 주소",
+  providerAddressHint:
+    "{name}가 기본 주소({address})가 아닌 곳에서 실행될 때, 이 컴퓨터나 네트워크에서의 주소입니다. 비워 두면 기본 주소를 씁니다.",
   apiKeyOptionalHintTemplate:
     "API 키가 필요하지 않습니다. {name}에 인증을 설정한 경우에만 입력하세요.",
   providerNoKeyRequired: "키 필요 없음",

@@ -121,7 +121,8 @@ pub async fn fetch_agent_models(app: AppHandle, provider: String) -> Result<Vec<
         }
         "openai-chat-completions" if entry.base_url.is_some() => {
             let key = crate::auth::keys::load_provider_key(&app, &provider)?;
-            custom::list_models(entry.base_url.unwrap_or_default(), key.as_deref()).await
+            let base_url = route::address(&app, &provider, entry.base_url.unwrap_or_default());
+            custom::list_models(&base_url, key.as_deref()).await
         }
         _ => Err(format!("models can't be listed for provider: {provider}")),
     }

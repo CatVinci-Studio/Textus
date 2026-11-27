@@ -14,6 +14,8 @@ pub fn init(app: &AppHandle) {
     let stores = Stores::load(&config_dir, &data_dir);
     proxy_changed(&stores.settings.snapshot().0);
     app.manage(stores);
+    #[cfg(desktop)]
+    super::outside::watch(app);
     #[cfg(target_os = "macos")]
     apply_app_theme(app);
 }

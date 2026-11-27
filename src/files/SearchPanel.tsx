@@ -1,3 +1,4 @@
+import { HeadingMatches } from "./HeadingMatches";
 import { isError } from "../utils/error-text";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { fs } from "../platform/ipc";
@@ -42,11 +43,14 @@ export function SearchPanel({
   onOpen,
   focusRequest,
   onFocusHandled,
+  front,
 }: {
   root: string;
   onOpen: (path: string, line?: number) => void;
   focusRequest: boolean;
   onFocusHandled: () => void;
+  /** The document in front, whose headings are searched too. */
+  front?: { content: string; tabId: string } | null;
 }) {
   const [query, setQuery] = useState("");
   return (
@@ -60,6 +64,13 @@ export function SearchPanel({
         focusRequest={focusRequest}
         onFocusHandled={onFocusHandled}
       >
+        {front && (
+          <HeadingMatches
+            content={front.content}
+            tabId={front.tabId}
+            query={query}
+          />
+        )}
         <TextMatches root={root} query={query} onOpen={onOpen} />
       </FileSearch>
     </div>

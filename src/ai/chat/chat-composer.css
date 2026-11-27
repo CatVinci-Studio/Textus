@@ -142,9 +142,11 @@
   /* Grows with content up to ~6 lines, or the height its top edge was
      dragged to (ComposerGrip's --composer-px); the auto-resize effect owns
      overflow-y, setting it to auto only once this clamps. */
-  min-height: var(--composer-px, auto);
+  /* Never past most of the window: one dragged tall in a big window
+     keeps to a smaller one (ComposerGrip lets it to 60%). */
+  min-height: min(var(--composer-px, 0px), 60vh);
   max-height: max(
-    var(--composer-px, 0px),
+    min(var(--composer-px, 0px), 60vh),
     calc(120px * var(--ui-text-scale, 1))
   );
   overflow-y: hidden;

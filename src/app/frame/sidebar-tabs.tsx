@@ -155,6 +155,9 @@ const BUILT_IN: SidebarTabDef[] = [
       onOpenFile,
       searchFocusRequest,
       onSearchFocusHandled,
+      activeContent,
+      activeTabId,
+      activeIsDocument,
     }) =>
       // Over the folder the tree shows: the opened one, else the
       // document's.
@@ -164,6 +167,11 @@ const BUILT_IN: SidebarTabDef[] = [
           onOpen={(path, line) => onOpenFile(path, undefined, line)}
           focusRequest={searchFocusRequest}
           onFocusHandled={onSearchFocusHandled}
+          front={
+            activeIsDocument
+              ? { content: activeContent, tabId: activeTabId }
+              : null
+          }
         />
       ) : (
         <OpenFolderNote text={t.searchNoFolder} t={t} />

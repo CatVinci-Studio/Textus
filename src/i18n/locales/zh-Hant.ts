@@ -502,6 +502,7 @@ export default {
   searchPlaceholder: "搜尋檔名和內容",
   searchNamesHeading: "檔案",
   searchTextHeading: "文件內容",
+  searchHeadingsHeading: "本文標題",
   searchTextCapped: "只顯示了前面一部分結果。",
   searchTextNone: "內容裡沒有找到。",
   searchNoFolder: "開啟資料夾後，可以搜尋裡面的所有文件。",
@@ -526,6 +527,7 @@ export default {
   menuRemoveLink: "移除連結",
   menuCopyRelativePath: "拷貝相對路徑",
   menuRevealInTree: "在檔案樹中顯示",
+  menuFileLocation: "檔案位置",
   menuCloseSaved: "關閉已儲存的",
   menuCloseAll: "全部關閉",
   menuCopyAsMarkdown: "拷貝為 Markdown",
@@ -832,6 +834,9 @@ export default {
   tableToMarkdownMerged: "轉換為 Markdown 表格（有合併的儲存格）",
   tableToMarkdownBlocks: "轉換為 Markdown 表格（儲存格裡有清單或段落）",
   apiKeyLabelTemplate: "{name} API 金鑰",
+  providerAddressLabel: "{name} 位址",
+  providerAddressHint:
+    "{name} 不在預設位址（{address}）時，填它在本機或區域網路裡的位址；留空使用預設位址。",
   apiKeyOptionalHintTemplate:
     "不需要 API 金鑰；只有在 {name} 啟用驗證時才需要填寫。",
   providerNoKeyRequired: "不需金鑰",

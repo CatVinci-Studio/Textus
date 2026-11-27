@@ -584,6 +584,7 @@ utiliser une.
   searchPlaceholder: "Rechercher noms et texte",
   searchNamesHeading: "Fichiers",
   searchTextHeading: "Dans les documents",
+  searchHeadingsHeading: "Dans ce document",
   searchTextCapped: "Seuls les premiers résultats sont affichés.",
   searchTextNone: "Aucun texte ne correspond.",
   searchNoFolder: "Ouvrez un dossier pour chercher dans tous ses documents.",
@@ -608,6 +609,7 @@ utiliser une.
   menuRemoveLink: "Retirer le lien",
   menuCopyRelativePath: "Copier le chemin relatif",
   menuRevealInTree: "Afficher dans Fichiers",
+  menuFileLocation: "Emplacement du fichier",
   menuCloseSaved: "Fermer les enregistrés",
   menuCloseAll: "Tout fermer",
   menuCopyAsMarkdown: "Copier en Markdown",
@@ -977,6 +979,9 @@ utiliser une.
   tableToMarkdownBlocks:
     "Convertir en tableau Markdown (une cellule contient des listes ou des paragraphes)",
   apiKeyLabelTemplate: "Clé API {name}",
+  providerAddressLabel: "Adresse de {name}",
+  providerAddressHint:
+    "Où {name} répond sur cet ordinateur ou votre réseau, s’il n’est pas à son adresse habituelle ({address}). Laissez vide pour l’habituelle.",
   apiKeyOptionalHintTemplate:
     "Aucune clé API n'est requise\u202f; ajoutez-en une seulement si {name} est protégé.",
   providerNoKeyRequired: "Aucune clé requise",

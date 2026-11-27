@@ -13,6 +13,8 @@ use tauri::{AppHandle, Emitter, Manager};
 pub(crate) mod chat_history;
 use chat_history::ChatHistory;
 
+#[cfg(desktop)]
+pub mod outside;
 mod store;
 pub(crate) use store::*;
 mod stores;
@@ -61,19 +63,7 @@ pub fn settings_patch(
         crate::mcp::secrets::seal(&app, servers);
     }
     let rev = stores.patch_settings(&patch);
-    if patch.contains_key("theme") || patch.contains_key("themeId") {
-        theme_changed(&app);
-    }
-    if proxy_keys_changed(&patch) {
-        proxy_changed(&stores.settings.snapshot().0);
-    }
-    // Background mode's tray follows the setting and the UI language.
-    #[cfg(desktop)]
-    if patch.contains_key(crate::background::ENABLED_SETTING) {
-        crate::background::apply(&app, crate::background::Change::Settings);
-    } else if patch.contains_key("language") {
-        crate::background::apply(&app, crate::background::Change::Language);
-    }
+    settings_took(&app, &stores, &patch);
     emit_to_all(
         &app,
         "settings-changed",
@@ -84,6 +74,24 @@ pub fn settings_patch(
         },
     );
     rev
+}
+
+/// What follows a change to the settings outside the windows: the app's
+/// theme, the proxy, background mode's tray (its setting and the UI
+/// language).
+pub(crate) fn settings_took(app: &AppHandle, stores: &Stores, patch: &Map<String, Value>) {
+    if patch.contains_key("theme") || patch.contains_key("themeId") {
+        theme_changed(app);
+    }
+    if proxy_keys_changed(patch) {
+        proxy_changed(&stores.settings.snapshot().0);
+    }
+    #[cfg(desktop)]
+    if patch.contains_key(crate::background::ENABLED_SETTING) {
+        crate::background::apply(app, crate::background::Change::Settings);
+    } else if patch.contains_key("language") {
+        crate::background::apply(app, crate::background::Change::Language);
+    }
 }
 
 /// Writes out the frontend's defaults for missing settings fields, never over a

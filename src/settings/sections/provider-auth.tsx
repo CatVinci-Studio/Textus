@@ -5,7 +5,8 @@ import { useLatest } from "../../utils/hooks/useLatest";
 import type { Strings } from "../../i18n/strings";
 import type { ProviderCatalogEntry } from "../../ai/provider-catalog";
 import { auth } from "../../platform/ipc";
-import { RowHelp, SecretInput } from "./controls";
+import { RowHelp, SecretInput, SettingRow, VERBATIM_INPUT } from "./controls";
+import { useSettings } from "../../prefs/SettingsContext";
 import {
   type ConnectedState,
   localizedLabel,
@@ -61,6 +62,14 @@ export function ProviderAuthPanel({
           label={label}
           unofficial={entry.oauthUnofficial}
           onStatusChange={onStatusChange}
+        />
+      )}
+      {entry.keyOptional && entry.baseUrl && (
+        <AddressRow
+          t={t}
+          providerId={entry.id}
+          label={label}
+          usual={entry.baseUrl}
         />
       )}
       {hasApiKey && (!hasOauth || tab === "api_key") && (
@@ -278,5 +287,55 @@ export function ApiKeyProviderPanel({
         onClear={clear}
       />
     </div>
+  );
+}
+
+/** Where a service on this computer answers, when not at its usual address
+ *  (Magpie on another port, Ollama on another machine): empty is the usual
+ *  one. Kept on leaving the field. */
+function AddressRow({
+  t,
+  providerId,
+  label,
+  usual,
+}: {
+  t: Strings;
+  providerId: string;
+  label: string;
+  usual: string;
+}) {
+  const { settings, setSettings } = useSettings();
+  const saved = settings.providerAddresses[providerId] ?? "";
+  const [value, setValue] = useState(saved);
+  useEffect(() => setValue(saved), [saved]);
+  const keep = () => {
+    const at = value.trim();
+    if (at === saved) return;
+    const next = { ...settings.providerAddresses };
+    if (/^https?:\/\//.test(at)) next[providerId] = at;
+    else delete next[providerId];
+    setSettings({ providerAddresses: next });
+    if (!/^https?:\/\//.test(at)) setValue("");
+  };
+  const name = fill(t.providerAddressLabel, { name: label });
+  return (
+    <SettingRow
+      label={name}
+      help={fill(t.providerAddressHint, { name: label, address: usual })}
+    >
+      <input
+        type="url"
+        {...VERBATIM_INPUT}
+        className="tx-input settings-text-input"
+        aria-label={name}
+        placeholder={usual}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={keep}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") keep();
+        }}
+      />
+    </SettingRow>
   );
 }

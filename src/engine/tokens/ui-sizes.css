@@ -89,6 +89,13 @@
   --text-secondary: 20px;
   --text-control: 20px;
   --text-body-large: 20px;
+  /* Plugins' size names, as ds-base.css makes them from these. */
+  --text-xs: 16px;
+  --text-sm: 16px;
+  --text-md: 20px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
   --window-bar-row: 48px;
   --ui-tab-lift: 10px;
   --island-space: 12px;

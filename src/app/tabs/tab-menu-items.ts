@@ -41,16 +41,25 @@ export function tabMenuItems({
     for (const tab of closing) onClose(tab.id);
   };
   // Its path three ways, and the file found in the tree when the open
-  // folder holds it.
-  const pathItem = (id: string, path: string | null | undefined) => {
+  // folder holds it: one row opening onto them, so the menu keeps to a few
+  // rows a group (HIG: a context menu's groups short).
+  const pathItem = (
+    id: string,
+    path: string | null | undefined,
+  ): ContextMenuEntry[] => {
     if (!path) return [];
     const folder = windowFolder();
     const inTree = folder !== null && isWithin(path, folder);
     return [
-      ...pathItems(t, path, folder),
-      ...(inTree
-        ? [{ label: t.menuRevealInTree, onSelect: () => revealInTree(id) }]
-        : []),
+      {
+        label: t.menuFileLocation,
+        items: [
+          ...pathItems(t, path, folder),
+          ...(inTree
+            ? [{ label: t.menuRevealInTree, onSelect: () => revealInTree(id) }]
+            : []),
+        ],
+      },
     ];
   };
   const revealInTree = (id: string) => {

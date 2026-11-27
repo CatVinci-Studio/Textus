@@ -584,6 +584,7 @@ export default {
   searchPlaceholder: "Поиск по именам и тексту",
   searchNamesHeading: "Файлы",
   searchTextHeading: "В документах",
+  searchHeadingsHeading: "В этом документе",
   searchTextCapped: "Показаны только первые совпадения.",
   searchTextNone: "В тексте ничего не найдено.",
   searchNoFolder: "Откройте папку, чтобы искать по всем её документам.",
@@ -608,6 +609,7 @@ export default {
   menuRemoveLink: "Убрать ссылку",
   menuCopyRelativePath: "Копировать относительный путь",
   menuRevealInTree: "Показать в «Файлах»",
+  menuFileLocation: "Расположение файла",
   menuCloseSaved: "Закрыть сохранённые",
   menuCloseAll: "Закрыть все",
   menuCopyAsMarkdown: "Копировать как Markdown",
@@ -982,6 +984,9 @@ export default {
   tableToMarkdownBlocks:
     "Преобразовать в таблицу Markdown (в ячейке есть списки или абзацы)",
   apiKeyLabelTemplate: "API-ключ {name}",
+  providerAddressLabel: "Адрес {name}",
+  providerAddressHint:
+    "Где {name} отвечает на этом компьютере или в вашей сети, если не по обычному адресу ({address}). Оставьте пустым для обычного.",
   apiKeyOptionalHintTemplate:
     "API-ключ не обязателен: укажите его, только если доступ к {name} защищён.",
   providerNoKeyRequired: "Ключ не нужен",

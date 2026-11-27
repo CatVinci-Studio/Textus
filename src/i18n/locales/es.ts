@@ -582,6 +582,7 @@ para usar una.
   searchPlaceholder: "Buscar nombres y texto",
   searchNamesHeading: "Archivos",
   searchTextHeading: "En documentos",
+  searchHeadingsHeading: "En este documento",
   searchTextCapped: "Solo se muestran los primeros resultados.",
   searchTextNone: "Ningún texto coincide.",
   searchNoFolder: "Abre una carpeta para buscar en todos sus documentos.",
@@ -606,6 +607,7 @@ para usar una.
   menuRemoveLink: "Quitar enlace",
   menuCopyRelativePath: "Copiar ruta relativa",
   menuRevealInTree: "Mostrar en Archivos",
+  menuFileLocation: "Ubicación del archivo",
   menuCloseSaved: "Cerrar las guardadas",
   menuCloseAll: "Cerrar todas",
   menuCopyAsMarkdown: "Copiar como Markdown",
@@ -973,6 +975,9 @@ para usar una.
   tableToMarkdownBlocks:
     "Convertir en tabla Markdown (una celda tiene listas o párrafos)",
   apiKeyLabelTemplate: "Clave de API de {name}",
+  providerAddressLabel: "Dirección de {name}",
+  providerAddressHint:
+    "Dónde responde {name} en este equipo o en tu red, si no está en su dirección habitual ({address}). Déjalo vacío para la habitual.",
   apiKeyOptionalHintTemplate:
     "No hace falta una clave de API; añade una solo si {name} está protegido.",
   providerNoKeyRequired: "No requiere clave",

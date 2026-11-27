@@ -36,6 +36,9 @@ pub struct Store {
     /// run to megabytes and are written compact.
     pub(crate) pretty: bool,
     pub(crate) inner: Mutex<Inner>,
+    /// The payload as the file last held it, read or written here: what
+    /// another program changed since is what differs from it.
+    pub(crate) on_disk: Mutex<Value>,
     pub(crate) flush_scheduled: AtomicBool,
     /// Whether the file was absent when loaded; for settings.json, that makes this
     /// a new profile.
@@ -101,6 +104,11 @@ impl Store {
         unreadable: bool,
     ) -> Self {
         Self {
+            on_disk: Mutex::new(if missing_at_load {
+                Value::Null
+            } else {
+                payload.clone()
+            }),
             path,
             key,
             pretty,
@@ -169,7 +177,45 @@ impl Store {
             self.pretty,
         )?;
         inner.dirty = false;
+        *self.on_disk.lock().unwrap() = inner.payload.clone();
         Ok(())
+    }
+
+    /// The top-level fields another program changed in the file since it was
+    /// last read or written here (a removed one as null), taken into the live
+    /// payload; with the new revision. `None` when nothing changed, as after
+    /// this store's own write. Read under the lock: a write of ours landing
+    /// meanwhile would otherwise look like someone undoing it.
+    // Called by the desktop's watcher (settings/outside.rs) and tests.
+    #[cfg_attr(not(desktop), allow(dead_code))]
+    pub fn take_outside_changes(&self) -> Option<(Map<String, Value>, u64)> {
+        if self.unreadable {
+            return None;
+        }
+        let mut inner = self.inner.lock().unwrap();
+        let raw = std::fs::read_to_string(&self.path).ok()?;
+        let (Value::Object(file), _) = parse(&raw, self.key, &Value::Object(Map::new()))? else {
+            return None;
+        };
+        let mut disk = self.on_disk.lock().unwrap();
+        let before = disk.as_object().cloned().unwrap_or_default();
+        let mut patch: Map<String, Value> = file
+            .iter()
+            .filter(|(key, value)| before.get(*key) != Some(value))
+            .map(|(key, value)| (key.clone(), value.clone()))
+            .collect();
+        for key in before.keys() {
+            if !file.contains_key(key) {
+                patch.insert(key.clone(), Value::Null);
+            }
+        }
+        *disk = Value::Object(file);
+        if patch.is_empty() {
+            return None;
+        }
+        merge_top_level(&mut inner.payload, &patch);
+        inner.rev += 1;
+        Some((patch, inner.rev))
     }
 
     /// Drops a change still waiting on its debounce and hands back the lock, so the

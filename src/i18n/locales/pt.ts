@@ -572,6 +572,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   searchPlaceholder: "Pesquisar nomes e texto",
   searchNamesHeading: "Arquivos",
   searchTextHeading: "Nos documentos",
+  searchHeadingsHeading: "Neste documento",
   searchTextCapped: "Mostrando só os primeiros resultados.",
   searchTextNone: "Nenhum texto corresponde.",
   searchNoFolder: "Abra uma pasta para pesquisar em todos os seus documentos.",
@@ -596,6 +597,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuRemoveLink: "Remover link",
   menuCopyRelativePath: "Copiar caminho relativo",
   menuRevealInTree: "Mostrar em Arquivos",
+  menuFileLocation: "Local do arquivo",
   menuCloseSaved: "Fechar as salvas",
   menuCloseAll: "Fechar todas",
   menuCopyAsMarkdown: "Copiar como Markdown",
@@ -957,6 +959,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   tableToMarkdownBlocks:
     "Converter em Tabela Markdown (uma célula tem listas ou parágrafos)",
   apiKeyLabelTemplate: "Chave de API do provedor {name}",
+  providerAddressLabel: "Endereço do {name}",
+  providerAddressHint:
+    "Onde o {name} responde neste computador ou na sua rede, se não estiver no endereço habitual ({address}). Deixe vazio para o habitual.",
   apiKeyOptionalHintTemplate:
     "Não é preciso chave de API; adicione uma só se o provedor {name} exigir autenticação.",
   providerNoKeyRequired: "Não requer chave",

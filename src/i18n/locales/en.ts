@@ -554,6 +554,7 @@ type /name in a conversation to use one.
   searchPlaceholder: "Search names and text",
   searchNamesHeading: "Files",
   searchTextHeading: "In documents",
+  searchHeadingsHeading: "In this document",
   searchTextCapped: "Showing the first matches only.",
   searchTextNone: "No text matches.",
   searchNoFolder: "Open a folder to search all its documents.",
@@ -578,6 +579,7 @@ type /name in a conversation to use one.
   menuRemoveLink: "Remove Link",
   menuCopyRelativePath: "Copy Relative Path",
   menuRevealInTree: "Show in Files",
+  menuFileLocation: "File Location",
   menuCloseSaved: "Close Saved",
   menuCloseAll: "Close All",
   menuCopyAsMarkdown: "Copy as Markdown",
@@ -916,6 +918,9 @@ type /name in a conversation to use one.
   tableToMarkdownBlocks:
     "Convert to Markdown Table (a cell holds lists or paragraphs)",
   apiKeyLabelTemplate: "{name} API key",
+  providerAddressLabel: "{name} address",
+  providerAddressHint:
+    "Where {name} answers on this computer or your network, if not at its usual address ({address}). Leave empty for the usual one.",
   apiKeyOptionalHintTemplate:
     "No API key is required; add one only if {name} is protected.",
   providerNoKeyRequired: "No key required",

@@ -191,6 +191,7 @@ function readSettings(parsed: Raw | null): Settings {
       shortcuts: storedShortcuts(parsed.shortcuts),
       commandShortcuts: stringMap(parsed.commandShortcuts),
       mcpServers: normaliseMcpServers(parsed.mcpServers),
+      providerAddresses: addressesOf(parsed.providerAddresses),
       pandocArgs: pandocArgs(parsed.pandocArgs),
       creations: storedCreations(parsed.creations),
       plugins: isRecord(parsed.plugins)
@@ -311,4 +312,15 @@ function uiTextScaleOf(raw: unknown): UiTextScale {
     ? (raw as UiTextScale)
     : (UI_TEXT_SCALES_BEFORE[String(raw)] ?? DEFAULT_SETTINGS.uiTextScale);
   return isMobileApp || scale <= UI_LARGE ? scale : UI_LARGE;
+}
+
+/** The addresses kept: a web address for each provider. */
+function addressesOf(raw: unknown): Record<string, string> {
+  if (!isRecord(raw)) return {};
+  return Object.fromEntries(
+    Object.entries(raw).filter(
+      (entry): entry is [string, string] =>
+        typeof entry[1] === "string" && /^https?:\/\//.test(entry[1].trim()),
+    ),
+  );
 }

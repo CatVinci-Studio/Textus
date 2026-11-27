@@ -90,3 +90,52 @@ describe("the boot script and the layout", () => {
     expect(document.documentElement.getAttribute("data-layout")).toBe(shown);
   });
 });
+
+// The boot script picks Interface Size's step before the app does: from the
+// same table, and following the system's text size by the same rule
+// (settings-normalise, theme/system-text-size).
+describe("the boot script and Interface Size", () => {
+  it("picks the step the app picks, with and without the system's size", async () => {
+    const TABLES = (await import("../prefs/appearance-tables.json")).default;
+    const { normaliseSettings } = await import("../prefs/settings-normalise");
+    const { stepFor } = await import("../theme/system-text-size");
+    const { UI_SIZE_NAMES, UI_TEXT_SCALES, UI_SYSTEM_SIZES } =
+      await import("../prefs/settings-values");
+    const cases: Record<string, unknown>[] = [
+      {},
+      { uiTextScale: 1 },
+      { uiTextScale: 1.25 },
+      { uiTextScale: 0.85, uiSizeFollowsSystem: true },
+      { uiTextScale: 1.25, uiSizeFollowsSystem: false },
+    ];
+    for (const fontScale of [0.85, 1, 1.3, 2])
+      for (const settings of cases) {
+        const root = document.documentElement;
+        root.removeAttribute("data-ui-size");
+        root.style.removeProperty("--ui-text-scale");
+        (window as { TextusAndroid?: unknown }).TextusAndroid = {
+          fontScale: () => fontScale,
+        };
+        new Function(BOOT_JS)();
+        (
+          window as unknown as { __textusBoot: (b: unknown) => void }
+        ).__textusBoot({
+          rev: 1,
+          label: "main",
+          uiState: {},
+          settings,
+          tables: TABLES,
+        });
+        const app = normaliseSettings(settings);
+        const scale = app.uiSizeFollowsSystem
+          ? stepFor(fontScale, UI_SYSTEM_SIZES.android)
+          : app.uiTextScale;
+        const name = UI_SIZE_NAMES[UI_TEXT_SCALES.indexOf(scale)];
+        expect(
+          root.getAttribute("data-ui-size"),
+          `${JSON.stringify(settings)} at ${fontScale}`,
+        ).toBe(name === "medium" ? null : name);
+      }
+    delete (window as { TextusAndroid?: unknown }).TextusAndroid;
+  });
+});
