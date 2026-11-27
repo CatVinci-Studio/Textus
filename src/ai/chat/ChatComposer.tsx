@@ -4,6 +4,7 @@ import { AttachmentChips } from "./AttachmentChips";
 import { resolveSkillMessage } from "./proposal";
 import { ai } from "../../platform/ipc";
 import { ComposerPicker } from "./ComposerPicker";
+import { ComposerGrip } from "./ComposerGrip";
 import {
   rememberSkill,
   resolveSkillName,
@@ -343,7 +344,6 @@ export function ChatComposer({
           sections={pickerSections}
           empty={pickerEmpty}
           active={activePickerIndex}
-          keys={phone ? null : picker.keys}
         />
       )}
       {dockActions !== undefined && (
@@ -366,6 +366,9 @@ export function ChatComposer({
         />
       )}
       <div className="inline-chat-bar">
+        {/* Its top edge makes the box taller (not a phone's: its keyboard
+            sets the room). */}
+        {!compact && !phone && <ComposerGrip input={inputRef} />}
         {attachError && (
           <div className="inline-chat-attach-error">{attachError}</div>
         )}

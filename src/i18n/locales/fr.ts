@@ -24,6 +24,7 @@ export default {
   agentPanelPopOut: "Ouvrir dans une fenêtre séparée",
   agentPanelResize: "Redimensionner le panneau IA",
   sidebarResize: "Redimensionner la barre latérale",
+  composerResize: "Redimensionner la zone de saisie",
   phonePages: "Page",
   phonePageWrite: "Écrire",
   phonePageAi: "IA",
@@ -883,7 +884,6 @@ utiliser une.
   skillCategoryCheck: "Vérifier",
   skillCategoryFormat: "Formats",
   skillCategoryCreate: "Créer",
-  pickerKeysHint: "↑↓ pour naviguer · Entrée pour choisir · Échap pour fermer",
   skillPickerAbout:
     "Tapez / pour utiliser une compétence\u00a0: une consigne toute prête, comme Relire et corriger ou Résumer.",
   skillPickerNoMatch:
@@ -1295,6 +1295,8 @@ utiliser une.
   menuExit: "Quitter",
   menuNewFile: "Nouveau fichier",
   menuOpenFile: "Ouvrir…",
+  startOpenFile: "Ouvrir un fichier",
+  startOpenFolder: "Ouvrir un dossier",
   menuOpenRecent: "Ouvrir l'élément récent",
   menuRecentNone: "Aucun fichier récent",
   menuRecentClear: "Effacer le menu",

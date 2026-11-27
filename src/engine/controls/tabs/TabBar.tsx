@@ -232,6 +232,7 @@ export function TabBar({
           activeTabId={activeTabId}
           onActivate={onActivate}
           label={labels.all}
+          activeMenu={menuFor && (() => menuFor(activeTabId))}
         />
       )}
     </div>

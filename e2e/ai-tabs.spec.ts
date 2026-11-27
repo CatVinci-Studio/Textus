@@ -25,7 +25,7 @@ async function open(page: Page) {
 }
 
 const aiButton = (page: Page) =>
-  page.getByRole("button", { name: "Textus AI", exact: true }).first();
+  page.getByRole("button", { name: "Textus AI" }).first();
 
 test("the AI button opens a conversation tab in an island on the right", async ({
   page,
@@ -659,21 +659,18 @@ test.describe("on a phone", () => {
     page,
   }) => {
     await openApp(page);
-    const count = page.locator(".tab-switcher-count");
     await aiButton(page).click();
-    // Over a conversation, the menu's New starts another, as the row's +
-    // does: a phone draws no row.
-    await page.locator(".tab-switcher-button").tap();
-    await page.getByRole("menuitem", { name: "新对话" }).tap();
-    await expect(count).toHaveText("3");
+    await page.locator(".tab-bar-add").first().click();
+    await expect(tabs(page)).toHaveCount(3);
     // A document in front, the AI's tab behind it.
-    await page.locator(".tab-switcher-button").tap();
-    await page.getByRole("menuitemradio").first().tap();
+    await tabs(page).first().click();
     await aiButton(page).click();
-    await expect(page.locator(".tab-switcher-name")).toHaveText(/Textus AI/);
-    await expect(count).toHaveText("3");
+    await expect(
+      page.locator(".tab-pill.active, .tab-pill[aria-selected=true]"),
+    ).toHaveText(/Textus AI/);
+    await expect(tabs(page)).toHaveCount(3);
     await aiButton(page).click();
-    await expect(count).toHaveText("2");
+    await expect(tabs(page)).toHaveCount(2);
   });
 });
 
@@ -738,4 +735,66 @@ test("with no row of tabs (Zen), the AI's island keeps a + of its own for a new 
   await expect(own).toBeVisible();
   await emit(page, "menu-toggle-zen-mode");
   await expect(own).toHaveCount(0);
+});
+
+// A long conversation took the / list's share of the panel's squeeze too,
+// until the list was a line: the conversation has only the room left over.
+test("the / list keeps its height however long the conversation", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 700 });
+  await openApp(page);
+  await aiButton(page).click();
+  const input = page.locator(".agent-panel-body .inline-chat-input");
+  await input.click();
+  await page.keyboard.type("hello");
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".agent-panel-empty")).toHaveCount(0);
+  await input.click();
+  await page.keyboard.type("/");
+  const list = page.locator(".agent-panel-body .composer-picker");
+  await expect(list).toBeVisible();
+  const before = (await list.boundingBox())!.height;
+  // A long conversation, as weeks of use leave one.
+  await page
+    .locator(".agent-panel-body .inline-chat-messages")
+    .evaluate((messages) => {
+      const long = document.createElement("div");
+      long.style.height = "6000px";
+      messages.prepend(long);
+    });
+  await expect
+    .poll(async () => (await list.boundingBox())!.height)
+    .toBeCloseTo(before, 0);
+});
+
+// The composer's top edge drags its box taller, kept; a double click lets
+// it grow by its text alone again.
+test("the composer's top edge drags its box taller", async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page);
+  await aiButton(page).click();
+  const input = page.locator(".agent-panel-body .inline-chat-input");
+  await expect(input).toBeVisible();
+  const before = (await input.boundingBox())!.height;
+  const grip = page.locator(".agent-panel-body .composer-grip");
+  const at = (await grip.boundingBox())!;
+  const x = at.x + at.width / 2;
+  const y = at.y + at.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x, y - 60, { steps: 4 });
+  await page.mouse.move(x, y - 120, { steps: 4 });
+  await page.mouse.up();
+  await expect
+    .poll(async () => (await input.boundingBox())!.height)
+    .toBeGreaterThan(before + 100);
+  // Typed into, it keeps the height it was given.
+  await input.click();
+  await page.keyboard.type("a line");
+  expect((await input.boundingBox())!.height).toBeGreaterThan(before + 100);
+  await grip.dblclick();
+  await expect
+    .poll(async () => (await input.boundingBox())!.height)
+    .toBeLessThan(before + 10);
 });

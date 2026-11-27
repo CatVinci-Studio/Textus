@@ -278,8 +278,10 @@
   }
 }
 
-.tab-bar-list svg {
-  rotate: 90deg;
+/* How many tabs: the shared count badge, as wide as two figures. */
+.tab-bar-list-count {
+  min-width: 1.6em;
+  text-align: center;
 }
 
 .word-count {

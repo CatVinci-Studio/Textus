@@ -54,22 +54,7 @@ export function useComposerInput(handle?: Ref<ChatComposerHandle | null>) {
   );
 
   useLayoutEffect(() => {
-    const el = inputRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    let needed = el.scrollHeight;
-    el.style.height = `${needed}px`;
-    // scrollHeight is an integer, so the height can land a hair short of the
-    // line box and WebKit then clips the caret (worst with CJK). One
-    // correction pass fits whatever the font does.
-    if (el.scrollHeight > el.clientHeight) {
-      needed += el.scrollHeight - el.clientHeight;
-      el.style.height = `${needed}px`;
-    }
-    // Scrolling only once the content outgrows the box, or an empty input
-    // draws scrollbars.
-    const max = parseFloat(getComputedStyle(el).maxHeight);
-    el.style.overflowY = needed > max ? "auto" : "hidden";
+    if (inputRef.current) fitComposer(inputRef.current);
   }, [input]);
 
   return {
@@ -275,4 +260,23 @@ export function useProjectFiles(
     };
   }, [open, projectFiles, docPath, workspaceRoot]);
   return projectFiles;
+}
+
+/** The composer's box as tall as its text, within its least and most
+ *  (its CSS, or the height its top edge was dragged to). */
+export function fitComposer(el: HTMLTextAreaElement) {
+  el.style.height = "auto";
+  let needed = el.scrollHeight;
+  el.style.height = `${needed}px`;
+  // scrollHeight is an integer, so the height can land a hair short of the
+  // line box and WebKit then clips the caret (worst with CJK). One
+  // correction pass fits whatever the font does.
+  if (el.scrollHeight > el.clientHeight) {
+    needed += el.scrollHeight - el.clientHeight;
+    el.style.height = `${needed}px`;
+  }
+  // Scrolling only once the content outgrows the box, or an empty input
+  // draws scrollbars.
+  const max = parseFloat(getComputedStyle(el).maxHeight);
+  el.style.overflowY = needed > max ? "auto" : "hidden";
 }

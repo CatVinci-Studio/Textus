@@ -98,7 +98,8 @@ async function openPluginPanels(page: Page) {
         window as unknown as { __devEmitTauriEvent: (n: string) => void }
       ).__devEmitTauriEvent("menu-toggle-sidebar"),
     );
-  const tabs = page.locator(".sidebar .sidebar-tab");
+  // The rail's buttons, the built-in three first: each plugin's panel after.
+  const tabs = page.locator(".activity-rail-item:not(.activity-rail-settings)");
   const count = await tabs.count();
   for (let i = 3; i < count; i++) {
     await tabs.nth(i).click();

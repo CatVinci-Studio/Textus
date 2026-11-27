@@ -8,7 +8,7 @@ const REGIONS: { region: string; start?: string }[] = [
   { region: ".window-bar" },
   {
     region: ".sidebar:not(.sidebar-collapsed)",
-    start: '[role="treeitem"][tabindex="0"], .sidebar-tab-active',
+    start: '[role="treeitem"][tabindex="0"]',
   },
   {
     region: ":is(.main-pane, .main-pane > .island-row) > .tab-bar",

@@ -1,6 +1,5 @@
-/* Tabs: a document's and the sidebar's share one look - a capsule that takes
-   the chosen fill - so each bar sets only its layout and type. */
-:is(.tab-pill, .sidebar-tab) {
+/* A document's tab: a capsule that takes the chosen fill. */
+.tab-pill {
   border-radius: var(--shape-pill);
   corner-shape: round;
   background: transparent;
@@ -12,12 +11,12 @@
 }
 
 @media (any-hover: hover) {
-  :is(.tab-pill, .sidebar-tab):hover {
+  .tab-pill:hover {
     background: var(--ui-hover);
   }
 }
 
-:is(.tab-pill-active, .sidebar-tab-active) {
+.tab-pill-active {
   background: var(--ui-selected);
   color: var(--ui-selected-text);
 }

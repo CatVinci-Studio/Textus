@@ -11,7 +11,7 @@ import type { Strings } from "../i18n/strings";
 
 /**
  * The three ways to begin - a new document, a file, a folder - as capsule
- * buttons, their keys in their tips: the start page's (the first the
+ * buttons named alike (no menu's "…"), their keys in their tips: the start page's (the first the
  * primary), or one alone where a sidebar panel is empty. Run here as the
  * menu items' events, not through the native menu: in a window-per-document
  * setup that would open another window.
@@ -35,7 +35,7 @@ export function StartActions({
       icon: <NewDocumentIcon />,
     },
     {
-      label: t.menuOpenFile,
+      label: t.startOpenFile,
       event: "menu-open-file",
       combo: "mod+o",
       icon: <GenericFileIcon />,
@@ -43,7 +43,7 @@ export function StartActions({
     ...(canOpenFolder
       ? [
           {
-            label: t.menuOpenFolder,
+            label: t.startOpenFolder,
             event: "menu-open-folder",
             combo: undefined,
             icon: <FolderOpenIcon />,

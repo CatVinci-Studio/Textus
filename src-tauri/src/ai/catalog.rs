@@ -300,6 +300,23 @@ pub const PROVIDER_CATALOG: &[ProviderCatalogEntry] = &[
         // /v1/models route works.
         known_models: &[],
     },
+    // Magpie's local gateway (usemagpie.ai): the plans and keys pooled in
+    // it, any of its models. Its key is a placeholder it ignores.
+    ProviderCatalogEntry {
+        id: "magpie",
+        label: "Magpie (local)",
+        dialect: "openai-chat-completions",
+        auth: &["api_key"],
+        base_url: Some("http://127.0.0.1:3425/v1"),
+        default_model: None,
+        agent_default_model: None,
+        key_optional: true,
+        paper_at_once: 3,
+        oauth_unofficial: false,
+        supports_vision: true,
+        // Whatever it pools: its /v1/models route lists them.
+        known_models: &[],
+    },
     ProviderCatalogEntry {
         id: "custom",
         label: "Custom Endpoint",

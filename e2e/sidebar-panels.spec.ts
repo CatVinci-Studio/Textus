@@ -478,7 +478,8 @@ test("the AI's edge stepped past what the window can show stops there, and steps
   // The composer takes the focus as the panel opens; the keys go to the
   // divider after that.
   await expect(page.locator(".inline-chat-input").first()).toBeFocused();
-  const divider = page.getByRole("separator").first();
+  // The islands' divider, not the composer's grip.
+  const divider = page.locator(".split-divider");
   await divider.focus();
   for (let i = 0; i < 20; i++) await page.keyboard.press("ArrowLeft");
   // Read once it has glided there.
@@ -639,18 +640,12 @@ test.describe("on a phone", () => {
   test("a document brought to the front is read first: the keyboard comes up for a tap in its text", async ({
     page,
   }) => {
-    // The 30x CPU below slows the sheet's close with the rest of the app.
-    test.slow();
     await openApp(page);
     const editor = page.locator(".ProseMirror:visible");
     await editor.tap();
     await page.keyboard.type("some text");
-    await page.locator(".tab-switcher-button").tap();
-    await page.getByRole("menuitem", { name: "新建文件" }).tap();
-    await expect(page.locator(".tab-switcher-count")).toHaveText("2");
-    // The menu already up: what is tapped under the throttle is the close.
-    await page.locator(".tab-switcher-button").tap();
-    await expect(page.getByRole("menuitemradio")).toHaveCount(2);
+    await page.locator(".tab-bar-add").first().tap();
+    await expect(page.locator(".tab-pill")).toHaveCount(2);
     // A slow phone: the document is built well after the tap.
     const cdp = await page
       .context()
@@ -659,7 +654,7 @@ test.describe("on a phone", () => {
     await cdp?.send("Emulation.setCPUThrottlingRate", { rate: 30 });
     // What was tapped goes (as a sidebar's row does): the document left
     // in front is not given the keys for it.
-    await page.getByRole("menuitem", { name: "关闭标签页", exact: true }).tap();
+    await page.locator(".tab-pill").last().locator(".tab-pill-close").tap();
     const text = page.locator(".ProseMirror:visible p", { hasText: "some" });
     await expect(text).toBeVisible();
     // Long enough for any late focus of its own to have come.

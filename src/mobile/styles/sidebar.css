@@ -1,18 +1,17 @@
-/* The sidebar on a phone (design: phone, pushed open): the library lies
-   under the page's left edge - a phone has no activity rail, its tabs are
-   the drawer's header - and the page, its bar too, moves right by the
-   drawer's width, a strip of it left at the right edge. Nothing dims; a
-   tap on that strip pushes it back (usePushedSidebar). */
+/* The sidebar on a phone (design: phone, pushed open): the rail and the
+   sidebar lie under the page's left edge, and the page, its bar too, moves
+   right by their width, a strip of it left at the right edge. Nothing
+   dims; a tap on that strip pushes it back (usePushedSidebar). */
 :root[data-window-chrome="mobile"] .app-shell {
-  /* No rail on a phone: the sidebar is the drawer. */
-  --rail-width: 0px;
-  --sidebar-width: min(240px, calc(100vw - 64px));
+  /* Its icons, a touch target wide, on whole pixels (--mobile-bar). */
+  --rail-width: calc(var(--touch-target) + 2 * var(--space-1));
+  --sidebar-width: min(240px, calc(100vw - var(--rail-width) - 64px));
   /* The screen between a phone's cutout and its far corner, turned on its
      side (#root's padding, base.css). */
   --phone-width: calc(100vw - var(--safe-left, 0px) - var(--safe-right, 0px));
 }
 
-:root[data-window-chrome="mobile"] .sidebar {
+:root[data-window-chrome="mobile"] :is(.activity-rail, .sidebar) {
   position: fixed;
   top: 0;
   margin-left: var(--safe-left, 0px);
@@ -34,7 +33,7 @@
 :root[data-window-chrome="mobile"]
   .app-shell[data-sidebar="open"]
   > :is(.window-bar, .main-pane) {
-  transform: translateX(var(--sidebar-width));
+  transform: translateX(calc(var(--rail-width) + var(--sidebar-width)));
 }
 
 /* The frame's paint, laid against the window as on the desktop: iOS has
@@ -46,16 +45,22 @@
 }
 
 :root[data-window-chrome="mobile"] .app-shell[data-sidebar="open"] {
-  --frame-shift: var(--sidebar-width);
+  --frame-shift: calc(var(--rail-width) + var(--sidebar-width));
 }
 
-:root[data-window-chrome="mobile"] .app-shell > :is(.sidebar, .main-pane) {
+:root[data-window-chrome="mobile"]
+  .app-shell
+  > :is(.activity-rail, .sidebar, .main-pane) {
   background-attachment: scroll;
   background-size: 100vw 100vh;
   background-position: calc(-1 * var(--frame-shift)) 0;
 }
 
 :root[data-window-chrome="mobile"] .app-shell > .sidebar {
+  background-position: calc(-1 * var(--rail-width)) 0;
+}
+
+:root[data-window-chrome="mobile"] .app-shell > .activity-rail {
   background-position: 0 0;
 }
 
@@ -75,7 +80,8 @@
   z-index: var(--z-dock);
 }
 
-/* The drawer's tabs on the tab row's line, no line under them. */
+/* The panel's name on the tab row's line, the frame one surface with the
+   rail: no line inside it, as on the desktop with its rail. */
 :root[data-window-chrome="mobile"] .sidebar-header {
   display: flex;
   align-items: center;
@@ -100,23 +106,6 @@
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
-}
-
-/* Tabs a finger can hit; rows take theirs with a tablet's (base.css). */
-:root[data-window-chrome="mobile"] .sidebar-tabs {
-  /* Plugins' panels too: past the drawer's width, they scroll. */
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-:root[data-window-chrome="mobile"] .sidebar-tab {
-  flex: none;
-  min-width: var(--touch-target);
-  min-height: var(--touch-target);
-}
-
-:root[data-window-chrome="mobile"] .sidebar-tab:hover:not(.sidebar-tab-active) {
-  background: none;
 }
 
 /* The page's sheet runs to the screen's foot, under the home indicator or

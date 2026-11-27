@@ -14,6 +14,17 @@ import { railTabs, sidebarTab } from "./sidebar-tabs";
 import { ViewTitleActions } from "../../plugins/views/plugin-views";
 import type { FileOpenHow } from "../../files/tree-shared";
 
+/** Closed by a rail button that goes with it (the rail turned off, a
+ *  phone's under the page): the keyboard goes back to the bar's sidebar
+ *  button, not to the page's top. */
+function focusBackToToggle() {
+  requestAnimationFrame(() => {
+    const at = document.activeElement;
+    if (at && at !== document.body) return;
+    document.querySelector<HTMLElement>(".window-bar-sidebar-toggle")?.focus();
+  });
+}
+
 /** The left sidebar, with the activity rail that switches its tabs. */
 export function Sidebar({
   open,
@@ -90,7 +101,10 @@ export function Sidebar({
             if (!open) onToggle();
             onModeChange(id);
           }}
-          onCloseSidebar={onToggle}
+          onCloseSidebar={() => {
+            onToggle();
+            focusBackToToggle();
+          }}
           onReorder={moved}
           t={t}
         />
@@ -117,45 +131,12 @@ export function Sidebar({
                   islands' tops. Without the rail its tabs are here. */}
               {/* A plugin's buttons for its panel (menus "view/title")
                   end the name's line: no row of their own. */}
-              {phone ? (
-                // No rail: its tabs are the drawer's header, one tap apart.
-                <div
-                  className="sidebar-tabs"
-                  role="toolbar"
-                  aria-label={t.activityRail}
-                >
-                  {railTabs().map(({ id, label, Icon }) => (
-                    <button
-                      key={id}
-                      type="button"
-                      className={`sidebar-tab${shown.id === id ? " sidebar-tab-active" : ""}`}
-                      aria-label={label(t)}
-                      aria-pressed={shown.id === id}
-                      data-sidebar-tab={id}
-                      onClick={() => {
-                        if (shown.id !== id) return onModeChange(id);
-                        onClose();
-                        // The button goes with the drawer: the keyboard
-                        // goes back to the one that brought it.
-                        document
-                          .querySelector<HTMLElement>(
-                            ".window-bar-sidebar-toggle",
-                          )
-                          ?.focus();
-                      }}
-                    >
-                      <Icon />
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <h2
-                  className="tx-pane-title sidebar-title"
-                  data-tauri-drag-region={titleShown || undefined}
-                >
-                  {shown.label(t)}
-                </h2>
-              )}
+              <h2
+                className="tx-pane-title sidebar-title"
+                data-tauri-drag-region={titleShown || undefined}
+              >
+                {shown.label(t)}
+              </h2>
               {titleShown && <ViewTitleActions view={shown.id} />}
             </div>
             <div className="sidebar-body" inert={closing || undefined}>
@@ -179,7 +160,7 @@ export function Sidebar({
               <ResizeHandle
                 className="sidebar-resizer"
                 edge="right"
-                width={width.width}
+                size={width.width}
                 min={width.min}
                 max={width.max}
                 onResize={width.setWidth}

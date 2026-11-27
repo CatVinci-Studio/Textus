@@ -8,8 +8,6 @@ export interface PickerLabels {
   /** The UI language: picks the built-in skills' labels. */
   lang: Lang;
   groups: Record<PickerGroupId, string>;
-  /** "↑↓ to move · Enter to choose · Esc to close" - not on a phone. */
-  keys: string;
   skillAbout: string;
   /** Says `{query}`. */
   skillNoMatch: string;
@@ -34,7 +32,6 @@ export function pickerLabels(t: Strings, lang: Lang): PickerLabels {
       format: t.skillCategoryFormat,
       create: t.skillCategoryCreate,
     },
-    keys: t.pickerKeysHint,
     skillAbout: t.skillPickerAbout,
     skillNoMatch: t.skillPickerNoMatch,
     skillHowTo: t.skillPickerHowTo,
@@ -71,7 +68,6 @@ export function ComposerPicker({
   sections,
   empty,
   active,
-  keys,
 }: {
   kind: "skill" | "mention";
   /** The listbox's accessible name. */
@@ -81,8 +77,6 @@ export function ComposerPicker({
   empty: string[];
   /** Index of the highlighted row, across all sections. */
   active: number;
-  /** The keyboard hint, or null (a phone has no arrow keys). */
-  keys: string | null;
 }) {
   const listRef = useRef<HTMLDivElement>(null);
   const count = sections.reduce((n, s) => n + s.rows.length, 0);
@@ -168,11 +162,6 @@ export function ComposerPicker({
               })}
             </div>
           ))}
-        </div>
-      )}
-      {keys && count > 0 && (
-        <div className="composer-picker-keys" aria-hidden="true">
-          {keys}
         </div>
       )}
     </div>
