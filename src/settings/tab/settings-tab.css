@@ -56,6 +56,14 @@
 }
 
 /* Under the version, as quiet as it. */
+/* Share, then Sponsor, side by side under the version. */
+.settings-about-card-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-3);
+  margin-top: 2px;
+}
+
 .settings-about-sponsor {
   display: block;
   margin-top: 2px;

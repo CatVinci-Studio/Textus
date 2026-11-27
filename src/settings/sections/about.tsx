@@ -76,9 +76,9 @@ export function AboutSection({
   );
 }
 
-/** "Like Textus?" and a button that passes it on: the system's share sheet
- *  where the page has one (iPhone, iPad), else the words copied. */
-function ShareRow({ t }: { t: Strings }) {
+/** Passes Textus on: the system's share sheet where the page has one
+ *  (iPhone, iPad), else the words copied, `copied` then true. */
+export function useShareTextus(t: Strings) {
   const [copied, setCopied] = useState(false);
   const share = () => {
     const text = t.aboutShareText;
@@ -88,6 +88,13 @@ function ShareRow({ t }: { t: Strings }) {
     }
     void navigator.clipboard.writeText(text).then(() => setCopied(true));
   };
+  return { copied, share };
+}
+
+/** "Like Textus?" and a button that passes it on: the system's share sheet
+ *  where the page has one (iPhone, iPad), else the words copied. */
+function ShareRow({ t }: { t: Strings }) {
+  const { copied, share } = useShareTextus(t);
   return (
     <div className="settings-about-share">
       <span>{t.aboutShareLead}</span>
