@@ -56,6 +56,8 @@ const ALLOWED = {
     "the document's scrolling: its zoom",
   "src/editor/nav-history.ts:NEAR": "places in the document: its zoom",
   "src/mobile/usePageSwipe.ts:EDGE": "the phone, whose chrome is 1",
+  "src/platform/phone-layout.ts:PHONE_WIDTH":
+    "the window's width, which picks the layout: grown only past Large",
 };
 
 function* files(dir) {

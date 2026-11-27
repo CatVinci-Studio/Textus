@@ -37,11 +37,14 @@ export function sidePanelMax(
   scale = 1,
   keep = 0,
 ): number {
+  const share = Math.floor(windowWidth * PANEL_SHARE);
+  // A large interface size grows the floor too, never past the share: at
+  // an iPad's Largest it took more than half the screen.
   return Math.max(
-    floor(limits) * scale,
+    Math.min(floor(limits) * scale, Math.max(floor(limits), share)),
     Math.min(
       limits.max * scale,
-      Math.floor(windowWidth * PANEL_SHARE),
+      share,
       windowWidth - beside - Math.max(keep, DOC_MIN),
     ),
   );

@@ -1,9 +1,14 @@
-/* Interface Size's three presets, as Chrome and macOS keep theirs: each
-   size chosen by hand, on even pixels, not a factor times one design. The
-   build leaves this sheet's lengths as written (vite.chrome-scale.ts); the
-   rest of the interface grows by --chrome-scale between them. Medium is the
-   default; the phone has its own (ds-base.css). */
+/* Interface Size's presets, as Chrome and macOS keep theirs: each size
+   chosen by hand, on even pixels, not a factor times one design. The build
+   leaves this sheet's lengths as written (vite.chrome-scale.ts); the rest
+   of the interface grows by --chrome-scale between them. Medium is the
+   default; Extra Large and Largest are a touch screen's, for the system's
+   larger text (theme/system-text-size.ts); the phone has its own steps
+   (ui-sizes-phone.css). */
 :root {
+  /* The document's margins grow with the interface up to Large's, the
+     rest of a larger step going to the text (UI_LARGE, settings-values.ts). */
+  --margin-scale: min(var(--chrome-scale, 1), 1.25);
   /* The bar's own row; on a phone or tablet the status bar sits above it,
      inside the bar (--safe-top, mobile/styles/base.css). */
   --window-bar-row: 40px;
@@ -72,7 +77,18 @@
   --space-8: 28px;
 }
 
-:root[data-ui-size="large"]:not([data-window-chrome="mobile"]) {
+/* Large, and a bar's at the two steps past it: its row holds the same
+   buttons, each still a fingertip's. */
+:root[data-ui-size="large"]:not([data-window-chrome="mobile"]),
+:root:is([data-ui-size="xlarge"], [data-ui-size="xxlarge"]):not(
+    [data-window-chrome="mobile"]
+  )
+  :is(.window-bar, .activity-rail, .tab-bar, .format-bar) {
+  --chrome-scale: 1.25;
+  --text-footnote: 16px;
+  --text-secondary: 20px;
+  --text-control: 20px;
+  --text-body-large: 20px;
   --window-bar-row: 48px;
   --ui-tab-lift: 10px;
   --island-space: 12px;
@@ -96,11 +112,74 @@
   --space-8: 40px;
 }
 
-/* The phone's chrome, at its first design. */
-:root[data-window-chrome="mobile"] {
-  /* The status bar's room and a fingertip's row: the tabs ride in it. */
+/* An iPad's Extra Large and Largest: what is read grows on, its bars stay
+   at Large's (below). */
+:root[data-ui-size="xlarge"]:not([data-window-chrome="mobile"]) {
   --window-bar-row: 48px;
-  --icon-button-s: 24px;
-  --tree-step: 12px;
-  --pane-inset: 12px;
+  --ui-tab-lift: 10px;
+  --island-space: 14px;
+  --control-height-sm: 38px;
+  --control-height: 42px;
+  --icon-button-s: 38px;
+  --tree-step: 18px;
+  --pane-inset: 22px;
+  --pane-edge: 6px;
+  --text-caption: 18px;
+  --text-list: 22px;
+  --text-body: 24px;
+  --text-title: 28px;
+  --text-large-title: 38px;
+  --text-mark: 14px;
+  --space-1: 6px;
+  --space-2: 12px;
+  --space-3: 18px;
+  --space-4: 24px;
+  --space-6: 36px;
+  --space-8: 48px;
+}
+
+:root[data-ui-size="xxlarge"]:not([data-window-chrome="mobile"]) {
+  --window-bar-row: 48px;
+  --ui-tab-lift: 10px;
+  --island-space: 16px;
+  --control-height-sm: 44px;
+  --control-height: 48px;
+  --icon-button-s: 44px;
+  --tree-step: 20px;
+  --pane-inset: 24px;
+  --pane-edge: 8px;
+  --text-caption: 20px;
+  --text-list: 26px;
+  --text-body: 28px;
+  --text-title: 32px;
+  --text-large-title: 44px;
+  --text-mark: 16px;
+  --space-1: 8px;
+  --space-2: 14px;
+  --space-3: 20px;
+  --space-4: 28px;
+  --space-6: 40px;
+  --space-8: 56px;
+}
+
+/* A touch tablet's bar is a finger's row at every size, a tab in it a
+   finger tall: after the presets, so it wins over theirs. */
+:root[data-touch]:not([data-window-chrome="mobile"]) {
+  --window-bar-row: 48px;
+  --ui-tab-lift: 4px;
+}
+
+/* A phone's or tablet's document text, at the theme's own size ("auto"),
+   grows with the step as its interface's does (content-base.css). */
+:root[data-touch][data-ui-size="small"]:not([data-doc-size]) {
+  --doc-step: 0.88;
+}
+:root[data-touch][data-ui-size="large"]:not([data-doc-size]) {
+  --doc-step: 1.18;
+}
+:root[data-touch][data-ui-size="xlarge"]:not([data-doc-size]) {
+  --doc-step: 1.41;
+}
+:root[data-touch][data-ui-size="xxlarge"]:not([data-doc-size]) {
+  --doc-step: 1.65;
 }

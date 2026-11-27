@@ -1,8 +1,8 @@
 /* Every phone and tablet style, layered over the mouse-first desktop ones.
    A phone's start with :root[data-window-chrome="mobile"] (the phone's
    layout, upright or on its side), which outranks the desktop rule it
-   replaces regardless of load order; a touch tablet's sit under
-   (pointer: coarse) with the platform named. */
+   replaces regardless of load order; a touch tablet's (and a phone's) start
+   with :root[data-touch], set on iOS and Android. */
 @import "./base.css";
 @import "./sidebar.css";
 @import "./chrome.css";

@@ -45,10 +45,25 @@ export type FormatBarSide = "top" | "left" | "right";
 
 export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
 
-/// Interface Text Size, as a factor on the UI's type scale.
-export type UiTextScale = 0.85 | 1 | 1.25;
-/** One table with the boot script's (appearance-tables.json). */
+/// Interface Size, as a factor on the UI's type scale.
+export type UiTextScale = 0.85 | 1 | 1.25 | 1.5 | 1.75;
+/** One table with the boot script's (appearance-tables.json). Extra Large
+ *  and Largest are a touch screen's (iOS and Android), for the system's
+ *  larger text; a desktop offers the first three. */
 export const UI_TEXT_SCALES = TABLES.uiTextScales as readonly UiTextScale[];
+/** Large: the last step a desktop offers, where the bars and the
+ *  document's margins stop growing (ui-sizes.css's --margin-scale) and past
+ *  which an upright tablet takes the phone's layout. */
+export const UI_LARGE: UiTextScale = 1.25;
+export const DESKTOP_UI_TEXT_SCALES = UI_TEXT_SCALES.filter(
+  (scale) => scale <= UI_LARGE,
+);
+/** The system's text size each step reaches up to: iOS's body text in pt,
+ *  Android's font scale. Past the last bound, the last step. */
+export const UI_SYSTEM_SIZES = TABLES.uiSystemSizes as {
+  ios: readonly number[];
+  android: readonly number[];
+};
 /** Each step's preset in ui-sizes.css, by place in UI_TEXT_SCALES. */
 export const UI_SIZE_NAMES = TABLES.uiSizeNames as readonly string[];
 /** A step no longer offered, and the one it now reads as. */

@@ -407,6 +407,8 @@ describe("interface text size", () => {
   it("reads a size it no longer offers as the nearest of small, medium and large", () => {
     expect(normaliseSettings({ uiTextScale: 0.9 }).uiTextScale).toBe(0.85);
     expect(normaliseSettings({ uiTextScale: 1.1 }).uiTextScale).toBe(1);
+    // A touch screen's step past Large, brought to a desktop, reads as Large.
+    expect(normaliseSettings({ uiTextScale: 1.75 }).uiTextScale).toBe(1.25);
   });
 
   it("puts the size on the page for the UI's type scale, and takes it off at 100%", () => {
@@ -421,6 +423,26 @@ describe("interface text size", () => {
     expect(root.style.getPropertyValue("--ui-text-scale")).toBe("0.85");
     act(() => lastSet({ uiTextScale: 1 }));
     expect(root.style.getPropertyValue("--ui-text-scale")).toBe("");
+  });
+
+  it("takes the system's text size's step where there is one, until a size is picked", () => {
+    const bridge = window as { TextusAndroid?: unknown };
+    bridge.TextusAndroid = { fontScale: () => 2, setAppearance: () => {} };
+    try {
+      boot({ languageChosen: true });
+      render(
+        <SettingsProvider>
+          <AppearanceSync />
+          <Probe />
+        </SettingsProvider>,
+      );
+      const root = document.documentElement;
+      expect(root.dataset.uiSize).toBe("xxlarge");
+      act(() => lastSet({ uiSizeFollowsSystem: false, uiTextScale: 0.85 }));
+      expect(root.dataset.uiSize).toBe("small");
+    } finally {
+      delete bridge.TextusAndroid;
+    }
   });
 
   it("is applied by the boot script for the same sizes", () => {

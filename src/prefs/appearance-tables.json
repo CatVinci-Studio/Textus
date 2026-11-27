@@ -16,8 +16,12 @@
     "zh": "zh-CN",
     "zh-Hant": "zh-TW"
   },
-  "uiTextScales": [0.85, 1, 1.25],
-  "uiSizeNames": ["small", "medium", "large"],
+  "uiTextScales": [0.85, 1, 1.25, 1.5, 1.75],
+  "uiSizeNames": ["small", "medium", "large", "xlarge", "xxlarge"],
+  "uiSystemSizes": {
+    "ios": [15, 17, 21, 28],
+    "android": [0.95, 1.1, 1.4, 1.9]
+  },
   "uiTextScalesBefore": { "0.9": 0.85, "1.1": 1 },
   "docLineHeights": {
     "compact": 1.55,

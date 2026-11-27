@@ -27,6 +27,8 @@ const ALLOWED: Record<string, string> = {
   "platform/mobile-viewport.ts":
     "the safe area from WebKit's env(), Android's from its bridge",
   "theme/apply-appearance.ts": "its keyboard takes the window's dark or light",
+  "theme/system-text-size.ts":
+    "iOS's text size is read from WebKit's body style, Android's from its app",
   "theme/imported-theme.ts":
     "its WebKit draws CJK as boxes under generic system fonts",
   "engine/controls/elastic-overscroll.ts": "the system's own overscroll",

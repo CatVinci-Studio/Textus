@@ -1385,6 +1385,8 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   uiTextSmall: "작게",
   uiTextMedium: "보통",
   uiTextLarge: "크게",
+  uiTextXLarge: "아주 크게",
+  uiTextXXLarge: "가장 크게",
   startPageTab: "시작",
   startupOpenLabel: "시작할 때 열기",
   startupOpenSession: "지난번 문서",

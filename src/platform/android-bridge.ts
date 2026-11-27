@@ -12,6 +12,9 @@ interface AndroidBridge {
   /** Keeps the back gesture off the left edge while a swipe from there opens
    *  the sidebar. */
   setEdgeSwipe(on: boolean): void;
+  /** The system's font size, as a factor (1 by default, up to 2): Interface
+   *  Size follows it (theme/system-text-size.ts). */
+  fontScale(): number;
 }
 
 export function androidBridge(): AndroidBridge | null {

@@ -15,6 +15,7 @@ import { clearThemeChrome } from "../engine/tokens/palette";
 import { isIOSApp } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
 import { holdTransitionsOnThemeChange } from "./restyle-hold";
+import { useSystemUiScale } from "./system-text-size";
 import { tokenPx } from "../engine/tokens/token-px";
 import { writeThemeStyle } from "../engine/tokens/appearance";
 import { useFileIconThemeChoice } from "../plugins/contributions/file-icon-themes";
@@ -171,18 +172,21 @@ function useApplyAppearance(
 
   // A factor on font sizes rather than CSS zoom on the panels: WebKit's zoom
   // leaves popovers and pointer coordinates in the unzoomed space.
+  const system = useSystemUiScale();
+  const uiScale =
+    settings.uiSizeFollowsSystem && system ? system : settings.uiTextScale;
   useEffect(() => {
     const root = document.documentElement;
-    const size = UI_SIZE_NAMES[UI_TEXT_SCALES.indexOf(settings.uiTextScale)];
+    const size = UI_SIZE_NAMES[UI_TEXT_SCALES.indexOf(uiScale)];
     if (!size || size === "medium") {
       root.style.removeProperty("--ui-text-scale");
       delete root.dataset.uiSize;
     } else {
-      root.style.setProperty("--ui-text-scale", String(settings.uiTextScale));
+      root.style.setProperty("--ui-text-scale", String(uiScale));
       root.dataset.uiSize = size;
     }
     if (root.dataset.windowChrome === "native") followWindowBar();
-  }, [settings.uiTextScale]);
+  }, [uiScale]);
 
   useEffect(() => {
     let styleEl = document.getElementById(

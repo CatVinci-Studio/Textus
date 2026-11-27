@@ -60,7 +60,8 @@ export function platformName():
 }
 
 /**
- * Publishes `data-window-chrome` and `data-platform` on <html>, before the
+ * Publishes `data-window-chrome`, `data-platform` and `data-touch` (iOS and
+ * Android: a finger's sizes) on <html>, before the
  * first render so the title row never paints at the wrong inset: "mobile"
  * for the phone's layout, "app" for a tablet's (the desktop's, its menu and
  * frame drawn by the app), else the desktop's own. A tablet that turns to the
@@ -81,4 +82,6 @@ export function publishWindowChrome(): void {
   publish();
   if (isMobileApp) onPhoneLayout(publish);
   root.dataset.platform = platformName();
+  // A finger's sizes (44pt targets, a taller bar) hang on this one mark.
+  root.toggleAttribute("data-touch", isMobileApp);
 }

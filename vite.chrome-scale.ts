@@ -21,13 +21,13 @@ const DOCUMENT = [
   /\/export\/print\.css$/,
   /\/playground\//,
   // Interface Size's presets, written as each size draws them.
-  /\/engine\/tokens\/ui-sizes\.css$/,
+  /\/engine\/tokens\/ui-sizes(-phone)?\.css$/,
 ];
 
 /** A length worth scaling: 3px and up; hairlines stay crisp. Plugin pages
  *  are scaled by src/engine/tokens/scale-lengths.ts: keep the two in step. */
 const LENGTH = /(^|[\s(,/+*])(-?\d*\.?\d+)px\b/g;
-const SCALED = /--(chrome-scale|ui-text-scale|window-scale)\b/;
+const SCALED = /--(chrome-scale|ui-text-scale|window-scale|margin-scale)\b/;
 
 /** `value` with each length of 3px or more times the chrome's scale. */
 export function scaleLengths(value: string): string {

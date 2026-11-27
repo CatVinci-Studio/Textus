@@ -52,6 +52,9 @@ class MainActivity : TauriActivity() {
   override fun onConfigurationChanged(newConfig: Configuration) {
     super.onConfigurationChanged(newConfig)
     barIcons()
+    // The system's font size changed: the page picks its Interface Size
+    // step again (`fontScale` below).
+    page?.let { tell(it, "new Event('textus-font-scale')") }
   }
 
   /** Light icons on a dark page, dark on a light one. */
@@ -75,12 +78,17 @@ class MainActivity : TauriActivity() {
   // (`textus-insets`), and the keyboard's height (`textus-keyboard`).
   override fun onWebViewCreate(webView: WebView) {
     page = webView
+    // The page sizes its text by the system's font size itself, as a step
+    // that grows icons and rows with it (theme/system-text-size.ts); the web
+    // view's own zoom would grow the text a second time.
+    webView.settings.textZoom = 100
     webView.addJavascriptInterface(
       object {
         @JavascriptInterface fun top(): Float = top
         @JavascriptInterface fun bottom(): Float = bottom
         @JavascriptInterface fun left(): Float = left
         @JavascriptInterface fun right(): Float = right
+        @JavascriptInterface fun fontScale(): Float = resources.configuration.fontScale
         @JavascriptInterface fun setEdgeSwipe(on: Boolean) {
           runOnUiThread {
             edgeSwipe = on

@@ -63,6 +63,9 @@ export function useCloseOnOutsideClick<T extends HTMLElement>(
       if (ref.current ? !ref.current.contains(target) : !!inside) {
         closed = true;
         onClose();
+        // A finger's tap outside only closes it, as iOS's menus do: its
+        // click would otherwise reach what lies under (a tab's +).
+        if ((e as PointerEvent).pointerType === "touch") swallowClick();
       }
     }
     // A tick later: the press that opened it is not one outside it.
@@ -93,4 +96,25 @@ function isInside(target: Node, inside: string | HTMLElement | null): boolean {
       `[data-floating-select], [data-floating-menu], [data-floating-tip]${named}`,
     )
   );
+}
+
+/** Drops the click the current tap is about to make, and no other: a
+ *  press that turned into a scroll makes none, and the next tap's own
+ *  press ends the wait. */
+function swallowClick() {
+  const drop = (e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    done();
+  };
+  const done = () => {
+    window.removeEventListener("click", drop, true);
+    window.removeEventListener("pointerdown", next, true);
+    clearTimeout(timer);
+  };
+  // Added after this press's own listeners have run.
+  const next = () => done();
+  window.addEventListener("click", drop, true);
+  setTimeout(() => window.addEventListener("pointerdown", next, true), 0);
+  const timer = setTimeout(done, 2000);
 }

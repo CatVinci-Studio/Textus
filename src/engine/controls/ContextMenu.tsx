@@ -101,8 +101,18 @@ function PointerMenu({
   // On its way out it no longer answers Escape: the next press belongs to
   // whatever is under it (the find bar, a dialog).
   const open = usePresenceState() === "open";
+  // A phone's menu opened while typing (the format bar's ⋯) puts the
+  // keyboard down, and gives it back once it closes, unless what was chosen
+  // took the focus elsewhere. In the closing tap, so iOS lets it come back.
+  const [typing] = useState(() => (inline && !keyboard ? typingIn() : null));
+  const close = useCallback(() => {
+    onClose();
+    const at = document.activeElement;
+    if (typing?.isConnected && (!at || at === document.body))
+      typing.focus({ preventScroll: true });
+  }, [onClose, typing]);
   const ref = useCloseOnOutsideClick<HTMLDivElement>(
-    onClose,
+    close,
     true,
     open,
     anchor ?? "",
@@ -129,7 +139,7 @@ function PointerMenu({
   return createPortal(
     <MenuPanel
       items={items}
-      onClose={onClose}
+      onClose={close}
       inline={inline}
       panelRef={ref}
       surface={presence}
@@ -143,7 +153,7 @@ function PointerMenu({
         // each render, and an Escape in that gap was lost.
         e.preventDefault();
         e.stopPropagation();
-        onClose();
+        close();
       }}
     />,
     menuHost(anchor),
@@ -179,4 +189,10 @@ function useFocusReturn(
   useEffect(() => {
     if (!open) giveBack();
   }, [open, giveBack]);
+}
+
+/** The text being typed in now: an editor or a field. */
+function typingIn(): HTMLElement | null {
+  const at = document.activeElement as HTMLElement | null;
+  return at?.isContentEditable || at?.matches("input, textarea") ? at : null;
 }

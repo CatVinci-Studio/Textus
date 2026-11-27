@@ -84,3 +84,28 @@
   height: var(--grip-line, 1px);
   translate: 0 -50%;
 }
+
+/* A finger's grip on a touch screen: 44pt, the strip itself still a
+   line's width. A side panel's reaches into the panel it sizes, not over
+   the page beside it (a format bar's first button); a top edge's reaches
+   up, not down over the composer's text. */
+:root[data-touch] .resize-handle::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--touch-target);
+}
+:root[data-touch] .resize-handle[data-edge="right"]::before {
+  right: 0;
+}
+:root[data-touch] .resize-handle[data-edge="left"]::before {
+  left: 0;
+}
+:root[data-touch] .resize-handle[data-edge="top"]::before {
+  top: auto;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: var(--touch-target);
+}

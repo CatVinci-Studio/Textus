@@ -1,6 +1,6 @@
 import { storedLook } from "./classic-look";
 import { normaliseMcpServers } from "./mcp";
-import { hasTextusAi } from "../platform/capabilities";
+import { hasTextusAi, isMobileApp } from "../platform/capabilities";
 import { detectLang, isLang, type Lang } from "../i18n/strings";
 import {
   UPDATE_CHANNELS,
@@ -40,6 +40,7 @@ import {
   type ThemeMode,
   UI_TEXT_SCALES,
   UI_TEXT_SCALES_BEFORE,
+  UI_LARGE,
   type UiTextScale,
   DOC_TEXT_SIZES,
   type DocTextSize,
@@ -228,10 +229,12 @@ function readSettings(parsed: Raw | null): Settings {
       )
         ? (parsed.singleNewline as SingleNewlineMode)
         : DEFAULT_SETTINGS.singleNewline,
-      uiTextScale: UI_TEXT_SCALES.includes(parsed.uiTextScale as UiTextScale)
-        ? (parsed.uiTextScale as UiTextScale)
-        : (UI_TEXT_SCALES_BEFORE[String(parsed.uiTextScale)] ??
-          DEFAULT_SETTINGS.uiTextScale),
+      uiTextScale: uiTextScaleOf(parsed.uiTextScale),
+      // A size picked before there was a system's to follow stays picked.
+      uiSizeFollowsSystem:
+        typeof parsed.uiSizeFollowsSystem === "boolean"
+          ? parsed.uiSizeFollowsSystem
+          : parsed.uiTextScale === undefined || parsed.uiTextScale === 1,
       docTextSize: DOC_TEXT_SIZES.includes(parsed.docTextSize as DocTextSize)
         ? (parsed.docTextSize as DocTextSize)
         : DEFAULT_SETTINGS.docTextSize,
@@ -299,4 +302,13 @@ function readSettings(parsed: Raw | null): Settings {
   } catch {
     return DEFAULT_SETTINGS;
   }
+}
+
+/** A step this device offers: a touch screen's two past Large read as
+ *  Large on a desktop (a settings file brought from an iPad). */
+function uiTextScaleOf(raw: unknown): UiTextScale {
+  const scale = UI_TEXT_SCALES.includes(raw as UiTextScale)
+    ? (raw as UiTextScale)
+    : (UI_TEXT_SCALES_BEFORE[String(raw)] ?? DEFAULT_SETTINGS.uiTextScale);
+  return isMobileApp || scale <= UI_LARGE ? scale : UI_LARGE;
 }

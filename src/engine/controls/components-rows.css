@@ -73,8 +73,12 @@
   contain: inline-size;
   min-width: 18ch;
 }
+/* A switch stays at the row's end, its name wrapping beside it: the name's
+   least is a few characters, not its longest unbreakable run (a Chinese
+   name, kept whole by keep-all, pushed the switch under it). */
 .settings-toggle-row > :first-child {
   flex-basis: 0;
+  min-width: min(100%, 5em);
 }
 
 .tx-input {
@@ -302,7 +306,11 @@ textarea.tx-input {
 }
 
 /* A name that would stand in a column of words beside its control
-   (useStackWhenTall): the control goes under it. */
-.settings-row[data-stacked] > :first-child {
+   (useStackWhenTall), or any name at a touch screen's two largest sizes
+   (HIG: a stacked layout for large text): the control goes under it. */
+.settings-row[data-stacked] > :first-child,
+:root[data-touch]:is([data-ui-size="xlarge"], [data-ui-size="xxlarge"])
+  .settings-row:not(.settings-toggle-row)
+  > :first-child {
   flex-basis: 100%;
 }

@@ -113,7 +113,7 @@ describe("builtinThemeCss", () => {
     expect(light).toContain("#write h2 {");
     expect(light).toContain("line-height: var(--doc-line-height, 1.8);");
     expect(light).toContain(
-      ":root[data-early-containers] #write {\n  font-size: var(--doc-font-size, 1.03125rem);",
+      ":root[data-early-containers] #write {\n  font-size: calc(var(--doc-font-size, 1.03125rem) * var(--doc-step, 1));",
     );
     expect(light).not.toContain("data-user-theme");
   });
