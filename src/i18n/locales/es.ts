@@ -823,6 +823,10 @@ para usar una.
   aboutVersion: "Versión {version}",
   aboutVersionBeta: "Versión {version} · Beta",
   aboutMadeBy: "Hecho por CatVinci Studio",
+  aboutShareLead: "¿Te gusta Textus?",
+  aboutShare: "Compártelo",
+  aboutShareText:
+    "Uso Textus: un entorno de escritura integrado, gratuito y de código abierto, para escribir Markdown de forma profesional en todas las plataformas. ¡Pruébalo! https://textus.md",
   aboutQq: "Grupo de QQ",
   aboutLicenses: "Licencias de código abierto",
   navShortcuts: "Atajos de teclado",

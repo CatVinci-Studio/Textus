@@ -831,6 +831,10 @@ export default {
   aboutVersion: "Версия {version}",
   aboutVersionBeta: "Версия {version} · Бета",
   aboutMadeBy: "Сделано в CatVinci Studio",
+  aboutShareLead: "Нравится Textus?",
+  aboutShare: "Поделиться",
+  aboutShareText:
+    "Я пользуюсь Textus — бесплатной интегрированной средой для письма с открытым исходным кодом: профессиональный Markdown на любой платформе. Попробуйте! https://textus.md",
   aboutQq: "Группа QQ",
   aboutLicenses: "Лицензии открытого ПО",
   navShortcuts: "Сочетания клавиш",

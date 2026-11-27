@@ -808,6 +808,10 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   aboutVersion: "Versão {version}",
   aboutVersionBeta: "Versão {version} · Beta",
   aboutMadeBy: "Feito pela CatVinci Studio",
+  aboutShareLead: "Gosta do Textus?",
+  aboutShare: "Compartilhar",
+  aboutShareText:
+    "Estou usando o Textus: um ambiente de escrita integrado, gratuito e de código aberto, para escrever em Markdown de forma profissional em todas as plataformas. Experimente! https://textus.md",
   aboutQq: "Grupo do QQ",
   aboutLicenses: "Licenças de código aberto",
   navShortcuts: "Atalhos",

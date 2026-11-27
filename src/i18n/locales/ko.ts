@@ -731,6 +731,10 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   aboutVersion: "버전 {version}",
   aboutVersionBeta: "버전 {version} · 베타",
   aboutMadeBy: "CatVinci Studio 제작",
+  aboutShareLead: "Textus가 마음에 드시나요?",
+  aboutShare: "공유하기",
+  aboutShareText:
+    "Textus를 쓰고 있어요. 무료 오픈 소스 통합 글쓰기 환경으로, 모든 플랫폼에서 전문적인 Markdown 글쓰기를 지원해요. 한번 써 보세요! https://textus.md",
   aboutQq: "QQ 그룹",
   aboutLicenses: "오픈 소스 라이선스",
   navShortcuts: "단축키",

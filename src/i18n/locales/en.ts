@@ -768,6 +768,10 @@ type /name in a conversation to use one.
   /** The phone and tablet apps, still in public testing. */
   aboutVersionBeta: "Version {version} · Beta",
   aboutMadeBy: "Made by CatVinci Studio",
+  aboutShareLead: "Like Textus?",
+  aboutShare: "Share it",
+  aboutShareText:
+    "I'm using Textus: a free, open-source Integrated Writing Environment for professional Markdown writing on every platform. Give it a try! https://textus.md",
   aboutQq: "QQ group",
   aboutLicenses: "Open-source licenses",
   navShortcuts: "Shortcuts",

@@ -70,7 +70,34 @@ export function AboutSection({
         </button>
         <UpdateButton t={t} checkOnOpen={checkNow} />
       </div>
+      <ShareRow t={t} />
       <div className="settings-about-credit">{t.aboutMadeBy}</div>
+    </div>
+  );
+}
+
+/** "Like Textus?" and a button that passes it on: the system's share sheet
+ *  where the page has one (iPhone, iPad), else the words copied. */
+function ShareRow({ t }: { t: Strings }) {
+  const [copied, setCopied] = useState(false);
+  const share = () => {
+    const text = t.aboutShareText;
+    if (typeof navigator.share === "function") {
+      void navigator.share({ text }).catch(() => {});
+      return;
+    }
+    void navigator.clipboard.writeText(text).then(() => setCopied(true));
+  };
+  return (
+    <div className="settings-about-share">
+      <span>{t.aboutShareLead}</span>
+      <button
+        type="button"
+        className="tx-button text-button settings-about-link"
+        onClick={share}
+      >
+        {copied ? t.codeBlockCopied : t.aboutShare}
+      </button>
     </div>
   );
 }

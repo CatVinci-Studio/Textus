@@ -824,6 +824,10 @@ utiliser une.
   aboutVersion: "Version {version}",
   aboutVersionBeta: "Version {version} · Bêta",
   aboutMadeBy: "Créé par CatVinci Studio",
+  aboutShareLead: "Vous aimez Textus ?",
+  aboutShare: "Partager",
+  aboutShareText:
+    "J’utilise Textus : un environnement d’écriture intégré, gratuit et open source, pour écrire en Markdown de façon professionnelle sur toutes les plateformes. Essayez-le ! https://textus.md",
   aboutQq: "Groupe QQ",
   aboutLicenses: "Licences open source",
   navShortcuts: "Raccourcis",
