@@ -302,7 +302,6 @@
     .agent-panel,
     .tab-pill-active,
     .tree-row-active,
-    .sidebar-tab-active,
     .settings-nav-item-active
   ) {
     border: 1px solid CanvasText;

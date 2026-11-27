@@ -333,14 +333,3 @@
 .inline-chat-bar {
   position: relative;
 }
-
-/* Over the shared handle's own size (resize-handle.css). */
-.inline-chat-bar > .composer-grip {
-  top: -6px;
-  bottom: auto;
-  left: 0;
-  right: 0;
-  width: auto;
-  height: 12px;
-  cursor: row-resize;
-}

@@ -80,23 +80,6 @@
   color: var(--ui-text);
 }
 
-.sidebar-tabs {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  height: 100%;
-}
-
-.sidebar-tab {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: calc(4px * var(--chrome-scale)) 4px;
-  border: none;
-}
-
 .sidebar-view-actions {
   display: flex;
   justify-content: flex-end;

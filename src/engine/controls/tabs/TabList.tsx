@@ -147,7 +147,7 @@ export function TabListButton({
           aria-label={label}
           {...list.button}
         >
-          <span className="tab-bar-list-count">{tabs.length}</span>
+          <span className="tx-badge tab-bar-list-count">{tabs.length}</span>
         </button>
       </Tooltip>
       {list.menu}

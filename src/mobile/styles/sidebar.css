@@ -108,16 +108,6 @@
   user-select: none;
 }
 
-/* Tabs a finger can hit; rows take theirs with a tablet's (base.css). */
-:root[data-window-chrome="mobile"] .sidebar-tab {
-  min-width: var(--touch-target);
-  min-height: var(--touch-target);
-}
-
-:root[data-window-chrome="mobile"] .sidebar-tab:hover:not(.sidebar-tab-active) {
-  background: none;
-}
-
 /* The page's sheet runs to the screen's foot, under the home indicator or
    the gesture bar, square there as a sheet from below is. What is on it
    stops above them: the island ends there, its paper goes on below. With

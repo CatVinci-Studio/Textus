@@ -11,6 +11,18 @@
   transition: background-color var(--dur-fast) var(--ease-standard);
 }
 
+/* On a box's top edge (the AI's composer): a strip across it, astride the
+   edge. */
+.resize-handle[aria-orientation="horizontal"] {
+  top: -6px;
+  bottom: auto;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: 12px;
+  cursor: row-resize;
+}
+
 .resize-handle:focus-visible {
   outline: none;
 }
