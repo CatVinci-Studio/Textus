@@ -180,6 +180,9 @@ pub async fn export_via_pandoc(
             return Err(String::from_utf8_lossy(&output.stderr).trim().to_string());
         }
         written.map_err(|e| e.to_string())?;
+        if format == "odt" {
+            odt_tables::line_table_cells(Path::new(&output_path)).map_err(|e| e.to_string())?;
+        }
         Ok(())
     })
     .await
@@ -399,6 +402,9 @@ mod pdf_offscreen;
 mod pdf_macos;
 
 mod pandoc_options;
+
+#[cfg(desktop)]
+mod odt_tables;
 
 #[cfg(all(test, desktop))]
 mod tests;

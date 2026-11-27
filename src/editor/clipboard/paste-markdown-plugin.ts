@@ -13,6 +13,7 @@ import { wordListsToHtml } from "./word-lists";
 import { keepPastedLines } from "./paste-lines";
 import { cleanPastedHtml } from "./paste-html";
 import { htmlTableToMarkdown } from "../tables/html-table-markdown";
+import { pastedMath } from "./pasted-math";
 
 /**
  * Milkdown parses pasted text as markdown only when the clipboard has no
@@ -150,6 +151,10 @@ function mergesAway(doc: ProseNode, $pos: ResolvedPos): boolean {
   return !table && lines === 1;
 }
 
+/** The HTML being pasted came from outside Textus: set as ProseMirror reads
+ *  it, just before transformPasted. */
+let fromOutside = false;
+
 export const pasteMarkdownSourcePlugin = $prose(
   (ctx) =>
     new Plugin({
@@ -159,17 +164,29 @@ export const pasteMarkdownSourcePlugin = $prose(
         transformPasted: (slice, view) => {
           const pasted = joinLinesForTableCell(
             keepPastedSpans(
-              keepPastedBlock(slice, view.state.selection.$from, false),
+              keepPastedBlock(
+                // From outside Textus (its own copies carry data-pm-slice,
+                // where a "$" is text on purpose), not dragged.
+                fromOutside && !view.dragging
+                  ? pastedMath(slice, view.state.schema)
+                  : slice,
+                view.state.selection.$from,
+                false,
+              ),
               view.state.selection,
             ),
             view.state.selection.$from,
           );
+          fromOutside = false;
           // A drop lands where the pointer is, not at the selection.
           return view.dragging
             ? pasted
             : itemsLikeTarget(pasted, view.state.selection.$from);
         },
-        transformPastedHTML: (html) => cleanPastedHtml(wordListsToHtml(html)),
+        transformPastedHTML: (html) => {
+          fromOutside = !html.includes("data-pm-slice");
+          return cleanPastedHtml(wordListsToHtml(html));
+        },
         handlePaste(view, event) {
           const data = event.clipboardData;
           if (!data) return false;

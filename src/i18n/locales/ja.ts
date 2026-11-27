@@ -742,6 +742,10 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   aboutVersion: "バージョン {version}",
   aboutVersionBeta: "バージョン {version} · ベータ版",
   aboutMadeBy: "CatVinci Studio 制作",
+  aboutShareLead: "Textus が気に入りましたか？",
+  aboutShare: "シェアする",
+  aboutShareText:
+    "Textus を使っています。無料でオープンソースの統合ライティング環境で、すべてのプラットフォームで本格的な Markdown 執筆ができます。ぜひ試してみてください！https://textus.md",
   aboutQq: "QQ グループ",
   aboutLicenses: "オープンソースライセンス",
   navShortcuts: "ショートカット",

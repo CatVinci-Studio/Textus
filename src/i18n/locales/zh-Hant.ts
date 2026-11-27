@@ -693,6 +693,10 @@ export default {
   aboutVersion: "版本 {version}",
   aboutVersionBeta: "版本 {version} · 公測版",
   aboutMadeBy: "由 CatVinci Studio 製作",
+  aboutShareLead: "喜歡 Textus？",
+  aboutShare: "歡迎分享",
+  aboutShareText:
+    "我在用 Textus：免費開源的整合寫作環境，支援全平台專業 Markdown 寫作，你也來試試！https://textus.md",
   aboutQq: "QQ 群",
   aboutLicenses: "開放原始碼授權",
   navShortcuts: "快速鍵",

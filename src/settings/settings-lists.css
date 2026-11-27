@@ -315,6 +315,17 @@
   text-align: start;
 }
 
+/* "Like Textus?" and its share button, under the links. */
+.settings-about-share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  color: var(--ui-muted);
+}
+
 .settings-about-credit {
   margin-top: 4px;
   font-size: var(--text-footnote);
