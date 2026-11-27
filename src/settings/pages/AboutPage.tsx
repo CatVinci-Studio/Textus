@@ -13,6 +13,7 @@ import {
 import { emitMenuEvent } from "../../platform/menu-events";
 import { links } from "../../platform/ipc";
 import appIcon from "../../../src-tauri/icons/128x128@2x.png";
+import { useShareTextus } from "../sections/about";
 
 /** About: Textus and its version, checking for updates and which ones to
  *  take; help; and, last, where Textus lives and who made it. */
@@ -24,6 +25,7 @@ export function AboutPage({
   checkUpdates = false,
 }: SettingsPageProps & { checkUpdates?: boolean }) {
   const [version, setVersion] = useState("");
+  const { copied, share } = useShareTextus(t);
   useEffect(() => {
     appVersion()
       .then(setVersion)
@@ -39,15 +41,25 @@ export function AboutPage({
           <div className="settings-about-card-text">
             <div className="settings-about-card-name">Textus</div>
             <div className="settings-about-card-version">{version}</div>
-            {canLinkSponsor && (
+            {/* Passing Textus on first, then supporting it. */}
+            <div className="settings-about-card-links">
               <button
                 type="button"
                 className="settings-about-sponsor"
-                onClick={() => void links.openSponsorPage(settings.language)}
+                onClick={share}
               >
-                {t.menuHelpSponsor}
+                {copied ? t.codeBlockCopied : t.aboutShare}
               </button>
-            )}
+              {canLinkSponsor && (
+                <button
+                  type="button"
+                  className="settings-about-sponsor"
+                  onClick={() => void links.openSponsorPage(settings.language)}
+                >
+                  {t.menuHelpSponsor}
+                </button>
+              )}
+            </div>
           </div>
           <UpdateButton t={t} checkOnOpen={checkUpdates} />
         </div>

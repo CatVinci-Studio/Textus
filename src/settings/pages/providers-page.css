@@ -59,7 +59,18 @@
   flex-direction: column;
   align-items: stretch;
 }
+/* Its basis is a width beside the label; stacked, it would be a height
+   (16ch tall, empty above the field). */
+.providers-detail .settings-row:has(.api-key-input-row) > .api-key-input-row {
+  flex: none;
+}
 
 .providers-detail .api-key-input {
   max-width: none;
+}
+
+/* A local service's address: wide enough for the usual one it shows. */
+.providers-detail input[type="url"] {
+  width: 26ch;
+  max-width: 100%;
 }
