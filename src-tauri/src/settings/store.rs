@@ -186,6 +186,8 @@ impl Store {
     /// payload; with the new revision. `None` when nothing changed, as after
     /// this store's own write. Read under the lock: a write of ours landing
     /// meanwhile would otherwise look like someone undoing it.
+    // Called by the desktop's watcher (settings/outside.rs) and tests.
+    #[cfg_attr(not(desktop), allow(dead_code))]
     pub fn take_outside_changes(&self) -> Option<(Map<String, Value>, u64)> {
         if self.unreadable {
             return None;
