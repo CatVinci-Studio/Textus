@@ -606,6 +606,7 @@ para usar una.
   menuRemoveLink: "Quitar enlace",
   menuCopyRelativePath: "Copiar ruta relativa",
   menuRevealInTree: "Mostrar en Archivos",
+  menuFileLocation: "Ubicación del archivo",
   menuCloseSaved: "Cerrar las guardadas",
   menuCloseAll: "Cerrar todas",
   menuCopyAsMarkdown: "Copiar como Markdown",

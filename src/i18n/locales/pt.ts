@@ -596,6 +596,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   menuRemoveLink: "Remover link",
   menuCopyRelativePath: "Copiar caminho relativo",
   menuRevealInTree: "Mostrar em Arquivos",
+  menuFileLocation: "Local do arquivo",
   menuCloseSaved: "Fechar as salvas",
   menuCloseAll: "Fechar todas",
   menuCopyAsMarkdown: "Copiar como Markdown",

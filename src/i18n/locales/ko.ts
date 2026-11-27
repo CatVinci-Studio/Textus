@@ -553,6 +553,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   menuRemoveLink: "링크 제거",
   menuCopyRelativePath: "상대 경로 복사",
   menuRevealInTree: "'파일'에서 보기",
+  menuFileLocation: "파일 위치",
   menuCloseSaved: "저장된 탭 닫기",
   menuCloseAll: "모두 닫기",
   menuCopyAsMarkdown: "Markdown으로 복사",

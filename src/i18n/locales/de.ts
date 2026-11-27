@@ -586,6 +586,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   menuRemoveLink: "Link entfernen",
   menuCopyRelativePath: "Relativen Pfad kopieren",
   menuRevealInTree: "In „Dateien“ zeigen",
+  menuFileLocation: "Speicherort",
   menuCloseSaved: "Gespeicherte schließen",
   menuCloseAll: "Alle schließen",
   menuCopyAsMarkdown: "Als Markdown kopieren",

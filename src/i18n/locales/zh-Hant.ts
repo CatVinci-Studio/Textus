@@ -526,6 +526,7 @@ export default {
   menuRemoveLink: "移除連結",
   menuCopyRelativePath: "拷貝相對路徑",
   menuRevealInTree: "在檔案樹中顯示",
+  menuFileLocation: "檔案位置",
   menuCloseSaved: "關閉已儲存的",
   menuCloseAll: "全部關閉",
   menuCopyAsMarkdown: "拷貝為 Markdown",

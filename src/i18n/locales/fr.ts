@@ -608,6 +608,7 @@ utiliser une.
   menuRemoveLink: "Retirer le lien",
   menuCopyRelativePath: "Copier le chemin relatif",
   menuRevealInTree: "Afficher dans Fichiers",
+  menuFileLocation: "Emplacement du fichier",
   menuCloseSaved: "Fermer les enregistrés",
   menuCloseAll: "Tout fermer",
   menuCopyAsMarkdown: "Copier en Markdown",

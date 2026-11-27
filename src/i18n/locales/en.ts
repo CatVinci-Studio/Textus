@@ -578,6 +578,7 @@ type /name in a conversation to use one.
   menuRemoveLink: "Remove Link",
   menuCopyRelativePath: "Copy Relative Path",
   menuRevealInTree: "Show in Files",
+  menuFileLocation: "File Location",
   menuCloseSaved: "Close Saved",
   menuCloseAll: "Close All",
   menuCopyAsMarkdown: "Copy as Markdown",

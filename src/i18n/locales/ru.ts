@@ -608,6 +608,7 @@ export default {
   menuRemoveLink: "Убрать ссылку",
   menuCopyRelativePath: "Копировать относительный путь",
   menuRevealInTree: "Показать в «Файлах»",
+  menuFileLocation: "Расположение файла",
   menuCloseSaved: "Закрыть сохранённые",
   menuCloseAll: "Закрыть все",
   menuCopyAsMarkdown: "Копировать как Markdown",

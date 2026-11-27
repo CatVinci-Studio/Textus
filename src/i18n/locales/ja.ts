@@ -563,6 +563,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   menuRemoveLink: "リンクを外す",
   menuCopyRelativePath: "相対パスをコピー",
   menuRevealInTree: "「ファイル」で表示",
+  menuFileLocation: "ファイルの場所",
   menuCloseSaved: "保存済みを閉じる",
   menuCloseAll: "すべて閉じる",
   menuCopyAsMarkdown: "Markdown としてコピー",
