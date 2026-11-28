@@ -151,6 +151,7 @@ describe.each(LANGS.filter((lang) => lang !== "en"))("%s", (lang) => {
     "providerDoubao",
     "mcpFormUrl",
     "mcpFormKindUrl",
+    "copyAsHtmlShort",
   ]);
   if (["zh", "zh-Hant", "ja", "ko"].includes(lang))
     it("leaves no interface words in English", () => {

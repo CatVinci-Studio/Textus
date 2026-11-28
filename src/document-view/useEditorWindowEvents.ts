@@ -69,6 +69,7 @@ const CLIPBOARD_ACTIONS: Record<string, (clipboard: EditorClipboard) => void> =
     cut: (c) => c.copyOrCut(true),
     copy: (c) => c.copyOrCut(false),
     "copy-as-plain-text": (c) => c.copyAsPlainText(),
+    "copy-as-html": (c) => c.copyAsHtml(),
     paste: (c) => c.paste(),
     "paste-as-plain-text": (c) => c.pasteAsPlainText(),
     "select-all": (c) => c.selectAll(),

@@ -59,6 +59,7 @@ export type NativeMenuId =
   | "find-next"
   | "insert-link"
   | "copy-as-plain-text"
+  | "copy-as-html"
   | "paste-as-plain-text"
   | "toggle-source-mode"
   | "view-mode-default"

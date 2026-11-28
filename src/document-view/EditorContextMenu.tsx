@@ -161,6 +161,7 @@ export function EditorContextMenu({
                     ...clipboard,
                     ...(!settings.plainTextMenu && {
                       copyAsPlainText: undefined,
+                      copyAsHtml: undefined,
                       pasteAsPlainText: undefined,
                     }),
                     openTableDialog,

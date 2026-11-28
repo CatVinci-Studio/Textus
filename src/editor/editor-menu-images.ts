@@ -5,6 +5,7 @@ import { IMAGE_WIDTHS } from "./images/image-widths";
 import { turnedTitle } from "./images/image-rotation";
 import { openDiagramViewer } from "./diagram-zoom";
 import { revealNearest, type ImageLocation } from "./images/missing-image";
+import { EDIT_IMAGE_PATH_EVENT } from "./images/image-path-field";
 import { canRevealInFileManager } from "../platform/capabilities";
 import type { EditorRunner } from "./useEditorRunner";
 import type { Strings } from "../i18n/strings";
@@ -151,15 +152,27 @@ export function imageTurnItems(
   ];
 }
 
+/** Opens Edit Path over the image at `pos` (its view listens). */
+export function editImagePath(run: EditorRunner, pos: number) {
+  run((ctx) => {
+    const dom = ctx.get(editorViewCtx).nodeDOM(pos);
+    dom?.dispatchEvent(new CustomEvent(EDIT_IMAGE_PATH_EVENT));
+  });
+}
+
 /**
  * Show in folder (the file, or the nearest folder that exists) and Copy
  * image path. A web image has only its address to copy; a data: URI, nothing.
+ * `editPath`: the document's own image, whose target can be rewritten
+ * (an embed's picture can't).
  */
 export function imageFileItems(
   t: Strings,
   location: ImageLocation | null,
+  editPath?: () => void,
 ): ContextMenuEntry[] {
   const items: ContextMenuEntry[] = [];
+  if (editPath) items.push({ label: t.imageEditPath, onSelect: editPath });
   if (location?.kind === "local" && canRevealInFileManager)
     items.push({
       label: t.imageReveal,

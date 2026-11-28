@@ -282,3 +282,22 @@
 .math-float-preview {
   counter-reset: katexEqnNo mmlEqnNo;
 }
+
+/* Edit Path (image-path-field.ts): the target in a field across the top of
+   the picture or its missing card. */
+.milkdown .image-view .image-path-field {
+  position: absolute;
+  top: var(--space-2);
+  left: 50%;
+  z-index: var(--z-lift);
+  display: flex;
+  /* A narrow picture's field is wider than it, centred over it. */
+  width: max(calc(100% - 2 * var(--space-2)), 14em);
+  max-width: 90vw;
+  translate: -50% 0;
+  line-height: normal;
+}
+
+.milkdown .image-view .image-path-field .tx-input {
+  box-shadow: var(--shadow-popover);
+}

@@ -23,6 +23,11 @@ import {
   probeMissing,
   revealNearest,
 } from "./missing-image";
+import {
+  EDIT_IMAGE_PATH_EVENT,
+  IMAGE_PATH_FIELD_CLASS,
+  openImagePathField,
+} from "./image-path-field";
 import { parseEmbed } from "./obsidian-embed";
 import { rootedImagePath } from "./rooted-image";
 import { imageSource } from "./image-source";
@@ -192,6 +197,25 @@ function createImageView(
   });
   dom.append(zoom);
   const showRotation = imageRotationView(dom, img);
+  // Edit Path, from the menu or the missing card.
+  const editPath = () =>
+    openImagePathField(dom, {
+      value: (current.attrs.src as string) ?? "",
+      label: resolveStrings(store.settings().language).imageEditPath,
+      docPath: docPath(),
+      apply: (src) => {
+        const pos = getPos();
+        if (pos === undefined) return;
+        view.dispatch(
+          view.state.tr.setNodeMarkup(pos, undefined, {
+            ...current.attrs,
+            src,
+          }),
+        );
+      },
+      done: () => view.focus(),
+    });
+  dom.addEventListener(EDIT_IMAGE_PATH_EVENT, editPath);
 
   let current = node;
   // Which picture is on show: its src, in this document.
@@ -218,6 +242,7 @@ function createImageView(
         onChoose: canPickImageFile
           ? () => void replaceImage(view, getPos, store)
           : undefined,
+        onEditPath: editPath,
         onReveal:
           canRevealInFileManager && location.kind === "local"
             ? () => revealNearest(location.path)
@@ -338,7 +363,10 @@ function createImageView(
     stopEvent: (event: Event) =>
       event.target === handle ||
       zoom.contains(event.target as Node) ||
-      isMissingCardAction(event),
+      isMissingCardAction(event) ||
+      !!(event.target as Element | null)?.closest?.(
+        `.${IMAGE_PATH_FIELD_CLASS}`,
+      ),
     // Everything inside is written by this view - the live width while
     // resizing included - never by the user typing.
     ignoreMutation: () => true,
