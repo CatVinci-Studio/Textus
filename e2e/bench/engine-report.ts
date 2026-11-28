@@ -123,6 +123,13 @@ function probeStats(frames: ProbeFrame[]) {
     readsPerFrame: stats(active.map((f) => count(f.reads))),
     forcedPerFrame: stats(active.map((f) => f.forced)),
     forcedTotal: active.reduce((n, f) => n + f.forced, 0),
+    // Totals over the gesture, all properties and sites (the maps below
+    // keep only the top few).
+    writesTotal: count(writes),
+    readsTotal: count(reads),
+    rectReadsTotal: Object.entries(reads)
+      .filter(([k]) => k.startsWith("getBoundingClientRect"))
+      .reduce((n, [, v]) => n + v, 0),
     commitsTotal: active.reduce((n, f) => n + f.commits, 0),
     framesWithCommit: active.filter((f) => f.commits).length,
     writes: top(writes, 14),
