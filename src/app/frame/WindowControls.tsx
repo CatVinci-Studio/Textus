@@ -5,6 +5,7 @@ import { AppMenu } from "../menu/app-menu-lazy";
 import type { MenuChecks } from "../../registry/menu/app-menu-model";
 import { HamburgerIcon } from "../../engine/controls/icons";
 import { appDrawsWindowFrame } from "../../platform/window-chrome";
+import { usePressOpen } from "../../engine/controls/press-open";
 import { Presence } from "../../engine/motion/usePresence";
 import { isMobileApp } from "../../platform/capabilities";
 import { Tooltip } from "../../engine/controls/Tooltip";
@@ -23,6 +24,22 @@ export function AppMenuButton({ checks }: { checks?: MenuChecks } = {}) {
     ref,
   } = useMenuOpen<{ x: number; y: number }>();
 
+  // The mouse's press opens it, as every menu button's does; a finger and
+  // the keys by the click.
+  const toggle = (button: HTMLElement) => {
+    if (anchor) {
+      close();
+      return false;
+    }
+    // Touch: blur the editor so the keyboard and the system's paste
+    // bubble go, and don't hand focus back afterwards.
+    if (isMobileApp) (document.activeElement as HTMLElement | null)?.blur();
+    const rect = button.getBoundingClientRect();
+    show({ x: rect.left, y: rect.bottom + 2 }, !isMobileApp);
+    return true;
+  };
+  const press = usePressOpen(toggle, '[data-floating-menu] [role^="menuitem"]');
+
   // Where the menu bar went with the OS frame, and the iPhone.
   if (!appDrawsWindowFrame && !isMobileApp) return null;
 
@@ -40,17 +57,9 @@ export function AppMenuButton({ checks }: { checks?: MenuChecks } = {}) {
           onMouseDown={(e) => {
             if (!isMobileApp) e.preventDefault();
           }}
+          onPointerDown={press.onPointerDown}
           onClick={(e) => {
-            if (anchor) {
-              close();
-              return;
-            }
-            // Touch: blur the editor so the keyboard and the system's paste
-            // bubble go, and don't hand focus back afterwards.
-            if (isMobileApp)
-              (document.activeElement as HTMLElement | null)?.blur();
-            const rect = e.currentTarget.getBoundingClientRect();
-            show({ x: rect.left, y: rect.bottom + 2 }, !isMobileApp);
+            if (!press.ownClick(e)) toggle(e.currentTarget);
           }}
         >
           <HamburgerIcon />

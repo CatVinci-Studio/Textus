@@ -51,6 +51,8 @@ mod webview_memory;
 #[cfg(desktop)]
 mod window_frame;
 mod window_guard;
+#[cfg(target_os = "macos")]
+mod window_notes;
 #[cfg(desktop)]
 mod windows;
 

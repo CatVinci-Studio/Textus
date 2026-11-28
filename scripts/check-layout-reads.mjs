@@ -34,6 +34,8 @@ const ALLOWED = {
     "the rail's groups, a list its stylesheet places, as an icon is carried and at the drag's end",
   "src/engine/frame/content-min.ts":
     "an island's narrowest content as its stylesheet draws it: the solver's least-width input",
+  "src/engine/frame/carry.ts":
+    "a view's column before and after a width change: two reads per motion, none per frame",
   "src/app/tabs/drag-pill-look.ts":
     "a dragged tab's colours from the theme, not a place or a size",
 };

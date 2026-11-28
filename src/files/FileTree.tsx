@@ -80,11 +80,11 @@ export function FileTree({
   onCloseFolder,
   onEntryMoved,
 }: FileTreeProps) {
-  const { t } = useSettings();
+  const { t, setSettings } = useSettings();
   const view = useTreeView(folder ?? root);
   const { generation, setGeneration } = view;
   const { sort, setSort, scope, setScope, versions, reload } = view;
-  const { showHidden, setShowHidden } = view;
+  const { showHidden } = view;
   // Not on a phone: above Documents is the app's private container, and above
   // a picked folder is outside what the user granted. Not above an
   // opened folder either: that is the edge of what the user opened.
@@ -195,10 +195,7 @@ export function FileTree({
         {
           label: t.treeShowHidden,
           checked: showHidden,
-          onSelect: () => {
-            setShowHidden(!showHidden);
-            setUiState("fileTreeHidden", showHidden ? "0" : "1");
-          },
+          onSelect: () => setSettings({ showHiddenFiles: !showHidden }),
         },
         "separator",
         collapseAllItem(t, view.collapseAll),

@@ -48,7 +48,7 @@ export const FileNode = memo(function FileNode({
   return (
     <>
       <div
-        className={`tree-row tree-row-file${active ? " tree-row-active" : ""}${picked ? " tree-row-picked" : ""}${entry.ignored ? " tree-row-ignored" : ""}${cut ? " tree-row-cut" : ""}`}
+        className={`tree-row tree-row-file${active ? " tree-row-active" : ""}${picked ? " tree-row-picked" : ""}${entry.ignored ? " tree-row-ignored" : ""}${entry.hidden ? " tree-row-hidden" : ""}${cut ? " tree-row-cut" : ""}`}
         role="treeitem"
         aria-level={depth}
         aria-selected={active || picked}
@@ -114,12 +114,15 @@ export function FolderRow({
   depth,
   open,
   ignored,
+  hidden = false,
   onToggle,
 }: {
   path: string;
   depth: number;
   open: boolean;
   ignored: boolean;
+  /** A dot name, shown because the setting is on: drawn muted. */
+  hidden?: boolean;
   onToggle: () => void;
 }) {
   const { t } = useSettings();
@@ -139,7 +142,7 @@ export function FolderRow({
   return (
     <div
       ref={row}
-      className={`tree-row${picked ? " tree-row-picked" : ""}${ignored ? " tree-row-ignored" : ""}${cut ? " tree-row-cut" : ""}`}
+      className={`tree-row${picked ? " tree-row-picked" : ""}${ignored ? " tree-row-ignored" : ""}${hidden ? " tree-row-hidden" : ""}${cut ? " tree-row-cut" : ""}`}
       role="treeitem"
       aria-level={depth}
       aria-expanded={open}

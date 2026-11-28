@@ -1527,6 +1527,9 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Perguntar antes de copiar arquivos soltos na árvore de arquivos",
   confirmTreeTrashLabel:
     "Perguntar antes de mover arquivos da árvore de arquivos para a lixeira",
+  showHiddenFilesLabel: "Mostrar arquivos e pastas ocultos",
+  showHiddenFilesHint:
+    "Nomes que começam com um ponto. Só a árvore de arquivos os mostra.",
   autosaveLabel: "Salvar automaticamente",
   settingsFileLabel: "Arquivo de ajustes",
   settingsFileSummary:

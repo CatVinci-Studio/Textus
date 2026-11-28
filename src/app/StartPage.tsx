@@ -183,13 +183,15 @@ export function StartPage({ t }: { t: Strings }) {
         </div>
       </div>
     );
+  // Its column held where it was as the island changes width (carry.ts).
   return (
     <div
       className="start-page tx-scroll-reveal"
       role="region"
       aria-label={t.startPageTab}
+      data-frame-carry=""
     >
-      <div className="start-page-body">
+      <div className="start-page-body" data-frame-column="">
         <header className="start-page-brand">
           <img
             className="start-page-mark"

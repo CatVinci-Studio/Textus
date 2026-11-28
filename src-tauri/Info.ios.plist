@@ -33,6 +33,10 @@
        which reads as stutter on a 120 Hz screen. -->
   <key>CADisableMinimumFrameDurationOnPhone</key>
   <true/>
+  <!-- Why the system's Local Network prompt appears: a server the user set up
+       on the home network, such as a NAS a sync plugin reaches. -->
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>Textus connects to servers you set up on your local network, such as a NAS you sync your notes with.</string>
   <key>UIFileSharingEnabled</key>
   <true/>
   <key>LSSupportsOpeningDocumentsInPlace</key>

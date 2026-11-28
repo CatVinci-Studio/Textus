@@ -1501,6 +1501,9 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Vor dem Kopieren von Dateien fragen, die auf den Dateibaum gezogen werden",
   confirmTreeTrashLabel:
     "Vor dem Verschieben von Dateien aus dem Dateibaum in den Papierkorb fragen",
+  showHiddenFilesLabel: "Versteckte Dateien und Ordner anzeigen",
+  showHiddenFilesHint:
+    "Namen, die mit einem Punkt beginnen. Nur der Dateibaum zeigt sie.",
   autosaveLabel: "Automatisch speichern",
   settingsFileLabel: "Einstellungsdatei",
   settingsFileSummary:
