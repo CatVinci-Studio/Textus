@@ -416,6 +416,115 @@ test.describe("the app-drawn menu (Windows, Linux)", () => {
     await page.keyboard.press("Escape");
     await expect(menus(page)).toHaveCount(0);
   });
+
+  const centre = async (target: ReturnType<Page["locator"]>) => {
+    const box = (await target.boundingBox())!;
+    return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  };
+
+  test("the window's Menu button opens on the press; held and let go over a row, it chooses it", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { menuBarShown: false, language: "en" } });
+    const button = page.getByRole("button", { name: "Menu" });
+    const at = await centre(button);
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await expect(menus(page)).toHaveCount(1);
+    await page.mouse.up();
+    await expect(menus(page)).toHaveCount(1);
+    // Pressed again: closed.
+    await page.mouse.down();
+    await page.mouse.up();
+    await expect(menus(page)).toHaveCount(0);
+    // Held, moved onto a group row and let go: that row is chosen, its
+    // list opens beside the first.
+    await page.mouse.down();
+    await expect(menus(page)).toHaveCount(1);
+    const group = await centre(row(page, "Edit"));
+    await page.mouse.move(group.x, group.y, { steps: 6 });
+    await page.mouse.up();
+    await expect(menus(page)).toHaveCount(2);
+  });
+
+  test("a menu bar title opens on the press, another title the pointer moves onto takes over, and a held press lets go on a row to choose it", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { menuBarShown: true, language: "en" } });
+    await docs(page).first().click();
+    await page.keyboard.type("alpha");
+    await expect(docs(page).first()).toContainText("alpha");
+    await settled(page);
+    const bar = page.getByRole("menubar");
+    const edit = bar.getByRole("menuitem", { name: "Edit" });
+    const format = bar.getByRole("menuitem", { name: "Format" });
+    const at = await centre(edit);
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await expect(edit).toHaveAttribute("aria-expanded", "true");
+    await page.mouse.up();
+    await expect(edit).toHaveAttribute("aria-expanded", "true");
+    // With a list open, the pointer on another title switches to it.
+    const next = await centre(format);
+    await page.mouse.move(next.x, next.y, { steps: 4 });
+    await expect(format).toHaveAttribute("aria-expanded", "true");
+    await expect(edit).toHaveAttribute("aria-expanded", "false");
+    // Pressed again: closed.
+    await page.mouse.down();
+    await page.mouse.up();
+    await expect(menus(page)).toHaveCount(0);
+    // Held on Edit, let go over Undo: undone, the list closed.
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await expect(row(page, "Undo")).toBeVisible();
+    // Straight down: across the other titles it would switch lists, as a
+    // native menu bar's does.
+    const undo = await centre(row(page, "Undo"));
+    await page.mouse.move(at.x, undo.y, { steps: 6 });
+    await page.mouse.up();
+    await expect(menus(page)).toHaveCount(0);
+    await expect(docs(page).first()).not.toContainText("alpha");
+  });
+
+  test("a submenu opens on hover, a straight move down to the next group switches to it, and the second Escape closes the menu", async ({
+    page,
+  }) => {
+    await openApp(page, { settings: { menuBarShown: false, language: "en" } });
+    await page.getByRole("button", { name: "Menu" }).click();
+    const groups = menus(page).first().locator('[aria-haspopup="menu"]');
+    await groups.nth(0).hover();
+    await expect(groups.nth(0)).toHaveAttribute("aria-expanded", "true");
+    await expect(menus(page)).toHaveCount(2);
+    // Beside its parent, not over or under it, and the one on top at its
+    // middle.
+    const [parent, sub] = await Promise.all(
+      [0, 1].map((i) => menus(page).nth(i).boundingBox()),
+    );
+    expect(sub!.x).toBeGreaterThanOrEqual(parent!.x + parent!.width);
+    expect(
+      await page.evaluate(
+        ([x, y]) =>
+          !!document
+            .elementFromPoint(x, y)
+            ?.closest('[data-floating-menu][class*="submenu"]'),
+        [sub!.x + sub!.width / 2, sub!.y + sub!.height / 2],
+      ),
+    ).toBe(true);
+    // Straight down onto the next group: its submenu takes over.
+    const from = (await groups.nth(0).boundingBox())!;
+    const to = (await groups.nth(1).boundingBox())!;
+    const x = from.x + from.width / 2;
+    await page.mouse.move(x, from.y + from.height / 2);
+    await page.mouse.move(x, to.y + to.height / 2, { steps: 5 });
+    await expect(groups.nth(1)).toHaveAttribute("aria-expanded", "true");
+    await expect(groups.nth(0)).toHaveAttribute("aria-expanded", "false");
+    await expect(menus(page)).toHaveCount(2);
+    // Escape folds the submenu the pointer opened; the next closes the menu.
+    await page.keyboard.press("Escape");
+    await expect(menus(page)).toHaveCount(1);
+    await page.keyboard.press("Escape");
+    await expect(menus(page)).toHaveCount(0);
+  });
 });
 
 test.describe("the phone's menu", () => {
@@ -515,4 +624,42 @@ test("Find Next from the menu reaches its match while the AI writes, and the pag
   await expect(needle).toBeInViewport();
   await settled(page);
   await expect(needle).toBeInViewport();
+});
+
+test("the quick pick opens with its shortcut, its one field has the focus and a caret", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  // The motion on: normal runs hide every caret.
+  await openApp(page, {
+    settings: { menuBarShown: false, language: "en" },
+    animations: true,
+  });
+  await docs(page).first().click();
+  await page.keyboard.press("ControlOrMeta+Shift+p");
+  const field = page.locator(".quick-pick-input");
+  await expect(field).toBeFocused();
+  // The panel is the field: its full width, no box of its own beside a
+  // hairline, and a caret that is drawn.
+  const look = await field.evaluate((e) => {
+    const style = getComputedStyle(e);
+    return {
+      caret: style.caretColor,
+      sides: [
+        style.borderTopWidth,
+        style.borderLeftWidth,
+        style.borderRightWidth,
+        style.borderBottomWidth,
+      ],
+      wide: e.getBoundingClientRect().width,
+      panel: e.closest(".quick-pick")!.getBoundingClientRect().width,
+    };
+  });
+  expect(look.caret).not.toBe("rgba(0, 0, 0, 0)");
+  expect(look.sides).toEqual(["0px", "0px", "0px", "1px"]);
+  expect(look.panel - look.wide).toBeLessThan(4);
+  await page.keyboard.type("bold");
+  await expect(page.locator(".quick-pick-item").first()).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(field).toHaveCount(0);
 });
