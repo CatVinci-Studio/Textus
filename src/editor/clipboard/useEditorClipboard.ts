@@ -7,6 +7,7 @@ import { tellCopied } from "../../clipboard/copied";
 import { pastePlainText } from "./paste-plain";
 import { clipboardIpc } from "../../platform/ipc";
 import { plainTextOf } from "./plain-text";
+import { htmlSource } from "./html-source";
 import { definitionsIn } from "../markdown/link-reveal";
 import { bareUrl, insertUrlLink } from "./paste-url";
 import {
@@ -19,6 +20,8 @@ export interface EditorClipboard {
   /** The selection's words as they read, for an app that shouldn't get
    *  the Markdown marks a copy's plain text carries. */
   copyAsPlainText: () => void;
+  /** The selection as HTML source text, for a field that takes HTML code. */
+  copyAsHtml: () => void;
   paste: () => void;
   pasteAsPlainText: () => void;
   selectAll: () => void;
@@ -98,6 +101,22 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
     });
   }, [run]);
 
+  const copyAsHtml = useCallback(() => {
+    run((ctx) => {
+      const view = ctx.get(editorViewCtx);
+      const { dom } = view.serializeForClipboard(
+        view.state.selection.content(),
+      );
+      const html = htmlSource(dom);
+      if (!html) return;
+      void (async () => {
+        await navigator.clipboard.writeText(html).catch(() => {});
+        tellCopied(html);
+        view.focus();
+      })();
+    });
+  }, [run]);
+
   const insertText = useCallback(
     (text: string) => {
       run((ctx) => {
@@ -153,6 +172,7 @@ export function useEditorClipboard(run: EditorRunner): EditorClipboard {
   return {
     copyOrCut,
     copyAsPlainText,
+    copyAsHtml,
     paste,
     pasteAsPlainText,
     selectAll,

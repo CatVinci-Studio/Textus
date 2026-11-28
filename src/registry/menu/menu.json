@@ -176,6 +176,11 @@
           "en": "Copy as Plain Text"
         },
         {
+          "id": "copy-as-html",
+          "label": "copyAsHtml",
+          "en": "Copy as HTML"
+        },
+        {
           "predefined": "paste",
           "label": "paste",
           "en": "Paste",

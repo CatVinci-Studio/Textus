@@ -245,6 +245,9 @@ export function useMenuBridge(handlers: MenuBridgeHandlers): void {
       listenToThisWindow("menu-copy-as-plain-text", () =>
         sendAppEvent(EDIT_ACTION_EVENT, "copy-as-plain-text"),
       ),
+      listenToThisWindow("menu-copy-as-html", () =>
+        sendAppEvent(EDIT_ACTION_EVENT, "copy-as-html"),
+      ),
       listenToThisWindow("menu-paste-as-plain-text", () =>
         sendAppEvent(EDIT_ACTION_EVENT, "paste-as-plain-text"),
       ),

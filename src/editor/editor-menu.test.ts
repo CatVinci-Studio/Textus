@@ -102,6 +102,7 @@ const options = (pos: number | null): ContextMenuOptions => ({
   aiItems: [],
   copyOrCut: () => {},
   copyAsPlainText: () => {},
+  copyAsHtml: () => {},
   pasteAsPlainText: () => {},
   paste: () => {},
   selectAll: () => {},
@@ -129,8 +130,9 @@ describe("the editor menu", () => {
       "-",
       t.cut,
       t.copy,
+      `${t.copyAs} › ${t.copyAsPlainTextShort} | ${t.copyAsHtmlShort}`,
       t.paste,
-      `${t.menuPlainText} › ${t.copyAsPlainText} | ${t.pasteAsPlainText}`,
+      t.pasteAsPlainText,
       "-",
       `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic} | ${t.menuStrikethrough} | ${t.toolbarHighlight} | ${t.menuInlineCode} | - | ${t.menuClearFormatting}`,
     ]);
@@ -141,6 +143,7 @@ describe("the editor menu", () => {
     const off = {
       ...options(null),
       copyAsPlainText: undefined,
+      copyAsHtml: undefined,
       pasteAsPlainText: undefined,
     };
     expect(labels(buildContextMenuItems(run, off)).slice(0, 4)).toEqual([
@@ -162,8 +165,9 @@ describe("the editor menu", () => {
     ).toEqual([
       t.cut,
       t.copy,
+      `${t.copyAs} › ${t.copyAsPlainTextShort} | ${t.copyAsHtmlShort}`,
       t.paste,
-      `${t.menuPlainText} › ${t.copyAsPlainText} | ${t.pasteAsPlainText}`,
+      t.pasteAsPlainText,
       "-",
       // Obsidian's three: inline styles, the block, and what goes in.
       `${t.menuFormat} › ${t.toolbarBold} | ${t.toolbarItalic} | ${t.menuStrikethrough} | ${t.toolbarHighlight} | ${t.menuInlineCode} | - | ${t.menuClearFormatting}`,
@@ -269,6 +273,7 @@ describe("the editor menu", () => {
     expect(inTable).not.toContain(t.copy);
     // The toolbar copies; only the menu has the plain text.
     expect(inTable).toContain(t.copyAsPlainText);
+    expect(inTable).toContain(t.copyAsHtml);
 
     const inText = labels(
       buildPhoneMoreItems(editorAt(caretIn("text")).run, options(null)),

@@ -144,8 +144,10 @@ export interface ContextMenuOptions {
   /** Textus AI's items for the image right-clicked. */
   pictureAiItems?: ContextMenuItem[];
   copyOrCut: (cut: boolean) => void;
-  /** Copy and paste as plain text, while Settings offers them. */
+  /** Copy as plain text or HTML and paste as plain text, while Settings
+   *  offers them. */
   copyAsPlainText?: () => void;
+  copyAsHtml?: () => void;
   paste: () => void;
   pasteAsPlainText?: () => void;
   selectAll: () => void;
@@ -186,24 +188,30 @@ export function buildContextMenuItems(
           ? copyPicture(options.picture)
           : options.copyOrCut(false),
     },
-    { label: t.paste, onSelect: options.paste },
-    ...(options.copyAsPlainText && options.pasteAsPlainText
+    // Copy As in a menu of its own, as VS Code has it: Copy itself
+    // stays one click.
+    ...(options.copyAsPlainText && options.copyAsHtml
       ? [
           {
-            label: t.menuPlainText,
+            label: t.copyAs,
             items: [
               {
-                label: t.copyAsPlainText,
+                label: t.copyAsPlainTextShort,
                 disabled: nothingSelected,
                 onSelect: options.copyAsPlainText,
               },
               {
-                label: t.pasteAsPlainText,
-                onSelect: options.pasteAsPlainText,
+                label: t.copyAsHtmlShort,
+                disabled: nothingSelected,
+                onSelect: options.copyAsHtml,
               },
             ],
           },
         ]
+      : []),
+    { label: t.paste, onSelect: options.paste },
+    ...(options.pasteAsPlainText
+      ? [{ label: t.pasteAsPlainText, onSelect: options.pasteAsPlainText }]
       : []),
     ...(options.addNote && !nothingSelected
       ? [{ label: t.ownNoteAdd, onSelect: options.addNote }]
@@ -294,9 +302,11 @@ export function buildPhoneMoreItems(
   // Offered, not working, with nothing selected.
   const disabled = run((c) => c.get(editorViewCtx).state.selection.empty);
   const plain = options.copyAsPlainText;
+  const html = options.copyAsHtml;
   const clipboard: ContextMenuEntry[] = [
     { label: t.cut, disabled, onSelect: () => options.copyOrCut(true) },
     ...(plain ? [{ label: t.copyAsPlainText, disabled, onSelect: plain }] : []),
+    ...(html ? [{ label: t.copyAsHtml, disabled, onSelect: html }] : []),
   ];
   if (inTable(run)) {
     return [
