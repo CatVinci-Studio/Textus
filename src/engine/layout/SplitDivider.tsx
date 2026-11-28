@@ -8,6 +8,7 @@ import { Presence } from "../motion/usePresence";
 import { chromeScale } from "../tokens/chrome-scale";
 import { panelWidth, setPanelWidth } from "../frame/panel-width";
 import { arrangeBranch, closeSplit } from "./store";
+import { heldShare, holdShare } from "./held-share";
 import { type SplitLayout } from "./ops";
 import { nodeAt, type Divider } from "./tree";
 
@@ -66,12 +67,16 @@ export function SplitDivider({
         false,
       );
     // Two documents share the length less the gap the divider sits in, so
-    // grabbing it doesn't make it jump.
+    // grabbing it doesn't make it jump. Held apart from the window's model
+    // until let go: the islands follow, nothing else redraws.
     else
-      share(
-        (at - before.start - gapHalf(sides)) /
+      holdShare({
+        path: line.path,
+        index: line.index,
+        share:
+          (at - before.start - gapHalf(sides)) /
           (after.end - before.start - 2 * gapHalf(sides)),
-      );
+      });
   };
   // A panel's width as the solver drew it, in interface pixels: what a key
   // steps from and a drag keeps, so a width it can't draw is never stored.
@@ -99,11 +104,22 @@ export function SplitDivider({
     move: (e, held) => moveTo((row ? e.clientX : e.clientY) - held.origin),
     end: (held, how) => {
       const panel = fixed === "before" || fixed === "after";
-      if (how === "cancelled") {
-        if (panel) setPanelWidth(held.width, true);
-        else share(held.share);
-      } else if (panel)
-        setPanelWidth(how === "gone" ? panelWidth() : drawn(), true);
+      if (panel) {
+        setPanelWidth(
+          how === "cancelled"
+            ? held.width
+            : how === "gone"
+              ? panelWidth()
+              : drawn(),
+          true,
+        );
+        return;
+      }
+      // Two documents: the model takes the share let go at, in the same
+      // render as the hold ends; cancelled, or its branch gone, nothing.
+      const kept = heldShare();
+      if (how === "done" && kept) arrangeBranch(kept.path, kept);
+      holdShare(null);
     },
   });
   return (

@@ -43,7 +43,10 @@ const same = (a: IslandRoom | null, b: IslandRoom) =>
  * resized: drawn in the same frame, before it is painted) and when `key`
  * - what else moves it, the layout's switches - changes. Never on every
  * render: a keystroke would lay the page out again. The spacing tokens are
- * read off a hidden probe, which resolves their calc()s.
+ * read off a hidden probe, which resolves their calc()s: afresh when the
+ * look or the layout's switches change, kept as the area only resizes -
+ * each fresh read is a style and layout pass of its own, five per
+ * measure, on every frame of a sidebar's edge dragged.
  */
 export function useIslandRoom(
   area: RefObject<HTMLElement | null>,
@@ -53,7 +56,7 @@ export function useIslandRoom(
   const observer = useRef<ResizeObserver | null>(null);
   useLayoutEffect(() => {
     const el = area.current;
-    const next = measure(el);
+    const next = measure(el, true);
     if (next) setRoom((was) => (same(was, next) ? was : next));
     // Observed afresh, it reports its size next frame: a size read
     // mid-change (a sidebar narrowed and widened again before the frame)
@@ -66,12 +69,15 @@ export function useIslandRoom(
   useLayoutEffect(() => {
     const el = area.current;
     if (!el) return;
-    const remeasure = () => {
-      const next = measure(area.current);
+    const measured = (fresh: boolean) => () => {
+      const next = measure(area.current, fresh);
       if (next)
         flushSync(() => setRoom((was) => (same(was, next) ? was : next)));
     };
-    const watch = new ResizeObserver(remeasure);
+    // Resized: the spacings are as they were.
+    const watch = new ResizeObserver(measured(false));
+    // Anything else read again (the look, a phone's bars and keyboard).
+    const remeasure = measured(true);
     watch.observe(el);
     observer.current = watch;
     // The spacings change with the look (Layout, Interface Size) too, with
@@ -98,12 +104,13 @@ export function useIslandRoom(
   return room;
 }
 
-function measure(el: HTMLElement | null): IslandRoom | null {
+function measure(el: HTMLElement | null, again: boolean): IslandRoom | null {
   if (!el) return null;
   const shell = el.offsetParent as HTMLElement | null;
   const at = shell?.getBoundingClientRect();
-  // Read again: a Layout or text size switch may not be told yet.
-  const fresh = { fresh: true };
+  // Read again when asked: a Layout or text size switch may not be told
+  // yet.
+  const fresh = { fresh: again };
   return {
     w: el.clientWidth,
     h: el.clientHeight,
