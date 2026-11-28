@@ -1633,6 +1633,7 @@ type /name in a conversation to use one.
   // An image's right-click menu; Show in folder is also the missing
   // image card's button.
   imageReveal: "Show in Folder",
+  imageEditPath: "Edit Path…",
   imageCopyPath: "Copy image path",
   imageViewLarge: "View Image",
   imageRotateLeft: "Rotate Left",

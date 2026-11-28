@@ -1589,6 +1589,7 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   imageWidth70: "画像の幅：70%",
   imageWidth100: "画像の幅：100%",
   imageReveal: "フォルダーに表示",
+  imageEditPath: "パスを編集…",
   imageCopyPath: "画像のパスをコピー",
   imageViewLarge: "画像を表示",
   imageRotateLeft: "左に回転",

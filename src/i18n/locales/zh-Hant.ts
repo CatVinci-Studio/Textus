@@ -1508,6 +1508,7 @@ export default {
   imageWidth70: "圖片寬度：70%",
   imageWidth100: "圖片寬度：100%",
   imageReveal: "在資料夾中顯示",
+  imageEditPath: "編輯路徑…",
   imageCopyPath: "複製圖片路徑",
   imageViewLarge: "檢視大圖",
   imageRotateLeft: "向左旋轉",

@@ -37,6 +37,7 @@ import {
 } from "./editor-menu-tables";
 import {
   imageFileItems,
+  editImagePath,
   imageTurnItems,
   imageWidthItems,
 } from "./editor-menu-images";
@@ -165,7 +166,11 @@ export function buildContextMenuItems(
   const { t, imagePos } = options;
   const imageItems = joinGroups(
     imagePos === null ? [] : imageWidthItems(run, t, imagePos),
-    imageFileItems(t, options.imageLocation ?? null),
+    imageFileItems(
+      t,
+      options.imageLocation ?? null,
+      imagePos === null ? undefined : () => editImagePath(run, imagePos),
+    ),
     imagePos === null
       ? pictureItems(t, options.picture)
       : imageTurnItems(run, t, imagePos),

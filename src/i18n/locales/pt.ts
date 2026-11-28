@@ -1696,6 +1696,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   imageWidth70: "Largura da imagem: 70%",
   imageWidth100: "Largura da imagem: 100%",
   imageReveal: "Mostrar na pasta",
+  imageEditPath: "Editar caminho…",
   imageCopyPath: "Copiar caminho da imagem",
   imageViewLarge: "Ver imagem",
   imageRotateLeft: "Girar para a esquerda",

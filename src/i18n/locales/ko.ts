@@ -1574,6 +1574,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   imageWidth70: "이미지 너비: 70%",
   imageWidth100: "이미지 너비: 100%",
   imageReveal: "폴더에서 보기",
+  imageEditPath: "경로 편집…",
   imageCopyPath: "이미지 경로 복사",
   imageViewLarge: "이미지 보기",
   imageRotateLeft: "왼쪽으로 회전",

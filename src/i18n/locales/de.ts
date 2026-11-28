@@ -1673,6 +1673,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   imageWidth70: "Bildbreite: 70 %",
   imageWidth100: "Bildbreite: 100 %",
   imageReveal: "Im Ordner anzeigen",
+  imageEditPath: "Pfad bearbeiten…",
   imageCopyPath: "Bildpfad kopieren",
   imageViewLarge: "Bild ansehen",
   imageRotateLeft: "Nach links drehen",

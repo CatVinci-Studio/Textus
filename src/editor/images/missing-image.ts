@@ -138,6 +138,7 @@ interface MissingCardContent {
   /** Where it was looked for - shown on hover. */
   location: ImageLocation;
   /** Each action the card offers; one left out isn't shown. */
+  onEditPath?: () => void;
   onChoose?: () => void;
   onReveal?: () => void;
 }
@@ -199,6 +200,8 @@ export function missingImageCard(
   card.append(span("missing-image-reason", reasonText(content, t)));
 
   const actions: [string, string, () => void][] = [];
+  if (content.onEditPath)
+    actions.push(["edit-path", t.imageEditPath, content.onEditPath]);
   if (content.onChoose)
     actions.push(["choose", t.missingImageChoose, content.onChoose]);
   if (content.onReveal)

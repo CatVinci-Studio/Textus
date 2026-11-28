@@ -1504,6 +1504,7 @@ export default {
   imageWidth70: "图片宽度：70%",
   imageWidth100: "图片宽度：100%",
   imageReveal: "在文件夹中显示",
+  imageEditPath: "编辑路径…",
   imageCopyPath: "复制图片路径",
   imageViewLarge: "查看大图",
   imageRotateLeft: "向左旋转",

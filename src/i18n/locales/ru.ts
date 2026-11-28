@@ -1722,6 +1722,7 @@ export default {
   imageWidth70: "Ширина изображения: 70%",
   imageWidth100: "Ширина изображения: 100%",
   imageReveal: "Показать в папке",
+  imageEditPath: "Изменить путь…",
   imageCopyPath: "Копировать путь к изображению",
   imageViewLarge: "Открыть изображение",
   imageRotateLeft: "Повернуть влево",

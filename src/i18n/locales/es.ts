@@ -1715,6 +1715,7 @@ para usar una.
   imageWidth70: "Ancho de la imagen: 70 %",
   imageWidth100: "Ancho de la imagen: 100 %",
   imageReveal: "Mostrar en la carpeta",
+  imageEditPath: "Editar ruta…",
   imageCopyPath: "Copiar la ruta de la imagen",
   imageViewLarge: "Ver imagen",
   imageRotateLeft: "Girar a la izquierda",

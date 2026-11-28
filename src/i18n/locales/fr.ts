@@ -1731,6 +1731,7 @@ utiliser une.
   imageWidth70: "Largeur de l'image\u00a0: 70\u00a0%",
   imageWidth100: "Largeur de l'image\u00a0: 100\u00a0%",
   imageReveal: "Afficher dans le dossier",
+  imageEditPath: "Modifier le chemin…",
   imageCopyPath: "Copier le chemin de l'image",
   imageViewLarge: "Voir l’image",
   imageRotateLeft: "Faire pivoter à gauche",
