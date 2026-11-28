@@ -93,6 +93,19 @@ describe("a change of look", () => {
     expect(order).toEqual(["theme", "dark", "again"]);
   });
 
+  it("queues behind a fade waiting for its picture even once motion is off", () => {
+    const order: string[] = [];
+    fadeLook(() => order.push("dark"));
+    vi.mocked(motionAllowed).mockReturnValue(false);
+    // Made at once, it would land before the change asked for first.
+    expect(lookCanFade()).toBe(true);
+    fadeLook(() => order.push("system"));
+    expect(order).toEqual([]);
+    fades[0].picture();
+    expect(order).toEqual(["dark", "system"]);
+    expect(lookCanFade()).toBe(false);
+  });
+
   it("makes a change asked for inside a fade's own at once", () => {
     const inner = vi.fn();
     fadeLook(() => {
@@ -128,6 +141,19 @@ describe("a change still loading what it shows", () => {
     expect(done).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(20);
     expect(done).toHaveBeenCalledOnce();
+  });
+
+  it("lands a pick made while one still loads after it, in a fade of its own", () => {
+    const order: string[] = [];
+    fadeLook(() => {
+      order.push("imported");
+      holdLook(new Promise(() => {}));
+    });
+    void fades[0].picture();
+    fadeLook(() => order.push("default"));
+    expect(fades[0].skipTransition).toHaveBeenCalledOnce();
+    fades[1].picture();
+    expect(order).toEqual(["imported", "default"]);
   });
 
   it("holds nothing outside a fade", () => {

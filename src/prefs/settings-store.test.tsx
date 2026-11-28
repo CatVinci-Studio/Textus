@@ -454,6 +454,97 @@ describe("a theme, light or dark, picked", () => {
   });
 });
 
+describe("picks made faster than the fade draws them", () => {
+  // Every fade the window asks for, its picture (the update callback) taken
+  // only when a test says: the browser takes it a frame or more later.
+  let pictures: (() => void)[] = [];
+  beforeEach(() => {
+    pictures = [];
+    document.startViewTransition = ((update: () => void) => {
+      pictures.push(() => act(update));
+      return {
+        ready: Promise.resolve(),
+        updateCallbackDone: Promise.resolve(),
+        finished: Promise.resolve(),
+        skipTransition: () => {},
+      } as unknown as ViewTransition;
+    }) as never;
+    vi.mocked(motionAllowed).mockReturnValue(true);
+    boot({ theme: "light", languageChosen: true });
+    render(
+      <SettingsProvider>
+        <AppearanceSync />
+        <Probe />
+      </SettingsProvider>,
+    );
+  });
+  afterEach(() => {
+    for (const picture of pictures) picture();
+    vi.mocked(motionAllowed).mockReset();
+    delete (document as { startViewTransition?: unknown }).startViewTransition;
+    document.documentElement.removeAttribute("data-theme");
+  });
+  const shows = () => screen.getByTestId("probe").textContent!.split("|")[0];
+
+  it("ends on the last of light, dark, system, dark: the arrows pressed quickly", () => {
+    act(() => lastSet({ theme: "dark" }));
+    pictures[0]();
+    act(() => lastSet({ theme: "system" }));
+    // The window still shows dark while system waits for its picture: dark
+    // again is still a change of look, after system's, not before it.
+    act(() => lastSet({ theme: "dark" }));
+    pictures[1]();
+    expect(shows()).toBe("dark");
+    expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
+  });
+
+  it("ends on a pick back to the look shown before the first was drawn", () => {
+    act(() => lastSet({ theme: "dark" }));
+    act(() => lastSet({ theme: "light" }));
+    pictures[0]();
+    expect(shows()).toBe("light");
+    expect(document.documentElement.getAttribute("data-theme")).toBe("light");
+  });
+
+  it("ends on the second of two themes picked from the list quickly", () => {
+    const other = BUILTIN_CONTENT_THEMES.find((t) => t.id !== "default")!;
+    act(() => lastSet({ themeId: other.id }));
+    act(() => lastSet({ themeId: "default" }));
+    pictures[0]();
+    expect(document.documentElement.dataset.themeId).toBe("default");
+  });
+
+  it("ends on the pick made after motion was turned off mid-fade", () => {
+    act(() => lastSet({ theme: "dark" }));
+    vi.mocked(motionAllowed).mockReturnValue(false);
+    act(() => lastSet({ theme: "system" }));
+    pictures[0]();
+    expect(shows()).toBe("system");
+    expect(document.documentElement.hasAttribute("data-theme")).toBe(false);
+  });
+
+  // This window's own write confirmed, so the store takes the other's.
+  const confirmed = () => act(async () => {});
+
+  it("ends on another window's pick that came after this one's", async () => {
+    act(() => lastSet({ theme: "dark" }));
+    await confirmed();
+    remote({ theme: "light" }, 10);
+    pictures[0]();
+    expect(shows()).toBe("light");
+  });
+
+  it("keeps a setting changed while a pick waits, in the order made", async () => {
+    act(() => lastSet({ theme: "dark" }));
+    act(() => lastSet({ zoom: 1.5 }));
+    await confirmed();
+    remote({ theme: "light", zoom: 2 }, 10);
+    pictures[0]();
+    // The other window's whole set came last; zoom is this window's own.
+    expect(screen.getByTestId("probe").textContent).toMatch(/^light\|1\.5\|/);
+  });
+});
+
 describe("interface text size", () => {
   it("keeps a size it offers and falls back to 100% for any other", () => {
     expect(normaliseSettings({ uiTextScale: 1.25 }).uiTextScale).toBe(1.25);

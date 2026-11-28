@@ -22,9 +22,12 @@ let fading: ViewTransition | null = null;
 /** What the change being made is still loading, while it is made. */
 let held: Promise<unknown>[] | null = null;
 
-/** Whether a change of look made now would cross-fade. Not from inside a
+/** Whether a change of look made now would cross-fade. Always while a
+ *  fade waits for its picture: made at once, the change would land before
+ *  the ones asked for first, and they would undo it. Not from inside a
  *  fade's own change: that lands in the picture already being shown. */
 export function lookCanFade(): boolean {
+  if (waiting) return true;
   return (
     typeof document !== "undefined" &&
     typeof document.startViewTransition === "function" &&

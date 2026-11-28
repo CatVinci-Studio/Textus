@@ -3,7 +3,6 @@ import {
   createContext,
   useContext,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -97,12 +96,31 @@ export function commitLookChangesWith(run: CommitLook): () => void {
   };
 }
 
-/** Commits `change`, which brings `next`: through commitLook when it
- *  changes the look from `now`'s. */
-function commit(change: () => void, next: Partial<Settings>, now: Settings) {
-  if (LOOK.some((key) => key in next && next[key] !== now[key]))
-    commitLook(change);
-  else change();
+/** The changes made so far, for each to land after the ones before it. */
+interface Order {
+  /** What the window ends on once every change made so far has landed. A
+   *  change is judged against this, not against what is drawn: a fade
+   *  draws a pick a frame or more after it is made, and a pick back to the
+   *  drawn look meanwhile is still a change, after the one waiting. */
+  wanted: Settings;
+  /** Changes handed to commitLook that have not landed yet. While one
+   *  waits, every later change waits behind it, so they land in the order
+   *  made and a fade's late change never overwrites a later one. */
+  queued: number;
+}
+
+/** Commits `change`, which brings the window to `next`: through commitLook
+ *  when it changes the look, or when one before it still waits there. */
+function commit(order: Order, change: () => void, next: Settings) {
+  const now = order.wanted;
+  order.wanted = next;
+  if (!order.queued && LOOK.every((key) => next[key] === now[key]))
+    return change();
+  order.queued++;
+  commitLook(() => {
+    order.queued--;
+    change();
+  });
 }
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
@@ -110,11 +128,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   // Read in the same render as the state above.
   const renderedVersion = useRef(remoteVersion);
   const wantedLanguage = useRef<string | null>(null);
-  // What the window shows, for a change to tell whether it changes the look.
-  const shown = useRef(settings);
-  useLayoutEffect(() => {
-    shown.current = settings;
-  });
+  const order = useRef<Order>({ wanted: settings, queued: 0 });
 
   useEffect(() => {
     // A first launch writes the whole set of defaults at once, so the next
@@ -125,20 +139,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     // own fields (WINDOW_OWN) itself; localStorage, shared by all, doesn't.
     const adopt = () => {
       const incoming = loadSettings();
+      const merged = (prev: Settings): Settings =>
+        readBoot()
+          ? incoming
+          : {
+              ...incoming,
+              ...Object.fromEntries(WINDOW_OWN.map((key) => [key, prev[key]])),
+            };
       commit(
-        () =>
-          setSettingsState((prev) =>
-            readBoot()
-              ? incoming
-              : {
-                  ...incoming,
-                  ...Object.fromEntries(
-                    WINDOW_OWN.map((key) => [key, prev[key]]),
-                  ),
-                },
-          ),
-        incoming,
-        shown.current,
+        order.current,
+        () => setSettingsState(merged),
+        merged(order.current.wanted),
       );
     };
     // Another window's language, once its strings are here too.
@@ -168,9 +179,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   function setSettings(patch: Partial<Settings>) {
     const apply = () => {
       commit(
+        order.current,
         () => setSettingsState((prev) => ({ ...prev, ...patch })),
-        patch,
-        shown.current,
+        { ...order.current.wanted, ...patch },
       );
       persist(patch);
     };
