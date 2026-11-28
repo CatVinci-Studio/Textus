@@ -180,7 +180,7 @@ pub fn window_session_current(
     window: tauri::Window,
     state: tauri::State<SessionTabsState>,
 ) -> Option<WindowSession> {
-    state.0.lock().unwrap().get(window.label()).cloned()
+    crate::locks::locked(&state.0).get(window.label()).cloned()
 }
 
 /// This window's session as it now stands.
@@ -194,7 +194,7 @@ pub fn update_window_session(
     state: tauri::State<SessionTabsState>,
 ) {
     let merged = {
-        let mut map = state.0.lock().unwrap();
+        let mut map = crate::locks::locked(&state.0);
         let session = with_kept_frame(&map, window.label(), session);
         if map.get(window.label()) == Some(&session) {
             return;
@@ -244,7 +244,7 @@ pub fn keep_frame(
     state: &SessionTabsState,
 ) {
     let merged = {
-        let mut map = state.0.lock().unwrap();
+        let mut map = crate::locks::locked(&state.0);
         if !set_frame(&mut map, label, frame) {
             return;
         }
@@ -258,7 +258,7 @@ pub fn keep_frame(
 /// window's state is read on the main thread, which may be waiting for it.
 #[cfg(desktop)]
 pub fn keep_open_frames(app: &AppHandle, state: &SessionTabsState) {
-    let labels: Vec<String> = state.0.lock().unwrap().keys().cloned().collect();
+    let labels: Vec<String> = crate::locks::locked(&state.0).keys().cloned().collect();
     let frames: Vec<_> = labels
         .into_iter()
         .filter_map(|label| {
@@ -267,7 +267,7 @@ pub fn keep_open_frames(app: &AppHandle, state: &SessionTabsState) {
         })
         .collect();
     let merged = {
-        let mut map = state.0.lock().unwrap();
+        let mut map = crate::locks::locked(&state.0);
         let mut changed = false;
         for (label, frame) in frames {
             changed |= set_frame(&mut map, &label, Some(frame));
@@ -283,7 +283,7 @@ pub fn keep_open_frames(app: &AppHandle, state: &SessionTabsState) {
 #[cfg(desktop)]
 pub fn begin_app_quit(app: &AppHandle, state: &SessionTabsState) {
     APP_QUITTING.store(true, Ordering::SeqCst);
-    if let Some(windows) = quit_snapshot(&state.0.lock().unwrap()) {
+    if let Some(windows) = quit_snapshot(&crate::locks::locked(&state.0)) {
         write_session(app, &windows);
     }
 }
@@ -312,7 +312,7 @@ pub fn cancel_session_quit(app: AppHandle, state: tauri::State<SessionTabsState>
         super::update::note_exit(&app, "quit cancelled by a window's prompt");
         super::update::cancel_relaunch();
     }
-    let windows = merge_windows(&state.0.lock().unwrap());
+    let windows = merge_windows(&crate::locks::locked(&state.0));
     write_session(&app, &windows);
 }
 
@@ -337,7 +337,7 @@ fn remove_window(
 #[cfg(desktop)]
 pub fn forget_window(app: &AppHandle, label: &str, state: &SessionTabsState) {
     let merged = {
-        let mut map = state.0.lock().unwrap();
+        let mut map = crate::locks::locked(&state.0);
         remove_window(&mut map, label, APP_QUITTING.load(Ordering::SeqCst))
     };
     if let Some(windows) = merged {

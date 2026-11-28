@@ -213,12 +213,16 @@ pub fn exit_app(app: &tauri::AppHandle) {
 /// after its relaunch says there where it stopped.
 #[cfg(desktop)]
 pub(crate) fn note_exit(app: &tauri::AppHandle, what: &str) {
-    use std::io::Write;
     use tauri::Manager;
-    let Ok(dir) = app.path().app_log_dir() else {
-        return;
-    };
-    let _ = std::fs::create_dir_all(&dir);
+    if let Ok(dir) = app.path().app_log_dir() {
+        write_exit_line(&dir, &app.package_info().version.to_string(), what);
+    }
+}
+
+#[cfg(desktop)]
+fn write_exit_line(dir: &std::path::Path, version: &str, what: &str) {
+    use std::io::Write;
+    let _ = std::fs::create_dir_all(dir);
     let path = dir.join("exit.log");
     if std::fs::metadata(&path).is_ok_and(|m| m.len() > 32 * 1024) {
         let kept = std::fs::read(&path).unwrap_or_default();
@@ -233,8 +237,34 @@ pub(crate) fn note_exit(app: &tauri::AppHandle, what: &str) {
         .append(true)
         .open(&path)
     {
-        let _ = writeln!(file, "{at} {} {what}", app.package_info().version);
+        let _ = writeln!(file, "{at} {version} {what}");
     }
+}
+
+/// A panic says where it happened in `exit.log` before it goes on as it
+/// would. One on the main thread ends the app with every window and leaves
+/// no crash report: the event loop catches it and unwinds out of `run`.
+#[cfg(desktop)]
+pub(crate) fn record_panics(app: &tauri::AppHandle) {
+    use tauri::Manager;
+    if let Ok(dir) = app.path().app_log_dir() {
+        record_panics_in(dir, app.package_info().version.to_string());
+    }
+}
+
+#[cfg(desktop)]
+fn record_panics_in(dir: std::path::PathBuf, version: String) {
+    let before = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        let thread = std::thread::current();
+        let line = format!(
+            "panic on {}: {}",
+            thread.name().unwrap_or("a thread"),
+            info.to_string().replace('\n', " ")
+        );
+        write_exit_line(&dir, &version, &line);
+        before(info);
+    }));
 }
 
 /// Windows: downloads `rid`'s update, then every window closes as at Quit
@@ -378,5 +408,22 @@ mod tests {
         assert!(!is_update(&v("1.0.5-rc.2"), &v("1.0.4")));
         assert!(!is_update(&v("1.0.5"), &v("1.0.5")));
         assert!(!is_update(&v("1.0.5"), &v("1.0.5-rc.2")));
+    }
+
+    #[cfg(desktop)]
+    #[test]
+    fn a_panic_is_written_to_the_exit_log_with_where_it_happened() {
+        let dir = tempfile::tempdir().unwrap();
+        record_panics_in(dir.path().to_path_buf(), "9.9.9".into());
+        let caught = std::panic::catch_unwind(|| panic!("the window map\nis gone"));
+        let _ = std::panic::take_hook();
+        assert!(caught.is_err());
+        let log = std::fs::read_to_string(dir.path().join("exit.log")).unwrap();
+        let line = log
+            .lines()
+            .find(|line| line.contains("the window map is gone"))
+            .expect("the panic's line");
+        assert!(line.contains(" 9.9.9 panic on "), "{line}");
+        assert!(line.contains("update.rs"), "{line}");
     }
 }

@@ -40,7 +40,11 @@ pub(crate) fn launch_opens(app: &tauri::AppHandle) -> Option<LaunchOpens> {
         &std::env::current_dir().unwrap_or_default(),
     );
     #[cfg(target_os = "macos")]
-    paths.extend(LAUNCH_OPENED.lock().unwrap().take().unwrap_or_default());
+    paths.extend(
+        crate::locks::locked(&LAUNCH_OPENED)
+            .take()
+            .unwrap_or_default(),
+    );
     let opens = if !paths.is_empty() {
         Some(LaunchOpens::Paths(paths))
     } else if crate::commands::prefs::read_restore_session_on_startup(app) {
@@ -68,17 +72,17 @@ pub(crate) fn queue_launch(app: &tauri::AppHandle, opens: Option<LaunchOpens>) {
 /// Wrong only towards yes, which costs a moment of empty sheet.
 #[cfg(desktop)]
 pub(crate) fn window_restores(app: &tauri::AppHandle, label: &str) -> bool {
-    let queued = !app.state::<PendingOpenPaths>().0.lock().unwrap().is_empty();
+    let queued = !crate::locks::locked(&app.state::<PendingOpenPaths>().0).is_empty();
     let launching = OPENING_AT_LAUNCH.load(Ordering::Relaxed) && !UI_READY.load(Ordering::Relaxed);
     let detached = app
         .try_state::<crate::tab_drag::PendingDetachedTabs>()
-        .is_some_and(|pending| pending.0.lock().unwrap().contains_key(label));
+        .is_some_and(|pending| crate::locks::locked(&pending.0).contains_key(label));
     let own = PENDING_SESSIONS
         .lock()
         .unwrap_or_else(|e| e.into_inner())
         .iter()
         .any(|(window, _)| window == label);
-    let help = PENDING_SHOW_HELP.lock().unwrap().is_some();
+    let help = crate::locks::locked(&PENDING_SHOW_HELP).is_some();
     let drafts = label == "main" && crate::commands::drafts::drafts_waiting(app);
     queued || own || launching || detached || help || drafts
 }
@@ -92,7 +96,7 @@ pub(crate) fn window_restores(_app: &tauri::AppHandle, _label: &str) -> bool {
 /// Park paths for the next window to drain as it mounts.
 #[cfg(desktop)]
 pub(crate) fn queue_pending(app: &tauri::AppHandle, paths: Vec<String>) {
-    app.state::<PendingOpenPaths>().0.lock().unwrap().extend(
+    crate::locks::locked(&app.state::<PendingOpenPaths>().0).extend(
         paths
             .into_iter()
             .map(|path| WindowSession::of_paths(vec![path])),
@@ -112,7 +116,7 @@ pub(crate) fn queue_windows_to_open(app: &tauri::AppHandle, windows: Vec<WindowS
         app.state::<PendingOpenPaths>()
             .0
             .lock()
-            .unwrap()
+            .unwrap_or_else(|e| e.into_inner())
             .extend(windows.next());
     }
     // Each other one in a window of its own, where it was.
@@ -184,7 +188,7 @@ pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
             .state::<crate::commands::session::SessionTabsState>()
             .0
             .lock()
-            .unwrap()
+            .unwrap_or_else(|e| e.into_inner())
             .clone();
         let live: std::collections::HashMap<_, _> = windows
             .into_iter()
@@ -212,7 +216,7 @@ pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
     }
     // No window yet (launching) or none left (macOS): the app opens as it
     // would anyway, its last session back, with these in it.
-    let pending_empty = app.state::<PendingOpenPaths>().0.lock().unwrap().is_empty();
+    let pending_empty = crate::locks::locked(&app.state::<PendingOpenPaths>().0).is_empty();
     if pending_empty
         && (!ui_ready || crate::editor_windows::last_editor(app).is_none())
         && crate::commands::prefs::read_restore_session_on_startup(app)
@@ -230,7 +234,7 @@ pub(crate) fn queue_paths_to_open(app: &tauri::AppHandle, paths: Vec<String>) {
     app.state::<PendingOpenPaths>()
         .0
         .lock()
-        .unwrap()
+        .unwrap_or_else(|e| e.into_inner())
         .push(WindowSession::of_paths(paths));
     if ui_ready {
         let _ = crate::editor_windows::open_new_window(app);
@@ -280,7 +284,7 @@ pub(crate) static PENDING_SHOW_HELP: Mutex<Option<String>> = Mutex::new(None);
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub(crate) fn take_pending_show_help() -> Option<String> {
-    PENDING_SHOW_HELP.lock().unwrap().take()
+    crate::locks::locked(&PENDING_SHOW_HELP).take()
 }
 
 /// A menu command that needs a window, chosen while none was open (macOS): the
@@ -292,7 +296,7 @@ pub(crate) static PENDING_MENU_EVENT: Mutex<Option<&'static str>> = Mutex::new(N
 #[tauri::command]
 #[cfg_attr(test, specta::specta)]
 pub(crate) fn take_pending_menu_event() -> Option<&'static str> {
-    PENDING_MENU_EVENT.lock().unwrap().take()
+    crate::locks::locked(&PENDING_MENU_EVENT).take()
 }
 
 /// The folder each new window was opened for (a recent folder with no
@@ -378,7 +382,7 @@ pub(crate) fn take_pending_window(
     }
     #[cfg(not(desktop))]
     let _ = window;
-    let mut windows = pending.0.lock().unwrap();
+    let mut windows = crate::locks::locked(&pending.0);
     (!windows.is_empty()).then(|| windows.remove(0))
 }
 
@@ -402,7 +406,7 @@ pub(crate) fn open_urls(app: &tauri::AppHandle, urls: Vec<tauri::Url>) {
         .collect();
     // Still launching: setup opens them (LAUNCH_OPENED).
     #[cfg(target_os = "macos")]
-    let paths = match LAUNCH_OPENED.lock().unwrap().as_mut() {
+    let paths = match crate::locks::locked(&LAUNCH_OPENED).as_mut() {
         Some(early) => {
             early.extend(paths);
             Vec::new()
@@ -451,7 +455,7 @@ mod folder_tests {
     #[test]
     fn each_restored_window_takes_the_session_built_for_it() {
         let keep = |label: &str, path: &str| {
-            PENDING_SESSIONS.lock().unwrap().push((
+            crate::locks::locked(&PENDING_SESSIONS).push((
                 label.to_string(),
                 WindowSession::of_paths(vec![path.into()]),
             ))

@@ -19,7 +19,7 @@ pub struct ChatWindowEntry {
 pub fn editor_for_chat(label: &str, open: &OpenChatWindows) -> Option<String> {
     open.0
         .lock()
-        .unwrap()
+        .unwrap_or_else(|e| e.into_inner())
         .iter()
         .find(|entry| entry.label == label)
         .map(|entry| entry.scope.clone())
@@ -48,7 +48,7 @@ pub struct OpenChatWindows(pub Mutex<Vec<ChatWindowEntry>>);
 fn chat_serving(editor_label: &str, open: &OpenChatWindows) -> Option<String> {
     open.0
         .lock()
-        .unwrap()
+        .unwrap_or_else(|e| e.into_inner())
         .iter()
         .find(|entry| entry.scope == editor_label)
         .map(|entry| entry.label.clone())
@@ -89,7 +89,7 @@ pub fn detach_chat_window(
         if let Some(win) = app.get_webview_window(&existing) {
             // The mounted window won't call take_chat_handoff again: park the new state
             // under its label and tell it to claim it, or the handoff would be lost.
-            pending.0.lock().unwrap().insert(
+            crate::locks::locked(&pending.0).insert(
                 existing.clone(),
                 ChatHandoff {
                     editor_label: editor_label.clone(),
@@ -109,7 +109,7 @@ pub fn detach_chat_window(
         // stale entry and build a fresh window.
         open.0
             .lock()
-            .unwrap()
+            .unwrap_or_else(|e| e.into_inner())
             .retain(|entry| entry.label != existing);
     }
 
@@ -117,14 +117,14 @@ pub fn detach_chat_window(
         "{CHAT_LABEL_PREFIX}{}",
         crate::editor_windows::next_window_id()
     );
-    pending.0.lock().unwrap().insert(
+    crate::locks::locked(&pending.0).insert(
         label.clone(),
         ChatHandoff {
             editor_label: editor_label.clone(),
             state,
         },
     );
-    open.0.lock().unwrap().push(ChatWindowEntry {
+    crate::locks::locked(&open.0).push(ChatWindowEntry {
         label: label.clone(),
         scope: editor_label.clone(),
     });
@@ -181,7 +181,7 @@ pub fn take_chat_handoff(
     window: tauri::Window,
     pending: State<PendingChatHandoffs>,
 ) -> Option<ChatHandoff> {
-    pending.0.lock().unwrap().remove(window.label())
+    crate::locks::locked(&pending.0).remove(window.label())
 }
 
 /// Told to every editor window when the set of chat windows changes, so none
@@ -196,7 +196,7 @@ pub fn forget_chat_window(app: &tauri::AppHandle, label: &str, open: &OpenChatWi
     let orphans: Vec<String> = open
         .0
         .lock()
-        .unwrap()
+        .unwrap_or_else(|e| e.into_inner())
         .iter()
         .filter(|entry| entry.scope == label)
         .map(|entry| entry.label.clone())
@@ -214,7 +214,7 @@ pub fn forget_chat_window(app: &tauri::AppHandle, label: &str, open: &OpenChatWi
 /// The registry half, testable without an AppHandle. Returns whether anything
 /// was dropped.
 fn forget_entries(label: &str, open: &OpenChatWindows) -> bool {
-    let mut entries = open.0.lock().unwrap();
+    let mut entries = crate::locks::locked(&open.0);
     let before = entries.len();
     entries.retain(|entry| entry.label != label && entry.scope != label);
     entries.len() != before

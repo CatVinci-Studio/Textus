@@ -5,10 +5,11 @@
 
 use super::access::{refused, running, url_allowed};
 use super::state;
+use crate::locks::locked;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::{LazyLock, Mutex, MutexGuard};
+use std::sync::{LazyLock, Mutex};
 use std::time::Duration;
 use tokio::sync::oneshot;
 
@@ -57,10 +58,6 @@ static CLIENTS: LazyLock<Mutex<HashMap<String, Kept>>> = LazyLock::new(Default::
 type Pending = HashMap<(String, String), (u64, oneshot::Sender<()>)>;
 static PENDING: LazyLock<Mutex<Pending>> = LazyLock::new(Default::default);
 static REQUESTS: AtomicU64 = AtomicU64::new(0);
-
-fn locked<T>(map: &Mutex<T>) -> MutexGuard<'_, T> {
-    map.lock().unwrap_or_else(|e| e.into_inner())
-}
 
 /// The plugin's client; a new one once its grants or the proxy change.
 fn client_for(id: &str, granted: &[String]) -> Result<reqwest::Client, String> {
