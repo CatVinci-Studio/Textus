@@ -59,6 +59,13 @@ export function AboutPage({
                   {t.menuHelpSponsor}
                 </button>
               )}
+              <button
+                type="button"
+                className="settings-about-sponsor"
+                onClick={() => void links.openAboutLink("github")}
+              >
+                {t.aboutStar}
+              </button>
             </div>
           </div>
           <UpdateButton t={t} checkOnOpen={checkUpdates} />

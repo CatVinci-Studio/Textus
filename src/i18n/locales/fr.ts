@@ -829,6 +829,7 @@ utiliser une.
   aboutMadeBy: "Créé par CatVinci Studio",
   aboutShareLead: "Vous aimez Textus ?",
   aboutShare: "Partager",
+  aboutStar: "Mettre une étoile sur GitHub",
   aboutShareText:
     "J’utilise Textus : un environnement d’écriture intégré, gratuit et open source, pour écrire en Markdown de façon professionnelle sur toutes les plateformes. Essayez-le ! https://textus.md",
   aboutQq: "Groupe QQ",
