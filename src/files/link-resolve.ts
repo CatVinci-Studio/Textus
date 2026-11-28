@@ -4,7 +4,13 @@ import {
   parseNoteLink,
   type NoteLink,
 } from "../utils/note-link";
-import { isNoteFile, noteStem, relativePath, slashed } from "../utils/path";
+import {
+  isNoteFile,
+  noteStem,
+  realSlashed,
+  relativePath,
+  slashed,
+} from "../utils/path";
 
 /**
  * Where a link to a note leads, among a folder's files: the one resolver for
@@ -193,8 +199,8 @@ export function pathIndex(root: string, paths: readonly string[]): PathIndex {
 
 /** `path` from the folder `root`, with "/"; as it is outside it. */
 export function relativeTo(root: string, path: string): string {
-  const base = slashed(root).replace(/\/+$/, "");
-  const full = slashed(path);
+  const base = realSlashed(root).replace(/\/+$/, "");
+  const full = realSlashed(path);
   return full.startsWith(`${base}/`) ? full.slice(base.length + 1) : full;
 }
 
@@ -205,7 +211,7 @@ export function linkFolderIn(root: string, doc: string): string {
 }
 
 const absolute = (paths: PathIndex, rel: string) =>
-  `${slashed(paths.root).replace(/\/+$/, "")}/${rel}`;
+  `${realSlashed(paths.root).replace(/\/+$/, "")}/${rel}`;
 
 /** Where `link` (a `[[wiki link]]` or a Markdown link's target, as written)
  *  from the document at `from` leads, as a click takes it; null when it

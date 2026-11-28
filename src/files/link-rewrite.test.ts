@@ -200,6 +200,17 @@ describe("planning a rename's link updates", () => {
       { path: "C:\\v\\x.md", text: "[a](b.md)", count: 1 },
     ]);
   });
+
+  it("never turns a backslash in a macOS or Linux file name into a folder", () => {
+    // `a\b.md` is one file, not b.md in a folder a: renaming it must not
+    // write a link into a folder that isn't there.
+    const updates = planLinkUpdates(
+      [{ path: "/v/x.md", text: "[[a\\b]] and [[a]]" }],
+      ["/v/x.md", "/v/a.md", "/v/a\\c.md"],
+      { root: "/v", from: "/v/a\\b.md", to: "/v/a\\c.md" },
+    );
+    expect(updates).toEqual([]);
+  });
 });
 
 /** `doc`'s text after a rename in a folder /r holding `doc`, the renamed
