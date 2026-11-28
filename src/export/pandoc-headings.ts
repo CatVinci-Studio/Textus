@@ -9,7 +9,7 @@ import { headingsOf } from "../utils/markdown-headings";
 const ATX = /^ {0,3}#{1,6}(?=[ \t]|$)/;
 
 /** The level numbering starts at, and the title's line if one is left out. */
-function numberingStart(levels: { line: number; level: number }[]) {
+function numberingStart(levels: readonly { line: number; level: number }[]) {
   const top = Math.min(...levels.map((h) => h.level));
   const atTop = levels.filter((h) => h.level === top);
   const below = levels.filter((h) => h.level > top);

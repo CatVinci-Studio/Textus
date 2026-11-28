@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseHeadings, sourceAnchors } from "./outline-parse";
 import { plainInline as headingLabel } from "../utils/markdown-plain";
+import { headingsOf } from "../utils/markdown-headings";
 
 const texts = (md: string) => parseHeadings(md).map((h) => h.text);
 
@@ -83,6 +84,20 @@ describe("parseHeadings", () => {
     // Words with a `$` after the opener open a block only if one closes.
     expect(texts("$$x$$ is famous\n\n# B")).toEqual(["B"]);
     expect(texts("$$x$$ is\n=\ny$$\n\n# B")).toEqual(["B"]);
+  });
+
+  it("scans a text once for all who ask, and again once it changes", () => {
+    const md = "# A\n\nText\n===";
+    const first = headingsOf(md);
+    // The outline, a plugin's getOutline and a jump share one scan.
+    expect(headingsOf(`${md}`)).toBe(first);
+    expect(Object.isFrozen(first)).toBe(true);
+    expect(headingsOf(`${md}\n# B`)).not.toBe(first);
+    expect(headingsOf(`${md}\n# B`).map((h) => h.text)).toEqual([
+      "A",
+      "Text",
+      "B",
+    ]);
   });
 
   it("gives the anchors the editor gives, math kept", () => {

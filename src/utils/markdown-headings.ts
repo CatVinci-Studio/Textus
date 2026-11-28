@@ -217,10 +217,24 @@ function leafTakes(leaf: Leaf, rest: string, closedLater: () => boolean) {
   }
 }
 
+/** The last text scanned and its headings: the outline, its phone menu,
+ *  a heading search, a plugin's getOutline and a source jump all ask about
+ *  the same text after an edit, and share one scan. */
+let last: { markdown: string; headings: readonly Readonly<HeadingLine>[] } = {
+  markdown: "",
+  headings: [],
+};
+
 /** A whole document's top-level headings, in order, as the editor counts
  *  them: ATX and setext, never in code, maths, HTML blocks, front matter,
- *  quotes, list items or footnotes. */
-export function headingsOf(markdown: string): HeadingLine[] {
+ *  quotes, list items or footnotes. Shared: never changed by a caller. */
+export function headingsOf(markdown: string): readonly Readonly<HeadingLine>[] {
+  if (markdown !== last.markdown)
+    last = { markdown, headings: Object.freeze(scan(markdown)) };
+  return last.headings;
+}
+
+function scan(markdown: string): HeadingLine[] {
   const out: HeadingLine[] = [];
   const lines = markdown.split("\n");
   const head = FRONTMATTER.exec(markdown)?.[0] ?? "";
