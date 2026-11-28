@@ -2,6 +2,7 @@ import { Suspense, useRef } from "react";
 import { useWindowEvent } from "../../utils/hooks/useWindowEvent";
 import { useSettings } from "../../prefs/SettingsContext";
 import { useMenuOpen } from "../../engine/controls/useMenuOpen";
+import { usePressOpen } from "../../engine/controls/press-open";
 import { usePluginMenuEntries } from "../../plugins/contributions/usePluginMenu";
 import { Presence } from "../../engine/motion/usePresence";
 import { AppMenu } from "./app-menu-lazy";
@@ -47,6 +48,18 @@ export function MenuBar({ checks }: { checks?: MenuChecks }) {
     show({ index, x: rect.left, y: rect.bottom + 2 });
   };
 
+  // The mouse's press opens a title's list (and closes it when pressed
+  // again), as a menu button's does; let go over a row, it chooses it.
+  const press = usePressOpen((trigger) => {
+    const index = buttons.current.indexOf(trigger as HTMLButtonElement);
+    if (open?.index === index) {
+      close();
+      return false;
+    }
+    openAt(index);
+    return true;
+  }, '[data-floating-menu] [role^="menuitem"]');
+
   return (
     <div
       ref={ref}
@@ -71,7 +84,9 @@ export function MenuBar({ checks }: { checks?: MenuChecks }) {
           onMouseEnter={() => {
             if (open && open.index !== index) openAt(index);
           }}
-          onClick={() => {
+          onPointerDown={press.onPointerDown}
+          onClick={(e) => {
+            if (press.ownClick(e)) return;
             if (open?.index === index) return close();
             openAt(index);
           }}
