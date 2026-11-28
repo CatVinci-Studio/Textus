@@ -107,6 +107,26 @@ export interface Placed {
   ay: number;
 }
 
+/** How a card's connector is drawn: "hot" while the pointer is on its card
+ *  or on its passage in the text (or it is the selected item), "far" when
+ *  the cards above pushed it well below its passage, else "". A group's
+ *  one line answers to any of its members. Hot wins over far, so a pushed
+ *  card still stands out under the pointer. */
+export function linkState(
+  p: Placed,
+  placed: readonly Placed[],
+  hot: string | null,
+  focused: string | null,
+  farPx: number,
+): "hot" | "far" | "" {
+  const own = (key: string | null) =>
+    p.group === null
+      ? key === p.item.key
+      : placed.some((q) => q.group === p.group && q.item.key === key);
+  if (own(hot) || own(focused)) return "hot";
+  return p.drift > farPx ? "far" : "";
+}
+
 /** marginRoom for this editor as it is laid out now, every width as drawn:
  *  the text is inside the document's zoom, and a width from before the
  *  zoom put a zoomed page's cards over its text. */
