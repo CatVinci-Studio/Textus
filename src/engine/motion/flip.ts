@@ -72,11 +72,19 @@ export function play(
   // again in the new positions.
   stopFlips(targets);
   prepare?.();
-  if (arrived)
+  if (arrived) {
+    const came = new Set<Element>();
     for (const el of arrived()) {
       const was = before.get(el);
-      if (!was || (was.width === 0 && was.height === 0)) discloseIn(el);
+      if (!was || unplaced(was)) came.add(el);
     }
+    // One inside another that came comes with it: faded twice, it would lag.
+    for (const el of came) {
+      let up = el.parentElement;
+      while (up && !came.has(up)) up = up.parentElement;
+      if (!up) discloseIn(el);
+    }
+  }
   type Move = {
     el: Element;
     dx: number;
@@ -87,6 +95,9 @@ export function play(
   for (const el of targets) {
     const was = before.get(el)!;
     const now = el.getBoundingClientRect();
+    // Not drawn before or after (a folded section): it has no place to
+    // slide from or to - it arrives, or is gone.
+    if (unplaced(was) || unplaced(now)) continue;
     const dx = was.left - now.left;
     const dy = was.top - now.top;
     const resized =
@@ -135,6 +146,8 @@ export function play(
     );
   }
 }
+
+const unplaced = (box: DOMRect) => box.width === 0 && box.height === 0;
 
 /** Something disclosed under what opened it: it settles down a short way
  *  into place as it fades in (motion-disclose-in), its room taken at once. */
