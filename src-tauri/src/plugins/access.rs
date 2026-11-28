@@ -378,18 +378,27 @@ fn is_this_computer(host: &str) -> bool {
     matches!(host, "localhost" | "127.0.0.1" | "[::1]" | "::1")
 }
 
-/// Whether the plugin may fetch `url`: a granted host over HTTPS, or plain HTTP
-/// to this computer (Zotero's local API).
+/// Whether the plugin may fetch `url`: a granted host over HTTPS; plain HTTP
+/// to this computer (Zotero's local API), or anywhere for a plugin granted
+/// `network:*`. That grant is for an address the user types, and a NAS or a
+/// home server is often plain HTTP; a plugin naming its hosts names services
+/// that have HTTPS.
 pub(super) fn url_allowed(granted: &[String], url: &reqwest::Url) -> bool {
     let Some(host) = url.host_str() else {
         return false;
     };
     let scheme_ok = match url.scheme() {
         "https" => true,
-        "http" => is_this_computer(host),
+        "http" => is_this_computer(host) || granted.iter().any(|g| g == "network:*"),
         _ => false,
     };
     scheme_ok && host_allowed(granted, host, url.port_or_known_default())
+}
+
+/// Whether a redirect to `next` would drop to plain HTTP after HTTPS: what
+/// was sent encrypted, a password among it, must not go on in the clear.
+pub(super) fn downgrades(previous: &[reqwest::Url], next: &reqwest::Url) -> bool {
+    next.scheme() == "http" && previous.iter().any(|u| u.scheme() == "https")
 }
 
 pub(crate) mod paths;
