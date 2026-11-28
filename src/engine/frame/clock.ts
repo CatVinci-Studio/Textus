@@ -206,6 +206,9 @@ class FrameClock {
     const span = duration(SETTLE);
     const moved = new Set(placed);
     for (const [key, run] of this.runs) {
+      // Another group's change landing mid-run: a run already under way
+      // stays where its last frame drew it, not back at its start.
+      if (now === null && run.start !== null) continue;
       moved.add(key);
       if (now !== null) run.start ??= now;
       const t =
