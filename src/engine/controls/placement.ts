@@ -68,15 +68,18 @@ const SUBMENU_GAP = 4;
 
 type Box = { top: number; bottom: number; left: number; right: number };
 
-/** Where a submenu `size` goes beside its `menu`, level with its `row`: to
- *  the right, or the left where the window ends; never over the menu. */
+/** Where a submenu `size` goes beside its `menu`, level with its `row`: on
+ *  the side `prefer`red, or across where the window ends; never over the
+ *  menu. A deeper level prefers the side its menu went to, so a cascade
+ *  that turned at the window's edge keeps going the same way. */
 export function submenuPlace(
   row: Box,
   menu: Box,
   size: { width: number; height: number },
+  prefer: "left" | "right" = "right",
 ): { left: number; top: number } {
   const gap = scaledPx(SUBMENU_GAP);
-  const side = sideThatFits("right", menu, size, gap);
+  const side = sideThatFits(prefer, menu, size, gap);
   const left = clampLeft(
     side === "right" ? menu.right + gap : menu.left - gap - size.width,
     size.width,

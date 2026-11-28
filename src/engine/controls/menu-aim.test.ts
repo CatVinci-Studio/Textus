@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
-import { headingFor } from "./menu-aim";
+// @vitest-environment jsdom
+import { renderHook } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { headingFor, useMenuAim } from "./menu-aim";
 
 const box = (left: number, top: number, width: number, height: number) => ({
   left,
@@ -41,5 +43,63 @@ describe("headingFor", () => {
     expect(
       headingFor({ x: 170, y: 200 }, { x: 140, y: 230 }, parent, left),
     ).toBe(true);
+  });
+
+  it("isn't, going straight down or not moving, however near the submenu", () => {
+    expect(
+      headingFor({ x: 280, y: 200 }, { x: 280, y: 200 }, parent, right),
+    ).toBe(false);
+    expect(
+      headingFor({ x: 290, y: 200 }, { x: 290, y: 215 }, parent, right),
+    ).toBe(false);
+  });
+});
+
+describe("useMenuAim", () => {
+  function setup() {
+    const menu = document.createElement("div");
+    const sub = document.createElement("div");
+    menu.getBoundingClientRect = () => parent as DOMRect;
+    sub.getBoundingClientRect = () => right as DOMRect;
+    const apply = vi.fn();
+    const { result } = renderHook(() =>
+      useMenuAim<number>(
+        apply,
+        () => menu,
+        () => sub,
+      ),
+    );
+    const move = (x: number, y: number) =>
+      result.current.move({ clientX: x, clientY: y, target: menu });
+    return { aim: result.current, move, menu, apply };
+  }
+
+  it("opens the next row at once on a step straight down after a sideways move", () => {
+    const { aim, move, apply } = setup();
+    move(230, 200);
+    move(260, 210);
+    aim.hover(2, { clientX: 260, clientY: 228 });
+    expect(apply).toHaveBeenCalledWith(2);
+  });
+
+  it("stops waiting the moment the pointer turns off its way to the submenu", () => {
+    const { aim, move, menu, apply } = setup();
+    move(230, 200);
+    move(260, 230);
+    aim.hover(2);
+    expect(apply).not.toHaveBeenCalled();
+    expect(menu.dataset.aiming).toBe("");
+    move(260, 250);
+    expect(apply).toHaveBeenCalledWith(2);
+    expect(menu.dataset.aiming).toBeUndefined();
+  });
+
+  it("forgets the aim once the pointer leaves the menu", () => {
+    const { aim, move, menu } = setup();
+    move(230, 200);
+    move(260, 230);
+    expect(menu.dataset.aiming).toBe("");
+    aim.leave();
+    expect(menu.dataset.aiming).toBeUndefined();
   });
 });

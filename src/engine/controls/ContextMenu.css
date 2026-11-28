@@ -84,8 +84,19 @@
   animation: motion-enter var(--dur-fast) var(--ease-out);
 }
 
+/* Opened on the left, it slides in from the right: out of its row either
+   way. */
+.context-submenu[data-side="left"] {
+  --enter-x: var(--motion-distance-sm);
+}
+
 .context-submenu-instant {
   animation: none;
+}
+
+/* Gone almost at once: the pointer has already moved to another row. */
+.context-submenu[data-state="closing"] {
+  animation: motion-exit var(--dur-instant) var(--ease-in) forwards;
 }
 
 /* A menu's name above its items, when it hangs from a named button. */
