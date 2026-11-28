@@ -69,9 +69,10 @@
   color: var(--ui-text);
 }
 
+/* A level above the message (--text-body), not a heavier line of it. */
 .app-dialog-title {
   margin: 0 0 8px;
-  font-size: var(--text-body-large);
+  font-size: var(--text-title);
   font-weight: 600;
 }
 

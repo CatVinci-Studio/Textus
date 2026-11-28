@@ -366,3 +366,56 @@ th > .tx-table-grip-col {
 .tx-step-nav-back {
   transform: rotate(180deg);
 }
+
+/* A key in a hint (a tooltip, a menu row, the quick pick): a small cap. */
+.tx-kbd {
+  padding: 0 var(--space-1);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-xs);
+  color: var(--ui-muted);
+  font: inherit;
+  font-size: var(--text-caption);
+  white-space: nowrap;
+}
+
+/* A number with its unit, stepped by − and + (NumberField.tsx): one box,
+   − value unit +, the box taking the focus. The unit's slot keeps its width
+   when there is no unit, so the value sits at the same place in every row. */
+.tx-number {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--shape-s);
+  background: var(--ui-bg);
+  /* In a row too narrow for it (a phone at the largest text size, beside a
+     select) the value gives way; the steppers and the unit keep their size. */
+  min-width: 0;
+}
+.tx-number:focus-within {
+  border-color: var(--ui-accent);
+}
+.tx-number .tx-number-input {
+  flex: 0 1 4em;
+  width: 4em;
+  min-width: 2em;
+  height: var(--control-height-sm);
+  padding: 0 var(--space-1);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.tx-number-unit {
+  flex: none;
+  box-sizing: border-box;
+  width: 2.5em;
+  padding-inline-start: var(--space-1);
+  color: var(--ui-muted);
+  font-size: var(--text-footnote);
+}
+.tx-number-step {
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  border-radius: var(--shape-xs);
+}

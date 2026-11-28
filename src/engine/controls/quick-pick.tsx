@@ -14,6 +14,7 @@ import { isImeKeydown } from "../../utils/ime";
 import { listMove } from "./list-keys";
 import { useShownItems } from "./quick-pick-shown";
 import { DialogActions } from "./DialogActions";
+import { useScrollFade } from "./scroll-fade";
 
 export function QuickPickHost({
   emptyLabel,
@@ -50,6 +51,8 @@ function QuickPick({
   );
   const listRef = useRef<HTMLUListElement>(null);
   const shown = useShownItems(request, query);
+  // A long list fades at the edge it goes on past.
+  useScrollFade(listRef);
   const dialog = useModalDialog(
     () => answer(request, null),
     true,
@@ -119,7 +122,7 @@ function QuickPick({
           }}
         />
         <ul
-          className="quick-pick-list"
+          className="quick-pick-list tx-scroll-fade"
           id="quick-pick-list"
           role="listbox"
           aria-multiselectable={request.multiple || undefined}
@@ -155,7 +158,9 @@ function QuickPick({
                 </span>
               )}
               {item.keys && (
-                <kbd className="quick-pick-keys">{formatCombo(item.keys)}</kbd>
+                <kbd className="tx-kbd quick-pick-keys">
+                  {formatCombo(item.keys)}
+                </kbd>
               )}
               {item.detail && (
                 <span className="quick-pick-detail">{item.detail}</span>

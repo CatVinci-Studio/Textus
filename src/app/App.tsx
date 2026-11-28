@@ -22,7 +22,6 @@ import {
 } from "./tabs/page-tabs";
 import { usePhoneLayout } from "../engine/controls/usePhoneLayout";
 import { useSettings } from "../prefs/SettingsContext";
-import { formatCombo } from "../utils/shortcuts";
 import { fixedShortcutGroups } from "../registry/fixed-shortcuts";
 import { commands } from "../registry/commands";
 import { platformName } from "../platform/window-chrome";
@@ -183,11 +182,11 @@ function App() {
             title={activeTitle}
             dirty={activeDirty}
             sidebarOpen={panelOpen}
-            sidebarShortcut={formatCombo(settings.shortcuts.toggleSidebar)}
+            sidebarShortcut={settings.shortcuts.toggleSidebar}
             onToggleSidebar={toggleSidebar}
             showAgentToggle={aiFeatures(settings, tutorial.active).chat}
             agentOpen={agentPanel.open}
-            agentShortcut={formatCombo(settings.shortcuts.toggleAgentPanel)}
+            agentShortcut={settings.shortcuts.toggleAgentPanel}
             onToggleAgent={toggleAgentPanel}
             onToggleReadOnly={() => toggleReadOnly()}
             documentMenu={

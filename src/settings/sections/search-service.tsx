@@ -47,20 +47,30 @@ function searchServiceMatters(
   return !!status && !(status.native && chosen === "auto");
 }
 
-/** Whether Settings shows the search service, for its group's title. */
-export function useSearchServiceShown(): boolean {
+type MatteringStatus = NonNullable<ReturnType<typeof useWebSearchStatus>>;
+
+/** The search service's status where Settings shows it, else null. The page
+ *  reads it once and hands it to the section: two readers each load their own
+ *  status, and while one had answered the other had not, the group was drawn
+ *  with nothing in it. */
+export function useSearchServiceStatus(): MatteringStatus | null {
   const { settings } = useSettings();
-  return searchServiceMatters(useWebSearchStatus(), settings.searchService);
+  const status = useWebSearchStatus();
+  return searchServiceMatters(status, settings.searchService) ? status : null;
 }
 
 /** Settings › Textus AI › Search service: what web_search uses when the chat
  *  model can't search itself. Shown only when that matters, or when a service
  *  was chosen before. */
-export function SearchServiceSection({ t }: { t: Strings }) {
+export function SearchServiceSection({
+  t,
+  status,
+}: {
+  t: Strings;
+  status: MatteringStatus;
+}) {
   const { settings, setSettings } = useSettings();
-  const status = useWebSearchStatus();
   const chosen = settings.searchService;
-  if (!searchServiceMatters(status, chosen)) return null;
   const hint = status.native
     ? t.searchServiceNativeHint
     : status.service

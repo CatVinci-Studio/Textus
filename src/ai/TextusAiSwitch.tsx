@@ -79,7 +79,7 @@ export function TextusAiButton({
   panelOpen: boolean;
   /** The AI panel can be opened: chat is on, or the tour needs it. */
   showPanel: boolean;
-  /** The AI panel's shortcut, as shown in the tooltip. */
+  /** The AI panel's shortcut as stored, shown in the tooltip. */
   shortcut: string;
   onTogglePanel: () => void;
 }) {
@@ -109,7 +109,7 @@ export function TextusAiButton({
       })
     : null;
   const tip = ai.on
-    ? `${t.agentPanelTitle} (${shortcut}) · ${t.textusAiMenuHint}`
+    ? `${t.agentPanelTitle} · ${t.textusAiMenuHint}`
     : until
       ? fill(t.textusAiPausedTooltip, { time: until })
       : t.textusAiOffTooltip;
@@ -130,7 +130,7 @@ export function TextusAiButton({
 
   return (
     <>
-      <Tooltip text={tip}>
+      <Tooltip text={tip} keys={ai.on ? shortcut : undefined}>
         <button
           type="button"
           className={`${className}${pressed ? " window-bar-toggle-on" : ""}${ai.on ? "" : " textus-ai-button-off"}`}
