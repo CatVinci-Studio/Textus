@@ -4,6 +4,7 @@ import { Segmented } from "../../engine/controls/Segmented";
 import { fill } from "../../i18n/fill";
 import { requestWorkshop } from "../../ai/chat/create-request";
 import { useRef, useState } from "react";
+import { isEffectiveDark } from "../../theme/imported-theme";
 import { useSettings, THEME_MODES } from "../../prefs/SettingsContext";
 import { BUILTIN_CONTENT_THEMES } from "../../prefs/builtin-themes";
 import type { Strings } from "../../i18n/strings";
@@ -307,6 +308,11 @@ export function ThemesTab({ t }: { t: Strings }) {
                   name={theme.name}
                   description={copy?.description}
                   previews={copy?.previews}
+                  sampleOf={{
+                    id: theme.id,
+                    hasDark: theme.hasDark,
+                    dark: isEffectiveDark(settings.theme),
+                  }}
                   byline={
                     copy ? (
                       <ThemeByline t={t} theme={copy} />

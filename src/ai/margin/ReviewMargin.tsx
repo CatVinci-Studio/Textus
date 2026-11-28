@@ -13,6 +13,7 @@ import {
   type Placed,
   type ReviewMarginLabels,
   anchorSelector,
+  linkState,
   measureRoom,
   placeColumn,
   sameLayout,
@@ -226,15 +227,13 @@ export function ReviewMargin({
         {layout.placed.map((p) => {
           // A group draws one line, from its first passage.
           if (p.group !== null && p.group !== p.item.key) return null;
-          const own = (key: string | null) =>
-            p.group === null
-              ? key === p.item.key
-              : layout.placed.some(
-                  (q) => q.group === p.group && q.item.key === key,
-                );
-          const lit = own(hot) || own(focused);
-          // Far below its passage, a card's line is fainter, not gone.
-          const far = p.drift > scaledPx(LINE_DRIFT);
+          const state = linkState(
+            p,
+            layout.placed,
+            hot,
+            focused,
+            scaledPx(LINE_DRIFT),
+          );
           const x2 = layout.left;
           const y2 = p.top + scaledPx(p.chip ? CHIP_HEIGHT / 2 : 18);
           const dx = Math.max(scaledPx(18), (x2 - p.ax) / 2);
@@ -243,7 +242,7 @@ export function ReviewMargin({
               key={p.item.key}
               // Length 1 for the draw-in dash, so long lines don't break up.
               pathLength={1}
-              className={`${p.item.kind}${lit ? " hot" : far ? " far" : ""}`}
+              className={`${p.item.kind}${state && ` ${state}`}`}
               d={`M${p.ax} ${p.ay} C ${p.ax + dx} ${p.ay}, ${x2 - dx} ${y2}, ${x2} ${y2}`}
             />
           );
