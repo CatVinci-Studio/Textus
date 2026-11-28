@@ -327,6 +327,22 @@ test("the editor taking the focus scrolls nothing; typing brings the caret into 
   });
   await settled(page);
   expect(await scroller.evaluate((el) => el.scrollTop)).toBe(0);
+  // ProseMirror puts its caret back 20 ms after the focus (a timer, late
+  // on a loaded runner): a key sooner than any hand types lands where the
+  // browser left the caret. Typed once its own caret is back.
+  await expect
+    .poll(() =>
+      editor.evaluate(
+        (el) =>
+          !!getSelection()?.anchorNode &&
+          el.contains(getSelection()!.anchorNode) &&
+          /^Line 150\.$/.test(
+            getSelection()!.anchorNode!.parentElement?.closest("p")
+              ?.textContent ?? "",
+          ),
+      ),
+    )
+    .toBe(true);
   await page.keyboard.type("!");
   await expect
     .poll(() => scroller.evaluate((el) => el.scrollTop))
