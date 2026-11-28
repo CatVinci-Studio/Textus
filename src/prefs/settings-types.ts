@@ -293,6 +293,9 @@ export interface Settings {
   /** The tree asks before moving rows to the Trash (the question's Don't
    *  Ask Again turns it off). */
   confirmTreeTrash: boolean;
+  /** The file tree lists names starting with a dot (and, on Windows, files
+   *  marked hidden), drawn muted. Search and the link index never read them. */
+  showHiddenFiles: boolean;
   /** Export as PDF numbers each page in its bottom margin. */
   pdfPageNumbers: boolean;
   /** The paper, margins and text size a PDF export prints with. */
@@ -435,6 +438,7 @@ export const DEFAULT_SETTINGS: Settings = {
   autosave: false,
   confirmTreeCopy: true,
   confirmTreeTrash: true,
+  showHiddenFiles: false,
   pdfPageNumbers: false,
   pdfPaper: "a4",
   pdfMargin: "normal",

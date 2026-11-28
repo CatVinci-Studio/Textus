@@ -3,6 +3,8 @@ import { useCallback, useEffect, useState } from "react";
 import { absoluteIn, isInside, parentDir } from "../utils/path";
 import { FILE_CREATED_EVENT, FILE_WRITTEN_EVENT } from "../utils/events";
 import { type SearchScope } from "./file-search";
+import { useSettings } from "../prefs/SettingsContext";
+import { migrateTreeHidden } from "../prefs/tree-hidden-migration";
 import { getUiState } from "../storage/ui-state";
 import { type TreeSort } from "./tree-shared";
 import { OpenFolders, useDiskWatch } from "./useDiskWatch";
@@ -31,13 +33,21 @@ function useFolderCounts() {
   return [counts, bumpAll] as const;
 }
 
+/** Whether the tree lists dot names: a setting, so Settings and the tree's
+ *  menu change the same value; a view state older builds kept comes along. */
+function useShowHidden(): boolean {
+  const { settings } = useSettings();
+  useEffect(() => {
+    void migrateTreeHidden();
+  }, []);
+  return settings.showHiddenFiles;
+}
+
 export function useTreeView(base: string) {
   const [generation, setGeneration] = useState(0);
   const [sort, setSort] = useState<TreeSort>(savedSort);
   const [scope, setScope] = useState<SearchScope>(savedScope);
-  const [showHidden, setShowHidden] = useState(
-    () => getUiState("fileTreeHidden") === "1",
-  );
+  const showHidden = useShowHidden();
   const [versions, reload] = useFolderCounts();
   const changes = useFolderChanges(base);
   // Collapse All: every folder below the root folds, as `versions` stood.
@@ -54,7 +64,6 @@ export function useTreeView(base: string) {
     scope,
     setScope,
     showHidden,
-    setShowHidden,
     versions,
     reload,
     ...changes,

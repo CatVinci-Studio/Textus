@@ -1544,6 +1544,9 @@ para usar una.
     "Preguntar antes de copiar archivos soltados en el árbol de archivos",
   confirmTreeTrashLabel:
     "Preguntar antes de mover archivos del árbol de archivos a la papelera",
+  showHiddenFilesLabel: "Mostrar archivos y carpetas ocultos",
+  showHiddenFilesHint:
+    "Nombres que empiezan por un punto. Solo los muestra el árbol de archivos.",
   autosaveLabel: "Guardar automáticamente",
   settingsFileLabel: "Archivo de ajustes",
   settingsFileSummary:
