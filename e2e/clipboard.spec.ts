@@ -277,10 +277,10 @@ test("Copy as Plain Text gives the words as they read; an old copy setting chang
   await page.keyboard.press("ControlOrMeta+c");
   expect((await clipboardNow(page))["text/plain"]).toBe(LINKED);
   await first.click({ button: "right" });
-  await page.locator(".context-menu-group", { hasText: "Plain Text" }).click();
+  await page.locator(".context-menu-group", { hasText: "Copy As" }).click();
   await page
     .locator(".context-menu-item")
-    .getByText("Copy as Plain Text", { exact: true })
+    .getByText("Plain Text", { exact: true })
     .click();
   await expect
     .poll(() =>
@@ -289,6 +289,22 @@ test("Copy as Plain Text gives the words as they read; an old copy setting chang
         .catch(() => ""),
     )
     .toBe("See Textus (https://textus.md) and bold text.");
+  // Beside it, the same selection as HTML code.
+  await first.click({ button: "right" });
+  await page.locator(".context-menu-group", { hasText: "Copy As" }).click();
+  await page
+    .locator(".context-menu-item")
+    .getByText("HTML", { exact: true })
+    .click();
+  await expect
+    .poll(() =>
+      clipboardNow(page)
+        .then((c) => c["text/plain"])
+        .catch(() => ""),
+    )
+    .toMatch(
+      /^<p>See <a href="https:\/\/textus\.md">Textus<\/a> and <strong>bold<\/strong> text\.<\/p>$/,
+    );
 });
 
 test("the context menu's Copy and Paste keep the formatting, as Cmd+C and Cmd+V do", async ({
@@ -336,7 +352,6 @@ test("Paste as Plain Text keeps Markdown marks as text", async ({ page }) => {
   await page.locator(editor).click();
   await page.evaluate(() => navigator.clipboard.writeText("**not bold**"));
   await page.locator(editor).click({ button: "right" });
-  await page.locator(".context-menu-group", { hasText: "Plain Text" }).click();
   await page
     .locator(".context-menu-item")
     .getByText("Paste as Plain Text", { exact: true })
