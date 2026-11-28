@@ -115,7 +115,7 @@
   justify-content: center;
   gap: var(--space-2);
   box-sizing: border-box;
-  padding: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   /* The theme's own values where it sets them (ThemeSample.tsx); else the
      look in use. Only these four are read from the theme, as text. */
   --sample-text-now: var(--sample-text, var(--doc-text, var(--ui-text)));
@@ -124,7 +124,7 @@
   font-family: var(--sample-font, var(--doc-font, inherit));
 }
 .theme-sample-heading {
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
   font-weight: 600;
   line-height: 1;
 }
@@ -151,9 +151,11 @@
    card; the one in use rings its screenshot. */
 .settings-group-body.settings-cards {
   display: grid;
-  /* As many as fit, sharing the row: two in a full page, one in a narrow
-     one: each card is wide enough for a screenshot that can be read. */
-  --theme-card-min: 240px;
+  /* As many as fit, sharing the row: four in a full page, two in a narrow
+     one, one in the narrowest. A gallery is browsed many at a time, so the
+     cards stay small; a group with few leaves the row's end empty rather
+     than growing its cards past the others'. */
+  --theme-card-min: 166px;
   grid-template-columns: repeat(auto-fill, minmax(var(--theme-card-min), 1fr));
   gap: var(--space-3);
   padding: var(--space-3);
@@ -224,9 +226,13 @@
 .theme-card-open > .theme-card-name {
   display: block;
 }
+/* In a narrow card the buttons wrap under each other, never past the
+   card's edge into the next one. */
 .theme-card-actions {
   display: flex;
-  flex: none;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  min-width: 0;
   gap: var(--space-1);
 }
 .theme-card-actions > .settings-inline-button {

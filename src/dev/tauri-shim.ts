@@ -409,8 +409,11 @@ export function installDevTauriShim(): void {
 
   // Saved theme stylesheets and the theme gallery, in memory.
   // `window.__devThemeGallery` is `{ offline, themes, files }`;
-  // `window.__devThemeFiles` is what was saved.
-  const themeFiles = new Map<string, string>();
+  // `window.__devThemeFiles` is what was saved; `window.__devThemeSeed`
+  // (`{ "<id>/<light|dark>": css }`) is what is on disk from the start.
+  const themeFiles = new Map<string, string>(
+    Object.entries((w.__devThemeSeed ?? {}) as Record<string, string>),
+  );
   w.__devThemeFiles = themeFiles;
   const gallery = {
     offline: false,

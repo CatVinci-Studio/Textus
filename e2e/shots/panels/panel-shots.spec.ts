@@ -74,6 +74,28 @@ const disk = Object.fromEntries([
   ]),
 ]);
 
+/** Three installed themes with no screenshot, for the sample on their
+ *  cards: Textus's own variables; a Typora theme with a dark design; and
+ *  one that sets none of the values (it shows the look in use). */
+const SAMPLE_THEMES = [
+  { id: "own", name: "Own Variables", hasDark: false },
+  { id: "typora", name: "Typora Style", hasDark: true },
+  { id: "bare", name: "Sets Nothing", hasDark: false },
+];
+const THEME_SEED: Record<string, string> = {
+  "own/light": `[data-content-theme="own"] { --doc-bg: #f6efe0; --doc-text: #3b2f22;
+    --doc-accent: #b3401f; --doc-font: Georgia, "Times New Roman", serif; }`,
+  "typora/light": `:root { --bg-color: #ffffff; --text-color: #333333; --primary-color: #0b6bcb; }
+    body { background: var(--bg-color); color: var(--text-color); }
+    #write a { color: var(--primary-color); }
+    #write h1 { font-family: "Courier New", monospace; }`,
+  "typora/dark": `:root { --bg-color: #1b2430; --text-color: #d7dee8; --primary-color: #6cb4ff; }
+    body { background: var(--bg-color); color: var(--text-color); }
+    #write a { color: var(--primary-color); }
+    #write h1 { font-family: "Courier New", monospace; }`,
+  "bare/light": `#write h3 { margin: 0; }`,
+};
+
 /** What a surface needs gone before the next one: menus, pickers, dialogs. */
 async function clear(page: Page) {
   for (let i = 0; i < 3; i++) await page.keyboard.press("Escape");
@@ -123,6 +145,10 @@ for (const [width, device] of Object.entries(WIDTHS))
             }
             await clear(page).catch(() => {});
           };
+          await page.addInitScript((seed) => {
+            (window as unknown as Record<string, unknown>).__devThemeSeed =
+              seed;
+          }, THEME_SEED);
           await page.addInitScript(
             ([root]) => {
               (window as unknown as Record<string, unknown>).__devPickFolder =
@@ -137,6 +163,7 @@ for (const [width, device] of Object.entries(WIDTHS))
             plugins: { plugins: {}, folder: disk },
             settings: {
               theme,
+              userThemes: SAMPLE_THEMES,
               addTabShowsStartPage: true,
               menuBarShown: false,
             },
