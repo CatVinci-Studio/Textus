@@ -33,6 +33,10 @@ const CATEGORIES = [
   "disabled-by-default-devtools.timeline.stack",
   "blink.user_timing",
   "v8.execute",
+  // More, for a kept trace to say why style was recalculated: e.g.
+  // disabled-by-default-devtools.timeline.invalidationTracking and
+  // disabled-by-default-blink.debug (selector stats).
+  ...(process.env.BENCH_TRACE_CATEGORIES?.split(",") ?? []),
 ];
 
 async function traced(

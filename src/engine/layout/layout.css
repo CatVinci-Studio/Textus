@@ -68,13 +68,16 @@
    source, the start page, a plugin's or a web page. The page's own views
    are the island's paper. */
 /* Weightless, so what floats over a view (the review bars) keeps its own. */
-:where(.app-shell[data-tabs="bar"] .main-pane [data-active-tab]) > * {
+/* By the view's tab (data-tab-id), never by whether it is the tab in use
+   (data-active-tab): that flips as the AI opens, and a rule keyed on it
+   restyles the whole document under the view (restyle-scope.test.ts). */
+:where(.app-shell[data-tabs="bar"] .main-pane [data-tab-id]) > * {
   position: relative;
 }
 
 .app-shell[data-tabs="bar"]
   .main-pane
-  [data-active-tab]
+  [data-tab-id]
   > :is(.editor-scroll, .source-view, .start-page) {
   background: transparent;
 }
