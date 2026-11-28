@@ -2,6 +2,7 @@ import { Component, type ReactNode, type RefObject } from "react";
 import { removeWhenGone } from "./leave";
 import {
   animate,
+  length,
   motionAllowed,
   type DurationToken,
   type EasingToken,
@@ -46,6 +47,7 @@ export function play(
     prepare,
     resizes,
     onTranslate = false,
+    arrived,
   }: Timing & {
     timingFor?: (el: Element) => Timing | undefined;
     /** Ones that change size as they move and are only a box (an island's
@@ -58,6 +60,10 @@ export function play(
     /** Slides on `translate`, leaving the place an item rests at on its
      *  own `transform` (one making room for a dragged one) alone. */
     onTranslate?: boolean;
+    /** Looked up after the change: those not on screen before it (rows a
+     *  folder opened) come in just under where they show, as the rest make
+     *  room - shown at once, they popped in while their neighbours slid. */
+    arrived?: () => Iterable<Element>;
   } = {},
 ): void {
   if (!motionAllowed()) return;
@@ -66,6 +72,11 @@ export function play(
   // again in the new positions.
   stopFlips(targets);
   prepare?.();
+  if (arrived)
+    for (const el of arrived()) {
+      const was = before.get(el);
+      if (!was || (was.width === 0 && was.height === 0)) discloseIn(el);
+    }
   type Move = {
     el: Element;
     dx: number;
@@ -123,6 +134,20 @@ export function play(
       },
     );
   }
+}
+
+/** Something disclosed under what opened it: it settles down a short way
+ *  into place as it fades in (motion-disclose-in), its room taken at once. */
+function discloseIn(el: Element): void {
+  const d = length("--motion-distance-sm");
+  animate(
+    el,
+    [
+      { opacity: 0, transform: `translateY(${-d}px)` },
+      { opacity: 1, transform: "none" },
+    ],
+    { duration: "--dur-base", easing: "--ease-out" },
+  );
 }
 
 /** How much bigger than laid out `el`'s place is drawn: the zoom it sits
@@ -217,6 +242,8 @@ export class FlipOnChange extends Component<{
   prepare?: () => void;
   /** See play's `resizes`. */
   resizes?: (el: Element) => boolean;
+  /** New targets after the change come in (play's `arrived`). */
+  enters?: boolean;
 }> {
   getSnapshotBeforeUpdate(previous: { watch: unknown }): Snapshot | null {
     if (
@@ -232,8 +259,11 @@ export class FlipOnChange extends Component<{
     if (!before) return;
     // After the commit's other layout effects (a parent's may be what moves the
     // layout), but before the frame is painted.
-    const { duration, easing, prepare, resizes } = this.props;
-    queueMicrotask(() => play(before, { duration, easing, prepare, resizes }));
+    const { duration, easing, prepare, resizes, enters, targets } = this.props;
+    const arrived = enters ? targets : undefined;
+    queueMicrotask(() =>
+      play(before, { duration, easing, prepare, resizes, arrived }),
+    );
   }
 
   render(): ReactNode {
