@@ -272,7 +272,7 @@ job they stand for passed, or when all of them were skipped.
 | `native (macos-26)`                    | `npm test`, then `npm run check:native`                                                                                                                            | the full suite                                         |
 | `native (windows-2025)`                | `npm run check:native`                                                                                                                                             | the full suite                                         |
 | `native (windows-2025, unit tests)`    | `npm test`                                                                                                                                                         | the full suite                                         |
-| `ios`                                  | the unsigned iOS simulator build, started in the simulator (not required)                                                                                          | the full suite                                         |
+| `ios`                                  | the unsigned iOS simulator build, started in the simulator                                                                                                         | the full suite                                         |
 
 macOS, Windows and iOS run only in the full suite; in the quick one
 `native` is the Linux job alone. A release builds only once the full suite
