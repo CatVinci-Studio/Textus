@@ -395,7 +395,9 @@ html:root[data-plain-frame] {
 /* The same switch where the engine cross-fades it (motion/look-fade.ts):
    the browser's picture of the old look fades over the new page. Only the
    root is pictured - nothing names a view-transition-name - so islands keep
-   their order and clipping. */
+   their order and clipping. Meanwhile the browser's overlay takes the
+   clicks, which would land on controls not seen yet; the keyboard and the
+   caret carry on. */
 @supports (view-transition-name: none) {
   ::view-transition-group(root),
   ::view-transition-old(root),
@@ -403,10 +405,4 @@ html:root[data-plain-frame] {
     animation-duration: var(--dur-theme);
     animation-timing-function: var(--ease-standard);
   }
-}
-
-/* Meanwhile clicks wait: they would land on controls not seen yet. The
-   keyboard and the caret carry on. */
-:root[data-look-fading] * {
-  pointer-events: none !important;
 }

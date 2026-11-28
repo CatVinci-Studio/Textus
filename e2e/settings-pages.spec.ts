@@ -131,7 +131,7 @@ test("installed themes show as the store's do", async ({ page }) => {
   await expect(mine.locator("..")).toHaveCSS("display", "grid");
 });
 
-test("light or dark, picked or the system's, cross-fades the window where the engine can, and clicks wait for it", async ({
+test("light or dark picked cross-fades the window where the engine can; the system's flip is left to the system", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1200, height: 760 });
@@ -143,21 +143,29 @@ test("light or dark, picked or the system's, cross-fades the window where the en
       }),
     ),
   );
-  // Each fade, as it starts: whether clicks then reach the page.
-  const fades = () =>
-    page.evaluate(() => (window as { fades?: string[] }).fades ?? []);
-  await page.evaluate(() => {
-    const seen: string[] = [];
-    (window as { fades?: string[] }).fades = seen;
-    const root = document.documentElement;
-    new MutationObserver(() => {
-      if (root.hasAttribute("data-look-fading"))
-        seen.push(getComputedStyle(document.body).pointerEvents);
-    }).observe(root, { attributeFilter: ["data-look-fading"] });
+  // Each fade the window starts, and one still playing.
+  const fading = await page.evaluate(() => {
+    const start = document.startViewTransition?.bind(document);
+    if (!start) return false;
+    const w = window as { fades?: number; playing?: Promise<void>[] };
+    w.fades = 0;
+    w.playing = [];
+    document.startViewTransition = ((update: () => void) => {
+      w.fades!++;
+      const transition = start(update);
+      w.playing!.push(transition.finished);
+      return transition;
+    }) as typeof document.startViewTransition;
+    return true;
   });
+  const fades = () =>
+    page.evaluate(() => (window as { fades?: number }).fades ?? 0);
+  /** Fades over: what a test does next lands on the page it sees. */
+  const settled = () =>
+    page.evaluate(() =>
+      Promise.all((window as { playing?: Promise<void>[] }).playing ?? []),
+    );
   const html = page.locator("html");
-  /** A fade over: what a test does next lands on the page it sees. */
-  const settled = () => expect(html).not.toHaveAttribute("data-look-fading");
   const mode = page.getByRole("radiogroup", { name: "浅色/深色" });
 
   await mode.getByRole("radio", { name: "深色" }).click();
@@ -166,19 +174,14 @@ test("light or dark, picked or the system's, cross-fades the window where the en
   await mode.getByRole("radio", { name: "跟随系统" }).click();
   await settled();
   await expect(html).not.toHaveAttribute("data-theme");
-  // The system turning dark under a window that follows it: the same fade,
-  // the old look held only for the fade's first picture.
+  expect(await fades()).toBe(fading ? 2 : 0);
+  // The system turning dark under a window that follows it: no fade of
+  // the window's own, the system fades the screen.
   await page.emulateMedia({ colorScheme: "dark" });
   await expect
     .poll(() => html.evaluate((el) => getComputedStyle(el).colorScheme))
     .toBe("dark");
-  await settled();
-  await expect(html).not.toHaveAttribute("data-theme");
-
-  const fading = await page.evaluate(
-    () => typeof document.startViewTransition === "function",
-  );
-  expect(await fades()).toEqual(fading ? ["none", "none", "none"] : []);
+  expect(await fades()).toBe(fading ? 2 : 0);
 });
 
 test("first-line indent sets in the document's paragraphs, not a list's", async ({

@@ -22,6 +22,7 @@ import { resetBootForTests } from "../storage/boot";
 import { resetPendingWritesForTests } from "../storage/pending-writes";
 import { resetUiStateForTests } from "../storage/ui-state";
 import { installTestLocalStorage } from "../dev/test-local-storage";
+import { motionAllowed } from "../engine/motion/motion";
 
 vi.mock("../platform/ipc", () => ({
   themes: { loadThemeCss: vi.fn() },
@@ -35,6 +36,11 @@ vi.mock("../platform/ipc", () => ({
     historyList: vi.fn().mockResolvedValue([]),
   },
 }));
+// jsdom moves nothing; one test lets the window's cross-fade run.
+vi.mock("../engine/motion/motion", async (actual) => {
+  const real = await actual<typeof import("../engine/motion/motion")>();
+  return { ...real, motionAllowed: vi.fn(real.motionAllowed) };
+});
 vi.mock("../platform/events", () => ({
   listenToThisWindow: () => Promise.resolve(() => {}),
 }));
@@ -121,5 +127,37 @@ describe("an imported theme", () => {
     await vi.waitFor(() => expect(themeCss()).toContain("rgb(1, 1, 1)"));
     expect(root.hasAttribute("data-content-theme")).toBe(false);
     expect(root.hasAttribute("data-user-theme")).toBe(true);
+  });
+
+  it("keeps the cross-fade's old picture until a theme not read yet is in", async () => {
+    let arrive: (css: string | null) => void = () => {};
+    vi.mocked(themes.loadThemeCss).mockImplementation(
+      () => new Promise((done) => (arrive = done)),
+    );
+    let picture: () => unknown = () => {};
+    document.startViewTransition = ((update: () => unknown) => {
+      picture = update;
+      const finished = Promise.resolve();
+      return { ready: finished, finished, skipTransition: () => {} };
+    }) as never;
+    vi.mocked(motionAllowed).mockReturnValue(true);
+    try {
+      start({ themeId: "paper", theme: "light" });
+      act(() => setter.current!({ themeId: "t" }));
+      const pictured = vi.fn();
+      await act(async () => {
+        void Promise.resolve(picture()).then(pictured);
+      });
+      // The fade waits on the stylesheet...
+      expect(pictured).not.toHaveBeenCalled();
+      await act(async () => arrive(CSS.light));
+      // ...and goes on once it is on the page.
+      await vi.waitFor(() => expect(pictured).toHaveBeenCalled());
+      expect(themeCss()).toContain("rgb(1, 1, 1)");
+    } finally {
+      vi.mocked(motionAllowed).mockReset();
+      delete (document as { startViewTransition?: unknown })
+        .startViewTransition;
+    }
   });
 });

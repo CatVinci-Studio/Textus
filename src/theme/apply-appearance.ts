@@ -19,11 +19,7 @@ import { holdTransitionsOnThemeChange } from "./restyle-hold";
 import { useSystemUiScale } from "./system-text-size";
 import { tokenPx } from "../engine/tokens/token-px";
 import { writeThemeStyle } from "../engine/tokens/appearance";
-import {
-  fadeLook,
-  fadeSystemSchemeFlips,
-  lookCanFade,
-} from "../engine/motion/look-fade";
+import { fadeLook, lookCanFade } from "../engine/motion/look-fade";
 import { flushSync } from "react-dom";
 import { useFileIconThemeChoice } from "../plugins/contributions/file-icon-themes";
 import {
@@ -292,7 +288,6 @@ export function AppearanceSync(): null {
   const { settings, setSettings } = useSettings();
   useApplyAppearance(settings, setSettings);
   useEffect(() => holdTransitionsOnThemeChange(), []);
-  useEffect(() => fadeSystemSchemeFlips(), []);
   useEffect(() => commitLookChangesWith(commitInFade), []);
   useFileIconThemeChoice(settings.fileIconTheme);
   return null;
