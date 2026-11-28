@@ -188,6 +188,7 @@ run by hand:
 E2E_WEBKIT=1 npm run test:e2e          # adds the WebKit project (npx playwright install webkit once)
 npm run test:perf                      # the stopwatch flows (@perf: frame budgets, slides) - never in CI
 npm run bench:motion                   # frame timing of every animation and scroll (e2e/bench/)
+npm run bench:engine                   # the window's gestures frame by frame, WebKit and Chromium
 npm run bench:large-doc                # large documents (below)
 npm run bench:plugins                  # the official plugins on a large folder (below)
 scripts/smoke-linux.sh --build         # the built Linux app and its .deb
@@ -232,7 +233,21 @@ forced layouts and style and layout time. Run it on `main` and on your
 branch, on a quiet machine (other builds or test runs skew it), and
 compare. `BENCH_CPU=1` runs it at full speed, `BENCH_TRACE=1` also saves a
 Chromium trace of each scenario; the header of `e2e/bench/motion.bench.ts`
-has the rest. Animations only move `opacity` and `transform`
+has the rest.
+
+`npm run bench:engine` measures the window engine's gestures (dragging an
+island, tabs making room, the sidebar's and a split's resize, the sidebar
+and the AI opening) with a long document open, on a production build with
+the dev shim on (`scripts/bench-engine-build.mjs`), in WebKit and Chromium.
+Each gesture is timed as it is and, in Chromium, with the CPU slowed
+`BENCH_CPU` times (4) and traced; a separate pass counts, frame by frame,
+the inline style writes by property, layout reads after a write, React
+commits and observer callbacks. Results go to `test-results/engine-bench/`
+(`BENCH_OUT`); `BENCH_GESTURES` picks some, `BENCH_TRACE=1` keeps the
+traces. Headless frames are not a 120 Hz display's: compare the layout
+counts and costs per frame, before and after a change.
+
+Animations only move `opacity` and `transform`
 ([design-language.md](../design/design-language.md#10-motion---in-force)); the unit test
 `src/engine/motion/motion-properties.test.ts` reads every stylesheet and fails on
 anything else.
