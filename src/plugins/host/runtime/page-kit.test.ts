@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import { TEXT_RUNTIME as textRuntime } from "../text-runtime";
 import pageKit from "./page-kit.js?raw";
 import pageTools from "./page-tools.js?raw";
+import pageDragCore from "./page-drag-core.js?raw";
 import pageDrag from "./page-drag.js?raw";
 
 type PageApi = {
@@ -48,7 +49,7 @@ beforeAll(() => {
     language: "en",
     t: (key: string) => `«${key}»`,
   };
-  for (const code of [textRuntime, pageKit, pageTools, pageDrag])
+  for (const code of [textRuntime, pageKit, pageTools, pageDragCore, pageDrag])
     (0, eval)(code);
 });
 

@@ -110,13 +110,13 @@ resolves with the value chosen, or null.
 
 HTML drag and drop doesn't work in a page: the Textus window takes it for
 dropping files, so the cursor shows a copy sign and nothing lands. Drag
-with pointer events instead - `pointerdown`, then `pointermove` and
-`pointerup` on `window` - and swallow the click the release sends.
-Textus's own official plugins share one small helper for this
-(`shared/drag.js` in textus-plugins): `drag.reorder` slides an item along
-its own row (tabs, columns) while the others make way, and `drag.sortable`
-moves it between lists with a lifted copy under the pointer
-(`tx-drag-ghost`; `tx-drag-source` marks where it will land).
+with pointer events instead, or with the page's own `textus.drag`: from
+API 1.12, `drag.track(event, { start, move, end })` follows any press by
+the app's rules (a mouse after 5 px, a finger once held still, Esc puts it
+back, the release's click swallowed); `drag.reorder` (1.7) slides an item
+along its own row (tabs, columns) while the others make way, and
+`drag.sortable` (1.12) moves it between lists with a lifted copy under the
+pointer (`tx-drag-ghost`; `tx-drag-source` marks where it will land).
 A table's row or column takes the editor tables' look: `tx-table-grip` with
 `tx-table-grip-row` or `tx-table-grip-col` is the pill to pull it by, `tx-cell-lifted`
 marks the pulled cells, and `tx-making-room` on the table lets the others

@@ -1,5 +1,5 @@
 /**
- * The Textus plugin API, 1.11: the `textus` object a plugin's code is given
+ * The Textus plugin API, 1.12: the `textus` object a plugin's code is given
  * (src/plugins/host/host-runtime.ts), the context its `activate` receives, and
  * `acquireTextusApi()` in its webviews (webview-runtime.ts). The one source
  * of truth: docs/dev/plugins/guide.md explains it, the reference pages are
@@ -183,7 +183,7 @@ declare global {
       /** Textus's UI language ("en", "zh", "zh-Hant", ...). */
       readonly language: string;
       readonly appVersion: string;
-      /** This API's version: "1.11" from Textus 1.4.8 ("1.10": 1.4.7, "1.9": 1.4.6, "1.8": 1.4.4, "1.7": 1.4.3, "1.6": 1.4.2, "1.5": 1.3.13-rc.1,
+      /** This API's version: "1.12" from Textus 1.4.9 ("1.11": 1.4.8, "1.10": 1.4.7, "1.9": 1.4.6, "1.8": 1.4.4, "1.7": 1.4.3, "1.6": 1.4.2, "1.5": 1.3.13-rc.1,
        *  "1.4": 1.3.10, "1.3": 1.3.10-rc.1, "1.2": 1.3.9, "1.1": 1.3.0-beta.8). Prefer engines.textus; compare
        *  it as numbers, not as text ("1.10" > "1.9"). */
       readonly apiVersion: string;
@@ -2171,13 +2171,16 @@ declare global {
       ): Disposable;
       /** From 1.7: dates as `textus.dates` has them. */
       readonly dates: Dates;
-      /** From 1.7: a list dragged into a new order, the app's way: the
-       *  item lifts, the others make room; `onDrop(from, to)` once let go
-       *  somewhere new. `handle`: only from inside it. Esc puts it back.
-       *  A finger lifts it once held still a moment; a press in a text
-       *  field is the field's. Near the edge of its scroller the drag
-       *  scrolls it. */
+      /** Drags by mouse or finger, the app's way: a mouse drags once it
+       *  moves 5 px, a finger once it has held still a moment (before
+       *  that, a move is a scroll), the page doesn't scroll under a lifted
+       *  finger, Esc puts it back, and the click a release sends isn't
+       *  one. */
       drag: {
+        /** From 1.7: a list dragged into a new order: the item lifts, the
+         *  others make room; `onDrop(from, to)` once let go somewhere new.
+         *  `handle`: only from inside it. A press in a text field is the
+         *  field's. Near the edge of its scroller the drag scrolls it. */
         reorder(
           container: Element,
           options: {
@@ -2187,6 +2190,47 @@ declare global {
             onDrop(from: number, to: number): void;
           },
         ): Disposable;
+        /** From 1.12: follows the press `down` (a `pointerdown`):
+         *  `start` once it is a drag (answering false ends it there),
+         *  `move` as it goes, then `end` (`dropped` false for Esc or a
+         *  cancel). `held`: a finger lifted it and let go where it was (a
+         *  long press). `hold: false`: a surface that takes every touch
+         *  itself drags a finger at once. */
+        track(
+          down: PointerEvent,
+          handlers: {
+            start?(x: number, y: number): boolean | void;
+            move(x: number, y: number, event: PointerEvent): void;
+            end(x: number, y: number, dropped: boolean): void;
+            held?(x: number, y: number): void;
+          },
+          options?: { hold?: boolean },
+        ): { cancel(): void };
+        /** From 1.12: `item` dragged among the lists `lists()` gives (a
+         *  board's columns), each holding its items as `itemsOf(list)`
+         *  gives them, `item` among them while it is there. A copy follows
+         *  the pointer (`tx-drag-ghost`) while the item moves through the
+         *  lists in its place (`tx-drag-source`), so the others make way;
+         *  near a scroller's edge it scrolls. `onDrop(list, index)`: the
+         *  list let go over and the item's index in it; not let go over a
+         *  list, or Esc, it goes back. A press in a text field is the
+         *  field's own and drags nothing. `after(list)`: what an empty list's
+         *  item goes before (its add button). */
+        sortable(
+          down: PointerEvent,
+          options: {
+            item: Element;
+            lists(): Element[];
+            itemsOf(list: Element): Element[];
+            onDrop(list: Element, index: number): void;
+            axis?: "x" | "y";
+            after?(list: Element): Element | null;
+            held?(x: number, y: number): void;
+          },
+        ): { cancel(): void };
+        /** From 1.12: where among `items` a pointer at `at` (along `axis`)
+         *  goes: before the first whose middle it hasn't passed. */
+        indexAt(items: Element[], at: number, axis: "x" | "y"): number;
       };
       /** From 1.7: `content` in the window's floating card under `anchor`
        *  (above with no room), kept on screen; a press outside or Esc
