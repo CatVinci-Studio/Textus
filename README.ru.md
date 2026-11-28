@@ -40,14 +40,6 @@
   <a href="https://trendshift.io/repositories/307610?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-307610" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/307610/daily?language=TypeScript" alt="CatVinci-Studio%2FTextus | Trendshift" width="250" height="55"/></a>
 </p>
 
-<p align="center"><strong>Главный спонсор</strong></p>
-
-<p align="center">
-  <a href="https://www.anthropic.com/">
-    <img src="docs/images/readme/sponsors/anthropic-badge.png" alt="Anthropic" width="300">
-  </a>
-</p>
-
 <p align="center">
   <img src="docs/images/readme/ru/hero.webp" alt="Textus с первой частью «Анны Карениной» рядом с заметками читателя о ней. Textus AI предлагает на полях правки к заметкам и прикрепляет комментарий рядом с романом." width="860" /><br>
   <sub>«Анна Каренина», Лев Толстой (1878)</sub>
@@ -64,8 +56,7 @@
 | Windows · x64         | [Скачать .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                                 | —                                                                                     |
 | Linux · x64           | [Скачать .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · Также .deb · .rpm        | Arch Linux: [репозиторий `[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) |
 | Android · arm64       | [Скачать .apk](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
-
-> iOS (iPhone и iPad): скоро открытая бета в TestFlight.
+| iPhone · iPad | [App Store](https://apps.apple.com/app/id6823757066) | — |
 
 Бета-версии: в **Настройки › О программе** переключите **Канал обновлений** на **Бета**.
 

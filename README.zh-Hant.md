@@ -41,14 +41,6 @@
   <a href="https://trendshift.io/repositories/307610?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-307610" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/307610/daily?language=TypeScript" alt="CatVinci-Studio%2FTextus | Trendshift" width="250" height="55"/></a>
 </p>
 
-<p align="center"><strong>首席贊助</strong></p>
-
-<p align="center">
-  <a href="https://www.anthropic.com/">
-    <img src="docs/images/readme/sponsors/anthropic-badge.png" alt="Anthropic" width="300">
-  </a>
-</p>
-
 <p align="center">
   <img src="docs/images/readme/zh-hant/hero.webp" alt="Textus 開著《西遊記》和一段讀書筆記，Textus AI 逐句精簡筆記，每處修改都在頁邊，並在原文旁釘上審閱註解" width="860" /><br>
   <sub>《西遊記》吳承恩</sub>
@@ -65,8 +57,7 @@
 | Windows · x64     | [下載 .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                        | —                                                                       |
 | Linux · x64       | [下載 .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · 另提供 .deb · .rpm | Arch Linux：[`[catvinci]` 軟體庫](https://github.com/CatVinci-Studio/arch-repo) |
 | Android · arm64   | [下載 .apk](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
-
-> iOS（iPhone 與 iPad）公測即將在 TestFlight 開放。
+| iPhone · iPad | [App Store](https://apps.apple.com/app/id6823757066) | — |
 
 測試版：在 **設定 › 關於** 中把 **更新通道** 改為 **測試版**。
 

@@ -40,14 +40,6 @@
   <a href="https://trendshift.io/repositories/307610?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-307610" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/307610/daily?language=TypeScript" alt="CatVinci-Studio%2FTextus | Trendshift" width="250" height="55"/></a>
 </p>
 
-<p align="center"><strong>Patrocinador principal</strong></p>
-
-<p align="center">
-  <a href="https://www.anthropic.com/">
-    <img src="docs/images/readme/sponsors/anthropic-badge.png" alt="Anthropic" width="300">
-  </a>
-</p>
-
 <p align="center">
   <img src="docs/images/readme/es/hero.webp" alt="Textus con el primer capítulo de Don Quijote junto a las notas del lector sobre él. Textus AI propone cambios a las notas en el margen y fija un comentario de revisión junto a la novela." width="860" /><br>
   <sub><i>Don Quijote de la Mancha</i>, Miguel de Cervantes (1605)</sub>
@@ -64,8 +56,7 @@ Gratuito y de código abierto, con licencia MIT.
 | Windows · x64         | [Descargar .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                                | —                                                                                         |
 | Linux · x64           | [Descargar .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · También como .deb · .rpm | Arch Linux: el [repositorio `[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) |
 | Android · arm64       | [Descargar .apk](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
-
-> iOS (iPhone y iPad): muy pronto en beta pública en TestFlight.
+| iPhone · iPad | [App Store](https://apps.apple.com/app/id6823757066) | — |
 
 Beta: en **Ajustes › Acerca de**, pon el **Canal de actualizaciones** en **Beta**.
 

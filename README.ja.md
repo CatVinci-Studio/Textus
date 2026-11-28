@@ -40,14 +40,6 @@
   <a href="https://trendshift.io/repositories/307610?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-307610" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/307610/daily?language=TypeScript" alt="CatVinci-Studio%2FTextus | Trendshift" width="250" height="55"/></a>
 </p>
 
-<p align="center"><strong>プレミアスポンサー</strong></p>
-
-<p align="center">
-  <a href="https://www.anthropic.com/">
-    <img src="docs/images/readme/sponsors/anthropic-badge.png" alt="Anthropic" width="300">
-  </a>
-</p>
-
 <p align="center">
   <img src="docs/images/readme/ja/hero.webp" alt="『吾輩は猫である』の冒頭と読書メモを並べて開いたTextus。Textus AIがメモの修正案を余白に示し、小説の横にレビューのコメントを付けている。" width="860" /><br>
   <sub>夏目漱石『吾輩は猫である』（1905年）</sub>
@@ -64,8 +56,7 @@
 | Windows · x64     | [.exeをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest)                         | —                                                                        |
 | Linux · x64       | [.AppImageをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest) · .deb · .rpm もあり | Arch Linux：[`[catvinci]` リポジトリ](https://github.com/CatVinci-Studio/arch-repo) |
 | Android · arm64   | [.apkをダウンロード](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
-
-> iOS版（iPhone・iPad）は、まもなくTestFlightで公開ベータを始めます。
+| iPhone · iPad | [App Store](https://apps.apple.com/app/id6823757066) | — |
 
 ベータ版：**設定 › について** で **アップデートチャンネル** を **ベータ版** にします。
 

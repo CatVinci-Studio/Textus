@@ -40,14 +40,6 @@
   <a href="https://trendshift.io/repositories/307610?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-307610" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/307610/daily?language=TypeScript" alt="CatVinci-Studio%2FTextus | Trendshift" width="250" height="55"/></a>
 </p>
 
-<p align="center"><strong>Patrocinador principal</strong></p>
-
-<p align="center">
-  <a href="https://www.anthropic.com/">
-    <img src="docs/images/readme/sponsors/anthropic-badge.png" alt="Anthropic" width="300">
-  </a>
-</p>
-
 <p align="center">
   <img src="docs/images/readme/pt/hero.webp" alt="Textus com o primeiro capítulo de Dom Casmurro ao lado das notas do leitor sobre ele. O Textus AI sugere revisões das notas na margem e fixa um comentário de revisão ao lado do romance." width="860" /><br>
   <sub><i>Dom Casmurro</i>, Machado de Assis (1899)</sub>
@@ -64,8 +56,7 @@ Gratuito e de código aberto, sob a licença MIT.
 | Windows · x64         | [Baixar o .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                              | —                                                                                    |
 | Linux · x64           | [Baixar o .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · Também em .deb · .rpm | Arch Linux: o [repositório `[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) |
 | Android · arm64       | [Baixar o .apk](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
-
-> iOS (iPhone e iPad): em breve em beta pública no TestFlight.
+| iPhone · iPad | [App Store](https://apps.apple.com/app/id6823757066) | — |
 
 Beta: em **Ajustes › Sobre**, mude o **Canal de atualização** para **Beta**.
 

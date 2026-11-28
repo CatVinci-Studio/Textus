@@ -40,14 +40,6 @@
   <a href="https://trendshift.io/repositories/307610?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-307610" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/307610/daily?language=TypeScript" alt="CatVinci-Studio%2FTextus | Trendshift" width="250" height="55"/></a>
 </p>
 
-<p align="center"><strong>프리미어 후원사</strong></p>
-
-<p align="center">
-  <a href="https://www.anthropic.com/">
-    <img src="docs/images/readme/sponsors/anthropic-badge.png" alt="Anthropic" width="300">
-  </a>
-</p>
-
 <p align="center">
   <img src="docs/images/readme/ko/hero.webp" alt="「메밀꽃 필 무렵」의 첫 대목과 그에 대한 독서 메모를 나란히 연 Textus. Textus AI가 메모의 수정안을 여백에 보여 주고, 소설 옆에 검토 댓글을 남겼습니다." width="860" /><br>
   <sub>이효석, 「메밀꽃 필 무렵」 (1936)</sub>
@@ -64,8 +56,7 @@ MIT 라이선스로 공개된 무료 오픈 소스입니다.
 | Windows · x64     | [.exe 다운로드](https://github.com/CatVinci-Studio/Textus/releases/latest)                         | —                                                                        |
 | Linux · x64       | [.AppImage 다운로드](https://github.com/CatVinci-Studio/Textus/releases/latest) · 또는 .deb · .rpm | Arch Linux: [`[catvinci]` 저장소](https://github.com/CatVinci-Studio/arch-repo) |
 | Android · arm64   | [.apk 다운로드](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
-
-> iOS(iPhone·iPad) 버전은 곧 TestFlight 공개 베타로 나옵니다.
+| iPhone · iPad | [App Store](https://apps.apple.com/app/id6823757066) | — |
 
 베타: **설정 › 정보**에서 **업데이트 채널**을 **베타**로 바꾸세요.
 

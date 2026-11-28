@@ -40,14 +40,6 @@
   <a href="https://trendshift.io/repositories/307610?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-307610" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/307610/daily?language=TypeScript" alt="CatVinci-Studio%2FTextus | Trendshift" width="250" height="55"/></a>
 </p>
 
-<p align="center"><strong>Hauptsponsor</strong></p>
-
-<p align="center">
-  <a href="https://www.anthropic.com/">
-    <img src="docs/images/readme/sponsors/anthropic-badge.png" alt="Anthropic" width="300">
-  </a>
-</p>
-
 <p align="center">
   <img src="docs/images/readme/de/hero.webp" alt="Textus mit dem ersten Kapitel der Verwandlung neben den Notizen des Lesers dazu. Textus AI schlägt am Rand Überarbeitungen der Notizen vor und heftet einen Kommentar neben die Erzählung." width="860" /><br>
   <sub><i>Die Verwandlung</i>, Franz Kafka (1915)</sub>
@@ -64,8 +56,7 @@ Kostenlos und Open Source, unter der MIT-Lizenz.
 | Windows · x64         | [.exe herunterladen](https://github.com/CatVinci-Studio/Textus/releases/latest)                         | —                                                                               |
 | Linux · x64           | [.AppImage herunterladen](https://github.com/CatVinci-Studio/Textus/releases/latest) · Auch als .deb · .rpm | Arch Linux: das [`[catvinci]`-Repository](https://github.com/CatVinci-Studio/arch-repo) |
 | Android · arm64       | [.apk herunterladen](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
-
-> iOS (iPhone und iPad): bald als öffentliche Beta über TestFlight.
+| iPhone · iPad | [App Store](https://apps.apple.com/app/id6823757066) | — |
 
 Beta: Stell unter **Einstellungen › Über** den **Update-Kanal** auf **Beta**.
 
