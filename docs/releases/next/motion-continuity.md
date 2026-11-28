@@ -5,3 +5,4 @@
 - Opening or folding a folder in the file tree, a heading in the outline, a group in the Settings list or Body text in Settings › Appearance now slides the rows below into place, and the opened rows fade in under it, instead of everything below jumping.
 - A tab whose name changes - Settings showing another page, a file opened in place of Untitled - now eases to its new width, and the tabs after it slide along, instead of jumping.
 - Folding a heading in the document slides the text below up into its place, and unfolding brings the section back in under the heading, instead of the page jumping. Folding a diagram or an embedded note to its one line slides what follows the same way.
+- On macOS, clicking a heading in the outline now glides the page to it, instead of leaping past it and sliding back.
