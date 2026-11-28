@@ -18,29 +18,14 @@ const COMMENT_OPEN = /^ {0,3}<!--/;
 export function eachLine(
   markdown: string,
   visit: (line: string, index: number, code: boolean) => void,
-  /** `$$` blocks count as code too: maths, kept whole. `"as-editor"` counts
-   *  only the blocks the editor makes (opensMathBlock). */
-  {
-    math = false,
-    frontMatter = false,
-    comments = false,
-  }: {
-    math?: boolean | "as-editor";
-    frontMatter?: boolean;
-    comments?: boolean;
-  } = {},
+  /** `$$` blocks count as code too: maths, kept whole. */
+  { math = false, frontMatter = false, comments = false } = {},
 ): void {
   let fence: string | null = null;
   let comment = false;
   const head = frontMatter ? (FRONTMATTER.exec(markdown)?.[0] ?? "") : "";
   const yamlLines = head ? head.replace(/\n$/, "").split("\n").length : 0;
-  const lines = markdown.split("\n");
-  let lastCloser: number | null = null;
-  const closedAfter = (index: number) => {
-    lastCloser ??= lastClosingLine(lines);
-    return lastCloser > index;
-  };
-  lines.forEach((line, index) => {
+  markdown.split("\n").forEach((line, index) => {
     if (index < yamlLines) return visit(line, index, true);
     if (comments && !fence) {
       if (comment) {
@@ -54,14 +39,7 @@ export function eachLine(
       }
     }
     const bare = line.replace(CONTAINER_PREFIX, "");
-    if (
-      math &&
-      (fence === "$$" ||
-        (!fence &&
-          bare.startsWith("$$") &&
-          (math !== "as-editor" ||
-            opensMathBlock(bare.trimEnd(), closedAfter(index)))))
-    ) {
+    if (math && (fence === "$$" || (!fence && bare.startsWith("$$")))) {
       const rest = bare.trimEnd();
       // Opened, closed on a line ending in $$; `$$x$$` closes itself.
       if (fence) {
@@ -91,76 +69,6 @@ export function eachLine(
   });
 }
 
-/** The last line that could close a `$$` block (one ending in `$$`), or -1. */
-function lastClosingLine(lines: string[]): number {
-  for (let i = lines.length - 1; i >= 0; i--)
-    if (lines[i].replace(CONTAINER_PREFIX, "").trimEnd().endsWith("$$"))
-      return i;
-  return -1;
-}
-
-/**
- * Whether the `$$` line `rest` opens a math block as the editor reads it
- * (remark-math and looseMathFlow): `$$x$$` alone is inline maths in a
- * paragraph, so `$$x$$` over `===` is a heading; and words holding a `$`
- * after the opener (`$$x$$ is famous`) open a block only when a later line
- * closes it - else the line is a paragraph's, and the text after it is not
- * maths.
- */
-function opensMathBlock(rest: string, closedLater: boolean): boolean {
-  const words = rest.replace(/^\$+/, "");
-  if (words.trim() && words.endsWith("$$")) return false;
-  return closedLater || !/(?:^|[^\\])\$/.test(words);
-}
-
-/** A heading as the editor reads it: its level, its text, its line. */
-interface HeadingLine {
-  level: number;
-  text: string;
-  line: number;
-}
-
-const ATX = /^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*(?:[ \t]#+[ \t]*)?$/;
-const SETEXT = /^ {0,3}(=+|-+)[ \t]*$/;
-// A line that starts a block of its own can't be a setext heading's text.
 /** A thematic break: three or more -, * or _, spaces between allowed. */
 export const THEMATIC_BREAK =
   /^ {0,3}(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,})$/;
-const NOT_TEXT = /^ {0,3}(?:[>|]|(?:[-+*]|\d+[.)])(?:[ \t]|$)|#|$)/;
-
-/** A whole document's headings, in order, as the editor counts them: ATX
- *  (indented up to three spaces, empty ones too) and setext (`Title` over
- *  `===` or `---`), outside code, `$$` maths, front matter and `<!-- -->`
- *  comments. A formula's lone `=` line is no setext underline: read as
- *  one, it was a heading the editor doesn't have, and every outline row
- *  after it jumped to the next heading (#851). */
-export function headingsOf(markdown: string): HeadingLine[] {
-  const out: HeadingLine[] = [];
-  let previous: { text: string; index: number } | null = null;
-  eachLine(
-    markdown,
-    (line, index, code) => {
-      const before = previous;
-      previous = null;
-      if (code) return;
-      const atx = ATX.exec(line);
-      if (atx) {
-        out.push({ level: atx[1].length, text: atx[2] ?? "", line: index });
-        return;
-      }
-      const under = SETEXT.exec(line);
-      if (under && before && before.index === index - 1) {
-        out.push({
-          level: under[1][0] === "=" ? 1 : 2,
-          text: before.text.trim(),
-          line: before.index,
-        });
-        return;
-      }
-      if (!NOT_TEXT.test(line) && !THEMATIC_BREAK.test(line))
-        previous = { text: line, index };
-    },
-    { math: "as-editor", frontMatter: true, comments: true },
-  );
-  return out;
-}

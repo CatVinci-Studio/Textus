@@ -1,4 +1,4 @@
-import { headingsOf } from "../utils/markdown-lines";
+import { headingsOf } from "../utils/markdown-headings";
 import { plainInline } from "../utils/markdown-plain";
 import { headingSlug, numberRepeats } from "../editor/markdown/link-target";
 

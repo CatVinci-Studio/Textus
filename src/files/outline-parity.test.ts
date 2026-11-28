@@ -29,6 +29,39 @@ const CASES: Record<string, string> = {
   "a $$ line holding inline maths, never closed": `# H1\n\n$$x$$ is famous\n\n# H2`,
   "a $$ line holding inline maths, closed later": `# H1\n\n$$x$$ is\n=\nb$$\n\n# H2`,
   "code, front matter and a comment": `---\n# yaml\n---\n# H1\n\n\`\`\`sh\n# not a heading\n\`\`\`\n\n<!--\n# old\n-->\n\nText\n===\n\n# H2`,
+  // HTML blocks end as CommonMark says: at their closing tag, or at a
+  // blank line; a `# x` line inside one is HTML.
+  "a <div> without blank lines": `# H1\n\n<div>\n# no\n</div>\n\n# H2`,
+  "a <div> with blank lines": `<div>\n\n# H1\n\n</div>\n\n# H2`,
+  "a <details>": `<details>\n<summary>S</summary>\n# no\n</details>\n\n<details>\n<summary>S</summary>\n\n# H1\n\n</details>\n\n# H2`,
+  "a <pre> across a blank line": `<pre>\n# no\n\n# no\n</pre>\n\n# H2`,
+  "a <script> and a <style>": `<script>\n# no\n\n# no\n</script>\n\n<style>\n# no\n\n</style>\n# H2`,
+  "a comment across a blank line": `<!--\n# no\n\n# no\n-->\n# H2`,
+  "a <table>": `<table>\n<tr><td>\n# no\n</td></tr>\n</table>\n\n# H2`,
+  "a custom element": `<my-el>\n# no\n</my-el>\n\n# H2`,
+  "an inline tag under text": `Text\n<span>\n# H1`,
+  // A fence or formula an item or quote opened ends with it.
+  "a fence left open in a quote": `> \`\`\`\n> # no\n\n# H2`,
+  "a fence left open in a list item": `- \`\`\`\n  # no\n\n# H2`,
+  "a formula left open in a quote": `> $$\n> a\n\n# H2`,
+  "a formula left open in a list item": `- $$\n  a\n\n# H2`,
+  "a fence an item opened, then a line out of it": `# H1\n- x\n  \`\`\`\n# H2\n  \`\`\`\n## no`,
+  // Nothing in a quote, list item or footnote is top-level.
+  "a heading in a list item": `- a\n\n  # no\n\n1. a\n\n   ## no\n\n## H2`,
+  "a setext heading in a list item": `- a\n  no\n  ---\n\n# H2`,
+  "a lazy line in a quote over ===": `> a\nno\n===\n\n# H2`,
+  "a quote over a rule": `> a\n---\n\n# H2`,
+  "a list closed by a heading": `- a\n# H1\n  # H2`,
+  "a footnote over a rule": `[^1]: no\n---\n\n# H2\n\nT[^1]`,
+  "a footnote's indented heading": `[^1]: note\n\n    # no\n\n# H2\n\nT[^1]`,
+  // No setext heading from code, a definition or a table.
+  "indented code over a rule": `    no\n---\n# H2`,
+  "a link definition over === and ---": `[a]: http://x\n===\n\n[b]: http://y\n---\n\n# H2`,
+  "a link definition, then text over ===": `[a]: http://x\nText\n===\n\n# H2`,
+  "a table over a rule": `a | b\n--- | ---\nno | d\n---\n\n| a | b |\n| - | - |\n| no | d |\n===\n\n# H2`,
+  "a paragraph's lines over ===": `H1\nH1b\n===\n\n# H2`,
+  "a numbered line under text, which starts no list": `H1\n2. H1b\n===\n\n# H2`,
+  "indented text under a paragraph": `Text\n    # no\n# H2`,
 };
 
 let editor: Editor | null = null;
@@ -54,7 +87,8 @@ describe("the Outline's headings are the editor's", () => {
       (h) => `${h.level} ${h.text.replace(/\$/g, "")}`,
     );
     expect(outline).toEqual(await editorHeadings(markdown));
-    // Only real headings: never a line of a formula.
-    expect(outline.every((h) => /^\d (H\d|Text|x)$/.test(h))).toBe(true);
+    // Only real headings: never a line of a formula, nor one named "no".
+    expect(outline.every((h) => /^\d (H\d|Text|x)/.test(h))).toBe(true);
+    expect(outline.some((h) => /\bno\b/.test(h))).toBe(false);
   });
 });
