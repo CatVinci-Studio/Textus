@@ -773,6 +773,7 @@ type /name in a conversation to use one.
   aboutMadeBy: "Made by CatVinci Studio",
   aboutShareLead: "Like Textus?",
   aboutShare: "Share it",
+  aboutStar: "Star on GitHub",
   aboutShareText:
     "I'm using Textus: a free, open-source Integrated Writing Environment for professional Markdown writing on every platform. Give it a try! https://textus.md",
   aboutQq: "QQ group",

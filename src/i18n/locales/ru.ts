@@ -836,6 +836,7 @@ export default {
   aboutMadeBy: "Сделано в CatVinci Studio",
   aboutShareLead: "Нравится Textus?",
   aboutShare: "Поделиться",
+  aboutStar: "Поставить звезду на GitHub",
   aboutShareText:
     "Я пользуюсь Textus — бесплатной интегрированной средой для письма с открытым исходным кодом: профессиональный Markdown на любой платформе. Попробуйте! https://textus.md",
   aboutQq: "Группа QQ",

@@ -696,6 +696,7 @@ export default {
   aboutMadeBy: "由 CatVinci Studio 制作",
   aboutShareLead: "喜欢 Textus？",
   aboutShare: "欢迎分享",
+  aboutStar: "在 GitHub 点星",
   aboutShareText:
     "我在用 Textus：免费开源的集成写作环境，支持全平台专业 Markdown 写作，你也来试试！https://textus.md",
   aboutQq: "QQ 群",

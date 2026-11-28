@@ -790,6 +790,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   aboutMadeBy: "Von CatVinci Studio",
   aboutShareLead: "Gefällt dir Textus?",
   aboutShare: "Teilen",
+  aboutStar: "Auf GitHub mit Stern markieren",
   aboutShareText:
     "Ich nutze Textus: eine kostenlose, quelloffene integrierte Schreibumgebung für professionelles Schreiben in Markdown auf allen Plattformen. Probier es aus! https://textus.md",
   aboutQq: "QQ-Gruppe",
