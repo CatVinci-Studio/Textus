@@ -109,6 +109,54 @@ describe("toPandocMarkdown", () => {
     );
   });
 
+  it("hands a display formula over as one formula, its lines unread (#851)", () => {
+    // Pandoc reads $$ maths inside a paragraph, so a formula's lone `=`
+    // made a setext heading of the line above. Indented four spaces, each
+    // line goes on the paragraph and the formula's TeX is the same.
+    const formula = [
+      "$$",
+      "\\mathcal L_{\\mathrm{GRU}}",
+      "=",
+      "-\\frac{1}{3|\\mathcal T|}",
+      "\\tag{4-5}",
+      "$$",
+    ];
+    expect(
+      toPandocMarkdown(["# A", "", ...formula, "", "# B"].join("\n")),
+    ).toBe(
+      [
+        "# A",
+        "",
+        "$$",
+        "    \\mathcal L_{\\mathrm{GRU}}",
+        "    =",
+        "    -\\frac{1}{3|\\mathcal T|}",
+        "    \\tag{4-5}",
+        "    $$",
+        "",
+        "# B",
+      ].join("\n"),
+    );
+    // An aligned block with `-` and `#` lines; in a list item and a quote.
+    expect(
+      toPandocMarkdown(
+        "$$\\begin{aligned}\na &= b \\\\\n-\n# c\n\\end{aligned}$$",
+      ),
+    ).toBe(
+      "$$\\begin{aligned}\n    a &= b \\\\\n    -\n    # c\n    \\end{aligned}$$",
+    );
+    expect(toPandocMarkdown("- x\n\n  $$\n  a\n  =\n  $$")).toBe(
+      "- x\n\n  $$\n      a\n      =\n      $$",
+    );
+    expect(toPandocMarkdown("> $$\n> a\n> -\n> $$")).toBe(
+      "> $$\n>     a\n>     -\n>     $$",
+    );
+    // Inline and one-line maths, and code, stay as written.
+    expect(toPandocMarkdown("A $x = 1$ b\n\n$$y$$\n\n```\n=\n```")).toBe(
+      "A $x = 1$ b\n\n$$y$$\n\n```\n=\n```",
+    );
+  });
+
   it("reads callouts by the editor's rule: titles, folds, any type, nesting", () => {
     const md = [
       "> [!faq]- Why so?",

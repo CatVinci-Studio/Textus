@@ -17,7 +17,8 @@ const COMMENT_OPEN = /^ {0,3}<!--/;
  */
 export function eachLine(
   markdown: string,
-  visit: (line: string, index: number, code: boolean) => void,
+  /** `math`: the line is a `$$` block's, its fences included. */
+  visit: (line: string, index: number, code: boolean, math?: boolean) => void,
   /** `$$` blocks count as code too: maths, kept whole. */
   { math = false, frontMatter = false, comments = false } = {},
 ): void {
@@ -47,7 +48,7 @@ export function eachLine(
       } else if (!(rest.length > 2 && rest.slice(2).endsWith("$$"))) {
         fence = "$$";
       }
-      return visit(line, index, true);
+      return visit(line, index, true, true);
     }
     const found = FENCE.exec(bare);
     if (fence) {
