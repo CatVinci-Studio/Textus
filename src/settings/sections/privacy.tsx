@@ -11,9 +11,10 @@ import { drafts } from "../../platform/ipc";
 import { hasTextusAi, isDesktopApp } from "../../platform/capabilities";
 import { SettingsFileSection } from "./settings-file";
 
-// Settings > Privacy: a switch per kind of local history, plus a clear. A
-// switch off only stops new writes; a clear can't be undone, so it asks first.
-// Last, the settings file, which can carry the AI history away.
+// Settings > Privacy & Data: the chat history's switch and clear, then the
+// data the app keeps: recovery drafts, and the settings file that can carry
+// the AI history away. A switch off only stops new writes; a clear can't be
+// undone, so it asks first.
 
 function ClearRow({
   label,
@@ -84,35 +85,16 @@ export function PrivacySection({ t }: { t: Strings }) {
         </SettingsGroup>
       )}
 
-      <SettingsGroup title={t.privacyDraftRecoveryLabel}>
-        <ToggleRow
-          label={t.privacyDraftRecoveryToggle}
-          checked={settings.enableDraftRecovery}
-          onChange={(v) => setSettings({ enableDraftRecovery: v })}
-        />
-        {/* Kept as drafts: only while drafts are kept at all. */}
-        {settings.enableDraftRecovery && (
-          <ToggleRow
-            label={t.privacyKeepUnsavedToggle}
-            help={t.privacyKeepUnsavedHelp}
-            checked={settings.keepUnsavedOnClose}
-            onChange={(v) => setSettings({ keepUnsavedOnClose: v })}
-          />
-        )}
+      <SettingsGroup title={t.privacyDataLabel}>
         <ClearRow
           label={t.privacyClearDrafts}
-          action={t.privacyDeleteButton}
+          action={t.privacyClearButton}
           warning={t.privacyDraftRecoveryClearHint}
           t={t}
           onClear={() => drafts.clearAllDrafts()}
         />
+        {isDesktopApp && <SettingsFileSection t={t} />}
       </SettingsGroup>
-
-      {isDesktopApp && (
-        <SettingsGroup title={t.settingsFileLabel}>
-          <SettingsFileSection t={t} />
-        </SettingsGroup>
-      )}
     </>
   );
 }

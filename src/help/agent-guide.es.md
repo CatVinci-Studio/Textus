@@ -4,7 +4,7 @@ Textus incluye una IA pensada para escribir, Textus AI: autocompletado, revisió
 
 ## Conectar un servicio
 
-Todo lo relativo a la IA está en **Ajustes › Textus AI**, en cuatro páginas: **Modelos**, **Chat y escritura**, **Memoria y habilidades** y **Herramientas externas**.
+Todo lo relativo a la IA está en **Ajustes › Textus AI**, en cinco páginas: **Modelos**, **Chat y escritura**, **Memoria y proyectos**, **Habilidades** y **Herramientas externas**.
 
 1. En **Modelos**, elige el servicio en la lista **Proveedores**. Inicia sesión con tu cuenta (**Cuenta**) o pega una clave (**Clave de API**), según lo que admita ese servicio. Un punto en la lista marca cada servicio que ya has configurado.
 2. Para un servidor propio (cualquier servidor compatible con OpenAI: modelos locales, relays, proxies), elige **Añadir endpoint personalizado** al final de la lista, ponle un nombre, escribe la URL base, una clave si la necesita y el nombre del modelo, y guarda. Puedes añadir varios: cada uno aparece con su nombre aquí y donde eliges un modelo.
@@ -39,7 +39,7 @@ Las conversaciones se abren como **pestañas**. Haz clic en el botón **Textus A
 
 ### Cambios en tus documentos
 
-**Ajustes › Textus AI › Chat y escritura › Cómo cambia Textus AI los archivos** decide cómo llegan a tu texto los cambios de Textus AI:
+**Ajustes › Textus AI › Chat y escritura › Cómo revisa Textus AI los archivos** decide cómo llegan a tu texto los cambios de Textus AI:
 
 - **Como revisiones para revisar** (el predeterminado): cada cambio es una revisión que se muestra donde se aplicaría, y nada es definitivo hasta que lo aceptas.
 - **Escritos directamente**: los cambios se escriben a medida que llegan. Quedan marcados para que veas qué ha cambiado, y cada respuesta se puede deshacer.
@@ -73,11 +73,11 @@ Mientras escribes, aparece una continuación en gris en el cursor: pulsa <kbd>Ta
 
 Pide una de forma explícita con <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd> o desde el menú contextual (el cursor debe estar al final de un párrafo): obtendrás una continuación más larga con hasta tres alternativas, que recorres con <kbd>Option</kbd>+<kbd>[</kbd> / <kbd>Option</kbd>+<kbd>]</kbd>.
 
-En **Ajustes › Textus AI › Chat y escritura › Continuar y revisar** puedes activar o desactivar el autocompletado y elegir un **Tono del autocompletado** (según el documento / formal / informal / académico / conciso). Cuando el documento pertenece a una carpeta con perfil de estilo o biblioteca (consulta **Personaliza Textus AI** más abajo), el autocompletado también los sigue.
+En **Ajustes › Textus AI › Chat y escritura › Ayuda de escritura** puedes activar o desactivar el autocompletado y elegir un **Tono del autocompletado** (según el documento / formal / informal / académico / conciso). Cuando el documento pertenece a una carpeta con perfil de estilo o biblioteca (consulta **Personaliza Textus AI** más abajo), el autocompletado también los sigue.
 
 ### Revisión gramatical
 
-Los posibles problemas aparecen subrayados. Pasa el puntero sobre uno, o coloca el cursor en él, para ver la explicación; **Aplicar** (o <kbd>Option</kbd>+<kbd>Enter</kbd> con el cursor encima) acepta la corrección e **Ignorar** la descarta. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> revisa el párrafo actual de inmediato. **Nivel de revisión** (Chat y escritura › Continuar y revisar) decide cuánto señala.
+Los posibles problemas aparecen subrayados. Pasa el puntero sobre uno, o coloca el cursor en él, para ver la explicación; **Aplicar** (o <kbd>Option</kbd>+<kbd>Enter</kbd> con el cursor encima) acepta la corrección e **Ignorar** la descarta. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> revisa el párrafo actual de inmediato. **Nivel de revisión** (Chat y escritura › Ayuda de escritura) decide cuánto señala.
 
 ### Pregunta rápida
 
@@ -127,7 +127,7 @@ El menú de la carpeta crea `.textus/` y sus archivos la primera vez que los pid
 - Escribir `@` en el cuadro de texto del chat adjunta uno de sus archivos a tu mensaje.
 - Su carpeta `.textus/` guarda el perfil de estilo, la biblioteca, las instrucciones de escritura y las habilidades de la carpeta.
 
-Haz clic derecho en el papel vacío de una pestaña de IA y elige **Memoria**: su fila superior muestra el nombre de la carpeta; haz clic en ella para abrir el **menú de la carpeta**. Si tu material de consulta no está junto al borrador, usa **Elegir carpeta…** en ese menú (o **Ajustes › Textus AI › Memoria y habilidades › Carpeta**). La carpeta que elijas se usa para todos los documentos, incluidos los borradores sin guardar, hasta que elijas **Usar la carpeta de la barra lateral**; sin ninguna elegida, la IA usa la carpeta abierta en la barra lateral.
+Haz clic derecho en el papel vacío de una pestaña de IA y elige **Memoria**: su fila superior muestra el nombre de la carpeta; haz clic en ella para abrir el **menú de la carpeta**. Si tu material de consulta no está junto al borrador, usa **Elegir carpeta del proyecto…** en ese menú (o **Ajustes › Textus AI › Memoria y proyectos › Carpeta del proyecto**). La carpeta que elijas se usa para todos los documentos, incluidos los borradores sin guardar, hasta que elijas **Usar la carpeta de la barra lateral**; sin ninguna elegida, la IA usa la carpeta abierta en la barra lateral.
 
 > [!TIP]
 > ¿Tu borrador está en `tesis/borradores/` y tus notas de entrevistas en `tesis/fuentes/`? Elige `tesis/` como carpeta y Textus AI podrá leer `fuentes/entrevistas.md` mientras trabajas en `borradores/capitulo-2.md`.
@@ -179,7 +179,7 @@ No tienes que adjuntar las entradas. Una entrada con `include: detected` (el val
 
 **Las instrucciones de escritura son normas fijas que se envían en cada conversación**: de qué trata la carpeta, en qué idioma responder, grafías y términos, y lo que Textus AI debe hacer siempre o no hacer nunca. Están en archivos llamados `agent.md`, en dos niveles:
 
-- **Global**, para todos los documentos: **Ajustes › Textus AI › Memoria y habilidades › Instrucciones de escritura (agent.md) › Editar agent.md**.
+- **Global**, para todos los documentos: **Ajustes › Textus AI › Memoria y proyectos › Instrucciones de escritura (agent.md) › Editar agent.md**.
 - **Carpeta**, para los documentos de una carpeta: `.textus/agent.md`, que se abre con **Editar instrucciones de escritura de la carpeta** en el menú de la carpeta.
 
 Ambos se abren en una pestaña y empiezan con una breve guía en comentarios. Cuando existen los dos, Textus AI recibe ambos (primero las instrucciones globales y después las de la carpeta) y, en caso de contradicción, prevalecen las de la carpeta.
@@ -199,7 +199,7 @@ Las instrucciones de escritura solo se aplican a las conversaciones. El autocomp
 - **Esta carpeta**: lo que trata de esta obra, en `projects/<carpeta>/memory/` dentro de la carpeta de configuración global (Textus lo guarda allí, no en tu carpeta); los datos sobre personas, lugares y términos van a la biblioteca.
 - **Para todas las carpetas**: tus hábitos generales, en `memory/` dentro de la carpeta de configuración global. Sin carpeta, todo va aquí.
 
-**Memoria** (clic derecho en el papel de una pestaña de IA › Memoria) lo muestra todo, con cuándo y en qué conversación se recordó cada cosa: **Editar** lo abre y **Eliminar** lo borra. De vez en cuando, Textus AI ordena su memoria: une los recuerdos que dicen lo mismo y descarta una regla que otra más reciente ha dejado sin efecto; lo descartado está en **Olvidado hace poco**, para recuperarlo. Tus propias instrucciones de escritura prevalecen cuando ambas no coinciden, y Textus AI nunca cambia tu `agent.md` ni tu perfil de estilo. Cuando hay demasiados recuerdos para enviarlos, se omiten los más antiguos y Memoria lo indica. El interruptor **Memoria** (Ajustes › Textus AI › Memoria y habilidades) lo desactiva.
+**Memoria** (clic derecho en el papel de una pestaña de IA › Memoria) lo muestra todo, con cuándo y en qué conversación se recordó cada cosa: **Editar** lo abre y **Eliminar** lo borra. De vez en cuando, Textus AI ordena su memoria: une los recuerdos que dicen lo mismo y descarta una regla que otra más reciente ha dejado sin efecto; lo descartado está en **Olvidado hace poco**, para recuperarlo. Tus propias instrucciones de escritura prevalecen cuando ambas no coinciden, y Textus AI nunca cambia tu `agent.md` ni tu perfil de estilo. Cuando hay demasiados recuerdos para enviarlos, se omiten los más antiguos y Memoria lo indica. El interruptor **Memoria** (Ajustes › Textus AI › Memoria y proyectos) lo desactiva.
 
 **También aprende de tus decisiones de revisión.** Cuando rechazas varias veces el mismo tipo de cambio —「」 convertidas en “”, una palabra cambiada por otra, frases divididas, una coma de Oxford añadida—, Textus AI te ofrece, al terminar la revisión, recordarlo como requisito: **Recordar** lo guarda en **Memoria**, **Ahora no** espera a tener más pruebas y **No volver a preguntar** deja de preguntar por ese tipo. Pregunta como mucho una vez al día, y solo se guarda algo cuando haces clic, también con la memoria desactivada. Lo que cuenta es una breve nota de los tipos de cambio que aceptaste o rechazaste, guardada en este ordenador junto a tus recuerdos y nunca enviada.
 
@@ -225,17 +225,17 @@ Puedes usar una habilidad de dos maneras:
 
 Cuando lo que pediste era un procedimiento propio, unos pasos que querrás repetir, Textus AI ofrece bajo su respuesta guardarlo como habilidad, para todos los documentos o solo para esta carpeta. No se guarda nada a menos que lo elijas.
 
-Las habilidades están en los mismos dos niveles que las instrucciones de escritura: las globales, en la carpeta `skills/` de la carpeta de configuración global (**Importar habilidad…**, arriba en Habilidades de **Ajustes › Textus AI › Memoria y habilidades**, copia ahí un archivo de habilidad), y las de la carpeta, en `.textus/skills/` (una carpeta oculta; en el Finder de macOS, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> la muestra). Una habilidad de la carpeta con el mismo nombre que una global la reemplaza.
+Las habilidades están en los mismos dos niveles que las instrucciones de escritura: las globales, en la carpeta `skills/` de la carpeta de configuración global (**Importar habilidad…**, en **Ajustes › Textus AI › Habilidades**, junto a Mis habilidades, copia ahí un archivo de habilidad), y las de la carpeta, en `.textus/skills/` (una carpeta oculta; en el Finder de macOS, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> la muestra). Una habilidad de la carpeta con el mismo nombre que una global la reemplaza.
 
 ### Habilidades integradas
 
-Textus trae cuatro habilidades. **Corregir**, en Revisar, comprueba la ortografía, la gramática, la puntuación y los números según las normas del idioma del texto. **Diseñar un tema**, **Crear un complemento** y **Crear una habilidad** hacen un tema para el editor, un pequeño complemento o una habilidad propia a partir de lo que describas, en una pestaña propia: **Crea tu tema** está en la tienda de temas de Apariencia, y **Crea tu plugin**, en el menú **⋯** del panel Complementos. Hay más habilidades —ampliar, condensar, traducir, resumir, revisar continuidad, correo, acta de reunión y otras— en **Disponibles**, al final de Habilidades en **Ajustes › Textus AI › Memoria y habilidades**. Escribe `/` y elige una, o escribe su nombre en cualquiera de los idiomas de la aplicación: `/proofread`, `/校对` y `/校正` llaman a la misma habilidad. Textus AI también elige una por su cuenta cuando tu petición encaja. **Diseñar un tema** pone el CSS del tema en la respuesta: **Usar este tema**, debajo, lo instala; o guárdalo como archivo .css y añádelo con **Temas instalados › ⋯ › Importar CSS…** en **Ajustes › Apariencia**.
+Textus trae cuatro habilidades. **Corregir**, en Revisar, comprueba la ortografía, la gramática, la puntuación y los números según las normas del idioma del texto. **Diseñar un tema**, **Crear un complemento** y **Crear una habilidad** hacen un tema para el editor, un pequeño complemento o una habilidad propia a partir de lo que describas, en una pestaña propia: **Crea tu tema** está en la tienda de temas de Apariencia, y **Crea tu plugin**, en el menú **⋯** del panel Complementos. Hay más habilidades —ampliar, condensar, traducir, resumir, revisar continuidad, correo, acta de reunión y otras— en **Disponibles**, al final de **Ajustes › Textus AI › Habilidades**. Escribe `/` y elige una, o escribe su nombre en cualquiera de los idiomas de la aplicación: `/proofread`, `/校对` y `/校正` llaman a la misma habilidad. Textus AI también elige una por su cuenta cuando tu petición encaja. **Diseñar un tema** pone el CSS del tema en la respuesta: **Usar este tema**, debajo, lo instala; o guárdalo como archivo .css y añádelo con **Temas instalados › ⋯ › Importar CSS…** en **Ajustes › Apariencia**.
 
-Las habilidades integradas encabezan Habilidades en **Ajustes › Textus AI › Memoria y habilidades** y siempre están activas. **Personalizar…** copia una en la carpeta `skills/` de la carpeta de configuración global y abre la copia para que cambies sus instrucciones; a partir de entonces se usa tu copia. **Restablecer** borra la copia y recupera la versión integrada. Debajo están las habilidades que añadiste. Cada una indica los modos en que funciona (haz clic para cambiarlos), y su interruptor la desactiva por ahora; sus modos se guardan para cuando la vuelvas a activar. Una habilidad tuya con el nombre de una integrada la reemplaza.
+Las habilidades integradas encabezan **Ajustes › Textus AI › Habilidades** y siempre están activas. **Personalizar…** copia una en la carpeta `skills/` de la carpeta de configuración global y abre la copia para que cambies sus instrucciones; a partir de entonces se usa tu copia. **Restablecer** borra la copia y recupera la versión integrada. Debajo están las habilidades que añadiste. Cada una indica los modos en que funciona (haz clic para cambiarlos), y su interruptor la desactiva por ahora; sus modos se guardan para cuando la vuelvas a activar. Una habilidad tuya con el nombre de una integrada la reemplaza.
 
 ### Normas de escritura
 
-**Normas de escritura** (Ajustes › Textus AI › Chat y escritura › Continuar y revisar) decide qué normas de puntuación, espacios y números siguen Textus AI y la revisión gramatical. **Automático** aplica la norma nacional cuando el idioma la tiene (GB/T para el chino simplificado o JTF para el japonés, por ejemplo); en los demás casos sigue lo que tu documento ya hace con más frecuencia y solo señala las incoherencias. Si eliges un perfil, como **Ficción** en chino simplificado o **Reino Unido · GOV.UK** en inglés, los documentos en ese idioma se revisan según él.
+**Normas de escritura** (Ajustes › Textus AI › Chat y escritura › Ayuda de escritura) decide qué normas de puntuación, espacios y números siguen Textus AI y la revisión gramatical. **Automático** aplica la norma nacional cuando el idioma la tiene (GB/T para el chino simplificado o JTF para el japonés, por ejemplo); en los demás casos sigue lo que tu documento ya hace con más frecuencia y solo señala las incoherencias. Si eliges un perfil, como **Ficción** en chino simplificado o **Reino Unido · GOV.UK** en inglés, los documentos en ese idioma se revisan según él.
 
 Una carpeta puede elegir el suyo: añade una línea `conventions:` entre las dos líneas `---` del principio de su perfil de estilo (`.textus/style.md`). En los documentos de esa carpeta, prevalece sobre el ajuste.
 
@@ -247,7 +247,7 @@ conventions: zh-Hans-CN/fiction, en-GB/govuk
 
 ### La carpeta de configuración global
 
-**La carpeta de configuración global guarda lo que se aplica a todos los documentos**: tu `agent.md` global y tus habilidades globales. Pertenece a la aplicación, no a una carpeta; **Ajustes › Textus AI › Memoria y habilidades › Carpeta de configuración global › Mostrar** la muestra.
+**La carpeta de configuración global guarda lo que se aplica a todos los documentos**: tu `agent.md` global y tus habilidades globales. Pertenece a la aplicación, no a una carpeta; **Ajustes › Textus AI › Memoria y proyectos › Carpeta de configuración global › Mostrar** la muestra.
 
 ```
 agent/                ← la carpeta de configuración global
@@ -286,7 +286,7 @@ No hay perfil de estilo ni biblioteca globales: describen una obra concreta, as�
 
 ### Investigación
 
-Elige **Investigar** en el botón de modo y envía un tema en lugar de una petición: Textus AI lo investiga (en la web, en tu carpeta, en los artículos que adjuntes), prepara un esquema y escribe el texto en el documento. Escribe `/` para elegir el tipo de texto (un ensayo, un informe, una revisión bibliográfica y otros), o déjalo en **Elegir por mí**. **Investigar con subagentes** (Chat y escritura) le permite repartir partes de la investigación entre ayudantes que trabajan a la vez; **Comprobar citas** hace que cada frase citada se compruebe con sus fuentes antes de terminar el texto. El texto se escribe directamente en el documento, diga lo que diga **Cómo cambia Textus AI los archivos**.
+Elige **Investigar** en el botón de modo y envía un tema en lugar de una petición: Textus AI lo investiga (en la web, en tu carpeta, en los artículos que adjuntes), prepara un esquema y escribe el texto en el documento. Escribe `/` para elegir el tipo de texto (un ensayo, un informe, una revisión bibliográfica y otros), o déjalo en **Elegir por mí**. **Investigar con subagentes** (Chat y escritura) le permite repartir partes de la investigación entre ayudantes que trabajan a la vez; **Comprobar citas** hace que cada frase citada se compruebe con sus fuentes antes de terminar el texto. El texto se escribe directamente en el documento, diga lo que diga **Cómo revisa Textus AI los archivos**.
 
 ### Búsqueda web
 

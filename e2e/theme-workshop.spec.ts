@@ -59,7 +59,7 @@ test("the workshop makes a theme from size and font, with the AI off", async ({
   await dialog.locator(".app-dialog-input").fill("大字主题");
   await dialog.locator(".close-prompt-primary").click();
   await expect(page.getByRole("status")).toContainText(
-    "「大字主题」已安装并启用",
+    "「大字主题」已安装并开启",
   );
   // In use: the window's own document takes it.
   await expect(page.locator("html")).toHaveAttribute("data-user-theme", "");

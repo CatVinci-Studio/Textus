@@ -1,7 +1,7 @@
 import type { SettingsPageProps } from "./types";
 import { SettingsGroup } from "./SettingsGroup";
 import { LANGS, LANG_NAMES, type Lang } from "../../i18n/strings";
-import { SettingRow, ToggleRow } from "../sections/controls";
+import { AdvancedFold, SettingRow, ToggleRow } from "../sections/controls";
 import { CliCommandSection, DefaultEditorSection } from "../sections/general";
 import { BackgroundSection } from "../sections/background";
 import { ProxySection } from "../sections/proxy";
@@ -14,8 +14,9 @@ import {
   canUseWindows,
 } from "../../platform/capabilities";
 
-/** General: language, what opens, documents and disk, then the app: its
- *  proxy and system integrations. */
+/** General: language, what opens and closes, documents and disk, the
+ *  system's integrations, then the network proxy and the file tree's two
+ *  confirmations folded at the end. */
 export function GeneralPage({ t, settings, setSettings }: SettingsPageProps) {
   return (
     <>
@@ -99,13 +100,28 @@ export function GeneralPage({ t, settings, setSettings }: SettingsPageProps) {
       )}
 
       {/* How documents reach the disk - used daily, so above the rarer
-            groups. */}
+          groups. The two draft switches are here, not under Privacy: they
+          decide what survives a crash or a close. */}
       <SettingsGroup title={t.settingsFilesGroup}>
         <ToggleRow
           label={t.autosaveLabel}
           checked={settings.autosave}
           onChange={(v) => setSettings({ autosave: v })}
         />
+        <ToggleRow
+          label={t.privacyDraftRecoveryToggle}
+          checked={settings.enableDraftRecovery}
+          onChange={(v) => setSettings({ enableDraftRecovery: v })}
+        />
+        {/* Kept as drafts: only while drafts are kept at all. */}
+        {settings.enableDraftRecovery && (
+          <ToggleRow
+            label={t.privacyKeepUnsavedToggle}
+            help={t.privacyKeepUnsavedHelp}
+            checked={settings.keepUnsavedOnClose}
+            onChange={(v) => setSettings({ keepUnsavedOnClose: v })}
+          />
+        )}
         <ToggleRow
           label={t.autoSuggestFilenameLabel}
           checked={settings.autoSuggestFilename}
@@ -117,6 +133,22 @@ export function GeneralPage({ t, settings, setSettings }: SettingsPageProps) {
           checked={settings.showHiddenFiles}
           onChange={(v) => setSettings({ showHiddenFiles: v })}
         />
+      </SettingsGroup>
+
+      {/* A desktop's own: the phone has no windows to close, no default
+          editor and no terminal. */}
+      {(canUseWindows || canSetDefaultEditor || canInstallCliCommand) && (
+        <SettingsGroup title={t.generalSystemLabel}>
+          {canSetDefaultEditor && <DefaultEditorSection t={t} />}
+          {canUseWindows && <BackgroundSection t={t} />}
+          {canInstallCliCommand && <CliCommandSection t={t} />}
+        </SettingsGroup>
+      )}
+
+      {/* Rarely changed, and for those who know their network: one fold,
+          one level deep. */}
+      <AdvancedFold t={t}>
+        <ProxySection t={t} settings={settings} setSettings={setSettings} />
         {canDropFilesIntoTree && (
           <ToggleRow
             label={t.confirmTreeCopyLabel}
@@ -131,16 +163,7 @@ export function GeneralPage({ t, settings, setSettings }: SettingsPageProps) {
             onChange={(v) => setSettings({ confirmTreeTrash: v })}
           />
         )}
-      </SettingsGroup>
-
-      {/* The proxy, then a desktop's own: the phone has no windows to
-          close, no default editor and no terminal. */}
-      <SettingsGroup title={t.generalSystemLabel}>
-        <ProxySection t={t} settings={settings} setSettings={setSettings} />
-        {canUseWindows && <BackgroundSection t={t} />}
-        {canSetDefaultEditor && <DefaultEditorSection t={t} />}
-        {canInstallCliCommand && <CliCommandSection t={t} />}
-      </SettingsGroup>
+      </AdvancedFold>
     </>
   );
 }

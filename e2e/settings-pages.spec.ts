@@ -13,6 +13,7 @@ const PAGES = [
   "providers",
   "chat",
   "memory",
+  "skills",
   "mcp",
   "shortcuts",
   "privacy",
@@ -476,6 +477,33 @@ test("the search reads the pages once its box is focused, before the first lette
   await box.fill("");
   await box.blur();
   await expect(index).toHaveCount(0);
+});
+
+test("Memory & projects and Skills are two pages; a moved switch is searched and lands on General", async ({
+  page,
+}) => {
+  await open(page);
+  await emit(page, "menu-settings");
+  const nav = page.locator(".sidebar");
+  await nav.getByText("Textus AI", { exact: true }).click();
+  await nav.getByRole("button", { name: "记忆与项目" }).click();
+  await expect(tabs(page).nth(1)).toHaveText("设置：记忆与项目");
+  const titles = page.locator(".settings-tab-page .settings-group-title");
+  await expect(titles).toHaveText(["记忆", "项目"]);
+  await nav.getByRole("button", { name: "技能", exact: true }).click();
+  await expect(tabs(page).nth(1)).toHaveText("设置：技能");
+  await expect(titles.first()).toHaveText("内置");
+  await expect(titles.nth(1)).toHaveText("我的技能");
+  // The draft switch left Privacy & Data for General, Files.
+  const box = page.locator(".settings-nav-panel input").first();
+  await box.fill("崩溃后恢复");
+  const hit = page.locator(".settings-nav-hit").first();
+  await expect(hit).toContainText("通用");
+  await hit.click();
+  await expect(tabs(page).nth(1)).toHaveText("设置：通用");
+  await expect(
+    page.getByRole("switch", { name: "崩溃后恢复未保存内容" }),
+  ).toBeVisible();
 });
 
 test("Layout switched in Settings lays the islands out again at once", async ({
