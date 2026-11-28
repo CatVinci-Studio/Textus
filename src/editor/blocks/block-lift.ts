@@ -77,8 +77,8 @@ export function placeRoom(room: HTMLElement, inList: boolean) {
 }
 
 /** The blocks that move aside as the room opens and closes: an editor's
- *  own, and list items. */
-export function movingBlocks(view: EditorView): Element[] {
+ *  own, and list items. Only its DOM is read: a block's own code has that. */
+export function movingBlocks(view: Pick<EditorView, "dom">): Element[] {
   // Only those within a screen of what shows: the rest move out of sight,
   // and measuring every block of a long document stalls each step.
   const children = [...view.dom.children];
