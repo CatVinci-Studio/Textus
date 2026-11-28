@@ -15,6 +15,7 @@ const PAGES = [
   "providers",
   "chat",
   "memory",
+  "skills",
   "mcp",
   "shortcuts",
   "privacy",

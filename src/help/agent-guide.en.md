@@ -4,7 +4,7 @@ Textus has a built-in AI made for writing, Textus AI: completion, grammar checki
 
 ## Connecting a service
 
-Everything about the AI is in **Settings › Textus AI**, four pages: **Models**, **Chat & writing**, **Memory & skills** and **External tools**.
+Everything about the AI is in **Settings › Textus AI**, five pages: **Models**, **Chat & writing**, **Memory & projects**, **Skills** and **External tools**.
 
 1. On **Models**, pick the service in the **Providers** list. Sign in to your account (**Account**) or paste a key (**API Key**), whichever that service supports. A dot in the list marks each service you have set up.
 2. For a server of your own (any OpenAI-compatible server: local models, relays, proxies), choose **Add custom endpoint** at the end of the list, give it a name, enter the base URL, a key if it needs one, and the model name, then save. Add as many as you need: each is listed under its name, here and wherever you pick a model.
@@ -39,21 +39,21 @@ Conversations open as **tabs**. Click the **Textus AI** button (the sparkles) at
 
 ### Changes to your documents
 
-**Settings › Textus AI › Chat & writing › How Textus AI changes files** decides how Textus AI's changes reach your text:
+**Settings › Textus AI › Chat & writing › How Textus AI revises files** decides how Textus AI's changes reach your text:
 
 - **As revisions to review** (the default): each change is a revision shown where it would land, and nothing is final until you accept it.
 - **Written straight in**: changes are written as they arrive. They stay marked, so you can see what changed, and each reply can be undone.
 
 A Research piece is written straight in either way. <kbd>Cmd</kbd>+<kbd>Z</kbd> undoes an accepted change in one step.
 
-**How revisions look**: **Show revisions** (Chat & writing, or the eye button on the review bar) has three views:
+**How revisions look**: **Show revisions** (Chat & writing, or the eye button on the revision bar) has three views:
 - **Result only, originals in the margin** (the default);
 - **Original in the text, changes in the margin**;
 - **All in the text**: removed text struck through, new text in green.
 
 New text is always drawn in the text. Without room for a margin (narrow window, sidebar and AI open), the margin views wait and the text shows all.
 
-- **The review bar**: one bar at the bottom of the document collects everything waiting there, changes and notes alike. Step through them with ‹ › (or <kbd>F7</kbd> / <kbd>Shift</kbd>+<kbd>F7</kbd>), **Accept** or **Reject** each, or **Accept all** / **Reject all**. Each changed sentence also has ✓ / ✕ in the text; take only some and the bar says "Accept 2 of 5". From the keyboard: <kbd>Cmd</kbd>+<kbd>Return</kbd> accepts, <kbd>Cmd</kbd>+<kbd>Delete</kbd> with the caret on a change rejects it.
+- **The revision bar**: one bar at the bottom of the document collects everything waiting there, changes and notes alike. Step through them with ‹ › (or <kbd>F7</kbd> / <kbd>Shift</kbd>+<kbd>F7</kbd>), **Accept** or **Reject** each, or **Accept all** / **Reject all**. Each changed sentence also has ✓ / ✕ in the text; take only some and the bar says "Accept 2 of 5". From the keyboard: <kbd>Cmd</kbd>+<kbd>Return</kbd> accepts, <kbd>Cmd</kbd>+<kbd>Delete</kbd> with the caret on a change rejects it.
 - **Reasons**: each proposal card in the conversation says why Textus AI made that change.
 - **At the cursor**: with nothing selected, Textus AI knows where your cursor is, so "write a transition here" inserts exactly there.
 - **Comments instead of edits**: ask for a review ("what's weak here?") and Textus AI pins comments to passages without changing them. Each comment card has **Show in document**, which selects the passage it is about.
@@ -73,11 +73,11 @@ As you type, a gray continuation appears at the cursor — press <kbd>Tab</kbd> 
 
 Ask for one explicitly with <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>Space</kbd> or the context menu (the cursor must be at the end of a paragraph): you get a longer continuation with up to three alternatives — <kbd>Option</kbd>+<kbd>[</kbd> / <kbd>Option</kbd>+<kbd>]</kbd> cycle through them.
 
-Under **Settings › Textus AI › Chat & writing › Continue & Check** you can turn completion on or off and pick a **Completion tone** (match the document / formal / casual / academic / concise). When the document belongs to a folder with a style profile or library (see **Make Textus AI yours** below), completion follows them too.
+Under **Settings › Textus AI › Chat & writing › Writing help** you can turn completion on or off and pick a **Completion tone** (match the document / formal / casual / academic / concise). When the document belongs to a folder with a style profile or library (see **Make Textus AI yours** below), completion follows them too.
 
 ### Grammar check
 
-Possible issues get underlined. Hover over one, or move the caret into it, to see the explanation; **Apply** (or <kbd>Option</kbd>+<kbd>Enter</kbd> with the caret on it) takes the fix, **Ignore** dismisses it. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> checks the current paragraph immediately. **Check level** (Chat & writing › Continue & Check) sets how much it flags.
+Possible issues get underlined. Hover over one, or move the caret into it, to see the explanation; **Apply** (or <kbd>Option</kbd>+<kbd>Enter</kbd> with the caret on it) takes the fix, **Ignore** dismisses it. <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd> checks the current paragraph immediately. **Check level** (Chat & writing › Writing help) sets how much it flags.
 
 ### Quick Ask
 
@@ -127,7 +127,7 @@ The folder menu creates `.textus/` and its files for you the first time you ask 
 - Typing `@` in the chat input attaches one of its files to your message.
 - Its `.textus/` folder holds the folder's style profile, library, writing instructions and skills.
 
-Right-click the empty paper of an AI tab and choose **Memory**: its top row shows the folder's name; click it for the **folder menu**. When your reference material doesn't live next to the draft, use **Choose folder…** there (or **Settings › Textus AI › Memory & skills › Folder**). The folder you choose is used for every document — unsaved drafts included — until you pick **Use the sidebar's folder**; with none chosen, the AI uses the folder open in the sidebar.
+Right-click the empty paper of an AI tab and choose **Memory**: its top row shows the folder's name; click it for the **folder menu**. When your reference material doesn't live next to the draft, use **Choose project folder…** there (or **Settings › Textus AI › Memory & projects › Project folder**). The folder you choose is used for every document — unsaved drafts included — until you pick **Use the sidebar's folder**; with none chosen, the AI uses the folder open in the sidebar.
 
 > [!TIP]
 > Your draft is in `thesis/drafts/` and your interview notes in `thesis/research/`? Choose `thesis/` as the folder, and Textus AI can read `research/interviews.md` while you work on `drafts/chapter-2.md`.
@@ -179,7 +179,7 @@ You don't attach entries yourself. An entry with `include: detected` (the defaul
 
 **Writing instructions are standing rules sent with every conversation**: what the folder is, which language to reply in, spellings and terms, things Textus AI should always or never do. They live in files called `agent.md`, at two levels:
 
-- **Global**, for every document: **Settings › Textus AI › Memory & skills › Writing Instructions (agent.md) › Edit agent.md**.
+- **Global**, for every document: **Settings › Textus AI › Memory & projects › Writing Instructions (agent.md) › Edit agent.md**.
 - **Folder**, for the documents of one folder: `.textus/agent.md`, opened with **Edit the folder's writing instructions** in the folder menu.
 
 Both open in a tab and start with a short how-to in comments. When both exist, Textus AI gets both — the global instructions first, then the folder's — and where they disagree, the folder's win.
@@ -199,7 +199,7 @@ Writing instructions apply to conversations only. Completion doesn't read them; 
 - **This folder**: what is about this work, in `projects/<folder>/memory/` in the global config folder (Textus keeps it there, not in your folder); facts about people, places and terms go into the library.
 - **For all folders**: your general habits, in `memory/` in the global config folder. Without a folder, everything goes here.
 
-**Memory** (right-click an AI tab's paper › Memory) lists it all, with when and in which conversation each was remembered: **Edit** opens it, **Delete** removes it. Now and then Textus AI tidies its memory, merging memories that say the same thing and dropping a rule a newer one overturned; what it dropped is under **Recently forgotten**, to bring back. Your own writing instructions win when the two disagree, and Textus AI never changes your `agent.md` or style profile. When there are too many memories to send, the oldest are left out and Memory says so. The **Memory** switch (Settings › Textus AI › Memory & skills) turns it off.
+**Memory** (right-click an AI tab's paper › Memory) lists it all, with when and in which conversation each was remembered: **Edit** opens it, **Delete** removes it. Now and then Textus AI tidies its memory, merging memories that say the same thing and dropping a rule a newer one overturned; what it dropped is under **Recently forgotten**, to bring back. Your own writing instructions win when the two disagree, and Textus AI never changes your `agent.md` or style profile. When there are too many memories to send, the oldest are left out and Memory says so. The **Memory** switch (Settings › Textus AI › Memory & projects) turns it off.
 
 **It also learns from your revision choices.** When you turn down the same kind of change several times — 「」 made “”, one word swapped for another, sentences split, an Oxford comma added — Textus AI offers, once the review is done, to remember it as a requirement: **Remember** saves it under **Memory**, **Not now** waits for more, and **Never ask for this** stops asking about that kind. It asks at most once a day, and only your click saves anything, also with memory turned off. What it counts is a short note of the kinds of change you accepted or rejected, kept on this computer beside your memories and never sent.
 
@@ -225,17 +225,17 @@ Use a skill in either of two ways:
 
 When what you asked for was a procedure of your own - steps you'll want again - Textus AI offers under its reply to keep it as a skill, for every document or for this folder only. Nothing is saved unless you choose to.
 
-Skills live at the same two levels as writing instructions: global skills in the `skills/` folder of the global config folder (**Import Skill…** at the top of Skills on **Settings › Textus AI › Memory & skills** copies a skill file there), folder skills in `.textus/skills/` (a hidden folder — in macOS Finder, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> shows it). A folder skill with the same name as a global one replaces it.
+Skills live at the same two levels as writing instructions: global skills in the `skills/` folder of the global config folder (**Import Skill…** on **Settings › Textus AI › Skills**, beside My skills copies a skill file there), folder skills in `.textus/skills/` (a hidden folder — in macOS Finder, <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>.</kbd> shows it). A folder skill with the same name as a global one replaces it.
 
 ### Built-in skills
 
-Textus comes with four skills. **Proofread**, in Review, checks spelling, grammar, punctuation and numbers against the standards of the text's language. **Design a theme**, **Make a plugin** and **Make a skill** make an editor theme, a small plugin or a skill of your own from what you describe, in a tab of their own: **Make your theme** is in Appearance's theme store, **Make your plugin** in the Plugins panel's **⋯** menu. More skills - expand, tighten, translate, summarize, check continuity, email, meeting minutes and others - are under **Available** at the end of Skills on **Settings › Textus AI › Memory & skills**. Type `/` and pick one, or type its name in any of the app's languages: `/proofread`, `/校对` and `/校正` call the same skill. Textus AI also picks a skill by itself when your request matches one. **Design a theme** puts the theme's CSS in the reply: **Use this theme** under it installs it, or save it as a .css file and add it with **Installed themes › ⋯ › Import CSS…** on **Settings › Appearance**.
+Textus comes with four skills. **Proofread**, in Review, checks spelling, grammar, punctuation and numbers against the standards of the text's language. **Design a theme**, **Make a plugin** and **Make a skill** make an editor theme, a small plugin or a skill of your own from what you describe, in a tab of their own: **Make your theme** is in Appearance's theme store, **Make your plugin** in the Plugins panel's **⋯** menu. More skills - expand, tighten, translate, summarize, check continuity, email, meeting minutes and others - are under **Available** at the end of **Settings › Textus AI › Skills**. Type `/` and pick one, or type its name in any of the app's languages: `/proofread`, `/校对` and `/校正` call the same skill. Textus AI also picks a skill by itself when your request matches one. **Design a theme** puts the theme's CSS in the reply: **Use this theme** under it installs it, or save it as a .css file and add it with **Installed themes › ⋯ › Import CSS…** on **Settings › Appearance**.
 
-The built-in skills head Skills on **Settings › Textus AI › Memory & skills**, always on. **Customize…** copies one into the `skills/` folder of the global config folder and opens the copy, so you can change its instructions; from then on your copy runs instead. **Reset** deletes the copy and brings the built-in version back. Below them are the skills you added. Each says the modes it works in - click that to change them - and its switch turns it off for now, its modes kept for when you turn it back on. A skill of your own with a built-in skill's name replaces the built-in one.
+The built-in skills head **Settings › Textus AI › Skills**, always on. **Customize…** copies one into the `skills/` folder of the global config folder and opens the copy, so you can change its instructions; from then on your copy runs instead. **Reset** deletes the copy and brings the built-in version back. Below them are the skills you added. Each says the modes it works in - click that to change them - and its switch turns it off for now, its modes kept for when you turn it back on. A skill of your own with a built-in skill's name replaces the built-in one.
 
 ### Writing conventions
 
-**Writing conventions** (Settings › Textus AI › Chat & writing › Continue & Check) decides which punctuation, spacing and number rules Textus AI and the grammar check follow. **Automatic** uses the national standard where a language has one (GB/T for Simplified Chinese, JTF for Japanese, for example); elsewhere it follows what your document already does most and points out only inconsistencies. Pick a profile, such as Simplified Chinese **Fiction** or English **UK · GOV.UK**, and documents in that language are held to it.
+**Writing conventions** (Settings › Textus AI › Chat & writing › Writing help) decides which punctuation, spacing and number rules Textus AI and the grammar check follow. **Automatic** uses the national standard where a language has one (GB/T for Simplified Chinese, JTF for Japanese, for example); elsewhere it follows what your document already does most and points out only inconsistencies. Pick a profile, such as Simplified Chinese **Fiction** or English **UK · GOV.UK**, and documents in that language are held to it.
 
 A folder can choose its own: add a `conventions:` line between the two `---` lines at the top of its style profile (`.textus/style.md`). For that folder's documents it wins over the setting.
 
@@ -247,7 +247,7 @@ conventions: zh-Hans-CN/fiction, en-GB/govuk
 
 ### The global config folder
 
-**The global config folder holds what applies to every document**: your global `agent.md` and your global skills. It belongs to the app, not to any folder; **Settings › Textus AI › Memory & skills › Global config folder › Show** shows it.
+**The global config folder holds what applies to every document**: your global `agent.md` and your global skills. It belongs to the app, not to any folder; **Settings › Textus AI › Memory & projects › Global config folder › Show** shows it.
 
 ```
 agent/                ← the global config folder
@@ -286,7 +286,7 @@ There is no global style profile or library: those describe one body of work, so
 
 ### Research
 
-Pick **Research** in the mode button and send a topic instead of a request: Textus AI researches it — the web, your folder, the papers you attach — makes an outline, and writes the piece into the document. Type `/` to choose the kind of piece (an essay, a report, a literature review and others), or leave it on **Choose for me**. **Research with sub-agents** (Chat & writing) lets it hand parts of the research to helpers working at once; **Check citations** has each cited sentence checked against its sources before the piece is done. A piece is written straight into the document, whatever **How Textus AI changes files** says.
+Pick **Research** in the mode button and send a topic instead of a request: Textus AI researches it — the web, your folder, the papers you attach — makes an outline, and writes the piece into the document. Type `/` to choose the kind of piece (an essay, a report, a literature review and others), or leave it on **Choose for me**. **Research with sub-agents** (Chat & writing) lets it hand parts of the research to helpers working at once; **Check citations** has each cited sentence checked against its sources before the piece is done. A piece is written straight into the document, whatever **How Textus AI revises files** says.
 
 ### Web search
 

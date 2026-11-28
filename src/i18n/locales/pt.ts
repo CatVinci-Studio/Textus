@@ -820,8 +820,8 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   aboutLicenses: "Licenças de código aberto",
   navShortcuts: "Atalhos",
   generalBasicsLabel: "Básico",
-  generalSystemLabel: "Aplicativo",
-  generalOpenCloseLabel: "Abrir e fechar",
+  generalSystemLabel: "Sistema",
+  generalOpenCloseLabel: "Início e encerramento",
   settingsFilesGroup: "Arquivos",
   shortcutAiGroupLabel: "IA e escrita",
   shortcutEditorGroupLabel: "Editor e navegação",
@@ -1531,7 +1531,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   showHiddenFilesHint:
     "Nomes que começam com um ponto. Só a árvore de arquivos os mostra.",
   autosaveLabel: "Salvar automaticamente",
-  settingsFileLabel: "Arquivo de ajustes",
   settingsFileSummary:
     "Importe ou exporte as configurações do app e o histórico de IA",
   settingsFileExport: "Exportar…",
@@ -1711,7 +1710,6 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   privacyChatHistoryToggle: "Salvar as conversas",
   privacyChatHistoryClearHint:
     "Limpa todas as conversas salvas. Esta ação não pode ser desfeita.",
-  privacyDraftRecoveryLabel: "Recuperação de rascunhos",
   privacyDraftRecoveryToggle: "Recuperar conteúdo não salvo após uma falha",
   privacyKeepUnsavedToggle:
     "Manter as alterações não salvas ao fechar, sem perguntar",
@@ -1897,8 +1895,12 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
   appearanceTextGroup: "Texto",
   navEditImages: "Imagens",
   navProvidersModels: "Modelos",
-  navMemorySkills: "Memória e habilidades",
+  navMemoryProjects: "Memória e projetos",
   memoryGroup: "Memória",
+  projectGroup: "Projeto",
+  skillsBuiltinGroup: "Integradas",
+  skillsOwnGroup: "Minhas habilidades",
+  privacyDataLabel: "Dados",
   netGroup: "Pesquisa na web",
   modelChoiceGroup: "Escolha do modelo",
   providersGroup: "Provedores",

@@ -12,6 +12,7 @@ import { ExtensionsPage } from "./pages/ExtensionsPage";
 import { GeneralPage } from "./pages/GeneralPage";
 import { ProvidersPage } from "./pages/ProvidersPage";
 import { MemoryPage } from "./pages/MemoryPage";
+import { SkillsPage } from "./pages/SkillsPage";
 import { McpPage } from "./pages/McpPage";
 import { ShortcutsPage } from "./pages/ShortcutsPage";
 import { PrivacySection } from "./sections/privacy";
@@ -41,6 +42,7 @@ const BUILT_IN: Record<string, ComponentType<SettingsPageProps>> = {
   providers: ProvidersPage,
   chat: ChatWritingPage,
   memory: MemoryPage,
+  skills: SkillsPage,
   mcp: McpPage,
   extensions: ExtensionsPage,
   shortcuts: ShortcutsPage,

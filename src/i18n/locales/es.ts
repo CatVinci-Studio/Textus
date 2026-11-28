@@ -835,8 +835,8 @@ para usar una.
   aboutLicenses: "Licencias de código abierto",
   navShortcuts: "Atajos de teclado",
   generalBasicsLabel: "Opciones básicas",
-  generalSystemLabel: "Aplicación",
-  generalOpenCloseLabel: "Abrir y cerrar",
+  generalSystemLabel: "Sistema",
+  generalOpenCloseLabel: "Inicio y cierre",
   settingsFilesGroup: "Archivos",
   shortcutAiGroupLabel: "IA y escritura",
   shortcutEditorGroupLabel: "Editor y navegación",
@@ -1548,7 +1548,6 @@ para usar una.
   showHiddenFilesHint:
     "Nombres que empiezan por un punto. Solo los muestra el árbol de archivos.",
   autosaveLabel: "Guardar automáticamente",
-  settingsFileLabel: "Archivo de ajustes",
   settingsFileSummary:
     "Importa o exporta los ajustes de la app y el historial de IA",
   settingsFileExport: "Exportar…",
@@ -1730,7 +1729,6 @@ para usar una.
   privacyChatHistoryToggle: "Guardar los chats",
   privacyChatHistoryClearHint:
     "Vacía todos los chats guardados. Esta acción no se puede deshacer.",
-  privacyDraftRecoveryLabel: "Recuperación de borradores",
   privacyDraftRecoveryToggle:
     "Recuperar lo no guardado tras un cierre inesperado",
   privacyKeepUnsavedToggle:
@@ -1919,8 +1917,12 @@ para usar una.
   appearanceTextGroup: "Texto",
   navEditImages: "Imágenes",
   navProvidersModels: "Modelos",
-  navMemorySkills: "Memoria y habilidades",
+  navMemoryProjects: "Memoria y proyectos",
   memoryGroup: "Memoria",
+  projectGroup: "Proyecto",
+  skillsBuiltinGroup: "Integradas",
+  skillsOwnGroup: "Mis habilidades",
+  privacyDataLabel: "Datos",
   netGroup: "Búsqueda web",
   modelChoiceGroup: "Elección de modelo",
   providersGroup: "Proveedores",

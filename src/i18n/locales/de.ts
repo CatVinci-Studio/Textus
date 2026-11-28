@@ -800,8 +800,8 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   aboutLicenses: "Open-Source-Lizenzen",
   navShortcuts: "Tastenkürzel",
   generalBasicsLabel: "Grundeinstellungen",
-  generalSystemLabel: "Anwendung",
-  generalOpenCloseLabel: "Öffnen und Schließen",
+  generalSystemLabel: "System",
+  generalOpenCloseLabel: "Start und Beenden",
   settingsFilesGroup: "Dateien",
   shortcutAiGroupLabel: "KI & Schreiben",
   shortcutEditorGroupLabel: "Editor & Navigation",
@@ -1507,7 +1507,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   showHiddenFilesHint:
     "Namen, die mit einem Punkt beginnen. Nur der Dateibaum zeigt sie.",
   autosaveLabel: "Automatisch speichern",
-  settingsFileLabel: "Einstellungsdatei",
   settingsFileSummary:
     "Einstellungen der App und den KI-Verlauf importieren oder exportieren",
   settingsFileExport: "Exportieren…",
@@ -1690,7 +1689,6 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   privacyChatHistoryToggle: "Chats speichern",
   privacyChatHistoryClearHint:
     "Leert alle gespeicherten Chats. Das lässt sich nicht rückgängig machen.",
-  privacyDraftRecoveryLabel: "Wiederherstellung von Entwürfen",
   privacyDraftRecoveryToggle:
     "Nicht gespeicherte Inhalte nach einem Absturz wiederherstellen",
   privacyKeepUnsavedToggle:
@@ -1875,8 +1873,12 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
   appearanceTextGroup: "Text",
   navEditImages: "Bilder",
   navProvidersModels: "Modelle",
-  navMemorySkills: "Gedächtnis und Skills",
+  navMemoryProjects: "Gedächtnis und Projekte",
   memoryGroup: "Gedächtnis",
+  projectGroup: "Projekt",
+  skillsBuiltinGroup: "Integriert",
+  skillsOwnGroup: "Meine Skills",
+  privacyDataLabel: "Daten",
   netGroup: "Websuche",
   modelChoiceGroup: "Modellwahl",
   providersGroup: "Anbieter",

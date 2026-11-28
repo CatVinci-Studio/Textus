@@ -241,10 +241,13 @@ export function BuiltinSkillsSection({
   onFilesDeleted,
   onClose,
   bare = false,
+  title,
 }: {
   t: Strings;
   /** Its rows only, for a section that lists them with others. */
   bare?: boolean;
+  /** The group's title where the page's own name already says "skills". */
+  title?: string;
   onOpenFile: (path: string) => void;
   onFilesDeleted?: (paths: string[]) => void;
   onClose: () => void;
@@ -403,7 +406,9 @@ export function BuiltinSkillsSection({
     </>
   );
   if (bare) return rows;
-  return <SettingsGroup title={t.agentSkillsBuiltin}>{rows}</SettingsGroup>;
+  return (
+    <SettingsGroup title={title ?? t.agentSkillsBuiltin}>{rows}</SettingsGroup>
+  );
 }
 
 /// Writing conventions: Automatic, or one profile, grouped by document

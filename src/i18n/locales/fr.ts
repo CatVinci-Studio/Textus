@@ -836,8 +836,8 @@ utiliser une.
   aboutLicenses: "Licences open source",
   navShortcuts: "Raccourcis",
   generalBasicsLabel: "Réglages de base",
-  generalSystemLabel: "Application",
-  generalOpenCloseLabel: "Ouverture et fermeture",
+  generalSystemLabel: "Système",
+  generalOpenCloseLabel: "Démarrage et fermeture",
   settingsFilesGroup: "Fichiers",
   shortcutAiGroupLabel: "IA et écriture",
   shortcutEditorGroupLabel: "Éditeur et navigation",
@@ -1559,7 +1559,6 @@ utiliser une.
   showHiddenFilesHint:
     "Noms commençant par un point. Seule l’arborescence les affiche.",
   autosaveLabel: "Enregistrer automatiquement",
-  settingsFileLabel: "Fichier de réglages",
   settingsFileSummary:
     "Importez ou exportez les réglages de l’app et l’historique de l’IA",
   settingsFileExport: "Exporter…",
@@ -1745,7 +1744,6 @@ utiliser une.
   privacyChatHistoryToggle: "Enregistrer les conversations",
   privacyChatHistoryClearHint:
     "Efface toutes les conversations enregistrées. Cette action est irréversible.",
-  privacyDraftRecoveryLabel: "Récupération des brouillons",
   privacyDraftRecoveryToggle:
     "Récupérer le contenu non enregistré après un plantage",
   privacyKeepUnsavedToggle:
@@ -1934,8 +1932,12 @@ utiliser une.
   appearanceTextGroup: "Texte",
   navEditImages: "Images",
   navProvidersModels: "Modèles",
-  navMemorySkills: "Mémoire et compétences",
+  navMemoryProjects: "Mémoire et projets",
   memoryGroup: "Mémoire",
+  projectGroup: "Projet",
+  skillsBuiltinGroup: "Intégrées",
+  skillsOwnGroup: "Mes compétences",
+  privacyDataLabel: "Données",
   netGroup: "Recherche web",
   modelChoiceGroup: "Choix du modèle",
   providersGroup: "Fournisseurs",

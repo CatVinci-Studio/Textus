@@ -31,6 +31,7 @@ const SETTINGS_PAGES = [
   "providers",
   "chat",
   "memory",
+  "skills",
   "extensions",
   "shortcuts",
   "privacy",
@@ -50,6 +51,7 @@ const NOT_ON: Record<string, string[]> = {
     "settings-providers",
     "settings-chat",
     "settings-memory",
+    "settings-skills",
   ],
   phone: [
     "ai-panel",
@@ -57,6 +59,7 @@ const NOT_ON: Record<string, string[]> = {
     "settings-providers",
     "settings-chat",
     "settings-memory",
+    "settings-skills",
     "settings-shortcuts",
     "sidebar-plugins",
   ],

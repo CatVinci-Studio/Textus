@@ -96,7 +96,13 @@ const BUILT_IN: SettingsPageDef[] = [
     id: "memory",
     group: "ai",
     available: ai,
-    label: (t) => t.navMemorySkills,
+    label: (t) => t.navMemoryProjects,
+  },
+  {
+    id: "skills",
+    group: "ai",
+    available: ai,
+    label: (t) => t.navSkills,
   },
   // MCP servers and external agents run on the desktop only.
   {
