@@ -634,6 +634,132 @@ test("a sidebar tab's own key shows it, and again puts the sidebar away; Search 
   await expect(page.locator(".search-panel input").first()).toBeFocused();
 });
 
+test("a panel switched to slides in 12px from its side of the rail, once; the sidebar opening plays none", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/one/a.md": "# A\n" };
+    w.__devPickFolder = "/one";
+  });
+  await openApp(page, {
+    settings: {
+      menuBarShown: false,
+      shortcuts: { showFiles: "mod+shift+y" },
+    },
+    animations: true,
+  });
+  await emit(page, "menu-open-folder");
+  await expect(page.locator(".tree-row", { hasText: "a.md" })).toBeVisible();
+  // What the sidebar's body is animated with, from now on.
+  await page.evaluate(() => {
+    const w = window as unknown as { slides: string[] };
+    w.slides = [];
+    const animate = Element.prototype.animate;
+    Element.prototype.animate = function (this: Element, ...args) {
+      if (this.classList.contains("sidebar-body"))
+        w.slides.push(JSON.stringify(args[0]));
+      return animate.apply(this, args);
+    };
+  });
+  const slides = () =>
+    page.evaluate(() => (window as unknown as { slides: string[] }).slides);
+  const mod = MAC ? "Meta" : "Control";
+  // Files → Search: later on the rail, so in from the end, once.
+  await page.locator('[data-rail-id="search"]').click();
+  await expect.poll(slides).toHaveLength(1);
+  expect(JSON.parse((await slides())[0])).toEqual([
+    { opacity: 0, transform: "translateX(12px)" },
+    { opacity: 1, transform: "none" },
+  ]);
+  await expect(page.locator(".search-panel input").first()).toBeFocused();
+  // Back to Files: from the start.
+  await page.keyboard.press(`${mod}+Shift+y`);
+  await expect(page.locator(".tree-row", { hasText: "a.md" })).toBeVisible();
+  await expect.poll(slides).toHaveLength(2);
+  expect(JSON.parse((await slides())[1])[0].transform).toBe(
+    "translateX(-12px)",
+  );
+  // The sidebar put away and opened again: its own slide, none on the body.
+  await page.keyboard.press(`${mod}+Shift+y`);
+  await expect(page.locator(".tree-row")).toHaveCount(0);
+  await page.keyboard.press(`${mod}+Shift+y`);
+  await expect(page.locator(".tree-row", { hasText: "a.md" })).toBeVisible();
+  expect(await slides()).toHaveLength(2);
+});
+
+test("a divider between two documents moves both live, keeps the share on release, and Escape puts the old one back", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w.__devFs = { "/w/a.md": "# A\n", "/w/b.md": "# B\n" };
+    // Records the session the window writes (the sizes are what is kept).
+    w.__devInvokeResults = { update_window_session: null };
+  });
+  await openApp(page, { settings: { menuBarShown: false } });
+  await openPath(page, "/w/a.md");
+  await openPath(page, "/w/b.md");
+  await emit(page, "menu-split-right");
+  const islands = page.locator("section.island");
+  await expect(islands).toHaveCount(2);
+  const widths = () =>
+    islands.evaluateAll((all) =>
+      all.map((e) => Math.round(e.getBoundingClientRect().width)),
+    );
+  const saved = () =>
+    page.evaluate(() => {
+      const calls = ((window as unknown as { __devInvokeCalls?: unknown[] })
+        .__devInvokeCalls ?? []) as {
+        cmd: string;
+        session: { layout: { tree: { sizes?: number[] } } | null };
+      }[];
+      return calls
+        .filter(
+          (c) =>
+            c.cmd === "update_window_session" && c.session.layout?.tree.sizes,
+        )
+        .map((c) => c.session.layout!.tree.sizes![0]);
+    });
+  await expect.poll(async () => (await saved()).at(-1)).toBe(0.5);
+  const writes = (await saved()).length;
+  const [left, right] = await widths();
+  const divider = page.locator(".split-divider");
+  const grab = async () => {
+    const box = (await divider.boundingBox())!;
+    const at = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    return at;
+  };
+  // Dragged left: both islands follow while it is held, the session not yet.
+  let at = await grab();
+  await page.mouse.move(at.x - 150, at.y, { steps: 6 });
+  await expect.poll(async () => (await widths())[0]).toBeLessThan(left - 100);
+  const [held, other] = await widths();
+  expect(other).toBeGreaterThan(right + 100);
+  expect(await saved()).toHaveLength(writes);
+  await page.mouse.up();
+  // Let go: the share is kept and saved once.
+  await expect.poll(async () => (await saved()).length).toBe(writes + 1);
+  expect(await widths()).toEqual([held, other]);
+  expect((await saved()).at(-1)).toBeLessThan(0.45);
+  const kept = (await saved()).at(-1);
+  // Escape while held puts the share it had back, and saves nothing.
+  at = await grab();
+  await page.mouse.move(at.x + 200, at.y, { steps: 6 });
+  await expect
+    .poll(async () => (await widths())[0])
+    .toBeGreaterThan(held + 100);
+  await page.keyboard.press("Escape");
+  await expect.poll(widths).toEqual([held, other]);
+  await page.mouse.up();
+  expect(await widths()).toEqual([held, other]);
+  expect(await saved()).toHaveLength(writes + 1);
+  expect((await saved()).at(-1)).toBe(kept);
+});
+
 test.describe("on a phone", () => {
   test.use(PHONE);
 

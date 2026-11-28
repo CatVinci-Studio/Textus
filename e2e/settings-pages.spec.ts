@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp, pasteMarkdown } from "./helpers";
+import { MAC, emit, openApp, pasteMarkdown } from "./helpers";
 
 // Settings: the list of pages in the sidebar (the gear, ⌘,), one page at a
 // time in the one Settings tab; every way in lands there.
@@ -182,6 +182,175 @@ test("light or dark picked cross-fades the window where the engine can; the syst
     .poll(() => html.evaluate((el) => getComputedStyle(el).colorScheme))
     .toBe("dark");
   expect(await fades()).toBe(fading ? 2 : 0);
+});
+
+/** Settings, Appearance: the page's `look-basic`. */
+async function openAppearance(page: Page) {
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new CustomEvent("textus:open-settings-page", {
+        detail: { page: "look-basic" },
+      }),
+    ),
+  );
+  await expect(page.locator(".settings-content").first()).toBeVisible();
+}
+
+test("a Select opens on the mouse's press; let go over an option picks it, in place picks nothing", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, { settings: { menuBarShown: false, language: "en" } });
+  await openAppearance(page);
+  const select = page.getByRole("combobox", { name: "Editor theme" });
+  const list = page.locator("[data-floating-select]");
+  const centre = async (target: ReturnType<Page["locator"]>) => {
+    const box = (await target.boundingBox())!;
+    return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  };
+  const at = await centre(select);
+  await page.mouse.move(at.x, at.y);
+  await page.mouse.down();
+  await expect(list).toHaveCount(1);
+  await expect(select).toHaveAttribute("aria-expanded", "true");
+  await page.mouse.up();
+  await expect(list).toHaveCount(1);
+  await expect(select).toHaveText("Default");
+  // Pressed again while open: closed.
+  await page.mouse.down();
+  await page.mouse.up();
+  await expect(list).toHaveCount(0);
+  // Held, moved onto the last option and let go: chosen, and the focus is
+  // on the select, not lost to the page.
+  await page.mouse.down();
+  await expect(list).toHaveCount(1);
+  const last = page.locator("[data-floating-select] [role='option']").last();
+  const name = (await last.textContent())!;
+  const row = await centre(last);
+  await page.mouse.move(row.x, row.y, { steps: 6 });
+  await page.mouse.up();
+  await expect(select).toHaveText(name);
+  await expect(list).toHaveCount(0);
+  await expect(select).toBeFocused();
+  // The right button does not open it.
+  await page.mouse.move(at.x, at.y);
+  await page.mouse.down({ button: "right" });
+  await expect(list).toHaveCount(0);
+  await page.mouse.up({ button: "right" });
+});
+
+test("a click during the theme's cross-fade lands on the fade, not the control under it; reduced motion starts none", async ({
+  page,
+  browserName,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, { settings: { menuBarShown: false }, animations: true });
+  await openAppearance(page);
+  const supported = await page.evaluate(() => {
+    const start = document.startViewTransition?.bind(document);
+    if (!start) return false;
+    const w = window as { fades?: number; hold?: boolean };
+    w.fades = 0;
+    document.startViewTransition = ((update: () => void) => {
+      w.fades!++;
+      const transition = start(update);
+      // Held where the browser's overlay is up, so a click can be tried.
+      void transition.ready.then(() => {
+        if (w.hold) document.getAnimations().forEach((a) => a.pause());
+      });
+      return transition;
+    }) as typeof document.startViewTransition;
+    w.hold = true;
+    return true;
+  });
+  test.skip(!supported, `${browserName} has no view transitions`);
+  const mode = page.getByRole("radiogroup", { name: "浅色/深色" });
+  const light = mode.getByRole("radio", { name: "浅色" });
+  await mode.getByRole("radio", { name: "深色" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  const at = (await light.boundingBox())!;
+  const x = at.x + at.width / 2;
+  const y = at.y + at.height / 2;
+  // The fade's overlay is on top: the page's own element is not under the
+  // pointer, and a press there changes nothing.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        ([x, y]) => document.elementFromPoint(x, y)?.tagName,
+        [x, y],
+      ),
+    )
+    .toBe("HTML");
+  await page.mouse.click(x, y);
+  await expect(light).not.toBeChecked();
+  await expect(mode.getByRole("radio", { name: "深色" })).toBeChecked();
+  // Played out, the page takes clicks again, and the last pick stands.
+  await page.evaluate(() => {
+    (window as { hold?: boolean }).hold = false;
+    document.getAnimations().forEach((a) => a.play());
+  });
+  await expect(light).toBeEnabled();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        ([x, y]) => !!document.elementFromPoint(x, y)?.closest("[role=radio]"),
+        [x, y],
+      ),
+    )
+    .toBe(true);
+  await light.click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  // Reduced motion: no transition starts, the page is dark at once.
+  const fades = () =>
+    page.evaluate(() => (window as { fades?: number }).fades ?? 0);
+  const before = await fades();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await mode.getByRole("radio", { name: "深色" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  expect(await fades()).toBe(before);
+});
+
+test("a number field is − / value / + in the Tab order; a typed value settles on Enter inside the range", async ({
+  page,
+  browserName,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, {
+    settings: {
+      menuBarShown: false,
+      language: "en",
+      docLetterSpacing: "expanded",
+    },
+  });
+  await openAppearance(page);
+  await page.locator("details.settings-fold > summary").first().click();
+  const number = page.locator(".tx-number:visible");
+  const input = number.getByRole("textbox", { name: "By" });
+  const stored = () =>
+    page.evaluate(
+      () =>
+        JSON.parse(localStorage.getItem("catvinci-settings")!)
+          .docLetterSpacingBy as number,
+    );
+  const label = () =>
+    page.evaluate(() => document.activeElement?.getAttribute("aria-label"));
+  // A Mac's WebKit tabs past buttons unless Option is held.
+  const tab = browserName === "webkit" && MAC ? "Alt+Tab" : "Tab";
+  await number.getByRole("button").first().focus();
+  expect(await label()).toBe("Decrease Character spacing");
+  await page.keyboard.press(tab);
+  expect(await label()).toBe("By");
+  // The box takes the focus's border as one.
+  await expect(number).toHaveCSS("border-top-color", "rgb(0, 122, 255)");
+  await page.keyboard.press(tab);
+  expect(await label()).toBe("Increase Character spacing");
+  await input.fill("0.5");
+  await input.press("Enter");
+  await expect.poll(stored).toBe(0.5);
+  await input.fill("999");
+  await input.press("Enter");
+  await expect.poll(stored).toBe(10);
+  await expect(input).toHaveValue("10");
 });
 
 test("first-line indent sets in the document's paragraphs, not a list's", async ({
