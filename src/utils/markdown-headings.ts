@@ -22,10 +22,15 @@ const FENCE = /^ {0,3}(`{3,}|~{3,})(.*)$/;
 const QUOTE = /^ {0,3}>[ \t]?/;
 const LIST_MARKER = /^ {0,3}([-+*]|\d{1,9}[.)])(?=[ \t]|$)/;
 const FOOTNOTE = /^ {0,3}\[\^[^\]\s]+\]:[ \t]?/;
-/** A link reference definition on one line: no paragraph text, so no
- *  setext heading's either. */
-const LINK_DEFINITION =
-  /^ {0,3}\[(?:[^\]\\]|\\.)+\]:[ \t]*(?:<[^>]*>|\S+)(?:[ \t]+(?:"[^"]*"|'[^']*'|\([^)]*\)))?[ \t]*$/;
+// A link reference definition: its label, destination and title may each
+// start on the next line. With a title that runs on into words, it is the
+// definition without its title, if that ends its line.
+const DEFINITION_HEAD = String.raw` {0,3}\[(?:[^\]\\]|\\.)+\]:[ \t]*\n?[ \t]*(?:<[^<>\n]*>|[^\s<>]\S*)`;
+const DEFINITION_TITLE = String.raw`(?:[ \t]+|[ \t]*\n[ \t]*)(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|\((?:[^()\\]|\\.)*\))`;
+const DEFINITIONS = [
+  new RegExp(`^${DEFINITION_HEAD}${DEFINITION_TITLE}[ \\t]*(?:\\n|$)`),
+  new RegExp(`^${DEFINITION_HEAD}[ \\t]*(?:\\n|$)`),
+];
 const TABLE_DELIMITER =
   /^ {0,3}\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|?[ \t]*$/;
 const BLOCK_TAGS =
@@ -59,8 +64,9 @@ const HTML_BLOCKS: { open: RegExp; close: RegExp | null; cuts: boolean }[] = [
 ];
 
 /** An open container: a quote, or a list item or footnote whose lines
- *  are indented `indent` columns. Nothing inside one is top-level. */
-type Container = { quote: true } | { indent: number };
+ *  are indented `indent` columns, `empty` while it holds nothing yet.
+ *  Nothing inside one is top-level. */
+type Container = { quote: true } | { indent: number; empty: boolean };
 
 /** The open leaf block, and how deep in the containers it sits. */
 type Leaf = { depth: number } & (
@@ -92,10 +98,28 @@ function continues(container: Container, line: string): string | null {
     const quote = QUOTE.exec(line);
     return quote ? line.slice(quote[0].length) : null;
   }
-  if (isBlank(line)) return "";
+  // An item can start with one blank line: a second ends it.
+  if (isBlank(line)) return container.empty ? null : "";
   return indentOf(line) >= container.indent
     ? line.slice(container.indent)
     : null;
+}
+
+/** How many of a paragraph's first lines are link reference definitions:
+ *  text no heading can be made of. */
+function definitionLines(lines: string[]): number {
+  const text = lines.join("\n");
+  let at = 0;
+  let count = 0;
+  while (at < text.length) {
+    const rest = text.slice(at);
+    const found = DEFINITIONS.map((d) => d.exec(rest)).find(Boolean);
+    if (!found) break;
+    at += found[0].length;
+    const breaks = found[0].split("\n").length - 1;
+    count += found[0].endsWith("\n") ? breaks : breaks + 1;
+  }
+  return count;
 }
 
 /** A list item or footnote opening on `line`: its indent and the rest.
@@ -204,15 +228,27 @@ export function headingsOf(markdown: string): HeadingLine[] {
   // The last line a `$$` block could close on, found once if ever asked.
   let lastCloser: number | null = null;
   let index = 0;
-  const closedLater = () => {
-    if (lastCloser === null) {
-      lastCloser = -1;
-      for (let i = lines.length - 1; i >= 0 && lastCloser < 0; i--)
-        if (lines[i].trimEnd().endsWith("$$")) lastCloser = i;
-    }
-    return lastCloser > index;
-  };
   const stack: Container[] = [];
+  /** Whether a line after this one, inside the first `depth` containers,
+   *  could close a `$$` block. At the top, any line to the end. */
+  const closedWithin = (depth: number) => {
+    if (depth === 0) {
+      if (lastCloser === null) {
+        lastCloser = -1;
+        for (let i = lines.length - 1; i >= 0 && lastCloser < 0; i--)
+          if (lines[i].trimEnd().endsWith("$$")) lastCloser = i;
+      }
+      return lastCloser > index;
+    }
+    for (let i = index + 1; i < lines.length; i++) {
+      let rest: string | null = expandTabs(lines[i]);
+      for (let c = 0; c < depth && rest !== null; c++)
+        rest = continues(stack[c], rest);
+      if (rest === null) return false;
+      if (rest.trimEnd().endsWith("$$")) return true;
+    }
+    return false;
+  };
   let leaf: Leaf | null = null;
 
   for (; index < lines.length; index++) {
@@ -220,21 +256,25 @@ export function headingsOf(markdown: string): HeadingLine[] {
     let rest = expandTabs(lines[index]);
     let matched = 0;
     for (; matched < stack.length; matched++) {
-      const inner = continues(stack[matched], rest);
+      const container = stack[matched];
+      const inner = continues(container, rest);
       if (inner === null) break;
       rest = inner;
+      if ("empty" in container && !isBlank(rest)) container.empty = false;
     }
+    const lazyClosed = () => closedWithin(matched);
     if (matched < stack.length) {
       // A lazy line: a paragraph in a container goes on without its marks.
       if (
         leaf?.kind === "paragraph" &&
         !isBlank(rest) &&
-        !cutsParagraph(rest, closedLater)
+        !cutsParagraph(rest, lazyClosed)
       )
         continue;
       stack.length = matched;
       if (leaf && leaf.depth > matched) leaf = null;
     }
+    const closedLater = () => closedWithin(stack.length);
     if (leaf && leaf.kind !== "paragraph") {
       const took = leafTakes(leaf, rest, closedLater);
       if (took === "last") leaf = null;
@@ -257,7 +297,11 @@ export function headingsOf(markdown: string): HeadingLine[] {
       const item = quote ? null : opensItem(rest, paragraph !== null);
       if (!quote && !item) break;
       leaf = null;
-      stack.push(quote ? { quote: true } : { indent: item!.indent });
+      stack.push(
+        quote
+          ? { quote: true }
+          : { indent: item!.indent, empty: isBlank(item!.rest) },
+      );
       rest = quote ? rest.slice(quote[0].length) : item!.rest;
     }
     const depth = stack.length;
@@ -269,8 +313,7 @@ export function headingsOf(markdown: string): HeadingLine[] {
       const underline = SETEXT.exec(rest);
       if (underline) {
         // Definitions lead a paragraph; once text starts, a line is text.
-        const defs = leaf.lines.findIndex((l) => !LINK_DEFINITION.test(l));
-        const text = defs < 0 ? [] : leaf.lines.slice(defs);
+        const text = leaf.lines.slice(definitionLines(leaf.lines));
         if (text.length && depth === 0)
           out.push({
             level: underline[1][0] === "=" ? 1 : 2,

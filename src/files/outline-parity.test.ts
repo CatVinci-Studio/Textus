@@ -62,6 +62,20 @@ const CASES: Record<string, string> = {
   "a paragraph's lines over ===": `H1\nH1b\n===\n\n# H2`,
   "a numbered line under text, which starts no list": `H1\n2. H1b\n===\n\n# H2`,
   "indented text under a paragraph": `Text\n    # no\n# H2`,
+  // Tabs count in columns, to the next multiple of four.
+  "tabs after quote and list marks": `>\t# no\n\n-\t# no\n\n- a\n\n\t# no\n\n1.\ta\n\n \t# no\n\n# H2`,
+  "a tab-indented fence in a list item": `- a\n\n\t\`\`\`\n\t# no\n\t\`\`\`\n\nText\n \t===\n\n# H2`,
+  // A loose formula's close must come before its container ends.
+  "a $$ line with inline maths in a quote, closed outside it": `> $$x$$ is\nno\n===\n\n$$\na\n$$\n\n# H2`,
+  "a $$ line with inline maths in a list item, closed outside it": `- $$x$$ is\nno\n===\n\n$$\na\n$$\n\n# H2`,
+  // A list item can start with one blank line, not two.
+  "an empty list item, then a blank line": `# H1\n\n-\n\n  # H2`,
+  "an empty list item, then a blank line and a setext heading": `-\n\n  H1\n  ---\n\n# H2`,
+  "an empty list item, then its text": `-\n  no\n  ---\n\n# H2`,
+  // A definition's destination, title or label may wrap.
+  "a link definition whose title wraps": `[a]: http://x\n"title"\n===\n\n[b]:\nhttp://x\n'ti\ntle'\n===\n\n# H2`,
+  "a link definition whose destination or label wraps": `[a]:\nhttp://x\n===\n\n[a\nb]: http://x\n---\n\n# H2`,
+  "a link definition with words after its title": `[a]: http://x\n"H1" junk\n===\n\n# H2`,
 };
 
 let editor: Editor | null = null;
@@ -88,7 +102,7 @@ describe("the Outline's headings are the editor's", () => {
     );
     expect(outline).toEqual(await editorHeadings(markdown));
     // Only real headings: never a line of a formula, nor one named "no".
-    expect(outline.every((h) => /^\d (H\d|Text|x)/.test(h))).toBe(true);
+    expect(outline.every((h) => /^\d ("?H\d|Text|x)/.test(h))).toBe(true);
     expect(outline.some((h) => /\bno\b/.test(h))).toBe(false);
   });
 });
