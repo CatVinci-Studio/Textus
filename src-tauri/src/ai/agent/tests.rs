@@ -742,7 +742,7 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
     let prompt = build_instructions(&chosen, &md("draft"), true, AgentMode::Review, "", "en");
     let en_ts = read("src/i18n/locales/en.ts");
     for label in [
-        "Choose folder…",
+        "Choose project folder…",
         "Use the sidebar's folder",
         "Learn my style from samples…",
         "Create style profile",
@@ -755,7 +755,7 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
         // The Settings pages and groups its paths go through.
         "Memory & skills",
         "Chat & writing",
-        "Continue & Check",
+        "Writing help",
         "Memory",
     ] {
         assert!(prompt.contains(label), "the prompt lacks {label}");
@@ -769,9 +769,9 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
         read("src/i18n/locales/ja.ts"),
     );
     for (strings, entry) in [
-        (&en_ts, "agentWorkspaceRootLabel: \"Folder\""),
-        (&zh_ts, "agentWorkspaceRootLabel: \"文件夹\""),
-        (&ja_ts, "agentWorkspaceRootLabel: \"フォルダー\""),
+        (&en_ts, "agentWorkspaceRootLabel: \"Project folder\""),
+        (&zh_ts, "agentWorkspaceRootLabel: \"项目文件夹\""),
+        (&ja_ts, "agentWorkspaceRootLabel: \"プロジェクトフォルダー\""),
         (&zh_ts, "navSkills: \"技能\""),
         (&ja_ts, "navSkills: \"スキル\""),
         (&zh_ts, "settingsTitle: \"设置\""),
@@ -785,7 +785,9 @@ fn the_prompt_names_things_exactly_as_the_ui_does() {
     ] {
         assert!(strings.contains(entry), "the UI has no {entry}");
     }
-    assert!(prompt.contains(&format!("Settings > {AI_NAME} > Memory & skills > Folder")));
+    assert!(prompt.contains(&format!(
+        "Settings > {AI_NAME} > Memory & skills > Project folder"
+    )));
     // The backend's own pointer to Settings names the same page.
     assert!(crate::ai::route::NOT_CONFIGURED.contains(&format!("Settings > {AI_NAME}.")));
 }

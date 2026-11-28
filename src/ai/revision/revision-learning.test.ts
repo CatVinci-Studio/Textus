@@ -188,7 +188,7 @@ describe("describeKind", () => {
       zh.learnSuggestion
         .replace("{what}", zhText.what)
         .replace("{rule}", zhText.rule),
-    ).toBe("你多次拒绝了把「」改成“”的修改。要记住吗：保留「」，不要改成“”。");
+    ).toBe("你多次拒绝了把「」改成“”的修订。要记住吗：保留「」，不要改成“”。");
     expect(
       describeKind({ type: "swap", from: "utilize", to: "use" }, en),
     ).toEqual({

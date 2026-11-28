@@ -101,7 +101,7 @@ export function PrivacySection({ t }: { t: Strings }) {
         )}
         <ClearRow
           label={t.privacyClearDrafts}
-          action={t.privacyDeleteButton}
+          action={t.privacyClearButton}
           warning={t.privacyDraftRecoveryClearHint}
           t={t}
           onClear={() => drafts.clearAllDrafts()}
