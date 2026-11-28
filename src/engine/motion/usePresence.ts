@@ -53,6 +53,17 @@ function hasExit(el: Element): boolean {
   return animated || transitioned;
 }
 
+/** The surfaces playing their exit now, each with what ends it. */
+const leaving = new Map<Element, () => void>();
+
+/** Ends at once the exits of the surfaces matching `selector`: a menu that
+ *  opens while another plays out its exit (the next button along, a second
+ *  right-click elsewhere) takes its place, rather than the two showing and
+ *  the eye waiting on the old one. */
+export function endExits(selector: string) {
+  for (const [el, finish] of [...leaving]) if (el.matches(selector)) finish();
+}
+
 /** `open` as it should be on screen: on close it stays mounted, "closing",
  *  until its exit animations end, or at once when none runs; never longer
  *  than the longest exit the tokens have (a missed end event). */
@@ -87,6 +98,7 @@ export function usePresence(open: boolean): PresenceHandle {
       finish();
       return;
     }
+    leaving.set(el, finish);
     const timer = window.setTimeout(finish, duration("--dur-sheet") + 50);
     const running = runningExit(el);
     const onEnd = (event: Event) => {
@@ -100,6 +112,7 @@ export function usePresence(open: boolean): PresenceHandle {
     }
     return () => {
       alive = false;
+      leaving.delete(el);
       window.clearTimeout(timer);
       el.removeEventListener("animationend", onEnd);
       el.removeEventListener("transitionend", onEnd);

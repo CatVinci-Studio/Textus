@@ -11,6 +11,13 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { Tooltip } from "./Tooltip";
+import {
+  Presence,
+  useMergedRef,
+  usePresenceProps,
+  usePresenceState,
+} from "../motion/usePresence";
+import { useLatest } from "../../utils/hooks/useLatest";
 import { useMenuAim } from "./menu-aim";
 import { submenuPlace } from "./placement";
 import { CheckIcon, ChevronIcon } from "./icons";
@@ -27,6 +34,8 @@ const MENU_ROWS = '[role^="menuitem"]:not(:disabled)';
 const SWAP_MS = 400;
 
 type Open = { index: number; focus: boolean } | null;
+
+type Side = "left" | "right";
 
 function isMenuGroup(entry: ContextMenuEntry): entry is ContextMenuGroup {
   return typeof entry === "object" && "items" in entry;
@@ -46,6 +55,20 @@ export function menuHost(opener?: Element | null): Element {
   );
 }
 
+/** The group whose submenu is open, and whether it swaps in at once. */
+function useOpenGroup() {
+  const [open, setOpenNow] = useState<Open>(null);
+  const [instant, setInstant] = useState(false);
+  const closedAt = useRef(-Infinity);
+  const setOpen = (next: Open) => {
+    const now = performance.now();
+    if (open) closedAt.current = now;
+    setInstant(next !== null && now - closedAt.current < SWAP_MS);
+    setOpenNow(next);
+  };
+  return { open, setOpen, instant };
+}
+
 /**
  * One level of a menu: its rows, arrow keys and menu aim, and the submenu
  * of the group open - beside its row, or with `inline` (a phone) under it.
@@ -61,6 +84,7 @@ export function MenuPanel({
   label,
   heading,
   surface,
+  side = "right",
   onKeyDown,
   onMouseEnter,
 }: {
@@ -75,23 +99,24 @@ export function MenuPanel({
   label?: string;
   heading?: ReactNode;
   /** The surface's own props (a Presence's state and ref). */
-  surface?: object;
+  surface?: { ref?: (el: HTMLDivElement | null) => void } & Record<
+    string,
+    unknown
+  >;
+  /** The side its submenus try first: the one this level opened on. */
+  side?: Side;
   onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void;
   onMouseEnter?: () => void;
 }) {
   const own = useRef<HTMLDivElement>(null);
   const ref = panelRef ?? own;
-  const [open, setOpenNow] = useState<Open>(null);
-  const [instant, setInstant] = useState(false);
-  const closedAt = useRef(-Infinity);
-  const sub = useRef<HTMLDivElement | null>(null);
+  // Both: the panel's own, and the Presence's that times its exit.
+  const setRef = useMergedRef(ref, surface?.ref);
+  // Leaving, it takes its open submenu out with it.
+  const leaving = usePresenceState() === "closing";
+  const { open, setOpen, instant } = useOpenGroup();
+  const subEl = useRef<HTMLDivElement | null>(null);
   const rows = useRef(new Map<number, HTMLButtonElement>());
-  const setOpen = (next: Open) => {
-    const now = performance.now();
-    if (open) closedAt.current = now;
-    setInstant(next !== null && now - closedAt.current < SWAP_MS);
-    setOpenNow(next);
-  };
   // A pointer on its way to the open submenu leaves it open (menu-aim.ts).
   const aim = useMenuAim<number>(
     (index) => {
@@ -99,15 +124,17 @@ export function MenuPanel({
         setOpen(index === null ? null : { index, focus: false });
     },
     () => ref.current,
-    () => sub.current,
+    () => subEl.current,
   );
 
   function keyDown(e: KeyboardEvent<HTMLDivElement>) {
     // Escape, Android's Back, folds a phone's open group before it closes
-    // the menu.
-    if (e.key === "Escape" && inline && open) {
+    // the menu; Escape or ← folds a submenu the pointer opened while the
+    // keys are still here, before a second Escape closes the whole menu.
+    if (open && (e.key === "Escape" || (!inline && e.key === "ArrowLeft"))) {
       e.preventDefault();
       e.stopPropagation();
+      aim.hold();
       setOpen(null);
       return;
     }
@@ -130,11 +157,12 @@ export function MenuPanel({
       !isMenuGroup(item) &&
       (item.checked !== undefined || item.current !== undefined),
   );
-  const group = open && !inline ? items[open.index] : undefined;
+  const group = open && !inline && !leaving ? items[open.index] : undefined;
+  const sub = group && isMenuGroup(group) && open ? { group, open } : null;
   return (
     <div
       {...surface}
-      ref={ref}
+      ref={setRef}
       role="menu"
       aria-label={label}
       data-floating-menu=""
@@ -143,6 +171,7 @@ export function MenuPanel({
       onKeyDown={nested ? undefined : keyDown}
       onMouseMove={aim.move}
       onMouseEnter={onMouseEnter}
+      onMouseLeave={aim.leave}
       // A press on an item doesn't take the focus: on Linux the button kept
       // it, and once the menu closed it fell to the page.
       onMouseDown={(e) => e.preventDefault()}
@@ -164,8 +193,8 @@ export function MenuPanel({
               disabled={item.disabled}
               tabIndex={-1}
               className="context-menu-item context-menu-group"
-              onMouseEnter={() => {
-                if (!inline) aim.hover(i);
+              onMouseEnter={(e) => {
+                if (!inline) aim.hover(i, e);
               }}
               onClick={() => {
                 aim.hold();
@@ -205,26 +234,38 @@ export function MenuPanel({
             checks={checks}
             reveal={inline}
             onClose={onClose}
-            onMouseEnter={() => aim.hover(null)}
+            onMouseEnter={(e) => aim.hover(null, e)}
           />
         ),
       )}
-      {group && isMenuGroup(group) && open && (
-        <SubMenu
-          anchor={rows.current.get(open.index) ?? null}
-          items={group.items}
-          focus={open.focus}
-          instant={instant}
-          subRef={sub}
-          onClose={onClose}
-          onBack={() => {
-            rows.current.get(open.index)?.focus();
-            aim.hold();
-            setOpen(null);
-          }}
-          onEnter={aim.hold}
-        />
-      )}
+      <Presence show={!!sub}>
+        {sub && (
+          <SubMenu
+            anchor={rows.current.get(sub.open.index) ?? null}
+            items={sub.group.items}
+            focus={sub.open.focus}
+            instant={instant}
+            prefer={side}
+            subRef={subEl}
+            onClose={onClose}
+            onBack={() => {
+              rows.current.get(sub.open.index)?.focus();
+              aim.hold();
+              setOpen(null);
+            }}
+            onLost={() => {
+              // Its row scrolled out of sight: the keys go back to the menu.
+              if (subEl.current?.contains(document.activeElement))
+                rows.current
+                  .get(sub.open.index)
+                  ?.focus({ preventScroll: true });
+              aim.hold();
+              setOpen(null);
+            }}
+            onEnter={aim.hold}
+          />
+        )}
+      </Presence>
     </div>
   );
 }
@@ -241,7 +282,7 @@ function MenuRow({
   /** A phone's: the checked row scrolled into view in a long list. */
   reveal: boolean;
   onClose: () => void;
-  onMouseEnter: () => void;
+  onMouseEnter: (e: { clientX: number; clientY: number }) => void;
 }) {
   const label = (
     <span className="context-menu-label tx-truncate">{item.label}</span>
@@ -293,55 +334,89 @@ function MenuRow({
   );
 }
 
-/** A group's items beside its row: to the right, or to the left where the
- *  window ends. Portalled, so the menu's own transform doesn't move it. */
+/** A group's items beside its row: on its menu's side, or across where the
+ *  window ends; kept beside the row as the menu scrolls and the window
+ *  changes size. Portalled, so the menu's own transform doesn't move it. */
 function SubMenu({
   anchor,
   items,
   focus,
   instant,
+  prefer,
   subRef,
   onClose,
   onBack,
+  onLost,
   onEnter,
 }: {
   anchor: HTMLElement | null;
   items: ContextMenuEntry[];
   focus: boolean;
   instant: boolean;
+  prefer: Side;
   subRef: RefObject<HTMLDivElement | null>;
   onClose: () => void;
   onBack: () => void;
+  /** Its row went out of sight. */
+  onLost: () => void;
   onEnter: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  const surface = usePresenceProps(ref);
+  const leaving = usePresenceState() === "closing";
+  const lost = useLatest(onLost);
+  const [pos, setPos] = useState<{
+    left: number;
+    top: number;
+    side: Side;
+  } | null>(null);
   useLayoutEffect(() => {
     const el = ref.current;
+    // On its way out it is no longer what the pointer aims for.
+    if (leaving) {
+      if (subRef.current === el) subRef.current = null;
+      return;
+    }
     subRef.current = el;
     if (!el || !anchor) return;
     const menu = anchor.closest('[role="menu"]') ?? anchor;
-    setPos(
-      submenuPlace(
-        anchor.getBoundingClientRect(),
-        menu.getBoundingClientRect(),
-        el.getBoundingClientRect(),
-      ),
-    );
-  }, [anchor, items, subRef]);
+    const place = () => {
+      const row = anchor.getBoundingClientRect();
+      const box = menu.getBoundingClientRect();
+      const middle = (row.top + row.bottom) / 2;
+      if (middle < box.top || middle > box.bottom) return lost.current();
+      const at = submenuPlace(row, box, el.getBoundingClientRect(), prefer);
+      setPos({ ...at, side: at.left < box.left ? "left" : "right" });
+    };
+    place();
+    menu.addEventListener("scroll", place);
+    window.addEventListener("resize", place);
+    return () => {
+      menu.removeEventListener("scroll", place);
+      window.removeEventListener("resize", place);
+      if (subRef.current === el) subRef.current = null;
+    };
+  }, [anchor, items, prefer, subRef, leaving, lost]);
+  // Once, as it is first placed: a scroll that moves it keeps the row the
+  // keys are on.
+  const placed = pos !== null;
   useEffect(() => {
-    if (focus && pos)
+    if (focus && placed)
       ref.current?.querySelector<HTMLElement>(MENU_ROWS)?.focus();
-  }, [focus, pos]);
+  }, [focus, placed]);
 
   return createPortal(
     <MenuPanel
       panelRef={ref}
+      surface={{ ...surface, "data-side": pos?.side }}
       items={items}
       onClose={onClose}
+      side={pos?.side}
       className={`context-menu context-submenu floating-surface${instant ? " context-submenu-instant" : ""}`}
       // Painted only once placed.
-      style={pos ?? { left: -9999, top: -9999 }}
+      style={
+        pos ? { left: pos.left, top: pos.top } : { left: -9999, top: -9999 }
+      }
       onMouseEnter={onEnter}
       onKeyDown={(e) => {
         if (e.key !== "ArrowLeft" && e.key !== "Escape") return;
@@ -350,6 +425,8 @@ function SubMenu({
         onBack();
       }}
     />,
-    menuHost(),
+    // By its row: the focus may be anywhere (WebKit doesn't focus a pressed
+    // button), and a floating view's menu must stay in that view.
+    menuHost(anchor),
   );
 }

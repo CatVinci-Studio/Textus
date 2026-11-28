@@ -18,11 +18,12 @@
   font-size: var(--text-body);
   outline: none;
   transform-origin: var(--transform-origin, top left);
-  animation: motion-pop-in var(--dur-base) var(--ease-out);
+  /* As quick as a menu's (ContextMenu.css). */
+  animation: motion-pop-in var(--dur-fast) var(--ease-out);
 }
 
 .ui-select-menu[data-state="closing"] {
-  animation: motion-pop-out var(--dur-fast) var(--ease-in) forwards;
+  animation: motion-pop-out var(--dur-instant) var(--ease-in) forwards;
 }
 
 /* The list takes focus so the keys work in it; its highlighted option

@@ -3,11 +3,12 @@
    the end reaches all of them. motion.ts reads the same tokens. */
 :root {
   /* Durations. Exits run at about 70% of their entrance. */
-  /* Press feedback, a hover colour arriving. */
+  /* Press feedback, a hover colour arriving, a menu's or select's exit. */
   --dur-instant: 80ms;
-  /* Colour changes, chevrons, small fades, every exit of a small popover. */
+  /* Colour changes, chevrons, small fades, every exit of a small popover;
+     menus and selects in. */
   --dur-fast: 120ms;
-  /* Menus, selects, popovers, toasts, dialogs in, cards arriving; small
+  /* Popovers, toasts, dialogs in, cards arriving; small
      springs - a switch's thumb, a segmented control, a tab settling. */
   --dur-base: 200ms;
   /* An older step, now the base one: kept for plugins that name it. */

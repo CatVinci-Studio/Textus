@@ -1,5 +1,18 @@
-import type { CSSProperties, KeyboardEvent, ReactNode, Ref } from "react";
+import {
+  useLayoutEffect,
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode,
+  type Ref,
+} from "react";
 import { createPortal } from "react-dom";
+import { endExits } from "../motion/usePresence";
+
+/** Every menu and select list the app draws: one shows at a time, so one
+ *  opening ends the exit of any still on its way out (usePresence.ts). */
+export function endListExits() {
+  endExits("[data-floating-menu], [data-floating-select]");
+}
 
 /**
  * The open list of a drawn select (Select, the AI mode picker, a code
@@ -29,6 +42,7 @@ export function SelectMenu({
   onKeyDown?: (e: KeyboardEvent<HTMLUListElement>) => void;
   children: ReactNode;
 }) {
+  useLayoutEffect(endListExits, []);
   return createPortal(
     <ul
       ref={listRef}
