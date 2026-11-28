@@ -52,7 +52,7 @@ function useBareWhenEmpty(body: RefObject<HTMLDivElement | null>) {
     const changed = new MutationObserver(mark);
     changed.observe(el, { childList: true });
     return () => changed.disconnect();
-  });
+  }, [body]);
 }
 
 /**
