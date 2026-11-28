@@ -166,6 +166,8 @@ export function SourceEditor({
         spellcheck: "false",
         autocorrect: "off",
         autocapitalize: "off",
+        // Where the text starts: held as the pane changes width (carry.ts).
+        "data-frame-column": "",
       }),
       // The plain-text keys only: no searchKeymap (Ctrl/Cmd+F is
       // Textus's own find bar). Tab indents as in a text editor; Escape
@@ -295,6 +297,7 @@ export function SourceEditor({
     <>
       <div
         ref={hostRef}
+        data-frame-carry=""
         className={`source-view tx-scroll-reveal ${className}${typewriter ? " typewriter-source" : ""}`}
       />
       {findBar}

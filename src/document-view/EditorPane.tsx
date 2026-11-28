@@ -260,8 +260,14 @@ export const EditorPane = memo(function EditorPane({
   }, [tabId, scrollRef]);
 
   return (
-    <div className="editor-scroll tx-scroll-reveal" ref={scrollRef}>
+    // The column held where it was as the island changes width (carry.ts).
+    <div
+      className="editor-scroll tx-scroll-reveal"
+      ref={scrollRef}
+      data-frame-carry=""
+    >
       <div
+        data-frame-column=""
         className={`editor-content ${settings.typewriterMode ? "typewriter-active" : ""}`}
       >
         <Suspense fallback={null}>

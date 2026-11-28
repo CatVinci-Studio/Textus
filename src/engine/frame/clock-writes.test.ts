@@ -37,7 +37,11 @@ function recorded(key: string): HTMLElement {
       return Reflect.set(target, prop, value, target);
     },
   });
-  const el = { style: proxy } as unknown as HTMLElement;
+  // Nothing inside it to carry (carry.ts looks).
+  const el = {
+    style: proxy,
+    querySelectorAll: () => [],
+  } as unknown as HTMLElement;
   frameClock.attach(key, el);
   used.add(key);
   return el;

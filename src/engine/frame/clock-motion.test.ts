@@ -215,6 +215,24 @@ describe("frame clock motion", () => {
     expect(sheet.style.left).toBe("75px");
   });
 
+  it("leaves a part mid-run where its last frame drew it as another group changes", () => {
+    const sheet = el("sheet");
+    const title = el("title");
+    set("islands", [["sheet", { rect: box(0) }]], false);
+    set("islands", [["sheet", { rect: box(100) }]]);
+    frame(1000);
+    frame(1200);
+    expect(sheet.style.left).toBe("50px");
+    // The title (or a row of tabs) placed between two frames.
+    set("title", [
+      ["title", { rect: { x: 10, y: 0, w: 50, h: 0 }, along: true }],
+    ]);
+    expect(sheet.style.left).toBe("50px");
+    expect(title.style.left).toBe("10px");
+    frame(1300);
+    expect(sheet.style.left).toBe("75px");
+  });
+
   it("puts everything at its end at once when told not to animate mid-run", () => {
     const sheet = el("sheet");
     const view = el("view");
