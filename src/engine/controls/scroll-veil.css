@@ -1,0 +1,27 @@
+/* The same fade for a scroller that draws its own border and shadow (a
+   menu, a select list), where a mask would cut them off. The surface's
+   colour is laid over the edge instead, on sticky pseudo-elements that
+   take no room; --veil-inset is the scroller's padding, so the veil
+   spans its full width. */
+.tx-scroll-veil::before,
+.tx-scroll-veil::after {
+  content: "";
+  display: block;
+  position: sticky;
+  z-index: 1;
+  height: 0;
+  margin-inline: calc(var(--veil-inset, 0px) * -1);
+  pointer-events: none;
+}
+.tx-scroll-veil[data-more-up]::before {
+  top: 0;
+  height: var(--space-6);
+  margin-bottom: calc(var(--space-6) * -1);
+  background: linear-gradient(var(--ui-bg), transparent);
+}
+.tx-scroll-veil[data-more-down]::after {
+  bottom: 0;
+  height: var(--space-6);
+  margin-top: calc(var(--space-6) * -1);
+  background: linear-gradient(transparent, var(--ui-bg));
+}

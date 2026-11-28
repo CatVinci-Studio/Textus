@@ -29,7 +29,9 @@
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-l);
   background: var(--ui-bg);
-  box-shadow: var(--shadow-dialog);
+  box-shadow:
+    inset 0 1px 0 var(--ui-edge-light),
+    var(--shadow-dialog);
   font-size: var(--text-body-large);
 }
 

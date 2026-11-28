@@ -49,7 +49,9 @@
   overflow-y: auto;
   padding: 16px;
   border-radius: var(--shape-l);
-  box-shadow: var(--shadow-dialog);
+  box-shadow:
+    inset 0 1px 0 var(--ui-edge-light),
+    var(--shadow-dialog);
   color: var(--ui-text);
   pointer-events: auto;
 }

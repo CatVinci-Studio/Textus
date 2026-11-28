@@ -282,6 +282,7 @@ document's own actions; nothing is in both.
 - **Three shadows**, by how far a surface stands off what is under it: `--shadow-1` resting on it (a switch's thumb, a selected segment, a margin card, a picture), `--shadow-2` floating over it (menus, popovers, a card under the pointer, the review bar), `--shadow-3` over everything (dialogs, sheets, drawers). The older names (`--shadow-popover`, `--shadow-card`…) stay, each one of the three.
 
 - Shadows MUST appear only on overlays, each paired with its surface.
+- In dark, a menu, popover or dialog also has a 1px light line along its top edge (`--ui-edge-light`, laid first in its `box-shadow` so the cast shadow stays); in light it is transparent. Islands do not have it. A long menu or list fades out at the edge it goes on past (`.tx-scroll-veil`, `useScrollFade`): a veil of the surface colour, since a mask would cut the border and shadow.
 - No blur materials anywhere: every surface is solid, the frame, menus and popovers alike. Overlays only darken what is under them; they never blur it.
 
 ## 8. Icons - In force
