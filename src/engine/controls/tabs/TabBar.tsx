@@ -100,6 +100,7 @@ export function TabBar({
     ids,
     widths: fit?.widths ?? null,
     gap: fit?.between ?? 0,
+    room: fit?.available ?? 0,
     incomingX: previewTab?.x ?? null,
   });
 
