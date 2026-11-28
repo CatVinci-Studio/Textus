@@ -409,6 +409,10 @@ test.describe("the app-drawn menu (Windows, Linux)", () => {
     );
     expect(second!.x).toBeGreaterThanOrEqual(first!.x + first!.width);
     expect(third!.x).toBeGreaterThanOrEqual(second!.x + second!.width);
+    // The keys are still in the first list (it opens with its first row
+    // focused): Escape folds the sections the pointer opened, then closes it.
+    await page.keyboard.press("Escape");
+    await expect(menus(page)).toHaveCount(1);
     await page.keyboard.press("Escape");
     await expect(menus(page)).toHaveCount(0);
   });
