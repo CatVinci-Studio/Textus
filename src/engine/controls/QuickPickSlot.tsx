@@ -1,4 +1,4 @@
-import { Suspense, useSyncExternalStore } from "react";
+import { Suspense, useRef, useSyncExternalStore } from "react";
 import { lazyComponent } from "../../lazy/lazy-component";
 import { lazyModule } from "../../lazy/lazy-module";
 import { quickPickNow, subscribeQuickPick } from "./quick-pick-queue";
@@ -15,7 +15,10 @@ export function QuickPickSlot(props: { emptyLabel: string; okLabel: string }) {
     subscribeQuickPick,
     () => !!quickPickNow(),
   );
-  if (!asked) return null;
+  // Kept once loaded, so a list answered can play its exit.
+  const loaded = useRef(false);
+  if (asked) loaded.current = true;
+  if (!loaded.current) return null;
   return (
     <Suspense fallback={null}>
       <QuickPickHost {...props} />

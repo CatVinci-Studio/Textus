@@ -15,6 +15,7 @@ import { listMove } from "./list-keys";
 import { useShownItems } from "./quick-pick-shown";
 import { DialogActions } from "./DialogActions";
 import { useScrollFade } from "./scroll-fade";
+import { Presence, PresenceDiv } from "../motion/usePresence";
 
 export function QuickPickHost({
   emptyLabel,
@@ -24,14 +25,19 @@ export function QuickPickHost({
   okLabel: string;
 }) {
   const current = useSyncExternalStore(subscribeQuickPick, quickPickNow);
-  if (!current) return null;
+  // Answered, it plays the dialogs' exit; one queued after it takes its
+  // place at once.
   return (
-    <QuickPick
-      key={current.id}
-      request={current}
-      emptyLabel={emptyLabel}
-      okLabel={okLabel}
-    />
+    <Presence show={!!current}>
+      {current && (
+        <QuickPick
+          key={current.id}
+          request={current}
+          emptyLabel={emptyLabel}
+          okLabel={okLabel}
+        />
+      )}
+    </Presence>
   );
 }
 
@@ -76,7 +82,7 @@ function QuickPick({
       ?.scrollIntoView({ block: "nearest" });
   }, [index]);
   return (
-    <div
+    <PresenceDiv
       className="tx-backdrop quick-pick-overlay"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) answer(request, null);
@@ -179,6 +185,6 @@ function QuickPick({
           </DialogActions>
         )}
       </div>
-    </div>
+    </PresenceDiv>
   );
 }
