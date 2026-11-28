@@ -288,7 +288,9 @@ turning it on, or leaves it off, and can take each back later.
 Ask for what the plugin's purpose explains, and no more: each permission
 is shown to the user, and a listing in Textus asks why for the broad ones.
 Files are reached only inside the open folder, never the app's own; plain
-HTTP goes only to this computer (`network:localhost:23119`). Files and
+HTTP goes only to this computer (`network:localhost:23119`), or, with
+`network:*`, to an address the user types (a NAS on the home network; 1.4.9).
+A redirect from HTTPS to plain HTTP is never followed. Files and
 folders whose names start with "." are shut to plugins but for `.textus`,
 Obsidian's shared settings, `.gitignore`, `.git/HEAD` and those a plugin
 names with `hidden:`, read only; `.git`, `.env`, `.ssh`, keys and other

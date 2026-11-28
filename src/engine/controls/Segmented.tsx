@@ -41,7 +41,19 @@ export function Segmented<T extends string>({
   useFitSteps(row, equal ? FIT_EQUAL : FIT);
   const at = options.findIndex((o) => o.id === value);
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    const moved = listMove(e.key, at, options.length, true, "row");
+    // From the segment the keys are on, which the last press moved the
+    // focus to: the owner may commit its change after this press (a fade
+    // does), so `value` can still be the one before.
+    const on = (e.target as HTMLElement).closest<HTMLElement>("[data-segment]")
+      ?.dataset.segment;
+    const from = options.findIndex((o) => o.id === on);
+    const moved = listMove(
+      e.key,
+      from < 0 ? at : from,
+      options.length,
+      true,
+      "row",
+    );
     if (moved === null) return;
     e.preventDefault();
     const next = options[moved];

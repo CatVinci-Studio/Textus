@@ -74,8 +74,13 @@ export function SettingsTab({
     pluginCommands,
   });
   return (
-    <div className="settings-tab tx-scroll-reveal" ref={content}>
-      <div className="settings-tab-page settings-content">
+    // The page held where it was as the island changes width (carry.ts).
+    <div
+      className="settings-tab tx-scroll-reveal"
+      ref={content}
+      data-frame-carry=""
+    >
+      <div className="settings-tab-page settings-content" data-frame-column="">
         {/* The list of pages is the sidebar's: with it put away, the way
             back to it. */}
         {!listShown && (

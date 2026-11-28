@@ -94,6 +94,7 @@ export function SplitView({
         <div
           ref={previewRef}
           className="split-preview tx-scroll-reveal"
+          data-frame-carry=""
           onScroll={(e) => {
             const source = sourceScroller();
             if (source) follow(e.currentTarget, source, "preview");

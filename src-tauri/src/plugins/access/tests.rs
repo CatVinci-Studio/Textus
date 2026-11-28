@@ -49,14 +49,35 @@ fn hosts_match_their_grants() {
 }
 
 #[test]
-fn plain_http_only_to_this_computer() {
-    let g = grants(&["network:*"]);
-    let ok = |u: &str| url_allowed(&g, &reqwest::Url::parse(u).unwrap());
+fn plain_http_only_to_this_computer_or_an_address_the_user_types() {
+    let named = grants(&["network:example.com", "network:localhost:23119"]);
+    let ok = |u: &str| url_allowed(&named, &reqwest::Url::parse(u).unwrap());
     assert!(ok("https://example.com/x"));
     assert!(!ok("http://example.com/x"));
     assert!(ok("http://localhost:23119/api"));
-    assert!(ok("http://127.0.0.1:23119/api"));
     assert!(!ok("file:///etc/passwd"));
+    let any = grants(&["network:*"]);
+    let ok = |u: &str| url_allowed(&any, &reqwest::Url::parse(u).unwrap());
+    assert!(ok("http://192.168.1.20:5005/dav"));
+    assert!(ok("http://nas.example.com/dav"));
+    assert!(ok("http://127.0.0.1:23119/api"));
+    assert!(!ok("ftp://example.com/x"));
+    assert!(!ok("file:///etc/passwd"));
+}
+
+#[test]
+fn a_redirect_never_drops_from_https_to_http() {
+    let url = |u: &str| reqwest::Url::parse(u).unwrap();
+    let https = [url("https://nas.example.com/dav")];
+    let http = [url("http://nas.example.com/dav")];
+    assert!(downgrades(&https, &url("http://nas.example.com/dav/")));
+    assert!(downgrades(
+        &[http[0].clone(), https[0].clone()],
+        &url("http://x/")
+    ));
+    assert!(!downgrades(&https, &url("https://other.example.com/")));
+    assert!(!downgrades(&http, &url("http://nas.example.com/dav/")));
+    assert!(!downgrades(&http, &url("https://nas.example.com/dav/")));
 }
 
 #[test]

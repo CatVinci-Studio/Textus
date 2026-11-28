@@ -1,5 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-import { emit, openApp, settled } from "./helpers";
+import { expect, test, type Locator, type Page } from "@playwright/test";
+import { MAC, emit, openApp, settled } from "./helpers";
 
 const doc = (page: Page) => page.locator(".ProseMirror:visible").first();
 const bar = (page: Page) => page.getByRole("toolbar");
@@ -51,6 +51,70 @@ test("the format bar's heading button picks a level", async ({ page }) => {
   await page.getByRole("menuitemradio", { name: "正文" }).click();
   await expect(doc(page).locator("h3")).toHaveCount(0);
   await expect(doc(page).locator("p")).toHaveText("a title");
+});
+
+test("a menu button opens on the mouse's press; let go over a row picks it, in place picks nothing", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await typeAndSelectLast(page, "a title", 5);
+  const heading = bar(page).getByRole("button", {
+    name: "Heading",
+    exact: true,
+  });
+  const menu = page.locator("[data-floating-menu]");
+  const centre = async (target: Locator) => {
+    const box = (await target.boundingBox())!;
+    return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  };
+  const at = await centre(heading);
+  await page.mouse.move(at.x, at.y);
+  // Open before the button comes up; let go in place, it stays open and
+  // chooses nothing.
+  await page.mouse.down();
+  await expect(menu).toHaveCount(1);
+  await expect(heading).toHaveAttribute("aria-expanded", "true");
+  await page.mouse.up();
+  await expect(menu).toHaveCount(1);
+  await expect(doc(page).locator("h3")).toHaveCount(0);
+  // Pressed again while open: closed, and the click of that press does not
+  // open it anew.
+  await page.mouse.down();
+  await page.mouse.up();
+  await expect(menu).toHaveCount(0);
+  // Held, moved onto a row and let go: that row is chosen, the menu closes,
+  // and the keys are back in the document.
+  await page.mouse.down();
+  await expect(menu).toHaveCount(1);
+  const row = await centre(
+    page.getByRole("menuitemradio", { name: "Heading 3" }),
+  );
+  await page.mouse.move(row.x, row.y, { steps: 6 });
+  await page.mouse.up();
+  await expect(doc(page).locator("h3")).toContainText("a title");
+  await expect(menu).toHaveCount(0);
+  await expect(doc(page)).toBeFocused();
+  // Neither the right button nor a Ctrl press opens it on the press.
+  await page.mouse.move(at.x, at.y);
+  await page.mouse.down({ button: "right" });
+  await expect(menu).toHaveCount(0);
+  await page.mouse.up({ button: "right" });
+  await page.keyboard.down("Control");
+  await page.mouse.down();
+  await expect(menu).toHaveCount(0);
+  await page.mouse.up();
+  await page.keyboard.up("Control");
+});
+
+test("a format bar button's tooltip shows its key as a keycap", async ({
+  page,
+}) => {
+  await openApp(page, { settings: { language: "en" } });
+  await typeAndSelectLast(page, "alpha beta", 4);
+  await bar(page).getByRole("button", { name: "Bold", exact: true }).hover();
+  const keycap = page.getByRole("tooltip").locator(".tx-kbd");
+  await expect(keycap).toHaveCount(1);
+  await expect(keycap).toHaveText(MAC ? "⌘B" : "Ctrl+B");
 });
 
 test("brought back to the top, the document's first block shows below the format bar", async ({
