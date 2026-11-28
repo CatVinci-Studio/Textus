@@ -3,7 +3,7 @@
 //! (no new TLS handshake each time) and HTTP/2 carries several at once; a
 //! request given a `cancelId` stops when the plugin cancels it.
 
-use super::access::{refused, running, url_allowed};
+use super::access::{downgrades, refused, running, url_allowed};
 use super::state;
 use crate::locks::locked;
 use serde::{Deserialize, Serialize};
@@ -68,11 +68,15 @@ fn client_for(id: &str, granted: &[String]) -> Result<reqwest::Client, String> {
             return Ok(kept.client.clone());
         }
     }
-    // A redirect must stay within what was granted too.
+    // A redirect must stay within what was granted too, and never from
+    // HTTPS to plain HTTP: the plugin then gets the redirect itself.
     let redirect_grants = granted.to_vec();
     let client = crate::net::public_client(Duration::from_secs(10), Duration::from_secs(60))?
         .redirect(reqwest::redirect::Policy::custom(move |attempt| {
-            if attempt.previous().len() > 5 || !url_allowed(&redirect_grants, attempt.url()) {
+            if attempt.previous().len() > 5
+                || !url_allowed(&redirect_grants, attempt.url())
+                || downgrades(attempt.previous(), attempt.url())
+            {
                 attempt.stop()
             } else {
                 attempt.follow()
