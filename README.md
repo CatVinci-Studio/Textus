@@ -43,14 +43,6 @@
   <a href="https://trendshift.io/repositories/307610?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-307610" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/307610/daily?language=TypeScript" alt="CatVinci-Studio%2FTextus | Trendshift" width="250" height="55"/></a>
 </p>
 
-<p align="center"><strong>Premier Sponsor</strong></p>
-
-<p align="center">
-  <a href="https://www.anthropic.com/">
-    <img src="docs/images/readme/sponsors/anthropic-badge.png" alt="Anthropic" width="300">
-  </a>
-</p>
-
 <p align="center">
   <img src="docs/images/readme/en/hero.webp" alt="Textus with the first chapter of A Study in Scarlet beside the reader’s notes on it. Textus AI suggests revisions to the notes in the margin and pins a review comment beside the novel." width="860" /><br>
   <sub><i>A Study in Scarlet</i>, Arthur Conan Doyle (1887)</sub>
@@ -67,8 +59,7 @@ Free and open source, under the MIT license.
 | Windows · x64         | [Download .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                            | —                                                                                   |
 | Linux · x64           | [Download .AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · Also as .deb · .rpm | Arch Linux: the [`[catvinci]` repository](https://github.com/CatVinci-Studio/arch-repo) |
 | Android · arm64       | [Download .apk](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
-
-> iOS (iPhone and iPad): public beta on TestFlight soon.
+| iPhone · iPad | [App Store](https://apps.apple.com/app/id6823757066) | — |
 
 Beta: in **Settings › About**, set **Update channel** to **Beta**.
 

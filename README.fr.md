@@ -40,14 +40,6 @@
   <a href="https://trendshift.io/repositories/307610?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-307610" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/307610/daily?language=TypeScript" alt="CatVinci-Studio%2FTextus | Trendshift" width="250" height="55"/></a>
 </p>
 
-<p align="center"><strong>Sponsor principal</strong></p>
-
-<p align="center">
-  <a href="https://www.anthropic.com/">
-    <img src="docs/images/readme/sponsors/anthropic-badge.png" alt="Anthropic" width="300">
-  </a>
-</p>
-
 <p align="center">
   <img src="docs/images/readme/fr/hero.webp" alt="Textus avec le Livre premier des Misérables à côté des notes du lecteur. Textus AI propose des retouches aux notes dans la marge et épingle un commentaire de relecture à côté du roman." width="860" /><br>
   <sub><i>Les Misérables</i>, Victor Hugo (1862)</sub>
@@ -64,8 +56,7 @@ Gratuit et open source, sous licence MIT.
 | Windows · x64         | [Télécharger le .exe](https://github.com/CatVinci-Studio/Textus/releases/latest)                                | —                                                                                    |
 | Linux · x64           | [Télécharger l’AppImage](https://github.com/CatVinci-Studio/Textus/releases/latest) · Également en .deb · .rpm | Arch Linux : le [dépôt `[catvinci]`](https://github.com/CatVinci-Studio/arch-repo) |
 | Android · arm64       | [Télécharger l’APK](https://github.com/CatVinci-Studio/Textus/releases/latest) | — |
-
-> iOS (iPhone et iPad) : bientôt en bêta publique sur TestFlight.
+| iPhone · iPad | [App Store](https://apps.apple.com/app/id6823757066) | — |
 
 Bêta : dans **Réglages › À propos**, réglez le **Canal de mise à jour** sur **Bêta**.
 
