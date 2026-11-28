@@ -12,6 +12,10 @@ import { between, sameRect, type Rect } from "./rect";
  * A box (a row, a sheet: no text to reflow) takes its rect each frame. A
  * view keeps its final size and follows the box it lies on, clipped to it,
  * so nothing inside is laid out again while it moves.
+ *
+ * Each frame writes only what moved - the parts running and what lies on
+ * them - and never a value an element already holds: a style write, even
+ * of the same value, can cost the engine a style pass over what it holds.
  */
 
 export type Edge = "left" | "right" | "top" | "bottom";
@@ -74,11 +78,7 @@ class FrameClock {
     const had = this.elements.get(key);
     this.elements.set(key, el);
     // A new element for a part already placed: drawn where it is at once.
-    if (had !== el)
-      for (const group of this.groups.values()) {
-        const part = group.parts.get(key);
-        if (part) this.write(key, part, group.origin);
-      }
+    if (had !== el) this.writeKey(key);
   }
 
   /** The group's parts as they now should be; `animate` false puts them
@@ -106,19 +106,26 @@ class FrameClock {
     const moving = animate && motionAllowed();
     // The curve as the tokens say now (a theme, reduced motion).
     if (moving) this.ease = easingFn("--ease-settle");
+    // Parts given a new place (their end, or drawn at once somewhere new):
+    // laid out again. The rest keep what they hold.
+    const placed = new Set<string>();
     for (const [key, part] of parts) {
+      const before = was?.parts.get(key);
+      if (!before || !samePart(before, part)) placed.add(key);
       // Already on its way there: it keeps going, not started over.
       const running = this.runs.get(key);
       if (moving && running && sameRect(running.to, part.rect)) continue;
-      const from = this.shown.get(key) ?? (moving ? grown(part) : part.rect);
+      const shown = this.shown.get(key);
+      const from = shown ?? (moving ? grown(part) : part.rect);
       if (moving && !sameRect(from, part.rect))
         this.runs.set(key, { from, to: part.rect, start: null });
       else {
+        if (running || !shown || !sameRect(shown, part.rect)) placed.add(key);
         this.runs.delete(key);
         this.shown.set(key, part.rect);
       }
     }
-    this.paint(null);
+    this.paint(null, placed);
     if (this.runs.size && !this.frame)
       this.frame = requestAnimationFrame((t) => this.tick(t));
   }
@@ -146,22 +153,31 @@ class FrameClock {
   place(key: string, rect: Rect): void {
     this.runs.delete(key);
     this.shown.set(key, rect);
+    this.writeKey(key);
+  }
+
+  /** Part `key` written in full wherever a group holds it. */
+  private writeKey(key: string) {
     for (const group of this.groups.values()) {
       const part = group.parts.get(key);
-      if (part) this.write(key, part, group.origin);
+      if (part) this.write(key, part, group.origin, true);
     }
   }
 
   private tick(now: number) {
     this.frame = 0;
-    this.paint(now);
+    this.paint(now, new Set());
     if (this.runs.size) this.frame = requestAnimationFrame((t) => this.tick(t));
   }
 
-  /** `now` null: the changes' first frame, drawn before the page paints. */
-  private paint(now: number | null) {
+  /** `now` null: the changes' first frame, drawn before the page paints.
+   *  `placed`: the parts `set` gave a new place, written in full; the parts
+   *  running move, and what lies on a part that moved follows it. */
+  private paint(now: number | null, placed: Set<string>) {
     const span = duration(SETTLE);
+    const moved = new Set(placed);
     for (const [key, run] of this.runs) {
+      moved.add(key);
       if (now !== null) run.start ??= now;
       const t =
         now === null || run.start === null
@@ -173,38 +189,43 @@ class FrameClock {
       );
       if (t >= 1) this.runs.delete(key);
     }
+    if (!moved.size) return;
     for (const group of this.groups.values())
       for (const [key, part] of group.parts)
-        this.write(key, part, group.origin);
+        if (moved.has(key) || (part.follow && moved.has(part.follow)))
+          this.write(key, part, group.origin, placed.has(key));
   }
 
+  /** `placed`: a view's end rect written too (it changes only with `set`,
+   *  `place` or a new element; React's render holds the same). */
   private write(
     key: string,
     part: FramePart,
     origin: { x: number; y: number },
+    placed: boolean,
   ) {
     const el = this.elements.get(key);
     const at = this.shown.get(key);
     if (!el || !at) return;
     const s = el.style;
     if (part.along) {
-      s.left = `${at.x - origin.x}px`;
-      s.width = `${at.w}px`;
+      put(s, "left", `${at.x - origin.x}px`);
+      put(s, "width", `${at.w}px`);
       return;
     }
     if (!part.follow) {
-      s.left = `${at.x - origin.x}px`;
-      s.top = `${at.y - origin.y}px`;
-      s.width = `${at.w}px`;
-      s.height = `${at.h}px`;
+      put(s, "left", `${at.x - origin.x}px`);
+      put(s, "top", `${at.y - origin.y}px`);
+      put(s, "width", `${at.w}px`);
+      put(s, "height", `${at.h}px`);
       return;
     }
     const end = part.rect;
-    if (!part.own) {
-      s.left = `${end.x - origin.x}px`;
-      s.top = `${end.y - origin.y}px`;
-      s.width = `${end.w}px`;
-      s.height = `${end.h}px`;
+    if (!part.own && placed) {
+      put(s, "left", `${end.x - origin.x}px`);
+      put(s, "top", `${end.y - origin.y}px`);
+      put(s, "width", `${end.w}px`);
+      put(s, "height", `${end.h}px`);
     }
     const on = this.shown.get(part.follow) ?? end;
     const box = part.above
@@ -213,17 +234,46 @@ class FrameClock {
     const settled = sameRect(box, end);
     const dx = part.still ? 0 : box.x - end.x;
     const dy = part.still ? 0 : box.y - end.y;
-    s.transform = settled || (!dx && !dy) ? "" : `translate(${dx}px, ${dy}px)`;
+    put(
+      s,
+      "transform",
+      settled || (!dx && !dy) ? "" : `translate(${dx}px, ${dy}px)`,
+    );
     // Clipped to the box it lies on, wherever that box now is.
     const left = Math.max(0, box.x - (end.x + dx));
     const top = Math.max(0, box.y - (end.y + dy));
     const right = Math.max(0, end.x + dx + end.w - (box.x + box.w));
     const bottom = Math.max(0, end.y + dy + end.h - (box.y + box.h));
-    s.clipPath =
+    put(
+      s,
+      "clipPath",
       settled || !(left || top || right || bottom)
         ? ""
-        : `inset(${top}px ${right}px ${bottom}px ${left}px)`;
+        : `inset(${top}px ${right}px ${bottom}px ${left}px)`,
+    );
   }
+}
+
+type Written = "left" | "top" | "width" | "height" | "transform" | "clipPath";
+
+/** What the clock last wrote to each style, and what the engine held then:
+ *  the engine may spell a value its own way (a long fraction cut short),
+ *  and React may have written since. */
+const written = new WeakMap<
+  CSSStyleDeclaration,
+  Map<Written, { wrote: string; held: string }>
+>();
+
+/** `s[prop] = value`, unless it holds that already. */
+function put(s: CSSStyleDeclaration, prop: Written, value: string): void {
+  let last = written.get(s);
+  const was = last?.get(prop);
+  const held = s[prop];
+  if (held === value || (was && was.wrote === value && was.held === held))
+    return;
+  s[prop] = value;
+  if (!last) written.set(s, (last = new Map()));
+  last.set(prop, { wrote: value, held: s[prop] });
 }
 
 /** Whether `group` already holds `parts` at `origin`, every one alike. */
@@ -236,18 +286,21 @@ function same(
   if (group.parts.size !== parts.size) return false;
   for (const [key, part] of parts) {
     const was = group.parts.get(key);
-    if (
-      !was ||
-      !sameRect(was.rect, part.rect) ||
-      was.follow !== part.follow ||
-      was.still !== part.still ||
-      was.own !== part.own ||
-      was.above !== part.above ||
-      was.along !== part.along
-    )
-      return false;
+    if (!was || !samePart(was, part)) return false;
   }
   return true;
+}
+
+/** The same place, held the same way. */
+function samePart(a: FramePart, b: FramePart): boolean {
+  return (
+    sameRect(a.rect, b.rect) &&
+    a.follow === b.follow &&
+    a.still === b.still &&
+    a.own === b.own &&
+    a.above === b.above &&
+    a.along === b.along
+  );
 }
 
 /** A new part's first frame: none of it yet, at the edge it grows from. */
