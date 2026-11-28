@@ -88,13 +88,16 @@ export function openImagePathField(
     options.done();
   };
   input.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" && !event.isComposing) {
+    if (event.isComposing) return;
+    if (event.key === "Enter") {
       event.preventDefault();
+      event.stopPropagation();
       const next = input.value.trim();
       if (next && next !== options.value) options.apply(next);
       close();
     } else if (event.key === "Escape") {
       event.preventDefault();
+      event.stopPropagation();
       close();
     }
   });

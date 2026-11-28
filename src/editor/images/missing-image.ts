@@ -137,8 +137,9 @@ interface MissingCardContent {
   reason: MissingReason;
   /** Where it was looked for - shown on hover. */
   location: ImageLocation;
-  /** Each action the card offers; one left out isn't shown. */
+  /** Rewrites the target in a field over the card. */
   onEditPath?: () => void;
+  /** Each action the card offers; one left out isn't shown. */
   onChoose?: () => void;
   onReveal?: () => void;
 }

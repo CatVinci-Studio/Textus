@@ -56,6 +56,25 @@ describe("Edit Path", () => {
     expect(c.apply).not.toHaveBeenCalled();
   });
 
+  it("ignores Enter and Escape while composing, and keeps them from the app", () => {
+    const { input, apply, done } = open();
+    const seen = vi.fn();
+    document.body.addEventListener("keydown", seen);
+    input.value = "pics/new.png";
+    for (const key of ["Enter", "Escape"])
+      input.dispatchEvent(
+        new KeyboardEvent("keydown", { key, isComposing: true, bubbles: true }),
+      );
+    expect(apply).not.toHaveBeenCalled();
+    expect(done).not.toHaveBeenCalled();
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "Escape", bubbles: true }),
+    );
+    expect(done).toHaveBeenCalledOnce();
+    expect(seen).toHaveBeenCalledTimes(2);
+    document.body.removeEventListener("keydown", seen);
+  });
+
   it("offers the folder's pictures from the picture completion's list", async () => {
     removeSource = addCompletionSource({
       id: "textus.paths.image",

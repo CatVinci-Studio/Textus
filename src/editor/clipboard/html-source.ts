@@ -19,7 +19,7 @@ const KEPT_ATTRIBUTES = new Set([
   "dir",
 ]);
 
-const VOID = new Set(["br", "hr", "img", "col", "wbr"]);
+const VOID = new Set(["br", "hr", "img", "col", "wbr", "input"]);
 
 /** Elements that start a line of their own. */
 const BLOCKS = new Set([
@@ -89,6 +89,12 @@ function source(node: ChildNode): string {
   const el = node as Element;
   const tag = el.tagName.toLowerCase();
   const attrs = attributesOf(el);
+  // Maths is copied as its TeX source: the editor's rendering is its own.
+  if (el.classList.contains("math-block-wrapper")) return childrenSource(el);
+  const kind = el.getAttribute("data-type");
+  if (kind === "math_inline") return `$${escapeHtml(el.textContent ?? "")}$`;
+  if (kind === "math_block")
+    return `\n<p>$$${escapeHtml(el.textContent ?? "")}$$</p>\n`;
   // A span the editor drew for itself says nothing once its classes go.
   if (tag === "span" && !attrs) return childrenSource(el);
   if (VOID.has(tag)) {
@@ -97,9 +103,17 @@ function source(node: ChildNode): string {
   }
   // Code keeps its lines and spaces as they are.
   if (tag === "pre") return `\n<pre${attrs}>${preSource(el)}</pre>\n`;
-  const inner = childrenSource(el);
+  const inner = taskBox(el) + childrenSource(el);
   const html = `<${tag}${attrs}>${inner}</${tag}>`;
   return BLOCKS.has(tag) ? `\n${html}\n` : html;
+}
+
+/** A task item's checkbox, as GitHub writes one; the editor draws its own
+ *  and marks the item `data-item-type` and `data-checked`. */
+function taskBox(li: Element): string {
+  if (li.getAttribute("data-item-type") !== "task") return "";
+  const checked = li.getAttribute("data-checked") === "true" ? " checked" : "";
+  return `<input type="checkbox" disabled${checked}> `;
 }
 
 function childrenSource(el: Element): string {

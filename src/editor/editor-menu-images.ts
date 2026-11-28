@@ -152,10 +152,6 @@ export function imageTurnItems(
   ];
 }
 
-/**
- * Show in folder (the file, or the nearest folder that exists) and Copy
- * image path. A web image has only its address to copy; a data: URI, nothing.
- */
 /** Opens Edit Path over the image at `pos` (its view listens). */
 export function editImagePath(run: EditorRunner, pos: number) {
   run((ctx) => {
@@ -164,8 +160,12 @@ export function editImagePath(run: EditorRunner, pos: number) {
   });
 }
 
-/** `editPath`: the document's own image, whose target can be rewritten
- *  (an embed's picture can't). */
+/**
+ * Show in folder (the file, or the nearest folder that exists) and Copy
+ * image path. A web image has only its address to copy; a data: URI, nothing.
+ * `editPath`: the document's own image, whose target can be rewritten
+ * (an embed's picture can't).
+ */
 export function imageFileItems(
   t: Strings,
   location: ImageLocation | null,

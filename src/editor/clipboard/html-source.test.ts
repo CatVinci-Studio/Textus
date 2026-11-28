@@ -51,3 +51,48 @@ describe("htmlSource", () => {
     expect(out).toContain('<img src="pics/cat.png" alt="cat">');
   });
 });
+
+describe("htmlSource: structure", () => {
+  it("nests lists, with a paragraph beside a nested list kept", async () => {
+    expect(await html("- a\n  - b\n- c\n\n  more\n  - d")).toBe(
+      [
+        "<ul>",
+        "<li>",
+        "<p>a</p>",
+        "<ul>",
+        "<li>b</li>",
+        "</ul>",
+        "</li>",
+        "<li>",
+        "<p>c</p>",
+        "<p>more</p>",
+        "<ul>",
+        "<li>d</li>",
+        "</ul>",
+        "</li>",
+        "</ul>",
+      ].join("\n"),
+    );
+  });
+
+  it("writes a blockquote around its paragraphs", async () => {
+    expect(await html("> one\n>\n> two")).toBe(
+      "<blockquote>\n<p>one</p>\n<p>two</p>\n</blockquote>",
+    );
+  });
+
+  it("writes a task item with a disabled checkbox", async () => {
+    const out = await html("- [x] done\n- [ ] todo");
+    expect(out).toContain(
+      '<li><input type="checkbox" disabled checked> done</li>',
+    );
+    expect(out).toContain('<li><input type="checkbox" disabled> todo</li>');
+    expect(out).not.toContain("</input>");
+  });
+
+  it("copies maths as its TeX source", async () => {
+    expect(await html("in $y$ line\n\n$$\nx^2\n$$")).toBe(
+      "<p>in $y$ line</p>\n<p>$$x^2$$</p>",
+    );
+  });
+});
