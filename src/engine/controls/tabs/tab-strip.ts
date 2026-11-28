@@ -21,6 +21,33 @@ export function stripSlots(widths: readonly number[], gap: number): Slot[] {
   });
 }
 
+/** A row as laid out: its tabs, their widths, and the room and gap they
+ *  were fitted to. */
+export interface RowShape {
+  ids: readonly string[];
+  widths: readonly number[];
+  room: number;
+  gap: number;
+}
+
+/** Whether a row's new places slide on the clock rather than land at once:
+ *  tabs came, went or moved, or a tab's own width changed (a new name, a
+ *  dot) while every tab had the width its name asks for - landed at once,
+ *  it and every tab after it jumped. Tabs squeezed to the room follow it in
+ *  the same frame as it changes (the window, an island sliding). */
+export function slides(was: RowShape, now: RowShape): boolean {
+  if (was.ids.join("\n") !== now.ids.join("\n")) return true;
+  const resized = now.widths.some(
+    (w, i) => Math.abs(w - (was.widths[i] ?? w)) >= 0.5,
+  );
+  return resized && roomy(was) && roomy(now);
+}
+
+/** Every tab at its own width: the row ends short of its room. */
+function roomy(row: RowShape): boolean {
+  return stripLength(stripSlots(row.widths, row.gap)) < row.room - 0.5;
+}
+
 /** The strip's length: its last tab's end. */
 export function stripLength(slots: readonly Slot[]): number {
   const last = slots[slots.length - 1];

@@ -1,6 +1,13 @@
 import { SettingsIndexing } from "../indexing";
 import { isImeKeydown } from "../../utils/ime";
-import { Fragment, useEffect, useState, useSyncExternalStore } from "react";
+import {
+  Fragment,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import { RowsMakeRoom } from "../../engine/motion/RowsMakeRoom";
 import { pageComponent } from "../builtin-pages";
 import {
   ChevronIcon,
@@ -60,6 +67,7 @@ export function SettingsNavPanel() {
     const group = groupOf(shown);
     if (group) setOpen((was) => new Set(was).add(group));
   }
+  const navList = useRef<HTMLElement>(null);
   const toggle = (id: string) =>
     setOpen((was) => {
       const next = new Set(was);
@@ -138,7 +146,16 @@ export function SettingsNavPanel() {
           ))}
         </div>
       ) : (
-        <nav className="settings-nav-list" aria-label={t.settingsTitle}>
+        <nav
+          ref={navList}
+          className="settings-nav-list"
+          aria-label={t.settingsTitle}
+        >
+          <RowsMakeRoom
+            watch={open}
+            root={() => navList.current}
+            rows=".tx-list-item"
+          />
           {pages.map((p, i) => {
             const item = (
               <button
