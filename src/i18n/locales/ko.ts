@@ -1413,8 +1413,7 @@ ${AI_NAME}에게 주는 글쓰기 지침으로, 모든 문서에 적용됩니다
   confirmTreeCopyLabel: "파일 트리에 놓은 파일을 복사하기 전에 묻기",
   confirmTreeTrashLabel: "파일 트리의 파일을 휴지통으로 옮기기 전에 묻기",
   showHiddenFilesLabel: "숨김 파일과 폴더 표시",
-  showHiddenFilesHint:
-    "이름이 .으로 시작하는 파일과 폴더(.git, .codex 등)입니다. 파일 트리에만 나타나며 검색과 링크에서는 제외됩니다.",
+  showHiddenFilesHint: "이름이 .으로 시작하는 항목. 파일 트리에만 표시됩니다.",
   autosaveLabel: "자동 저장",
   settingsFileLabel: "설정 파일",
   settingsFileSummary: "앱 설정과 AI 기록을 가져오거나 내보냅니다",

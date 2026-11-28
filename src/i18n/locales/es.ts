@@ -1546,7 +1546,7 @@ para usar una.
     "Preguntar antes de mover archivos del árbol de archivos a la papelera",
   showHiddenFilesLabel: "Mostrar archivos y carpetas ocultos",
   showHiddenFilesHint:
-    "Archivos y carpetas cuyo nombre empieza por un punto, como .git o .codex. Solo el árbol de archivos los muestra; la búsqueda y los enlaces los omiten.",
+    "Nombres que empiezan por un punto. Solo los muestra el árbol de archivos.",
   autosaveLabel: "Guardar automáticamente",
   settingsFileLabel: "Archivo de ajustes",
   settingsFileSummary:

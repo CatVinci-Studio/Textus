@@ -1503,7 +1503,7 @@ Skills liegen im Ordner skills/ neben dieser Datei, je Skill eine
     "Vor dem Verschieben von Dateien aus dem Dateibaum in den Papierkorb fragen",
   showHiddenFilesLabel: "Versteckte Dateien und Ordner anzeigen",
   showHiddenFilesHint:
-    "Dateien und Ordner, deren Name mit einem Punkt beginnt, etwa .git oder .codex. Nur der Dateibaum zeigt sie; Suche und Links überspringen sie.",
+    "Namen, die mit einem Punkt beginnen. Nur der Dateibaum zeigt sie.",
   autosaveLabel: "Automatisch speichern",
   settingsFileLabel: "Einstellungsdatei",
   settingsFileSummary:

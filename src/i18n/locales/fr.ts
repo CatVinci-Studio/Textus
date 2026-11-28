@@ -1558,7 +1558,7 @@ utiliser une.
     "Demander avant de mettre à la corbeille des fichiers de l'arborescence",
   showHiddenFilesLabel: "Afficher les fichiers et dossiers masqués",
   showHiddenFilesHint:
-    "Fichiers et dossiers dont le nom commence par un point, comme .git ou .codex. Seule l’arborescence les liste ; la recherche et les liens les ignorent.",
+    "Noms commençant par un point. Seule l’arborescence les affiche.",
   autosaveLabel: "Enregistrer automatiquement",
   settingsFileLabel: "Fichier de réglages",
   settingsFileSummary:

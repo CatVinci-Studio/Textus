@@ -1529,7 +1529,7 @@ Habilidades ficam na pasta skills/ ao lado deste arquivo, um arquivo
     "Perguntar antes de mover arquivos da árvore de arquivos para a lixeira",
   showHiddenFilesLabel: "Mostrar arquivos e pastas ocultos",
   showHiddenFilesHint:
-    "Arquivos e pastas cujo nome começa com um ponto, como .git ou .codex. Só a árvore de arquivos os mostra; a busca e os links os ignoram.",
+    "Nomes que começam com um ponto. Só a árvore de arquivos os mostra.",
   autosaveLabel: "Salvar automaticamente",
   settingsFileLabel: "Arquivo de ajustes",
   settingsFileSummary:
