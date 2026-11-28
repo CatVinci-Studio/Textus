@@ -146,3 +146,18 @@ describe("motion animates only opacity and transform", () => {
     expect(Object.keys(EXCEPTIONS).filter((key) => !used.has(key))).toEqual([]);
   });
 });
+
+// A theme's cross-fade (look-fade.ts) pictures the root alone. Anything
+// given a view-transition-name would be pictured apart and drawn over the
+// rest for the fade, out of its island's clipping and order.
+describe("the window's cross-fade", () => {
+  it("is of the root alone: nothing else is named", () => {
+    const named = stylesheets(SRC).filter((file) =>
+      // A declaration, not an @supports test.
+      /[{;]\s*view-transition-name\s*:/.test(
+        readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, ""),
+      ),
+    );
+    expect(named).toEqual([]);
+  });
+});

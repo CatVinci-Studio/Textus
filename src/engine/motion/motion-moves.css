@@ -222,6 +222,7 @@
   :root {
     --motion-distance-sm: 0px;
     --motion-distance-md: 0px;
+    --motion-distance-lg: 0px;
     --scale-enter: 1;
     --scale-enter-dialog: 1;
     --scale-exit: 1;

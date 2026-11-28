@@ -13,6 +13,7 @@ import { useSettings } from "../../prefs/SettingsContext";
 import { railTabs, sidebarTab } from "./sidebar-tabs";
 import { ViewTitleActions } from "../../plugins/views/plugin-views";
 import type { FileOpenHow } from "../../files/tree-shared";
+import { usePanelSwitchMotion } from "./sidebar-tab";
 
 /** Closed by a rail button that goes with it (the rail turned off, a
  *  phone's under the page): the keyboard goes back to the bar's sidebar
@@ -87,6 +88,7 @@ export function Sidebar({
     },
     [presenceRef, frame],
   );
+  const body = usePanelSwitchMotion(shown.id, open);
   // The rail turned off comes with the sidebar and goes with it.
   const rail = railShown(settings, open, phone);
   return (
@@ -139,7 +141,11 @@ export function Sidebar({
               </h2>
               {titleShown && <ViewTitleActions view={shown.id} />}
             </div>
-            <div className="sidebar-body" inert={closing || undefined}>
+            <div
+              ref={body}
+              className="sidebar-body"
+              inert={closing || undefined}
+            >
               {!titleShown && <ViewTitleActions view={shown.id} />}
               <shown.Panel
                 t={t}

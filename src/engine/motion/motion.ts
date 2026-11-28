@@ -149,15 +149,20 @@ export function duration(token: DurationToken): number {
   return raw.endsWith("ms") ? value : value * 1000;
 }
 
+/** The distances' defaults in motion.css. */
+const DISTANCES = {
+  "--motion-distance-sm": 4,
+  "--motion-distance-md": 8,
+  "--motion-distance-lg": 12,
+};
+
 /** A length token in pixels, as the stylesheet currently has it (reduced
- *  motion sets the distances to 0): --motion-distance-sm / -md. */
-export function length(
-  token: "--motion-distance-sm" | "--motion-distance-md",
-): number {
+ *  motion sets the distances to 0): --motion-distance-sm / -md / -lg. */
+export function length(token: keyof typeof DISTANCES): number {
   // Resolved by the page: calc() and the interface's scale included.
   const px = tokenPx(token);
   if (px > 0 || readToken(token) !== "") return px;
-  return token === "--motion-distance-sm" ? 4 : 8;
+  return DISTANCES[token];
 }
 
 /** An easing token's current value: the linear() spring where the engine

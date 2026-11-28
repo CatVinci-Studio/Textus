@@ -159,6 +159,13 @@ const DOM_APIS: { name: string; since: number; pattern: RegExp }[] = [
   { name: "Element.moveBefore", since: 133, pattern: /\.moveBefore\(/ },
 ];
 
+/** File -> the newer DOM API it may call, and why. */
+const DOM_ALLOWED: Record<string, string> = {
+  // Asked whether it is there first: an old engine changes the theme in one
+  // frame instead of cross-fading.
+  "engine/motion/look-fade.ts": "document.startViewTransition",
+};
+
 function files(dir: string, test: (name: string) => boolean): string[] {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name);
@@ -241,9 +248,9 @@ describe("the code works in the oldest supported engine", () => {
         /\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,
         "",
       );
-      return DOM_APIS.filter((api) => api.pattern.test(code)).map(
-        (api) => `${rel(path)}: ${api.name} (Chromium ${api.since})`,
-      );
+      return DOM_APIS.filter(
+        (api) => api.pattern.test(code) && DOM_ALLOWED[rel(path)] !== api.name,
+      ).map((api) => `${rel(path)}: ${api.name} (Chromium ${api.since})`);
     });
     expect(found).toEqual([]);
   });

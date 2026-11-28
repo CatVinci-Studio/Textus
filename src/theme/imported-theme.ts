@@ -8,6 +8,7 @@ import {
 import type { ThemeMode, UserThemeMeta } from "../prefs/SettingsContext";
 import { applyThemeChrome } from "../engine/tokens/palette";
 import { writeThemeStyle } from "../engine/tokens/appearance";
+import { holdLook } from "../engine/motion/look-fade";
 import { isIOSApp } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
 import {
@@ -187,13 +188,18 @@ export function applyImportedTheme(
     try {
       const ready = designs[design];
       if (ready && legacy.peek() && typora.peek()) return show(ready);
+      // Not read yet: a cross-fade taking this change keeps the old look a
+      // moment longer for it, rather than fading to the page without it.
+      let shown = () => {};
+      holdLook(new Promise<void>((done) => (shown = done)));
       // One imported before web fonts were embedded still has them: the
       // theme shows at once, its fonts once fetched (or not, offline).
       const withFonts = await read(design, (stored) => {
         if (!current()) return false;
         show({ stored, css: stored });
+        shown();
         return true;
-      });
+      }).finally(shown);
       if (withFonts && withFonts.css !== withFonts.stored && current())
         show(withFonts);
       // The other design, so a switch to it needs no wait.

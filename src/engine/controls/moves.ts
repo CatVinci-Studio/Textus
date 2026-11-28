@@ -17,8 +17,8 @@ import { measure, play } from "../motion/flip";
  *  (a fade in place). "start" and "end" follow the writing direction. */
 type Direction = "none" | "up" | "down" | "start" | "end";
 
-/** How far it travels: --motion-distance-sm / -md. */
-type Distance = "sm" | "md";
+/** How far it travels: --motion-distance-sm / -md / -lg. */
+type Distance = "sm" | "md" | "lg";
 
 interface MoveOptions {
   from?: Direction;
