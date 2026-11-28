@@ -1,5 +1,6 @@
 import { splitFrontmatter } from "../utils/frontmatter";
-import { THEMATIC_BREAK, eachLine, headingsOf } from "../utils/markdown-lines";
+import { THEMATIC_BREAK, eachLine } from "../utils/markdown-lines";
+import { headingsOf } from "../utils/markdown-headings";
 import { plainInline } from "../utils/markdown-plain";
 const WINDOWS_RESERVED_NAME = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\..*)?$/i;
 

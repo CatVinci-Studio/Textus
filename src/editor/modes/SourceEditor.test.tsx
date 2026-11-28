@@ -7,6 +7,8 @@ import { sourceViewAt } from "./source-view-registry";
 import { flushEditor } from "../tab-editor";
 import { editInFocus } from "../../engine/controls/edit-in-focus";
 import { runScopeHandlers } from "@codemirror/view";
+import { goToHeading } from "../../files/outline-current";
+import { takeTabJump } from "../tab-jump";
 
 afterEach(cleanup);
 
@@ -172,5 +174,52 @@ describe("SourceEditor", () => {
     expect(view.state.doc.toString()).toBe("\t- a");
     press(true);
     expect(view.state.doc.toString()).toBe("- a");
+  });
+
+  it("goes to an outline row's heading line, as the rich editor goes to its heading", () => {
+    // A formula's lone `=` line is no heading; a setext heading starts on
+    // its text line; the outline's index counts top-level headings only.
+    const doc = [
+      "# One", // 0
+      "",
+      "$$",
+      "a",
+      "=",
+      "$$",
+      "",
+      "- item",
+      "",
+      "  # in a list",
+      "",
+      "Two", // 11
+      "===",
+      "",
+      "text",
+      "",
+      "## Three", // 16
+    ].join("\n");
+    const { container } = render(
+      <SourceEditor
+        tabId="jump"
+        value={doc}
+        onChange={vi.fn()}
+        typewriter={false}
+      />,
+    );
+    const { view } = sourceViewAt(container)!;
+    const caretLine = () =>
+      view.state.doc.lineAt(view.state.selection.main.head).number - 1;
+    goToHeading("jump", 1);
+    expect(caretLine()).toBe(11);
+    goToHeading("jump", 2);
+    expect(caretLine()).toBe(16);
+    // Taken here, so the rich editor finds no stale jump when it comes back.
+    expect(takeTabJump("jump")).toBeNull();
+    // Its section selected: the heading up to the next at its level or above.
+    goToHeading("jump", 0, true);
+    const { from, to } = view.state.selection.main;
+    expect(view.state.sliceDoc(from, to)).toBe(
+      doc.slice(0, doc.indexOf("\nTwo")),
+    );
   });
 });

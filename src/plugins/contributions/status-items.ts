@@ -1,4 +1,4 @@
-import { headingsOf } from "../../utils/markdown-lines";
+import { headingsOf } from "../../utils/markdown-headings";
 import { localize } from "../store/manifest";
 import {
   pluginsSnapshot,
@@ -121,5 +121,9 @@ export function withDeclared(
 export function outlineOf(
   markdown: string,
 ): { level: number; text: string; line: number }[] {
-  return headingsOf(markdown);
+  return headingsOf(markdown).map(({ level, text, line }) => ({
+    level,
+    text,
+    line,
+  }));
 }

@@ -32,6 +32,11 @@ export function setTabJump(tabId: string, jump: TabJump, now = false): void {
   if (now) jumps.publish(tabId);
 }
 
+/** The jump waiting for `tabId`, left in place. */
+export function peekTabJump(tabId: string): TabJump | null {
+  return pending.get(tabId) ?? null;
+}
+
 export function takeTabJump(tabId: string): TabJump | null {
   const jump = pending.get(tabId) ?? null;
   pending.delete(tabId);

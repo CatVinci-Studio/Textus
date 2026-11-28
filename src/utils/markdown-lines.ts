@@ -17,7 +17,8 @@ const COMMENT_OPEN = /^ {0,3}<!--/;
  */
 export function eachLine(
   markdown: string,
-  visit: (line: string, index: number, code: boolean) => void,
+  /** `math`: the line is a `$$` block's, its fences included. */
+  visit: (line: string, index: number, code: boolean, math?: boolean) => void,
   /** `$$` blocks count as code too: maths, kept whole. */
   { math = false, frontMatter = false, comments = false } = {},
 ): void {
@@ -47,7 +48,7 @@ export function eachLine(
       } else if (!(rest.length > 2 && rest.slice(2).endsWith("$$"))) {
         fence = "$$";
       }
-      return visit(line, index, true);
+      return visit(line, index, true, true);
     }
     const found = FENCE.exec(bare);
     if (fence) {
@@ -69,51 +70,6 @@ export function eachLine(
   });
 }
 
-/** A heading as the editor reads it: its level, its text, its line. */
-interface HeadingLine {
-  level: number;
-  text: string;
-  line: number;
-}
-
-const ATX = /^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*(?:[ \t]#+[ \t]*)?$/;
-const SETEXT = /^ {0,3}(=+|-+)[ \t]*$/;
-// A line that starts a block of its own can't be a setext heading's text.
 /** A thematic break: three or more -, * or _, spaces between allowed. */
 export const THEMATIC_BREAK =
   /^ {0,3}(?:(?:-[ \t]*){3,}|(?:\*[ \t]*){3,}|(?:_[ \t]*){3,})$/;
-const NOT_TEXT = /^ {0,3}(?:[>|]|(?:[-+*]|\d+[.)])(?:[ \t]|$)|#|$)/;
-
-/** A whole document's headings, in order, as the editor counts them: ATX
- *  (indented up to three spaces, empty ones too) and setext (`Title` over
- *  `===` or `---`), outside code, front matter and `<!-- -->` comments. */
-export function headingsOf(markdown: string): HeadingLine[] {
-  const out: HeadingLine[] = [];
-  let previous: { text: string; index: number } | null = null;
-  eachLine(
-    markdown,
-    (line, index, code) => {
-      const before = previous;
-      previous = null;
-      if (code) return;
-      const atx = ATX.exec(line);
-      if (atx) {
-        out.push({ level: atx[1].length, text: atx[2] ?? "", line: index });
-        return;
-      }
-      const under = SETEXT.exec(line);
-      if (under && before && before.index === index - 1) {
-        out.push({
-          level: under[1][0] === "=" ? 1 : 2,
-          text: before.text.trim(),
-          line: before.index,
-        });
-        return;
-      }
-      if (!NOT_TEXT.test(line) && !THEMATIC_BREAK.test(line))
-        previous = { text: line, index };
-    },
-    { frontMatter: true, comments: true },
-  );
-  return out;
-}

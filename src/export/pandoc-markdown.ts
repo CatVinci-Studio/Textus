@@ -2,7 +2,8 @@ import { eachLine } from "../utils/markdown-lines";
 // The Markdown handed to pandoc for export, rewritten where the editor's
 // syntax has no pandoc equivalent: highlights, sized images, callouts,
 // `[[links]]` and embeds, `~sub~`/`^sup^`, citations; `%%comments%%` go.
-// Code and math are left untouched.
+// Code and math are left as written, but for a display formula's lines
+// set on as one paragraph (mathLine).
 
 import { WIKILINK_SOURCE } from "../utils/note-link";
 import { parseImageTag, splitAltSize } from "../editor/images/image-html";
@@ -250,6 +251,17 @@ function callout(
   return `${prefix}**${rewriteProse(heading, options)}**\n${prefix.trimEnd()}`;
 }
 
+/**
+ * A line inside a `$$` formula, indented four spaces past its quote marks
+ * and indent. Pandoc reads `$$` maths inside a paragraph, so a formula's
+ * lone `=` or `-` line made the line above a setext heading, and a `#` or
+ * `- ` line a heading or list, splitting the formula. Indented so, every
+ * line goes on the paragraph; maths ignores the spaces (#851).
+ */
+function mathLine(line: string): string {
+  return line.replace(/^((?:[ \t]*>)*[ \t]*)/, "$1    ");
+}
+
 /** Splits `markdown` into runs of code lines and runs of prose paragraphs. */
 function blocks(markdown: string): { code: boolean; text: string }[] {
   const out: { code: boolean; text: string }[] = [];
@@ -258,11 +270,14 @@ function blocks(markdown: string): { code: boolean; text: string }[] {
     if (last && last.code === code && joins) last.text += `\n${line}`;
     else out.push({ code, text: line });
   };
+  let previousMath = false;
   eachLine(
     markdown,
-    (line, _index, code) => {
+    (line, _index, code, math = false) => {
+      const opened = previousMath;
+      previousMath = math;
       if (code) {
-        push(true, line, true);
+        push(true, math && opened ? mathLine(line) : line, true);
       } else {
         const joins =
           !!line.trim() &&
