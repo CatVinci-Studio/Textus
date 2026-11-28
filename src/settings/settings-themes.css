@@ -110,11 +110,39 @@
 /* A theme with no screenshot (one's own, an imported one): a quiet sample
    in the same frame. */
 .theme-gallery-preview.theme-sample {
-  display: grid;
-  place-items: center;
-  font-family: var(--doc-font, inherit);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  padding: var(--space-3);
+  /* The theme's own values where it sets them (ThemeSample.tsx); else the
+     look in use. Only these four are read from the theme, as text. */
+  --sample-text-now: var(--sample-text, var(--doc-text, var(--ui-text)));
+  background: var(--sample-bg, var(--doc-bg, var(--ui-bg)));
+  color: var(--sample-text-now);
+  font-family: var(--sample-font, var(--doc-font, inherit));
+}
+.theme-sample-heading {
   font-size: var(--text-lg);
-  color: var(--ui-muted);
+  font-weight: 600;
+  line-height: 1;
+}
+.theme-sample-line,
+.theme-sample-accent {
+  display: block;
+  height: var(--space-1);
+  border-radius: var(--shape-xs);
+  background: var(--sample-text-now);
+  opacity: 0.35;
+}
+.theme-sample-line.is-short {
+  width: 70%;
+}
+.theme-sample-accent {
+  width: 30%;
+  background: var(--sample-accent, var(--doc-accent, var(--ui-accent)));
+  opacity: 1;
 }
 
 /* Themes, installed and in the store: in their group's grey frame, a
@@ -123,9 +151,10 @@
    card; the one in use rings its screenshot. */
 .settings-group-body.settings-cards {
   display: grid;
-  /* As many as fit, sharing the row: four in a full page, two in a narrow
-     one, one in the narrowest. */
-  grid-template-columns: repeat(auto-fill, minmax(166px, 1fr));
+  /* As many as fit, sharing the row: two in a full page, one in a narrow
+     one: each card is wide enough for a screenshot that can be read. */
+  --theme-card-min: 240px;
+  grid-template-columns: repeat(auto-fill, minmax(var(--theme-card-min), 1fr));
   gap: var(--space-3);
   padding: var(--space-3);
 }
