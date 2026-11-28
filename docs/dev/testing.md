@@ -193,6 +193,7 @@ npm run bench:plugins                  # the official plugins on a large folder 
 scripts/smoke-linux.sh --build         # the built Linux app and its .deb
 npm run screenshots:readme             # regenerate the README screenshots (e2e/shots/readme/)
 npm run screenshots:website            # the website's app screenshots (e2e/shots/website/)
+SHOTS_OUT=<dir> npm run screenshots:panels  # every panel, light and dark, three widths (e2e/shots/panels/): the before and after of a UI change
 cd src-tauri && cargo test --lib live_eval -- --ignored --nocapture --test-threads=1
                                        # real Anthropic API (costs money - docs/design/ai-eval.md)
 ```

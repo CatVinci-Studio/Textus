@@ -21,6 +21,16 @@ export default defineConfig({
       },
     },
     {
+      name: "panels",
+      testDir: "./e2e/shots/panels",
+      // Each test walks every surface at one width and theme.
+      timeout: 240_000,
+      use: {
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1440, height: 900 },
+      },
+    },
+    {
       name: "website",
       testDir: "./e2e/shots/website",
       // Each test is one language's whole set, Mermaid and KaTeX included.
