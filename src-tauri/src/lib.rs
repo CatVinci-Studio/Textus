@@ -75,6 +75,7 @@ use tab_drag::{DragTrackers, PendingDetachedTabs};
 use tauri::{EventTarget, WebviewUrl, WebviewWindowBuilder};
 
 mod launch;
+mod locks;
 #[cfg(desktop)]
 mod open_route;
 pub(crate) use launch::*;
@@ -183,6 +184,7 @@ fn desktop_setup(
     app: &mut tauri::App,
     opens: Option<launch::LaunchOpens>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    commands::update::record_panics(app.handle());
     #[cfg(target_os = "linux")]
     crate::editor_windows::detect_wayland();
     #[cfg(target_os = "macos")]
