@@ -117,6 +117,10 @@
   --shadow-1: 0 1px 3px rgb(0 0 0 / 12%);
   --shadow-2: 0 4px 18px rgb(20 27 40 / 10%);
   --shadow-3: 0 18px 52px rgb(20 27 40 / 16%);
+  /* The lit top edge of a menu, popover or dialog in dark (an inset 1px,
+     laid first in its box-shadow so the cast shadow stays); none in light,
+     where the shadow and border already lift it. Islands don't take it. */
+  --ui-edge-light: transparent;
   /* A menu or popover; a card under the pointer; the review bar. */
   --shadow-popover: var(--shadow-2);
   --shadow-card-hover: var(--shadow-2);
@@ -189,6 +193,7 @@
     --shadow-1: 0 1px 3px rgb(0 0 0 / 32%);
     --shadow-2: 0 4px 18px rgb(0 0 0 / 24%);
     --shadow-3: 0 18px 52px rgb(0 0 0 / 32%);
+    --ui-edge-light: rgb(255 255 255 / 7%);
   }
 }
 
@@ -203,6 +208,7 @@
   --shadow-1: 0 1px 3px rgb(0 0 0 / 32%);
   --shadow-2: 0 4px 18px rgb(0 0 0 / 24%);
   --shadow-3: 0 18px 52px rgb(0 0 0 / 32%);
+  --ui-edge-light: rgb(255 255 255 / 7%);
 }
 
 /* The window's own surfaces: the interface's type and colour. */

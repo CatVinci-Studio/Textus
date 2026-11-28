@@ -151,6 +151,26 @@ describe("submenus", () => {
     }
   });
 
+  it("fade at the edge a long list goes on past, and light the top edge in dark", () => {
+    const read = (file: string) => readFileSync(resolve("src", file), "utf8");
+    // A mask would cut the menu's border and shadow, so the fade is a veil.
+    expect(read("engine/controls/scroll-veil.css")).toMatch(
+      /\.tx-scroll-veil\[data-more-down\]::after/,
+    );
+    expect(read("engine/controls/Select.css")).not.toMatch(/margin-top: -4px/);
+    const tokens = read("engine/tokens/ds-base.css");
+    expect(tokens).toMatch(
+      /:root:not\(\[data-theme="light"\]\)\s*\{[^}]*--ui-edge-light: rgb/,
+    );
+    expect(tokens).toMatch(
+      /:root\[data-theme="dark"\]\s*\{[^}]*--ui-edge-light: rgb/,
+    );
+    // Laid first, so the cast shadow stays.
+    expect(read("engine/tokens/base.css")).toMatch(
+      /box-shadow:\s*inset 0 1px 0 var\(--ui-edge-light\),\s*var\(--shadow-popover\)/,
+    );
+  });
+
   it("leave in the quickest step there is", () => {
     const css = readFileSync(
       resolve("src/engine/controls/ContextMenu.css"),

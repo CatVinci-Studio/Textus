@@ -22,6 +22,7 @@ import { useMenuAim } from "./menu-aim";
 import { submenuPlace } from "./placement";
 import { CheckIcon, ChevronIcon } from "./icons";
 import { menuKeyStep } from "./list-keys";
+import { useScrollFade } from "./scroll-fade";
 import type {
   ContextMenuEntry,
   ContextMenuGroup,
@@ -112,6 +113,9 @@ export function MenuPanel({
   const ref = panelRef ?? own;
   // Both: the panel's own, and the Presence's that times its exit.
   const setRef = useMergedRef(ref, surface?.ref);
+  // A tall menu fades at the edge it goes on past; a phone's inline level
+  // is part of its parent's scroll.
+  useScrollFade(ref, "y", !nested);
   // Leaving, it takes its open submenu out with it.
   const leaving = usePresenceState() === "closing";
   const { open, setOpen, instant } = useOpenGroup();
@@ -166,7 +170,7 @@ export function MenuPanel({
       role="menu"
       aria-label={label}
       data-floating-menu=""
-      className={className}
+      className={nested ? className : `${className} tx-scroll-veil`}
       style={style}
       onKeyDown={nested ? undefined : keyDown}
       onMouseMove={aim.move}

@@ -296,7 +296,9 @@
   background: var(--ui-bg);
   border: 1px solid var(--ui-border);
   border-radius: var(--shape-m);
-  box-shadow: var(--shadow-popover);
+  box-shadow:
+    inset 0 1px 0 var(--ui-edge-light),
+    var(--shadow-popover);
 }
 
 /* Tones: the categorical colours (tags, board lists, chart series, graph
