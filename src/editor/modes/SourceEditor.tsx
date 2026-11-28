@@ -44,6 +44,7 @@ import { mayTakeKeys } from "../take-keys";
 import "./source-editor.css";
 import { sharedEnds } from "../../utils/lcs";
 import { registerZoomPane } from "../../engine/zoom/zoom-panes";
+import { followOutlineJumps } from "./source-jumps";
 
 /** A change the tab's markdown made, not the user. */
 const outside = Annotation.define<boolean>();
@@ -245,6 +246,7 @@ export function SourceEditor({
     const stopFlush = tabId
       ? registerTabEditor(tabId, "flush", report)
       : undefined;
+    const stopJumps = tabId ? followOutlineJumps(tabId, view) : undefined;
     // The keys can go to it once built, as to the rendered editor.
     const stopFocus = tabId
       ? registerTabEditor(tabId, "focus", () => {
@@ -277,6 +279,7 @@ export function SourceEditor({
           scroll: place ?? view.scrollSnapshot(),
         });
       stopFlush?.();
+      stopJumps?.();
       stopFocus?.();
       stopZoomPane?.();
       stopFormat();
