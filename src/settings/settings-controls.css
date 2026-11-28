@@ -86,9 +86,10 @@ button.settings-inline-button {
   font-size: var(--text-body);
 }
 
-/* An empty group: its one line of muted text, no box (useBareWhenEmpty). */
+/* An empty group: its one line of muted text, no box (useBareWhenEmpty),
+   starting where the group's title does. */
 .settings-group-body[data-bare] {
-  padding: 0;
+  padding: 0 var(--space-1);
   border: 0;
   background: none;
 }
