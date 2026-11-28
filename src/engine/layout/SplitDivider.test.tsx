@@ -77,6 +77,20 @@ describe("a divider between two documents", () => {
     expect(share()).toBeCloseTo(400 / 995, 3);
   });
 
+  it("tells the window's model once, when it is let go", () => {
+    const el = divider();
+    let told = 0;
+    const stop = subscribeSplit(() => told++);
+    fireEvent.pointerDown(el, { button: 0, clientX: 500, pointerId: 1 });
+    for (const x of [450, 400, 350, 300])
+      fireEvent.pointerMove(el, { clientX: x, pointerId: 1 });
+    expect(told).toBe(0);
+    expect(share()).toBeCloseTo(0.5, 3);
+    fireEvent.pointerUp(el, { clientX: 300, pointerId: 1 });
+    stop();
+    expect(told).toBe(1);
+  });
+
   it("goes back to where it started when Esc cancels the drag", () => {
     const el = divider();
     fireEvent.pointerDown(el, { button: 0, clientX: 500, pointerId: 1 });

@@ -36,6 +36,7 @@ import {
 import { useIslandFrame } from "../frame/useIslandFrame";
 import type { RoomCheck } from "../frame/frame-store";
 import { foldPanels } from "./fold";
+import { useHeldShare, withHeld } from "./held-share";
 import "./split-panes.css";
 
 /** Where one island goes in the area, in pixels. */
@@ -68,7 +69,7 @@ export type IslandContent = (
  * no tab's content: `content` draws it at the places it is given.
  */
 export function IslandArea({
-  layout,
+  layout: model,
   rows,
   plain,
   isPanel,
@@ -86,6 +87,8 @@ export function IslandArea({
   t: Strings;
 }) {
   const ref = useRef<HTMLElement>(null);
+  // As drawn: a divider held moves the islands before the model hears.
+  const layout = withHeld(model, useHeldShare());
   const keyed = useRef(new Map<string, string>());
   const panel = usePanelWidth();
   useSolveAgain();
