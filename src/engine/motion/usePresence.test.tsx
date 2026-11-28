@@ -3,7 +3,12 @@
 import "@testing-library/jest-dom/vitest";
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { Presence, usePresenceProps, usePresenceState } from "./usePresence";
+import {
+  Presence,
+  endExits,
+  usePresenceProps,
+  usePresenceState,
+} from "./usePresence";
 
 afterEach(() => {
   cleanup();
@@ -102,6 +107,33 @@ describe("Presence", () => {
       expect(first.isConnected).toBe(false);
       expect(again).toHaveAttribute("data-state", "open");
       expect(again).not.toHaveAttribute("inert");
+    } finally {
+      restore();
+    }
+  });
+
+  it("ends at once the exits endExits names, and only those", () => {
+    const restore = withExit(new Promise(() => {}));
+    try {
+      const { rerender } = render(
+        <>
+          <Host open label="Menu" />
+          <Host open label="Dialog" />
+        </>,
+      );
+      const menu = screen.getByRole("dialog", { name: "Menu" });
+      menu.dataset.list = "";
+      rerender(
+        <>
+          <Host open={false} label="Menu" />
+          <Host open={false} label="Dialog" />
+        </>,
+      );
+      act(() => endExits("[data-list]"));
+      expect(menu.isConnected).toBe(false);
+      expect(
+        screen.getByRole("dialog", { name: "Dialog", hidden: true }),
+      ).toHaveAttribute("data-state", "closing");
     } finally {
       restore();
     }

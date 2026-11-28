@@ -12,6 +12,7 @@ import { usePhoneLayout } from "./usePhoneLayout";
 import { useDropdown } from "./useDropdown";
 import { ContextMenu, type ContextMenuEntry } from "./ContextMenu";
 import { Presence } from "../motion/usePresence";
+import { usePressOpen } from "./press-open";
 import "./Select.css";
 
 /** A drop-in for `<select>` whose list the app draws, in a portal marked
@@ -117,6 +118,12 @@ function MenuSelect({
   const current = options.find((o) => o.value === value);
   const [at, setAt] = useState<{ x: number; y: number } | null>(null);
   const [button, setButton] = useState<HTMLButtonElement | null>(null);
+  const toggle = (trigger: HTMLElement) => {
+    const r = trigger.getBoundingClientRect();
+    setAt(at ? null : { x: r.left, y: r.bottom });
+    return !at;
+  };
+  const press = usePressOpen(toggle, '[data-floating-menu] [role^="menuitem"]');
   const items = runs(options).flatMap((run, r): ContextMenuEntry[] => [
     ...(r > 0 ? ["separator" as const] : []),
     ...run.items.map(({ option }) => ({
@@ -141,9 +148,9 @@ function MenuSelect({
         title={title}
         disabled={disabled}
         // Pressed again while open: closed, as the menu's own button is.
+        onPointerDown={press.onPointerDown}
         onClick={(e) => {
-          const r = e.currentTarget.getBoundingClientRect();
-          setAt((open) => (open ? null : { x: r.left, y: r.bottom }));
+          if (!press.ownClick(e)) toggle(e.currentTarget);
         }}
       >
         <span className="tx-truncate ui-select-value">
@@ -201,6 +208,12 @@ function DrawnSelect({
     },
   });
 
+  const press = usePressOpen(() => {
+    if (open) close();
+    else openMenu();
+    return !open;
+  }, '[data-floating-select] [role="option"]');
+
   function onListKey(e: KeyboardEvent<HTMLUListElement>) {
     if (listKeys(e) || e.key.length !== 1) return;
     // Type-ahead: the next option starting with the typed character.
@@ -229,7 +242,11 @@ function DrawnSelect({
         aria-label={ariaLabel}
         title={title}
         disabled={disabled}
-        onClick={() => (open ? close() : openMenu())}
+        onPointerDown={press.onPointerDown}
+        onMouseDown={press.keepFocus}
+        onClick={(e) => {
+          if (!press.ownClick(e)) (open ? close : openMenu)();
+        }}
         onKeyDown={onTriggerKey}
       >
         <span className="tx-truncate ui-select-value">

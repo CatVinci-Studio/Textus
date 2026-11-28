@@ -31,19 +31,20 @@ body {
    activity rail's column, the sidebar's, the islands' area; the window
    bar's row over them, the rest under it. Each part is placed by its cell,
    none by margins. The sidebar's column opens in one step; the motion is
-   the frame clock's (below). */
+   the frame clock's (below). The column is written out in each state, not
+   through a custom property: one changed on the shell restyles everything
+   in the window, a long document too, on the toggle's first frame
+   (restyle-scope.test.ts). */
 :root:not([data-window-chrome="mobile"]) .app-shell {
-  --sidebar-column: 0px;
   display: grid;
-  grid-template-columns: var(--rail-width, 0px) var(--sidebar-column) minmax(
-      0,
-      1fr
-    );
+  grid-template-columns: var(--rail-width, 0px) 0px minmax(0, 1fr);
   grid-template-rows: var(--window-bar-height) minmax(0, 1fr);
 }
 
 :root:not([data-window-chrome="mobile"]) .app-shell[data-sidebar="open"] {
-  --sidebar-column: var(--sidebar-width, 264px);
+  grid-template-columns:
+    var(--rail-width, 0px) var(--sidebar-width, 264px)
+    minmax(0, 1fr);
 }
 
 /* The rail under the bar; the islands' area the full height, its top

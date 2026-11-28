@@ -25,6 +25,8 @@
   gap: var(--space-3);
 }
 .theme-workshop-actions {
+  /* Apart from the last card above: these are the page's, not a row's. */
+  margin-top: var(--space-3);
   display: flex;
   justify-content: flex-end;
   gap: var(--space-2);

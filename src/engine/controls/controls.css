@@ -196,6 +196,19 @@ input[type="checkbox"].tx-switch:checked::after {
   background: var(--ui-on-primary);
   transform: translateX(var(--switch-travel));
 }
+/* Off in the dark: a track that close to the surface gets a faint ring, so
+   its end is still drawn. Both dark selectors, as the tokens do. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])
+    input[type="checkbox"].tx-switch:not(:checked) {
+    box-shadow: inset 0 0 0 1px
+      color-mix(in srgb, var(--ui-text) 12%, transparent);
+  }
+}
+:root[data-theme="dark"] input[type="checkbox"].tx-switch:not(:checked) {
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--ui-text) 12%, transparent);
+}
 /* Held down, the thumb stretches toward the side it would go to. */
 input[type="checkbox"].tx-switch:active::after {
   transform: scaleX(1.2);
@@ -243,29 +256,6 @@ input[type="range"].tx-slider {
   width: var(--slider-width);
   margin: 0;
   accent-color: var(--ui-accent-fill);
-}
-
-/* A number with its unit, stepped by − and + (NumberField.tsx). */
-.tx-number {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-.tx-number-input {
-  flex: none;
-  width: 4.5em;
-  height: var(--control-height-sm);
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-.tx-number-unit {
-  min-width: 1.5em;
-  color: var(--ui-muted);
-  font-size: var(--text-footnote);
-}
-.tx-number-step {
-  width: var(--control-height-sm);
-  height: var(--control-height-sm);
 }
 
 /* Text edited where it is shown: a cell, a card's title. No frame of its

@@ -121,7 +121,8 @@ export function WindowBar({
               return (
                 <Tooltip
                   key={item}
-                  text={`${t.menuToggleSidebar} (${sidebarShortcut})`}
+                  text={t.menuToggleSidebar}
+                  keys={sidebarShortcut}
                 >
                   <button
                     type="button"

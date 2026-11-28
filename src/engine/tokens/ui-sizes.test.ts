@@ -49,3 +49,22 @@ describe("a tablet's two larger steps", () => {
       ).toBe("48px");
   });
 });
+
+describe("the smallest step on a touch screen", () => {
+  // 11pt is the least iOS draws text at; measured in the running app, the
+  // smallest interface text on a phone is 13px and on an iPad 12px.
+  it("keeps every text role at 11px or more", () => {
+    const phone = sheet("ui-sizes-phone.css");
+    const small = `:root[data-window-chrome="mobile"][data-ui-size="small"]`;
+    for (const role of ["caption", "footnote", "secondary", "body"])
+      expect(
+        Number.parseFloat(token(phone, small, `--text-${role}`) ?? "0"),
+      ).toBeGreaterThanOrEqual(11);
+    const css = sheet("ui-sizes.css");
+    const tablet = `:root[data-ui-size="small"]:not([data-window-chrome="mobile"])`;
+    for (const role of ["caption", "list", "body"])
+      expect(
+        Number.parseFloat(token(css, tablet, `--text-${role}`) ?? "0"),
+      ).toBeGreaterThanOrEqual(11);
+  });
+});

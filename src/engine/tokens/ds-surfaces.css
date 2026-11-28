@@ -152,7 +152,8 @@
 
 /* Menus: one panel padding, one item size, one hover. */
 .context-menu {
-  padding: 4px;
+  padding: var(--space-1);
+  --veil-inset: var(--space-1);
   font-size: var(--text-body);
 }
 
@@ -162,7 +163,7 @@
   align-items: center;
   gap: 16px;
   width: 100%;
-  padding: 4px 8px;
+  padding: var(--space-1) var(--space-2);
   border: none;
   border-radius: var(--shape-s);
   background: transparent;
@@ -231,6 +232,35 @@ input[type="checkbox"].ui-check {
     border-color var(--dur-fast) var(--ease-standard);
 }
 
+/* The tick grows in on opacity and transform only (the motion rule); reduced
+   motion (--motion-travel 0) puts it there at once. ::before, as ::after is
+   the touch target's (plugin-ui.css). */
+input[type="checkbox"].ui-check {
+  position: relative;
+}
+input[type="checkbox"].ui-check::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 12px no-repeat;
+  opacity: 0;
+  transform: scale(calc(1 - 0.5 * var(--motion-travel)));
+  transition:
+    opacity var(--dur-fast) var(--ease-standard),
+    transform calc(var(--dur-fast) * var(--motion-travel)) var(--ease-out);
+}
+input[type="checkbox"].ui-check:checked::before {
+  opacity: 1;
+  transform: none;
+}
+
+@media (any-hover: hover) {
+  input[type="checkbox"].ui-check:not(:checked):hover {
+    border-color: var(--ui-muted);
+  }
+}
+
 /* No specificity: a row's own margin for it wins. */
 :where(input[type="checkbox"].ui-check) {
   margin: 0;
@@ -238,9 +268,7 @@ input[type="checkbox"].ui-check {
 
 input[type="checkbox"].ui-check:checked {
   border-color: var(--ui-accent-fill);
-  background: var(--ui-accent-fill)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
-    center / 12px no-repeat;
+  background-color: var(--ui-accent-fill);
 }
 
 /* Scrollbars: thin, rounded and quiet everywhere (the sidebar goes further

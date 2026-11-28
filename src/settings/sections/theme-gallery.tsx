@@ -27,6 +27,7 @@ import { openDiagramViewer } from "../../editor/diagram-zoom";
 import { AvailableSection } from "../pages/AvailableSection";
 import { installsText } from "../pages/installs-text";
 import { matchesWords } from "../../utils/match-words";
+import { ThemeSample } from "./ThemeSample";
 
 /** The themes whose name, author or description hold every word of
  *  `query`. */
@@ -141,13 +142,14 @@ export function AvailableThemes({
 }
 
 /** A theme's card, installed or in the gallery alike: its screenshot (an
- *  empty sample when it has none), its name, line and byline - opening its
+ *  sample drawn from the theme's CSS when it has none), its name, line and byline - opening its
  *  page when it has one - and its buttons. */
 export function ThemeCard({
   t,
   name,
   description,
   previews,
+  sampleOf,
   byline,
   onOpen,
   children,
@@ -157,6 +159,8 @@ export function ThemeCard({
   name: string;
   description?: string;
   previews?: string[];
+  /** An installed theme with no screenshot: drawn from its own CSS. */
+  sampleOf?: { id: string; hasDark: boolean; dark: boolean };
   byline?: ReactNode;
   onOpen?: () => void;
   children: ReactNode;
@@ -178,9 +182,11 @@ export function ThemeCard({
           paths={previews}
           label={`${t.themePreviewEnlarge}: ${name}`}
         />
+      ) : sampleOf ? (
+        <ThemeSample {...sampleOf} />
       ) : (
         <div className="theme-gallery-preview theme-sample" aria-hidden>
-          Aa
+          <span className="theme-sample-heading">Aa</span>
         </div>
       )}
       {/* Its name and its buttons on one line; what it is under them. */}

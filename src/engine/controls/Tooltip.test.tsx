@@ -8,6 +8,7 @@ import {
   screen,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { formatCombo } from "../../utils/shortcuts";
 import { TOOLTIP_OPEN_MS, Tooltip } from "./Tooltip";
 
 // jsdom has no ResizeObserver; nothing here resizes, so a stub will do.
@@ -185,5 +186,37 @@ describe("Tooltip", () => {
     fireEvent.pointerLeave(one, { pointerType: "mouse" });
     fireEvent.pointerEnter(two, { pointerType: "mouse" });
     expect(screen.getByRole("tooltip")).toHaveTextContent("Two");
+  });
+
+  it("shows the button's shortcut as a keycap beside the words", () => {
+    const view = (keys: string) =>
+      render(
+        <Tooltip text="Bold" keys={keys}>
+          <button type="button" aria-label="Bold">
+            B
+          </button>
+        </Tooltip>,
+      );
+    const { unmount } = view("mod+b");
+    fireEvent.pointerEnter(screen.getByRole("button", { name: "Bold" }), {
+      pointerType: "mouse",
+    });
+    rest(TOOLTIP_OPEN_MS);
+    const tip = screen.getByRole("tooltip");
+    expect(tip.querySelector(".tx-kbd")).toHaveTextContent(
+      formatCombo("mod+b"),
+    );
+    // The words stay the name alone: a rebinding changes only the keycap.
+    expect(tip.firstChild).toHaveTextContent("Bold");
+    unmount();
+    // Rebound by the user: the new keys, nothing of the old.
+    view("mod+shift+k");
+    fireEvent.pointerEnter(screen.getByRole("button", { name: "Bold" }), {
+      pointerType: "mouse",
+    });
+    rest(TOOLTIP_OPEN_MS);
+    expect(
+      screen.getByRole("tooltip").querySelector(".tx-kbd"),
+    ).toHaveTextContent(formatCombo("mod+shift+k"));
   });
 });

@@ -335,6 +335,20 @@
   font-size: var(--text-secondary);
 }
 
+/* A narrow phone: the tab sits between the bar's three 44pt buttons, so its
+   widest is what is left of the screen after them (a long name used to run
+   under the AI button on a 320pt screen), and it starts its name a step
+   closer to its edge, leaving the document's title the room. */
+@media (max-width: 430px) {
+  :root[data-window-chrome="mobile"] .tab-pill {
+    max-width: min(
+      216px,
+      calc(100vw - 3 * var(--touch-target) - var(--space-4))
+    );
+    padding-left: var(--space-2);
+  }
+}
+
 :root[data-window-chrome="mobile"] .tab-pill-dirty-dot {
   margin-right: 8px;
 }

@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from "react";
 import { frameClock } from "../../engine/frame/clock";
 import { BEFORE_ISLANDS } from "../../engine/frame/useIslandFrame";
+import { tokenPx } from "../../engine/tokens/token-px";
 
 /**
  * The sidebar opens and closes on the window's clock, with the islands
@@ -38,7 +39,7 @@ export function useSidebarFrame(open: boolean, on: boolean, width: number) {
  *  only clipped, to the islands' room before them as it is drawn. Also as
  *  its edge is held, at the width held. */
 export function placeSidebar(el: HTMLElement, width: number): void {
-  const box = { x: 0, y: 0, w: el.offsetLeft + width, h: 0 };
+  const box = { x: 0, y: 0, w: railWidth(el) + width, h: 0 };
   frameClock.set(
     "sidebar",
     new Map([
@@ -50,4 +51,19 @@ export function placeSidebar(el: HTMLElement, width: number): void {
     { x: 0, y: 0 },
     false,
   );
+}
+
+/** Whether the rail stood beside the sidebar when its width was last read. */
+let railSeen: boolean | null = null;
+
+/** The rail's column before the sidebar, from the token the shell's grid
+ *  uses rather than the sidebar's place: read just after the grid is
+ *  written (its edge dragged), a place would lay the window out there and
+ *  then. The token is resolved by the rail's presence (activity-rail.css),
+ *  so it is read again when that changes. */
+function railWidth(el: HTMLElement): number {
+  const rail = !!el.parentElement?.querySelector(":scope > .activity-rail");
+  const fresh = rail !== railSeen;
+  railSeen = rail;
+  return rail ? tokenPx("--rail-width", { fresh }) : 0;
 }

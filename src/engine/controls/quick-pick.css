@@ -11,13 +11,21 @@
   flex-direction: column;
   overflow: hidden;
 }
-/* The shared field (tx-input), roomier. */
+/* The panel is the field (design-language.md 6, the one exception to a
+   framed field): full width, no box, one hairline under it. */
 .tx-input.quick-pick-input {
   flex: initial;
-  margin: var(--space-3);
-  padding: var(--space-2) var(--space-3);
+  margin: 0 0 var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  border-bottom: 1px solid var(--ui-border);
+  border-radius: 0;
+  background: transparent;
   font: inherit;
   font-size: var(--text-body);
+}
+.tx-input.quick-pick-input:focus {
+  border-bottom-color: var(--ui-border);
 }
 .quick-pick-list {
   list-style: none;
@@ -52,9 +60,11 @@
   color: var(--ui-muted);
   font-size: var(--text-secondary);
 }
+/* The keycap itself is .tx-kbd; here it only goes to the row's end. */
 .quick-pick-keys {
   margin-left: auto;
-  color: var(--ui-muted);
-  font-size: var(--text-caption);
-  font-family: inherit;
+}
+/* On the selected row the cap takes the row's text colour. */
+.quick-pick-item.is-active .tx-kbd {
+  color: inherit;
 }

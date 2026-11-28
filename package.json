@@ -33,7 +33,8 @@
     "screenshots:readme": "playwright test -c playwright.shots.config.ts --project=readme",
     "screenshots:panels": "playwright test -c playwright.shots.config.ts --project=panels --workers=1",
     "screenshots:website": "playwright test -c playwright.shots.config.ts --project=website",
-    "bench:motion": "playwright test -c playwright.bench.config.ts",
+    "bench:motion": "playwright test -c playwright.bench.config.ts motion.bench.ts",
+    "bench:engine": "node scripts/bench-engine-build.mjs && PLAYWRIGHT_PORT=${PLAYWRIGHT_PORT:-1467} playwright test -c playwright.bench.config.ts --workers=1 engine-webkit engine-chromium",
     "sync-models": "node scripts/sync-models.mjs",
     "bindings": "node scripts/write-bindings.mjs",
     "release": "node scripts/release.mjs"

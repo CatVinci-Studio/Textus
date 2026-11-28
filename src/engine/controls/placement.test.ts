@@ -28,4 +28,12 @@ describe("submenuPlace", () => {
     const place = submenuPlace(menu, menu, { width: 150, height: 100 });
     expect(place.left).toBe(menu.left - 4 - 150);
   });
+
+  it("goes the way its menu went: left first, right where the window ends", () => {
+    const size = { width: 150, height: 100 };
+    const menu = box(400, 100, 200, 300);
+    expect(submenuPlace(menu, menu, size, "left").left).toBe(400 - 4 - 150);
+    const edge = box(100, 100, 200, 300);
+    expect(submenuPlace(edge, edge, size, "left").left).toBe(304);
+  });
 });

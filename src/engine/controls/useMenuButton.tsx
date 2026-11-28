@@ -1,11 +1,14 @@
 import { useCallback, useRef, useState, type ReactNode } from "react";
 import { ContextMenu, type ContextMenuEntry } from "./ContextMenu";
 import { Presence } from "../motion/usePresence";
+import { usePressOpen } from "./press-open";
 
 /**
  * A button that opens a menu below it - the one way to: the context menu's
  * look, keys (arrows, Home/End, Escape), submenus and closing, a phone's
- * too. Spread `button` on the button and render `menu` beside it.
+ * too. Spread `button` on the button and render `menu` beside it. The
+ * mouse opens it on the press (press-open.ts); a finger and the keys on the
+ * click.
  */
 export function useMenuButton(
   items: () => ContextMenuEntry[],
@@ -26,6 +29,7 @@ export function useMenuButton(
     ref: (el: HTMLElement | null) => void;
     "aria-haspopup": "menu";
     "aria-expanded": boolean;
+    onPointerDown: (e: React.PointerEvent) => void;
     onClick: (e: React.MouseEvent) => void;
   };
   menu: ReactNode;
@@ -43,6 +47,32 @@ export function useMenuButton(
     setAt(null);
     closed.current?.();
   }, []);
+  /** Opens below (or beside) `button`, or closes the open menu. */
+  const toggle = (button: HTMLElement, keyboard: boolean) => {
+    if (at) {
+      setAt(null);
+      return false;
+    }
+    const box = button.getBoundingClientRect();
+    const { beside, alignEnd } = options;
+    setAt({
+      x:
+        beside === "right"
+          ? box.right + 4
+          : beside === "left"
+            ? box.left - 4
+            : alignEnd
+              ? box.right
+              : box.left,
+      y: beside ? box.top : box.bottom + 4,
+      keyboard,
+    });
+    return true;
+  };
+  const press = usePressOpen(
+    (trigger) => toggle(trigger, false),
+    '[data-floating-menu] [role^="menuitem"]',
+  );
   return {
     button: {
       ref: (el) => {
@@ -50,23 +80,11 @@ export function useMenuButton(
       },
       "aria-haspopup": "menu",
       "aria-expanded": at !== null,
+      onPointerDown: press.onPointerDown,
       onClick: (e) => {
-        if (at) return setAt(null);
-        const box = (e.currentTarget as HTMLElement).getBoundingClientRect();
-        const { beside, alignEnd } = options;
-        setAt({
-          x:
-            beside === "right"
-              ? box.right + 4
-              : beside === "left"
-                ? box.left - 4
-                : alignEnd
-                  ? box.right
-                  : box.left,
-          y: beside ? box.top : box.bottom + 4,
-          // detail 0: Enter or Space, not a pointer.
-          keyboard: e.detail === 0,
-        });
+        if (press.ownClick(e)) return;
+        // detail 0: Enter or Space, not a pointer.
+        toggle(e.currentTarget as HTMLElement, e.detail === 0);
       },
     },
     menu: (

@@ -3,14 +3,18 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 /** Each preview's way to finish drawing: its body as tall as `height`. */
 const finish: Array<(height: number) => void> = [];
+/** The Markdown each preview was asked to draw. */
+const drawnMarkdown: string[] = [];
 vi.mock("../preview-editor", () => ({
-  drawPreview: (root: HTMLElement) =>
-    new Promise((resolve) =>
+  drawPreview: (root: HTMLElement, markdown: string) => {
+    drawnMarkdown.push(markdown);
+    return new Promise((resolve) =>
       finish.push((height) => {
         root.dataset.height = String(height);
         resolve({ destroy() {}, update() {} });
       }),
-    ),
+    );
+  },
 }));
 const { showHoverCard, hideHoverCard } = await import("./hover-card");
 
@@ -27,6 +31,7 @@ HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
 afterEach(() => {
   hideHoverCard(true);
   finish.length = 0;
+  drawnMarkdown.length = 0;
   vi.useRealTimers();
 });
 
@@ -69,5 +74,22 @@ describe("a link's hover card", () => {
     await vi.advanceTimersByTimeAsync(1000);
     expect(first.isConnected).toBe(false);
     expect(first.classList).not.toContain("hover-card-open");
+  });
+
+  it("leaves out a first heading that only repeats the card's title", () => {
+    showHoverCard("k", link(), {
+      title: "Note",
+      markdown: "# note\n\nFirst line.\n\n# Note\n",
+    });
+    // Only the first block, and only when it is the title itself.
+    expect(drawnMarkdown[0]).toBe("First line.\n\n# Note\n");
+  });
+
+  it("keeps a first heading that says more than the title", () => {
+    showHoverCard("k", link(), {
+      title: "Note",
+      markdown: "# Note on cats\n\nText",
+    });
+    expect(drawnMarkdown[0]).toBe("# Note on cats\n\nText");
   });
 });

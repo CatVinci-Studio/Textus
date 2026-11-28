@@ -21,6 +21,20 @@ const PREVIEW_WAIT_MS = 150;
 
 const previews = new WeakMap<HTMLElement, PreviewHandle>();
 
+/** `markdown` without its first block when that is a level-1 heading named
+ *  as the card's title: the head already says it, and the note's own title
+ *  line would repeat it right under. Only an exact match (case and spacing
+ *  aside) goes; a heading that says more stays. */
+function withoutTitleHeading(markdown: string, title: string | null): string {
+  if (!title) return markdown;
+  const first = /^\s*#[ \t]+(.+?)(?:[ \t]+#+)?[ \t]*(?:\r?\n|$)/.exec(markdown);
+  const same = (a: string, b: string) =>
+    a.trim().replace(/\s+/g, " ").toLowerCase() ===
+    b.trim().replace(/\s+/g, " ").toLowerCase();
+  if (!first || !same(first[1]!, title)) return markdown;
+  return markdown.slice(first[0].length).replace(/^(?:[ \t]*\r?\n)+/, "");
+}
+
 /** A card gone, the editor drawing it let go. */
 function removeCard(el: HTMLElement) {
   previews.get(el)?.destroy();
@@ -137,7 +151,7 @@ function build(card: HoverCard): {
   // loads nothing.
   const drawn = drawPreview(
     body,
-    card.markdown.replace(PICTURES_IN_TEXT, ""),
+    withoutTitleHeading(card.markdown, named).replace(PICTURES_IN_TEXT, ""),
     null,
     () => named ?? t.hoverCard,
   ).then(

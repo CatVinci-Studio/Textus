@@ -39,6 +39,18 @@
 :root {
   /* The palette's mark: a note is "look here". */
   --review-note-line: var(--doc-mark);
+  /* The connector's three strengths: resting, under the pointer, far. */
+  --review-link-width: 1.2px;
+  --review-link-width-hot: 1.7px;
+  --review-link-width-far: 1px;
+  --review-link-opacity: 0.7;
+  --review-link-opacity-hot: 1;
+  --review-link-opacity-far: 0.35;
+  --review-link-revision: color-mix(
+    in srgb,
+    var(--ui-success) 70%,
+    transparent
+  );
   --review-anchor-bg: color-mix(in srgb, var(--doc-mark) 22%, transparent);
   --review-anchor-hot-bg: color-mix(in srgb, var(--doc-mark) 42%, transparent);
   --review-note-bg: color-mix(in srgb, var(--doc-mark) 8%, var(--ui-surface));
@@ -142,7 +154,13 @@
 }
 
 .review-links path.revision {
-  stroke: color-mix(in srgb, var(--ui-success) 70%, transparent);
+  stroke: var(--review-link-revision);
+}
+
+/* The revision's line rests at 70%; under the pointer it is the full
+   colour, so it steps up like a note's does. */
+.review-links path.revision.hot {
+  stroke: var(--ui-success);
 }
 
 /* Result only: the card holds what the change takes out, struck, in the

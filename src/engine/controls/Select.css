@@ -12,17 +12,19 @@
   position: fixed;
   z-index: var(--z-select);
   margin: 0;
-  padding: 4px;
+  padding: var(--space-1);
+  --veil-inset: var(--space-1);
   list-style: none;
   overflow-y: auto;
   font-size: var(--text-body);
   outline: none;
   transform-origin: var(--transform-origin, top left);
-  animation: motion-pop-in var(--dur-base) var(--ease-out);
+  /* As quick as a menu's (ContextMenu.css). */
+  animation: motion-pop-in var(--dur-fast) var(--ease-out);
 }
 
 .ui-select-menu[data-state="closing"] {
-  animation: motion-pop-out var(--dur-fast) var(--ease-in) forwards;
+  animation: motion-pop-out var(--dur-instant) var(--ease-in) forwards;
 }
 
 /* The list takes focus so the keys work in it; its highlighted option
@@ -63,10 +65,13 @@
   content: "";
   position: absolute;
   left: 10px;
-  top: 50%;
+  top: 0;
+  bottom: 0;
   width: 12px;
   height: 12px;
-  margin-top: -4px;
+  /* Centred in the row by its own box, not nudged: auto margins on a
+     fixed-height absolute box. */
+  margin-block: auto;
   background: var(--ui-accent-fill);
   -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
     center / contain no-repeat;

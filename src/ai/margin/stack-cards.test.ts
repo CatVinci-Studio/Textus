@@ -1,8 +1,11 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   CHIP_HEIGHT,
   CROWDED_DRIFT,
   GROUP_DRIFT,
+  linkState,
   STACK_GAP,
   stackCards,
   type Placed,
@@ -131,5 +134,50 @@ describe("stackCards", () => {
     expect(placed[20].top).toBe(100);
     expect(placed[39].top).toBe(200);
     expect(placed[39].chip).toBe(true);
+  });
+});
+
+describe("linkState", () => {
+  const a = card("note:a", 0);
+  const b = card("rev:c:1", 50);
+  const placed = [a, b];
+
+  it("lights the line of the card, or of the passage, under the pointer", () => {
+    expect(linkState(a, placed, "note:a", null, 22)).toBe("hot");
+    expect(linkState(b, placed, "note:a", null, 22)).toBe("");
+    expect(linkState(b, placed, "rev:c:1", null, 22)).toBe("hot");
+  });
+
+  it("restores the line the moment the pointer leaves", () => {
+    expect(linkState(a, placed, null, null, 22)).toBe("");
+  });
+
+  it("keeps a far line fainter, but lets the pointer win over it", () => {
+    const far = { ...a, drift: 40 };
+    expect(linkState(far, [far], null, null, 22)).toBe("far");
+    expect(linkState(far, [far], "note:a", null, 22)).toBe("hot");
+  });
+
+  it("gives a group's one line to any of its members", () => {
+    const first = { ...a, group: "note:a" };
+    const second = { ...b, group: "note:a" };
+    expect(linkState(first, [first, second], "rev:c:1", null, 22)).toBe("hot");
+  });
+});
+
+describe("the connector's CSS", () => {
+  const css = (file: string) => readFileSync(join(__dirname, file), "utf8");
+
+  it("draws a revision's line in its full colour under the pointer", () => {
+    expect(css("margin-marks.css")).toMatch(
+      /\.review-links path\.revision\.hot\s*\{\s*stroke: var\(--ui-success\)/,
+    );
+  });
+
+  it("takes every strength from a token", () => {
+    const rules = css("margin-cards.css").match(
+      /\.review-links path[^{]*\{[^}]*\}/g,
+    );
+    expect(rules?.join("")).not.toMatch(/(opacity|stroke-width): [\d.]+;/);
   });
 });

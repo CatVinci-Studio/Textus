@@ -11,6 +11,7 @@ import { useCloseOnOutsideClick } from "../../utils/hooks/useCloseOnOutsideClick
 import { usePlacement } from "./usePlacement";
 import { usePhoneLayout } from "./usePhoneLayout";
 import { usePresenceProps, usePresenceState } from "../motion/usePresence";
+import { endListExits } from "./SelectMenu";
 import { menuHost, MenuPanel } from "./menu-panel";
 import "./ContextMenu.css";
 
@@ -129,11 +130,7 @@ function PointerMenu({
   } as CSSProperties;
 
   useFocusReturn(ref, keyboard, open);
-  // On a phone the menu takes the focus from a field: the keyboard goes
-  // down, and nothing typed lands behind the menu.
-  useLayoutEffect(() => {
-    if (inline && !keyboard) (document.activeElement as HTMLElement)?.blur?.();
-  }, [inline, keyboard]);
+  useOpening(inline, keyboard);
 
   // Out of its opener: an ancestor's clip (a tab row's) would cut it.
   return createPortal(
@@ -158,6 +155,16 @@ function PointerMenu({
     />,
     menuHost(anchor),
   );
+}
+
+/** As it opens: a menu or list still on its way out goes now, as this one
+ *  replaces it; and on a phone the menu takes the focus from a field, so
+ *  the keyboard goes down and nothing typed lands behind the menu. */
+function useOpening(inline: boolean, keyboard: boolean | undefined) {
+  useLayoutEffect(() => {
+    endListExits();
+    if (inline && !keyboard) (document.activeElement as HTMLElement)?.blur?.();
+  }, [inline, keyboard]);
 }
 
 /** Opened from the keyboard, the first item takes the focus, and closing

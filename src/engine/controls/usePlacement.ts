@@ -3,7 +3,8 @@ import { clampLeft, clampTop, opensBelow } from "./placement";
 
 /**
  * Where a popup at (`x`, `y`) draws, kept inside the window by the same rule
- * every popup follows (placement.ts), and again whenever it grows. `alignEnd`:
+ * every popup follows (placement.ts), and again whenever it or the window
+ * changes size. `alignEnd`:
  * `x` is its right edge (a menu under a button at a bar's end); `right`: an
  * edge short of the window's it stays left of, read at each placing.
  */
@@ -60,7 +61,12 @@ export function usePlacement(
     place();
     const observer = new ResizeObserver(place);
     observer.observe(el);
-    return () => observer.disconnect();
+    // A window made smaller would leave it hanging over the new edge.
+    window.addEventListener("resize", place);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", place);
+    };
   }, [ref, x, y, alignEnd]);
   return pos;
 }

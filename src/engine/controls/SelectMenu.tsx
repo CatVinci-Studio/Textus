@@ -1,5 +1,20 @@
-import type { CSSProperties, KeyboardEvent, ReactNode, Ref } from "react";
+import {
+  useLayoutEffect,
+  useRef,
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode,
+  type Ref,
+} from "react";
 import { createPortal } from "react-dom";
+import { endExits, useMergedRef } from "../motion/usePresence";
+import { useScrollFade } from "./scroll-fade";
+
+/** Every menu and select list the app draws: one shows at a time, so one
+ *  opening ends the exit of any still on its way out (usePresence.ts). */
+export function endListExits() {
+  endExits("[data-floating-menu], [data-floating-select]");
+}
 
 /**
  * The open list of a drawn select (Select, the AI mode picker, a code
@@ -29,13 +44,18 @@ export function SelectMenu({
   onKeyDown?: (e: KeyboardEvent<HTMLUListElement>) => void;
   children: ReactNode;
 }) {
+  useLayoutEffect(endListExits, []);
+  // A long list fades at the edge it goes on past.
+  const own = useRef<HTMLUListElement | null>(null);
+  const setRef = useMergedRef<HTMLUListElement>(listRef, own);
+  useScrollFade(own);
   return createPortal(
     <ul
-      ref={listRef}
+      ref={setRef}
       id={id}
       data-state={state}
       inert={state === "closing" || undefined}
-      className={`ui-select-menu floating-surface${className ? ` ${className}` : ""}`}
+      className={`ui-select-menu floating-surface tx-scroll-veil${className ? ` ${className}` : ""}`}
       role="listbox"
       aria-label={label}
       aria-activedescendant={activeId}

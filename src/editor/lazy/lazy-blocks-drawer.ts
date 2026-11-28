@@ -2,6 +2,7 @@ import type { Node as ProseNode } from "@milkdown/kit/prose/model";
 import type { EditorState, PluginView } from "@milkdown/kit/prose/state";
 import type { EditorView } from "@milkdown/kit/prose/view";
 import { pageIsTheHands } from "../../engine/controls/scroll-hold";
+import { frameClock } from "../../engine/frame/clock";
 import { firstBelow, holdStillWhile } from "./still-point";
 import { flushDomSelection } from "../modes/mode-switch";
 import {
@@ -230,6 +231,9 @@ export class LazyBlocksDrawer implements PluginView {
   private readonly scroller: Element | null;
   private readonly resize: ResizeObserver | null;
   private width = 0;
+  /** Asked for while the window's islands moved: drawn once they stop. */
+  private owed = false;
+  private readonly unsettled: () => void;
 
   constructor(readonly view: EditorView) {
     this.scroller =
@@ -245,6 +249,7 @@ export class LazyBlocksDrawer implements PluginView {
     for (const type of USER_INPUT)
       this.scroller?.addEventListener(type, this.letGo, { passive: true });
     drawers.set(view.dom, this);
+    this.unsettled = frameClock.onSettled(this.settled);
     this.schedule();
   }
 
@@ -266,6 +271,7 @@ export class LazyBlocksDrawer implements PluginView {
     for (const type of USER_INPUT)
       this.scroller?.removeEventListener(type, this.letGo);
     this.resize?.disconnect();
+    this.unsettled();
     drawers.delete(this.view.dom);
   }
 
@@ -409,10 +415,30 @@ export class LazyBlocksDrawer implements PluginView {
     this.scrolledAt = performance.now();
     clearTimeout(this.settle);
     this.settle = setTimeout(this.schedule, SETTLE_MS);
+    // What scrolls into view is drawn even mid-motion: the column is
+    // already at its end width.
+    this.ask();
+  };
+
+  /** Drawn next frame - unless the window's islands are moving (a sidebar
+   *  opening narrows the column): the editor is at its end width from the
+   *  motion's first frame, and measuring its blocks then (a resize, an
+   *  edit) would only cost the motion frames. Once it ends, drawn once. */
+  private readonly schedule = () => {
+    if (frameClock.moving()) {
+      this.owed = true;
+      return;
+    }
+    this.ask();
+  };
+
+  private readonly settled = () => {
+    if (!this.owed) return;
+    this.owed = false;
     this.schedule();
   };
 
-  private readonly schedule = () => {
+  private readonly ask = () => {
     if (this.frame || !this.scroller) return;
     this.frame = requestAnimationFrame(() => {
       this.frame = 0;

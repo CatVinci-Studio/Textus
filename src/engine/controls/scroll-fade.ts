@@ -1,4 +1,5 @@
 import { useEffect, type RefObject } from "react";
+import "./scroll-veil.css";
 
 /**
  * Marks a .tx-scroll-fade scroller with the edges it has more past

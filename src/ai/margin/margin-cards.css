@@ -25,8 +25,8 @@
 .review-links path {
   fill: none;
   stroke: var(--review-note-line);
-  stroke-width: 1.2;
-  opacity: 0.7;
+  stroke-width: var(--review-link-width);
+  opacity: var(--review-link-opacity);
   stroke-dasharray: 1;
   animation: review-link-draw calc(var(--dur-base) * 3) var(--ease-out) both;
   animation-delay: calc(var(--dur-instant) * 2);
@@ -35,15 +35,16 @@
     stroke-width var(--dur-fast) var(--ease-standard);
 }
 
+/* Under the pointer (on the card or its passage): one step stronger. */
 .review-links path.hot {
-  opacity: 1;
-  stroke-width: 1.7;
+  opacity: var(--review-link-opacity-hot);
+  stroke-width: var(--review-link-width-hot);
 }
 
 /* A card stacked far below its passage: its line is there, fainter. */
 .review-links path.far {
-  opacity: 0.35;
-  stroke-width: 1;
+  opacity: var(--review-link-opacity-far);
+  stroke-width: var(--review-link-width-far);
 }
 
 @keyframes review-link-draw {
