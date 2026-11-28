@@ -79,6 +79,8 @@
   /* Entrance offsets and scales. */
   --motion-distance-sm: 4px;
   --motion-distance-md: 8px;
+  /* A sidebar panel taking another's place, in from its side of the rail. */
+  --motion-distance-lg: 12px;
   --scale-enter: 0.96;
   --scale-enter-dialog: 0.98;
   --scale-exit: 0.98;
