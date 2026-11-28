@@ -47,6 +47,55 @@ function withExit(finished: Promise<unknown>) {
   };
 }
 
+/** Each element's entrance (opacity rising) while open and exit (falling)
+ *  while closing, drawn into its style as a browser would, the entrance
+ *  caught half way: a surface turned back mid-move. */
+function withMoves() {
+  const moves = new WeakMap<Element, { state: string; anim: Animation }>();
+  const make = (el: HTMLElement, closing: boolean) => {
+    let time = 0;
+    const anim = {
+      animationName: closing ? "motion-exit" : "motion-enter",
+      playState: "running",
+      finished: new Promise(() => {}),
+      effect: {
+        target: el,
+        pseudoElement: null,
+        getComputedTiming: () => ({ endTime: 120 }),
+      },
+      get currentTime() {
+        return time;
+      },
+      set currentTime(t: number) {
+        time = t;
+        const p = Math.min(t / 120, 1);
+        el.style.opacity = String(closing ? 1 - p : p);
+      },
+    };
+    anim.currentTime = closing ? 0 : 60;
+    return anim as unknown as Animation;
+  };
+  Object.defineProperty(HTMLElement.prototype, "getAnimations", {
+    configurable: true,
+    value(this: HTMLElement) {
+      if (this.getAttribute("role") !== "dialog") return [];
+      const state = this.dataset.state ?? "open";
+      const was = moves.get(this);
+      if (was?.state === state) return [was.anim];
+      const anim = make(this, state === "closing");
+      moves.set(this, { state, anim });
+      return [anim];
+    },
+  });
+  return {
+    of: (el: Element) => el.getAnimations()[0]!,
+    restore: () => {
+      delete (HTMLElement.prototype as { getAnimations?: unknown })
+        .getAnimations;
+    },
+  };
+}
+
 describe("Presence", () => {
   it("mounts open and leaves at once when no exit runs", () => {
     const { rerender } = render(<Host open />);
@@ -136,6 +185,39 @@ describe("Presence", () => {
       ).toHaveAttribute("data-state", "closing");
     } finally {
       restore();
+    }
+  });
+  it("closed half way in, its exit starts half way out, not from full", () => {
+    const moves = withMoves();
+    try {
+      const { rerender } = render(<Host open />);
+      const panel = screen.getByRole("dialog");
+      // Half way in.
+      moves.of(panel);
+      rerender(<Host open={false} />);
+      expect(panel).toHaveAttribute("data-state", "closing");
+      expect(moves.of(panel).currentTime).toBeCloseTo(60, -1);
+      expect(parseFloat(panel.style.opacity)).toBeCloseTo(0.5, 1);
+    } finally {
+      moves.restore();
+    }
+  });
+
+  it("opened again during its exit, the new copy starts where the exit had got to", () => {
+    const moves = withMoves();
+    try {
+      const { rerender } = render(<Host open />);
+      const first = screen.getByRole("dialog");
+      moves.of(first);
+      rerender(<Host open={false} />);
+      // The exit runs on to a quarter of the way out.
+      moves.of(first).currentTime = 30;
+      rerender(<Host open />);
+      const again = screen.getByRole("dialog");
+      expect(again).not.toBe(first);
+      expect(parseFloat(again.style.opacity)).toBeCloseTo(0.75, 1);
+    } finally {
+      moves.restore();
     }
   });
 });

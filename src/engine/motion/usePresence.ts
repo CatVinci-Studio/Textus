@@ -1,4 +1,5 @@
 import { duration } from "./motion";
+import { carryLook, readLook, type Look } from "./carry";
 import {
   Fragment,
   createContext,
@@ -70,21 +71,28 @@ export function endExits(selector: string) {
 export function usePresence(open: boolean): PresenceHandle {
   const [mounted, setMounted] = useState(open);
   const [closing, setClosing] = useState(false);
+  const element = useRef<Element | null>(null);
+  // How it looked as it turned back, read before the commit replaces its
+  // move: the next move starts from there.
+  const turned = useRef<Look | null>(null);
   // Adjusted while rendering rather than in an effect, so the frame that
   // shows the change is the first one painted.
   if (open && (!mounted || closing)) {
+    if (closing) turned.current = readLook(element.current);
     setMounted(true);
     setClosing(false);
   } else if (!open && mounted && !closing) {
+    turned.current = readLook(element.current);
     setClosing(true);
   }
 
-  const element = useRef<Element | null>(null);
   const ref = useCallback((el: Element | null) => {
     element.current = el;
   }, []);
 
   useLayoutEffect(() => {
+    if (turned.current) carryLook(element.current, turned.current);
+    turned.current = null;
     if (!closing) return;
     let alive = true;
     const finish = () => {
