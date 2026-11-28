@@ -33,6 +33,7 @@ import {
 } from "../storage/pending-writes";
 import { keepInList, resetUiStateForTests } from "../storage/ui-state";
 import { installTestLocalStorage } from "../dev/test-local-storage";
+import { motionAllowed } from "../engine/motion/motion";
 
 // The file-backed path, run when Rust booted the window with a snapshot.
 
@@ -58,6 +59,12 @@ vi.mock("../platform/events", () => ({
     return Promise.resolve(() => {});
   },
 }));
+
+// jsdom moves nothing; one test lets the window's cross-fade run.
+vi.mock("../engine/motion/motion", async (actual) => {
+  const real = await actual<typeof import("../engine/motion/motion")>();
+  return { ...real, motionAllowed: vi.fn(real.motionAllowed) };
+});
 
 function boot(settings: Record<string, unknown>, extra: object = {}) {
   (window as unknown as { __BOOT__: unknown }).__BOOT__ = {
@@ -393,6 +400,50 @@ describe("files dropped on the file tree", () => {
     expect(
       normaliseSettings({ confirmTreeTrash: false }).confirmTreeTrash,
     ).toBe(false);
+  });
+});
+
+describe("a theme, light or dark, picked", () => {
+  it("lands behind the browser's picture of the old look, all at once inside the fade", () => {
+    boot({ theme: "light", languageChosen: true });
+    let picture = () => {};
+    const start = vi.fn((update?: unknown) => {
+      picture = update as () => void;
+      return {
+        ready: Promise.resolve(),
+        updateCallbackDone: Promise.resolve(),
+        finished: Promise.resolve(),
+        skipTransition: () => {},
+      } as unknown as ViewTransition;
+    });
+    document.startViewTransition = start as never;
+    vi.mocked(motionAllowed).mockReturnValue(true);
+    try {
+      render(
+        <SettingsProvider>
+          <AppearanceSync />
+          <Probe />
+        </SettingsProvider>,
+      );
+      const root = document.documentElement;
+      expect(root.getAttribute("data-theme")).toBe("light");
+      act(() => lastSet({ theme: "dark" }));
+      // Still the old look while the browser pictures it...
+      expect(root.getAttribute("data-theme")).toBe("light");
+      // ...and the new one, effects and all, by the time its callback
+      // returns: the fade's second picture is the page then.
+      picture();
+      expect(root.getAttribute("data-theme")).toBe("dark");
+      expect(screen.getByTestId("probe").textContent).toMatch(/^dark\|/);
+      // Any other setting is no change of look.
+      act(() => lastSet({ zoom: 1.1 }));
+      expect(start).toHaveBeenCalledOnce();
+    } finally {
+      vi.mocked(motionAllowed).mockReset();
+      delete (document as { startViewTransition?: unknown })
+        .startViewTransition;
+      document.documentElement.removeAttribute("data-theme");
+    }
   });
 });
 

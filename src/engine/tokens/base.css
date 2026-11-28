@@ -391,3 +391,22 @@ html:root[data-plain-frame] {
 :root[data-restyling] *::after {
   transition: none !important;
 }
+
+/* The same switch where the engine cross-fades it (motion/look-fade.ts):
+   the browser's picture of the old look fades over the new page. Only the
+   root is pictured - nothing names a view-transition-name - so islands keep
+   their order and clipping. */
+@supports (view-transition-name: none) {
+  ::view-transition-group(root),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: var(--dur-theme);
+    animation-timing-function: var(--ease-standard);
+  }
+}
+
+/* Meanwhile clicks wait: they would land on controls not seen yet. The
+   keyboard and the caret carry on. */
+:root[data-look-fading] * {
+  pointer-events: none !important;
+}

@@ -131,6 +131,56 @@ test("installed themes show as the store's do", async ({ page }) => {
   await expect(mine.locator("..")).toHaveCSS("display", "grid");
 });
 
+test("light or dark, picked or the system's, cross-fades the window where the engine can, and clicks wait for it", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, { settings: { menuBarShown: false }, animations: true });
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new CustomEvent("textus:open-settings-page", {
+        detail: { page: "look-basic" },
+      }),
+    ),
+  );
+  // Each fade, as it starts: whether clicks then reach the page.
+  const fades = () =>
+    page.evaluate(() => (window as { fades?: string[] }).fades ?? []);
+  await page.evaluate(() => {
+    const seen: string[] = [];
+    (window as { fades?: string[] }).fades = seen;
+    const root = document.documentElement;
+    new MutationObserver(() => {
+      if (root.hasAttribute("data-look-fading"))
+        seen.push(getComputedStyle(document.body).pointerEvents);
+    }).observe(root, { attributeFilter: ["data-look-fading"] });
+  });
+  const html = page.locator("html");
+  /** A fade over: what a test does next lands on the page it sees. */
+  const settled = () => expect(html).not.toHaveAttribute("data-look-fading");
+  const mode = page.getByRole("radiogroup", { name: "浅色/深色" });
+
+  await mode.getByRole("radio", { name: "深色" }).click();
+  await settled();
+  await expect(html).toHaveAttribute("data-theme", "dark");
+  await mode.getByRole("radio", { name: "跟随系统" }).click();
+  await settled();
+  await expect(html).not.toHaveAttribute("data-theme");
+  // The system turning dark under a window that follows it: the same fade,
+  // the old look held only for the fade's first picture.
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect
+    .poll(() => html.evaluate((el) => getComputedStyle(el).colorScheme))
+    .toBe("dark");
+  await settled();
+  await expect(html).not.toHaveAttribute("data-theme");
+
+  const fading = await page.evaluate(
+    () => typeof document.startViewTransition === "function",
+  );
+  expect(await fades()).toEqual(fading ? ["none", "none", "none"] : []);
+});
+
 test("first-line indent sets in the document's paragraphs, not a list's", async ({
   page,
 }) => {

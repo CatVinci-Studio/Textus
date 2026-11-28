@@ -3,6 +3,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -79,11 +80,41 @@ interface SettingsContextValue {
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
 
+/** What changes the whole window's look. */
+const LOOK: (keyof Settings)[] = ["theme", "themeId"];
+
+type CommitLook = (change: () => void) => void;
+const atOnce: CommitLook = (change) => change();
+let commitLook = atOnce;
+
+/** How a change of the whole window's look is committed: at once, unless
+ *  the layer that draws the look (theme/apply-appearance.ts) hands its
+ *  cross-fade here. Returns the function that takes it back. */
+export function commitLookChangesWith(run: CommitLook): () => void {
+  commitLook = run;
+  return () => {
+    if (commitLook === run) commitLook = atOnce;
+  };
+}
+
+/** Commits `change`, which brings `next`: through commitLook when it
+ *  changes the look from `now`'s. */
+function commit(change: () => void, next: Partial<Settings>, now: Settings) {
+  if (LOOK.some((key) => key in next && next[key] !== now[key]))
+    commitLook(change);
+  else change();
+}
+
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettingsState] = useState<Settings>(loadSettings);
   // Read in the same render as the state above.
   const renderedVersion = useRef(remoteVersion);
   const wantedLanguage = useRef<string | null>(null);
+  // What the window shows, for a change to tell whether it changes the look.
+  const shown = useRef(settings);
+  useLayoutEffect(() => {
+    shown.current = settings;
+  });
 
   useEffect(() => {
     // A first launch writes the whole set of defaults at once, so the next
@@ -94,13 +125,20 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     // own fields (WINDOW_OWN) itself; localStorage, shared by all, doesn't.
     const adopt = () => {
       const incoming = loadSettings();
-      setSettingsState((prev) =>
-        readBoot()
-          ? incoming
-          : {
-              ...incoming,
-              ...Object.fromEntries(WINDOW_OWN.map((key) => [key, prev[key]])),
-            },
+      commit(
+        () =>
+          setSettingsState((prev) =>
+            readBoot()
+              ? incoming
+              : {
+                  ...incoming,
+                  ...Object.fromEntries(
+                    WINDOW_OWN.map((key) => [key, prev[key]]),
+                  ),
+                },
+          ),
+        incoming,
+        shown.current,
       );
     };
     // Another window's language, once its strings are here too.
@@ -129,7 +167,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   function setSettings(patch: Partial<Settings>) {
     const apply = () => {
-      setSettingsState((prev) => ({ ...prev, ...patch }));
+      commit(
+        () => setSettingsState((prev) => ({ ...prev, ...patch })),
+        patch,
+        shown.current,
+      );
       persist(patch);
     };
     // A language switched to takes effect once its strings have loaded, so

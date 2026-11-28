@@ -213,6 +213,10 @@ test("theme and appearance switching", async ({ page }) => {
   await bench(page, "appearance", async () => {
     for (let i = 0; i < ROUNDS * 2; i++) {
       await page.emulateMedia({ colorScheme: i % 2 ? "light" : "dark" });
+      // The window's cross-fade over before the next flip (look-fade.ts).
+      await expect(page.locator("html")).not.toHaveAttribute(
+        "data-look-fading",
+      );
       await page.waitForTimeout(350);
     }
   });

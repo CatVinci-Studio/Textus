@@ -30,10 +30,15 @@ const transient = (node: Node | null): boolean =>
  *  transitions off (base.css). Itself no change of look. */
 export const RESTYLING = "data-restyling";
 
+/** On <html> while a change of look cross-fades (motion/look-fade.ts):
+ *  clicks wait (base.css). Itself no change of look. */
+export const LOOK_FADING = "data-look-fading";
+
 function start(): () => void {
   const changed = subscribers.publish;
   const rootChanged = (records: MutationRecord[]) => {
-    if (records.some((r) => r.attributeName !== RESTYLING)) changed();
+    const marks = [RESTYLING, LOOK_FADING];
+    if (records.some((r) => !marks.includes(r.attributeName ?? ""))) changed();
   };
   const headChanged = (records: MutationRecord[]) => {
     // Inside a transient style, or one added or removed: no change of look.

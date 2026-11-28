@@ -8,6 +8,7 @@ import {
 import type { ThemeMode, UserThemeMeta } from "../prefs/SettingsContext";
 import { applyThemeChrome } from "../engine/tokens/palette";
 import { writeThemeStyle } from "../engine/tokens/appearance";
+import { onSystemScheme } from "../engine/motion/look-fade";
 import { isIOSApp } from "../platform/capabilities";
 import { lazyModule } from "../lazy/lazy-module";
 import {
@@ -207,11 +208,11 @@ export function applyImportedTheme(
   void apply();
 
   // Injected CSS can't be swapped by a media query - in "system" mode this
-  // is what re-picks the variant when the OS flips.
-  const mq = window.matchMedia?.("(prefers-color-scheme: dark)");
-  mq?.addEventListener("change", apply);
+  // is what re-picks the variant when the OS flips, inside the window's
+  // cross-fade so the fade's first picture is still the old variant.
+  const stopScheme = onSystemScheme(() => void apply());
   return () => {
     cancelled = true;
-    mq?.removeEventListener("change", apply);
+    stopScheme();
   };
 }

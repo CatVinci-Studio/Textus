@@ -16,6 +16,8 @@
   --dur-slow: 320ms;
   /* Phone sheets and full-screen pages on a spring; slow fades. */
   --dur-sheet: 450ms;
+  /* The whole window cross-fading to a theme, or to light or dark. */
+  --dur-theme: 180ms;
   /* A tint that marks where something was found, fading as it is read
      (Settings' search). Colour only, so reduced motion keeps it. */
   --dur-linger: 1600ms;
