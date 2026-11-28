@@ -343,6 +343,16 @@
   opacity: 0.5;
 }
 
+/* A dot name shown because Settings says so: muted the way a file manager
+   draws a hidden item, in the muted text colour, not dimmed like ignored. */
+.tree-row-hidden:not(.tree-row-active, .tree-row-picked) .tree-label {
+  color: var(--ui-muted);
+}
+
+.tree-row-hidden .tree-icon {
+  opacity: 0.7;
+}
+
 /* A row dragged with ⌥ (Ctrl elsewhere) held is copied: the cursor and
    the copy under the pointer say so. */
 body.document-dragging.tree-drag-copy,

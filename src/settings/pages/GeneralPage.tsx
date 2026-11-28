@@ -111,6 +111,12 @@ export function GeneralPage({ t, settings, setSettings }: SettingsPageProps) {
           checked={settings.autoSuggestFilename}
           onChange={(v) => setSettings({ autoSuggestFilename: v })}
         />
+        <ToggleRow
+          label={t.showHiddenFilesLabel}
+          hint={t.showHiddenFilesHint}
+          checked={settings.showHiddenFiles}
+          onChange={(v) => setSettings({ showHiddenFiles: v })}
+        />
         {canDropFilesIntoTree && (
           <ToggleRow
             label={t.confirmTreeCopyLabel}

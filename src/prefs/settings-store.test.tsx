@@ -401,6 +401,13 @@ describe("files dropped on the file tree", () => {
       normaliseSettings({ confirmTreeTrash: false }).confirmTreeTrash,
     ).toBe(false);
   });
+
+  it("lists dot names in the tree only when the user turned it on", () => {
+    expect(normaliseSettings({}).showHiddenFiles).toBe(false);
+    expect(normaliseSettings({ showHiddenFiles: true }).showHiddenFiles).toBe(
+      true,
+    );
+  });
 });
 
 describe("a theme, light or dark, picked", () => {

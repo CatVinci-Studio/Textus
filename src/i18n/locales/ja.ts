@@ -1425,6 +1425,9 @@ ${AI_NAME}への執筆の指示です。すべての文書に適用されます�
   confirmTreeCopyLabel:
     "ファイルツリーにドロップしたファイルをコピーする前に確認する",
   confirmTreeTrashLabel: "ファイルツリーのファイルをゴミ箱に入れる前に確認する",
+  showHiddenFilesLabel: "隠しファイルとフォルダーを表示",
+  showHiddenFilesHint:
+    "名前が . で始まるファイルとフォルダー（.git や .codex など）。表示されるのはファイルツリーだけで、検索とリンクの対象にはなりません。",
   autosaveLabel: "自動保存",
   settingsFileLabel: "設定ファイル",
   settingsFileSummary: "アプリの設定と AI の履歴を読み込み／書き出します",

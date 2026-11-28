@@ -117,11 +117,6 @@ const LOCAL: {
     decode: (raw) => raw,
     encode: (value) => value,
   },
-  fileTreeHidden: {
-    key: "textus-file-tree-hidden",
-    decode: (raw) => raw,
-    encode: (value) => value,
-  },
   fileTreeSort: {
     key: "textus-file-tree-sort",
     decode: (raw) => raw,

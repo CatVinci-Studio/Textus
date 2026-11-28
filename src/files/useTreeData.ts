@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { absoluteIn, isInside, parentDir } from "../utils/path";
 import { FILE_CREATED_EVENT, FILE_WRITTEN_EVENT } from "../utils/events";
 import { type SearchScope } from "./file-search";
+import { useSettings } from "../prefs/SettingsContext";
 import { getUiState } from "../storage/ui-state";
 import { type TreeSort } from "./tree-shared";
 import { OpenFolders, useDiskWatch } from "./useDiskWatch";
@@ -35,9 +36,9 @@ export function useTreeView(base: string) {
   const [generation, setGeneration] = useState(0);
   const [sort, setSort] = useState<TreeSort>(savedSort);
   const [scope, setScope] = useState<SearchScope>(savedScope);
-  const [showHidden, setShowHidden] = useState(
-    () => getUiState("fileTreeHidden") === "1",
-  );
+  // A setting, not a view state: Settings and the tree's menu change the same value.
+  const { settings } = useSettings();
+  const showHidden = settings.showHiddenFiles;
   const [versions, reload] = useFolderCounts();
   const changes = useFolderChanges(base);
   // Collapse All: every folder below the root folds, as `versions` stood.
@@ -54,7 +55,6 @@ export function useTreeView(base: string) {
     scope,
     setScope,
     showHidden,
-    setShowHidden,
     versions,
     reload,
     ...changes,

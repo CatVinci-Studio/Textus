@@ -1467,6 +1467,9 @@ type /name in a conversation to use one.
   confirmTreeCopyLabel: "Ask before copying files dropped onto the file tree",
   confirmTreeTrashLabel:
     "Ask before moving files in the file tree to the Trash",
+  showHiddenFilesLabel: "Show hidden files and folders",
+  showHiddenFilesHint:
+    "Files and folders whose names start with a dot, such as .git or .codex. Only the file tree lists them; search and links skip them.",
   autosaveLabel: "Save automatically",
   settingsFileLabel: "Settings file",
   settingsFileSummary: "Import or export the app’s settings and AI history",

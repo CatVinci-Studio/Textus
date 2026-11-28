@@ -1556,6 +1556,9 @@ utiliser une.
     "Demander avant de copier les fichiers déposés dans l'arborescence",
   confirmTreeTrashLabel:
     "Demander avant de mettre à la corbeille des fichiers de l'arborescence",
+  showHiddenFilesLabel: "Afficher les fichiers et dossiers masqués",
+  showHiddenFilesHint:
+    "Fichiers et dossiers dont le nom commence par un point, comme .git ou .codex. Seule l’arborescence les liste ; la recherche et les liens les ignorent.",
   autosaveLabel: "Enregistrer automatiquement",
   settingsFileLabel: "Fichier de réglages",
   settingsFileSummary:

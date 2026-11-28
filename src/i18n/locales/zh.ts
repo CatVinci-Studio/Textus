@@ -1354,6 +1354,9 @@ export default {
   autoSuggestFilenameLabel: "新文件保存时自动建议文件名",
   confirmTreeCopyLabel: "拖到文件树的文件复制前先询问",
   confirmTreeTrashLabel: "文件树里的文件移到废纸篓前先询问",
+  showHiddenFilesLabel: "显示隐藏的文件和文件夹",
+  showHiddenFilesHint:
+    "名称以 . 开头的文件和文件夹，如 .git、.codex。只有文件树会列出，搜索和链接不会读取它们。",
   autosaveLabel: "自动保存",
   settingsFileLabel: "设置文件",
   settingsFileSummary: "导入/导出软件的设置以及 AI 历史记录",

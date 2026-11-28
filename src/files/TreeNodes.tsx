@@ -40,6 +40,8 @@ interface DirNodeProps {
   depth: number;
   /** Left out by a .gitignore: shown dimmed, as the search leaves it out. */
   ignored?: boolean;
+  /** A dot name (or marked hidden): shown muted, as a file manager does. */
+  hidden?: boolean;
   activePath: string | null;
   onFileSelect: (path: string, how?: FileOpenHow) => void;
 }
@@ -160,6 +162,7 @@ export const DirNode = memo(function DirNode({
   path,
   depth,
   ignored = false,
+  hidden = false,
   activePath,
   onFileSelect,
 }: DirNodeProps) {
@@ -240,6 +243,7 @@ export const DirNode = memo(function DirNode({
             depth={depth}
             open={open}
             ignored={ignored}
+            hidden={hidden}
             onToggle={() => setOpen(!open)}
           />
         </div>
@@ -285,6 +289,7 @@ export const DirNode = memo(function DirNode({
                   path={entry.path}
                   depth={depth + 1}
                   ignored={entry.ignored}
+                  hidden={entry.hidden}
                   activePath={activePath}
                   onFileSelect={onFileSelect}
                 />

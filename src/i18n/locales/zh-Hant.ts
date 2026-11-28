@@ -1356,6 +1356,9 @@ export default {
   autoSuggestFilenameLabel: "儲存新檔案時建議檔名",
   confirmTreeCopyLabel: "拖進檔案樹的檔案，複製前先詢問",
   confirmTreeTrashLabel: "檔案樹裡的檔案移到垃圾桶前先詢問",
+  showHiddenFilesLabel: "顯示隱藏的檔案和資料夾",
+  showHiddenFilesHint:
+    "名稱以 . 開頭的檔案和資料夾，如 .git、.codex。只有檔案樹會列出，搜尋和連結不會讀取它們。",
   autosaveLabel: "自動儲存",
   settingsFileLabel: "設定檔",
   settingsFileSummary: "匯入/匯出軟體的設定以及 AI 歷史紀錄",
