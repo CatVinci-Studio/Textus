@@ -1,6 +1,7 @@
 import { duration, motionAllowed } from "../motion/motion";
 import { easingFn } from "./easing";
 import { between, sameRect, type Rect } from "./rect";
+import { createSubscribers } from "../../utils/store";
 
 /**
  * The window's one clock for where things are (design-language.md 5.7):
@@ -62,6 +63,22 @@ class FrameClock {
   private runs = new Map<string, Run>();
   private frame = 0;
   private ease = easingFn("--ease-settle");
+  /** Whether a run was going after the last paint: its end is told. */
+  private ran = false;
+  private settled = createSubscribers();
+
+  /** Whether anything is on its way now. What only measures the page
+   *  (where lazy blocks fall) waits: the views are at their end size from
+   *  the first frame, clipped, so a measure mid-motion buys nothing. */
+  moving(): boolean {
+    return this.runs.size > 0;
+  }
+
+  /** Calls `listener` each time the last run ends; returns the function
+   *  that stops. */
+  onSettled(listener: () => void): () => void {
+    return this.settled.subscribe(listener);
+  }
 
   attach(key: string, el: HTMLElement | null): void {
     if (!el) {
@@ -128,6 +145,15 @@ class FrameClock {
     this.paint(null, placed);
     if (this.runs.size && !this.frame)
       this.frame = requestAnimationFrame((t) => this.tick(t));
+    this.tell();
+  }
+
+  /** The runs' end told once, however they ended: run out, or put at
+   *  their end at once, or their group gone. */
+  private tell() {
+    const ran = this.ran;
+    this.ran = this.runs.size > 0;
+    if (ran && !this.ran) this.settled.publish();
   }
 
   private allAt(parts: Map<string, FramePart>): boolean {
@@ -146,6 +172,7 @@ class FrameClock {
       this.runs.delete(key);
     }
     this.groups.delete(name);
+    this.tell();
   }
 
   /** Part `key` drawn at `rect` now, from where a gesture left it (a tab
@@ -154,6 +181,7 @@ class FrameClock {
     this.runs.delete(key);
     this.shown.set(key, rect);
     this.writeKey(key);
+    this.tell();
   }
 
   /** Part `key` written in full wherever a group holds it. */
@@ -168,6 +196,7 @@ class FrameClock {
     this.frame = 0;
     this.paint(now, new Set());
     if (this.runs.size) this.frame = requestAnimationFrame((t) => this.tick(t));
+    this.tell();
   }
 
   /** `now` null: the changes' first frame, drawn before the page paints.

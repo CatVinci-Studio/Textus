@@ -307,3 +307,42 @@ describe("frame clock motion", () => {
     expect(sheet.style.left).toBe("70px");
   });
 });
+
+describe("frame clock settling", () => {
+  it("is moving while a run goes and tells its end once", () => {
+    el("sheet");
+    let told = 0;
+    const stop = frameClock.onSettled(() => told++);
+    set("islands", [["sheet", { rect: box(0) }]], false);
+    expect(frameClock.moving()).toBe(false);
+    set("islands", [["sheet", { rect: box(100) }]]);
+    expect(frameClock.moving()).toBe(true);
+    expect(told).toBe(0);
+    frame(1000);
+    expect(told).toBe(0);
+    frame(1200);
+    expect(told).toBe(0);
+    // Turned mid-way: still one motion.
+    set("islands", [["sheet", { rect: box(20) }]]);
+    frame(1300);
+    expect(told).toBe(0);
+    frame(1700);
+    expect(frameClock.moving()).toBe(false);
+    expect(told).toBe(1);
+    frame(1800);
+    expect(told).toBe(1);
+    stop();
+  });
+
+  it("tells the end of a run put at its end at once", () => {
+    el("sheet");
+    let told = 0;
+    const stop = frameClock.onSettled(() => told++);
+    set("islands", [["sheet", { rect: box(0) }]], false);
+    set("islands", [["sheet", { rect: box(100) }]]);
+    set("islands", [["sheet", { rect: box(200) }]], false);
+    expect(frameClock.moving()).toBe(false);
+    expect(told).toBe(1);
+    stop();
+  });
+});
