@@ -147,6 +147,27 @@ export function loadCatalog(force = false): Promise<void> {
   return fetching;
 }
 
+/** Resolves once a list can be read: last time's at once when one is
+ *  kept, else the fresh one (or its failure). For a lookup on the way to
+ *  something else, such as which plugin opens a file: the fresh catalog is
+ *  over a megabyte from the network, and waiting for it held the first
+ *  script file opened by seconds. */
+export function catalogAtHand(): Promise<void> {
+  const loading = loadCatalog().catch(() => {});
+  if (state.status === "ready") return Promise.resolve();
+  return new Promise((resolve) => {
+    const stop = subscribeCatalog(() => {
+      if (state.status === "loading") return;
+      stop();
+      resolve();
+    });
+    void loading.then(() => {
+      stop();
+      resolve();
+    });
+  });
+}
+
 /** The Textus version the catalog's `item` needs, when it is newer than
  *  this one; null when it runs here. */
 export function neededTextus(item: CatalogItem): string | null {

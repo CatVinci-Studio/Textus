@@ -187,7 +187,8 @@ pub(crate) fn watch_fullscreen(app: &tauri::AppHandle) {
     };
     for (name, fullscreen) in names {
         let app = app.clone();
-        on_window_note(name, move |window| {
+        // Asks Tauri for each window's NSWindow: not inside AppKit's post.
+        crate::window_notes::on_window_note_later(name, move |window| {
             for (label, webview) in app.windows() {
                 if webview.ns_window().ok() == Some(window) {
                     let _ = app.emit_to(label.as_str(), "window-fullscreen", fullscreen);
@@ -195,35 +196,6 @@ pub(crate) fn watch_fullscreen(app: &tauri::AppHandle) {
             }
         });
     }
-}
-
-/// Calls `act` with the NSWindow each time any window posts `name`, for the
-/// life of the process. Main thread.
-#[cfg(target_os = "macos")]
-pub(crate) fn on_window_note(
-    name: &objc2_foundation::NSNotificationName,
-    act: impl Fn(*mut std::ffi::c_void) + 'static,
-) {
-    use objc2_foundation::{NSNotification, NSNotificationCenter};
-    use std::ptr::NonNull;
-    let block = block2::RcBlock::new(move |note: NonNull<NSNotification>| {
-        // SAFETY: AppKit hands the block a live notification.
-        let Some(window) = (unsafe { note.as_ref() }).object() else {
-            return;
-        };
-        act(objc2::rc::Retained::as_ptr(&window) as *mut std::ffi::c_void);
-    });
-    // SAFETY: any window's notification (no object), delivered on the
-    // thread that posts it - AppKit's main thread.
-    let observer = unsafe {
-        NSNotificationCenter::defaultCenter().addObserverForName_object_queue_usingBlock(
-            Some(name),
-            None,
-            None,
-            &block,
-        )
-    };
-    std::mem::forget(observer);
 }
 
 /// Whether this process talks to a Wayland compositor (no window positions, no

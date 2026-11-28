@@ -5,6 +5,7 @@ import { basename, extname } from "../../utils/path";
 import type { Strings } from "../../i18n/strings";
 import { showMessage } from "../../engine/controls/app-dialog";
 import {
+  catalogAtHand,
   catalogSnapshot,
   installFromCatalog,
   loadCatalog,
@@ -74,7 +75,8 @@ export async function offerPluginToOpen(
   path: string,
   t: Strings,
 ): Promise<"on" | "system" | "declined" | "muted" | "dropped" | "none"> {
-  await loadCatalog().catch(() => {});
+  // The file waits on this: last time's list will do.
+  await catalogAtHand();
   const catalog = catalogSnapshot();
   if (catalog.status !== "ready") return "none";
   const item = catalogEditorFor(path, catalog.items);
