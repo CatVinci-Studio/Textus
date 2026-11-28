@@ -310,6 +310,27 @@ test("a click during the theme's cross-fade lands on the fade, not the control u
   expect(await fades()).toBe(before);
 });
 
+test("arrow keys pressed quickly step light, dark and system from the segment they are on, through the fade", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 760 });
+  await openApp(page, {
+    settings: { menuBarShown: false, language: "en" },
+    animations: true,
+  });
+  await openAppearance(page);
+  const mode = page.getByRole("radiogroup", { name: "Light or dark" });
+  await mode.getByRole("radio", { name: "Light" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await mode.getByRole("radio", { name: "Light" }).focus();
+  // Light → Dark → System → Dark, the keys one after another.
+  for (const key of ["ArrowRight", "ArrowRight", "ArrowLeft"])
+    await page.keyboard.press(key);
+  await expect(mode.getByRole("radio", { name: "Dark" })).toBeFocused();
+  await expect(mode.getByRole("radio", { name: "Dark" })).toBeChecked();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+});
+
 test("a number field is − / value / + in the Tab order; a typed value settles on Enter inside the range", async ({
   page,
   browserName,
