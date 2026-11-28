@@ -61,6 +61,30 @@ describe("parseHeadings", () => {
     expect(texts("```\n``` js\n# inside\n```\n# After")).toEqual(["After"]);
   });
 
+  it("reads no heading inside a $$ formula (#851)", () => {
+    const issue =
+      "# 标题1\n\n$$\n\\mathcal S_v=(a_{v,k})_{k=1}^{n_v},\n\\qquad\na_{v,k}=(c_{i_k},d_{v,k},\\phi(w_{v,k})).\n\\tag{4-2}\n$$\n\n# 标题2\n\n# 标题3";
+    expect(texts(issue)).toEqual(["标题1", "标题2", "标题3"]);
+    // A lone `=` or `-` under a formula's line is no setext underline, nor a
+    // `#` line an ATX heading; in a list item too, and loosely fenced.
+    for (const body of [
+      "$$\n\\mathcal L_{\\mathrm{GRU}}\n=\n-\\frac{1}{3}\n\\tag{4-5}\n$$",
+      "$$\na\n-\nb\n$$",
+      "$$\na\n# b\n$$",
+      "$$a\n=\nb$$",
+      "- $$\n  a\n  =\n  $$",
+    ])
+      expect(texts(`# A\n\n${body}\n\n# B`)).toEqual(["A", "B"]);
+  });
+
+  it("reads a $$ line as the editor does when it opens no block", () => {
+    // `$$x$$` alone is inline maths: a paragraph a setext line can head.
+    expect(texts("$$x$$\n===\n# B")).toEqual(["$$x$$", "B"]);
+    // Words with a `$` after the opener open a block only if one closes.
+    expect(texts("$$x$$ is famous\n\n# B")).toEqual(["B"]);
+    expect(texts("$$x$$ is\n=\ny$$\n\n# B")).toEqual(["B"]);
+  });
+
   it("gives the anchors the editor gives, math kept", () => {
     expect(
       sourceAnchors(["Energy $E=mc^2$", "`Code` *now*", "Energy $E=mc^2$"]),
