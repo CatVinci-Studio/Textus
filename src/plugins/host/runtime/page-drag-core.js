@@ -137,8 +137,8 @@
     var cancel = once(function (e) {
       finish(e.clientX, e.clientY, false);
     });
-    // A release outside the frame is never heard: the window losing focus
-    // ends the drag, dropping nothing.
+    // The window losing focus mid-drag (another app, another window) may
+    // take the release with it: the drag ends, dropping nothing.
     function lost() {
       finish(last.x, last.y, false);
     }
