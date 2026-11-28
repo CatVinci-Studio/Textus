@@ -5333,6 +5333,7 @@ dependencies = [
  "calamine",
  "chrono",
  "codepage",
+ "dispatch2",
  "dom_query",
  "drag",
  "encoding_rs",

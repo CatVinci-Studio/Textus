@@ -165,7 +165,7 @@ fn place(window: *mut std::ffi::c_void) {
 /// thread, once.
 #[cfg(target_os = "macos")]
 pub(crate) fn watch(app: &tauri::AppHandle) {
-    use crate::editor_windows::on_window_note;
+    use crate::window_notes::{on_window_note, on_window_note_later};
     use objc2_app_kit::{
         NSWindowDidBecomeKeyNotification, NSWindowDidChangeBackingPropertiesNotification,
         NSWindowDidChangeScreenNotification, NSWindowDidDeminiaturizeNotification,
@@ -206,8 +206,10 @@ pub(crate) fn watch(app: &tauri::AppHandle) {
         // failed or was cut short sends no Did note.
         show(window, !in_transit(window));
     });
+    // Asks Tauri which windows are ours, so not inside AppKit's post: closing
+    // a window makes the next one key while Tauri holds its windows (#828).
     let opened = app.clone();
-    on_window_note(key, move |window| {
+    on_window_note_later(key, move |window| {
         if ours(&opened).contains(&window) {
             settle(&opened, window);
         }

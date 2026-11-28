@@ -270,6 +270,9 @@ objc2-pdf-kit = { version = "0.3", default-features = false, features = [
     "objc2-core-foundation",
 ] }
 block2 = "0.6"
+# The main queue, for window notes that must wait a turn (window_notes.rs).
+# Already in the tree through rfd and tao.
+dispatch2 = "0.3"
 
 # Windows/Linux PDF export (commands/export.rs): the webview's own PDF
 # renderer driven directly - WebView2's PrintToPdf, WebKitGTK's print-to-file
