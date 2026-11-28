@@ -136,6 +136,21 @@ describe("submenus", () => {
     );
   });
 
+  it("come in quicker than a popover and leave in the quickest step", () => {
+    for (const [file, rule] of [
+      ["ContextMenu.css", ".context-menu"],
+      ["Select.css", ".ui-select-menu"],
+    ]) {
+      const css = readFileSync(resolve("src/engine/controls", file), "utf8");
+      const block = (selector: string) =>
+        css.slice(css.indexOf(`${selector} {`)).split("}")[0];
+      expect(block(rule)).toMatch(/motion-pop-in var\(--dur-fast\)/);
+      expect(block(`${rule}[data-state="closing"]`)).toMatch(
+        /var\(--dur-instant\)/,
+      );
+    }
+  });
+
   it("leave in the quickest step there is", () => {
     const css = readFileSync(
       resolve("src/engine/controls/ContextMenu.css"),
@@ -194,6 +209,32 @@ describe("submenus", () => {
       window.innerWidth = width;
     }
   });
+});
+
+it("a menu opening ends the exit of another still on its way out", () => {
+  withExits();
+  const { rerender } = render(
+    <>
+      <Menu />
+      <Menu show={false} />
+    </>,
+  );
+  const first = document.querySelector(".context-menu")!;
+  rerender(
+    <>
+      <Menu show={false} />
+      <Menu show={false} />
+    </>,
+  );
+  expect(first).toHaveAttribute("data-state", "closing");
+  rerender(
+    <>
+      <Menu show={false} />
+      <Menu />
+    </>,
+  );
+  expect(first.isConnected).toBe(false);
+  expect(document.querySelectorAll(".context-menu")).toHaveLength(1);
 });
 
 it("a menu comes back inside a window made smaller", () => {

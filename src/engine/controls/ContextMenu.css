@@ -9,11 +9,12 @@
      opened. */
   z-index: var(--z-menu);
   transform-origin: var(--transform-origin, top left);
-  animation: motion-pop-in var(--dur-base) var(--ease-out);
+  /* Quicker than a popover: a menu is opened to be used at once. */
+  animation: motion-pop-in var(--dur-fast) var(--ease-out);
 }
 
 .context-menu[data-state="closing"] {
-  animation: motion-pop-out var(--dur-fast) var(--ease-in) forwards;
+  animation: motion-pop-out var(--dur-instant) var(--ease-in) forwards;
 }
 
 .context-menu-label {

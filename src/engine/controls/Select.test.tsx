@@ -105,4 +105,58 @@ describe("Select", () => {
     fireEvent.keyDown(screen.getByRole("listbox"), { key: "Enter" });
     expect(onChange).toHaveBeenCalledWith({ target: { value: "news" } });
   });
+
+  it("opens on the mouse's press; that press's click leaves it open", () => {
+    const { onChange } = renderSelect();
+    const trigger = screen.getByRole("combobox");
+    fireEvent.pointerDown(trigger, { pointerType: "mouse", button: 0 });
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+    fireEvent.pointerUp(trigger, { pointerType: "mouse" });
+    fireEvent.click(trigger, { detail: 1 });
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+    // The next press closes it, its click too leaving it so.
+    fireEvent.pointerDown(trigger, { pointerType: "mouse", button: 0 });
+    fireEvent.click(trigger, { detail: 1 });
+    expect(screen.queryByRole("listbox")).toBeNull();
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("held and let go over an option, chooses it; let go at once in place, chooses nothing", () => {
+    const { onChange } = renderSelect();
+    const trigger = screen.getByRole("combobox");
+    const now = vi.spyOn(performance, "now").mockReturnValue(1000);
+    try {
+      const press = {
+        pointerType: "mouse",
+        button: 0,
+        clientX: 30,
+        clientY: 10,
+      };
+      fireEvent.pointerDown(trigger, press);
+      fireEvent.pointerUp(screen.getByRole("option", { name: "Alpha" }), press);
+      expect(onChange).not.toHaveBeenCalled();
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
+
+      fireEvent.pointerDown(trigger, press);
+      fireEvent.pointerDown(trigger, press);
+      now.mockReturnValue(1400);
+      fireEvent.pointerUp(
+        screen.getByRole("option", { name: "Charlie" }),
+        press,
+      );
+      expect(onChange).toHaveBeenCalledWith({ target: { value: "c" } });
+      expect(screen.queryByRole("listbox")).toBeNull();
+    } finally {
+      now.mockRestore();
+    }
+  });
+
+  it("opens for a finger on its click, as before", () => {
+    renderSelect();
+    const trigger = screen.getByRole("combobox");
+    fireEvent.pointerDown(trigger, { pointerType: "touch", button: 0 });
+    expect(screen.queryByRole("listbox")).toBeNull();
+    fireEvent.click(trigger, { detail: 1 });
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+  });
 });
