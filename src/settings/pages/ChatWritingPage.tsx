@@ -16,7 +16,7 @@ import type { TextKey } from "../../i18n/strings";
 import { SettingRow, ToggleRow } from "../sections/controls";
 import {
   SearchServiceSection,
-  useSearchServiceShown,
+  useSearchServiceStatus,
 } from "../sections/search-service";
 import { WritingConventionsRow } from "../sections/skills";
 import { Select } from "../../engine/controls/Select";
@@ -38,7 +38,7 @@ export function ChatWritingPage({
   marginAvailable,
 }: SettingsPageProps) {
   const sources = useInlineSources();
-  const searchShown = useSearchServiceShown();
+  const searchStatus = useSearchServiceStatus();
   return (
     <>
       <SettingsGroup title={t.aiAskLabel}>
@@ -186,9 +186,9 @@ export function ChatWritingPage({
         <WritingConventionsRow t={t} />
       </SettingsGroup>
 
-      {settings.enableAskAi && searchShown && (
+      {settings.enableAskAi && searchStatus && (
         <SettingsGroup title={t.netGroup}>
-          <SearchServiceSection t={t} />
+          <SearchServiceSection t={t} status={searchStatus} />
         </SettingsGroup>
       )}
     </>

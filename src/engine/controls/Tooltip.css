@@ -17,6 +17,11 @@
   animation: motion-fade-in var(--dur-fast) var(--ease-out);
 }
 
+/* The shortcut beside the words. */
+.tooltip .tx-kbd {
+  margin-inline-start: var(--space-2);
+}
+
 .tooltip[data-state="closing"] {
   animation: motion-fade-out var(--dur-fast) var(--ease-in) forwards;
 }

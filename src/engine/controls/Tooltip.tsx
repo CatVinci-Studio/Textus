@@ -15,6 +15,7 @@ import {
 import { createPortal } from "react-dom";
 import { Bubble, type BubbleSide } from "./Bubble";
 import { Presence } from "../motion/usePresence";
+import { formatCombo } from "../../utils/shortcuts";
 import "./Tooltip.css";
 import { useTipTimer } from "./useTipTimer";
 
@@ -62,6 +63,7 @@ export function Tooltip({
   description = text,
   side = "below",
   whenCut = false,
+  keys,
   children,
 }: {
   text: string;
@@ -73,6 +75,10 @@ export function Tooltip({
   side?: BubbleSide;
   /** Only while its text is cut short: a name read whole on hover. */
   whenCut?: boolean;
+  /** The button's shortcut as stored ("mod+b"), from the user's current key
+   *  settings: shown beside the text, in the platform's own symbols. The
+   *  text never carries it, so a rebinding changes nothing else. */
+  keys?: string;
   children: ReactElement<TriggerProps>;
 }) {
   const [open, setOpenState] = useState(false);
@@ -185,7 +191,7 @@ export function Tooltip({
         )}
       <Presence show={open}>
         {open && (
-          <TooltipBubble id={tipId} anchor={anchor} side={side}>
+          <TooltipBubble id={tipId} anchor={anchor} side={side} keys={keys}>
             {text}
           </TooltipBubble>
         )}
@@ -198,11 +204,13 @@ function TooltipBubble({
   id,
   anchor,
   side,
+  keys,
   children,
 }: {
   id: string;
   anchor: RefObject<HTMLElement | null>;
   side: BubbleSide;
+  keys?: string;
   children: string;
 }) {
   return (
@@ -215,6 +223,7 @@ function TooltipBubble({
       gap={scaledPx(GAP)}
     >
       {children}
+      {keys && <kbd className="tx-kbd">{formatCombo(keys)}</kbd>}
     </Bubble>
   );
 }

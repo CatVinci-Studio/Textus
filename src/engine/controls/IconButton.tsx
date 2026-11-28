@@ -13,6 +13,7 @@ export function IconButton({
   label,
   hint = label,
   hintSide,
+  keys,
   onClick,
   opens,
   pressed,
@@ -25,6 +26,8 @@ export function IconButton({
   hint?: string;
   /** Where the tooltip prefers to sit (below by default). */
   hintSide?: BubbleSide;
+  /** Its shortcut as stored ("mod+b"), shown in the tooltip. */
+  keys?: string;
   onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
   opens?: ReturnType<typeof useMenuButton>["button"];
   /** For a toggle: whether it is on. */
@@ -34,7 +37,7 @@ export function IconButton({
   children: ReactNode;
 }) {
   return (
-    <Tooltip text={hint} side={hintSide}>
+    <Tooltip text={hint} side={hintSide} keys={keys}>
       <button
         type="button"
         className={className}

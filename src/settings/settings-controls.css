@@ -86,6 +86,13 @@ button.settings-inline-button {
   font-size: var(--text-body);
 }
 
+/* An empty group: its one line of muted text, no box (useBareWhenEmpty). */
+.settings-group-body[data-bare] {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
 /* Inline banners carry their own left accent, so drop the row hairline
    above them. */
 .settings-group-body > .settings-error,

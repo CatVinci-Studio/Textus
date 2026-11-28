@@ -19,7 +19,6 @@ import type {
 } from "../engine/controls/ContextMenu";
 import { fill } from "../i18n/fill";
 import { HideKeyboardIcon, MoreIcon } from "../engine/controls/icons";
-import { formatCombo } from "../utils/shortcuts";
 import {
   EDITOR_MORE_EVENT,
   INSERT_BLOCK_EVENT,
@@ -181,7 +180,7 @@ export function FormatBar({
                 >
                   <IconButton
                     label={label}
-                    hint={b.keys ? `${label}  ${formatCombo(b.keys)}` : label}
+                    keys={b.keys}
                     hintSide={toward}
                     // A menu's button says it opens one, not that it is on.
                     pressed={b.on && !b.picksHeading ? b.on(block) : undefined}

@@ -1,7 +1,6 @@
-/* The start page (design-language.md 5.7): two columns centred as one
-   block. On the left the mark, the name and three text rows to begin with;
-   on the right the recent folders and files. The columns share their top
-   and bottom edges; a narrow window stacks them. */
+/* The start page (design-language.md 5.7): one column, centred: the mark, the
+   name and three text rows to begin with, then the recent folders and files
+   under them. */
 .start-page {
   display: flex;
   align-items: center;

@@ -33,6 +33,28 @@ function useEvenRows(body: RefObject<HTMLDivElement | null>, on: boolean) {
   });
 }
 
+/** A group with nothing to list - no rows, or only a note saying so - draws
+ *  no box (design-language.md 5, empty states): data-bare on its body, which
+ *  settings-controls.css strips of its frame. Watched, because a list inside
+ *  loads or filters without this component rendering again. */
+function useBareWhenEmpty(body: RefObject<HTMLDivElement | null>) {
+  useLayoutEffect(() => {
+    const el = body.current;
+    if (!el) return;
+    const mark = () =>
+      el.toggleAttribute(
+        "data-bare",
+        [...el.children].every((child) =>
+          child.classList.contains("tx-list-note"),
+        ),
+      );
+    mark();
+    const changed = new MutationObserver(mark);
+    changed.observe(el, { childList: true });
+    return () => changed.disconnect();
+  });
+}
+
 /**
  * A section of a Settings page (and of a plugin's page): a small heading,
  * what acts on the whole section at its end (add, import, ⋯), then one flat
@@ -73,6 +95,7 @@ export function SettingsGroup({
 }) {
   const body = useRef<HTMLDivElement>(null);
   useEvenRows(body, evenRows);
+  useBareWhenEmpty(body);
   return (
     <section
       className={className ? `settings-group ${className}` : "settings-group"}
