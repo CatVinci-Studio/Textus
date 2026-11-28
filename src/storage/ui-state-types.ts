@@ -61,6 +61,9 @@ export interface UiState {
   fileSearchScope: string;
   /** The file tree's order: "name" or "modified". */
   fileTreeSort: string;
+  /** Before `showHiddenFiles` was a setting: "1" when the tree showed hidden
+   *  files. Read once by `migrateTreeHidden`, then left "0". */
+  fileTreeHidden: string;
   /** The documents left read-only (View › Read Only), by path. */
   readOnlyPaths: string[];
   /** Documents pinned in their row, by path (document/pinned.ts). */
