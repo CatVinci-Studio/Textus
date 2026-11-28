@@ -1,6 +1,7 @@
 import { duration, motionAllowed } from "../motion/motion";
 import { easingFn } from "./easing";
 import { between, sameRect, type Rect } from "./rect";
+import { carriedBy, columnStarts, type Carried } from "./carry";
 import { createSubscribers } from "../../utils/store";
 
 /**
@@ -12,7 +13,9 @@ import { createSubscribers } from "../../utils/store";
  *
  * A box (a row, a sheet: no text to reflow) takes its rect each frame. A
  * view keeps its final size and follows the box it lies on, clipped to it,
- * so nothing inside is laid out again while it moves.
+ * so nothing inside is laid out again while it moves. Its column, laid
+ * out at that end size from the first frame, is carried from where it was
+ * seen (carry.ts) rather than jumping there.
  *
  * Each frame writes only what moved - the parts running and what lies on
  * them - and never a value an element already holds: a style write, even
@@ -46,6 +49,8 @@ interface Run {
   /** Set on the first frame drawn: a change whose first frame comes late
    *  (a tab's content loading) still starts from its beginning. */
   start: number | null;
+  /** How far along the curve it is drawn now, 0 to 1. */
+  p: number;
 }
 
 interface Group {
@@ -61,6 +66,8 @@ class FrameClock {
   /** Where each part is drawn now. */
   private shown = new Map<string, Rect>();
   private runs = new Map<string, Run>();
+  /** Each view's columns held off their end places (carry.ts). */
+  private carries = new Map<string, Carried[]>();
   private frame = 0;
   private ease = easingFn("--ease-settle");
   /** Whether a run was going after the last paint: its end is told. */
@@ -89,6 +96,7 @@ class FrameClock {
         had.style.transform = "";
         had.style.clipPath = "";
       }
+      this.letGo(key);
       this.elements.delete(key);
       return;
     }
@@ -119,10 +127,14 @@ class FrameClock {
       if (!parts.has(key)) {
         this.shown.delete(key);
         this.runs.delete(key);
+        this.letGo(key);
       }
     const moving = animate && motionAllowed();
     // The curve as the tokens say now (a theme, reduced motion).
     if (moving) this.ease = easingFn("--ease-settle");
+    // Views taking a new width: where their columns are seen now, read
+    // before anything is written.
+    const seen = moving ? this.columnsSeen(parts, was) : null;
     // Parts given a new place (their end, or drawn at once somewhere new):
     // laid out again. The rest keep what they hold.
     const placed = new Set<string>();
@@ -135,7 +147,7 @@ class FrameClock {
       const shown = this.shown.get(key);
       const from = shown ?? (moving ? grown(part) : part.rect);
       if (moving && !sameRect(from, part.rect))
-        this.runs.set(key, { from, to: part.rect, start: null });
+        this.runs.set(key, { from, to: part.rect, start: null, p: 0 });
       else {
         if (running || !shown || !sameRect(shown, part.rect)) placed.add(key);
         this.runs.delete(key);
@@ -143,9 +155,79 @@ class FrameClock {
       }
     }
     this.paint(null, placed);
+    if (seen) this.holdColumns(parts, seen);
     if (this.runs.size && !this.frame)
       this.frame = requestAnimationFrame((t) => this.tick(t));
     this.tell();
+  }
+
+  /** Where the columns of each view about to change width are seen now:
+   *  the start of the carry, a carry under way included. */
+  private columnsSeen(
+    parts: Map<string, FramePart>,
+    was: Group | undefined,
+  ): Map<string, Map<HTMLElement, number>> {
+    const changing: [string, HTMLElement][] = [];
+    for (const [key, part] of parts) {
+      const before = was?.parts.get(key);
+      const el = this.elements.get(key);
+      if (!carries(part) || !before || !el || before.rect.w === part.rect.w)
+        continue;
+      // At the size it was drawn: a render that drew the islands anew
+      // (one opening beside it) has already given it its end size, not
+      // yet laid out.
+      put(el.style, "width", `${before.rect.w}px`);
+      put(el.style, "height", `${before.rect.h}px`);
+      changing.push([key, el]);
+    }
+    // All written, then all read: one layout for them all.
+    const seen = new Map<string, Map<HTMLElement, number>>();
+    for (const [key, el] of changing) {
+      const starts = columnStarts(el);
+      if (starts.size) seen.set(key, starts);
+    }
+    // No old carry left on them under the end layout.
+    for (const key of seen.keys()) this.letGo(key);
+    return seen;
+  }
+
+  /** The end layout written: each column held where it was seen, the
+   *  gap eased out on its view's run. */
+  private holdColumns(
+    parts: Map<string, FramePart>,
+    seen: Map<string, Map<HTMLElement, number>>,
+  ) {
+    // All read before any is held: one layout for them all.
+    const held: [string, string][] = [];
+    for (const [key, before] of seen) {
+      const el = this.elements.get(key);
+      const follow = parts.get(key)?.follow;
+      if (!el || !follow) continue;
+      const carried = carriedBy(before, columnStarts(el));
+      if (!carried.length) continue;
+      this.carries.set(key, carried);
+      held.push([key, follow]);
+    }
+    for (const [key, follow] of held) this.carry(key, follow);
+  }
+
+  /** View `key`'s columns as far off their end places as its box still
+   *  has to go; none once it is there. */
+  private carry(key: string, follow: string) {
+    const carried = this.carries.get(key);
+    if (!carried) return;
+    const run = this.runs.get(follow);
+    const left = run ? 1 - run.p : 0;
+    for (const { el, by } of carried)
+      put(el.style, "translate", left ? `${by * left}px` : "");
+    if (!left) this.carries.delete(key);
+  }
+
+  /** View `key`'s columns back at their own places. */
+  private letGo(key: string) {
+    for (const { el } of this.carries.get(key) ?? [])
+      put(el.style, "translate", "");
+    this.carries.delete(key);
   }
 
   /** The runs' end told once, however they ended: run out, or put at
@@ -170,6 +252,7 @@ class FrameClock {
     for (const key of this.groups.get(name)?.parts.keys() ?? []) {
       this.shown.delete(key);
       this.runs.delete(key);
+      this.letGo(key);
     }
     this.groups.delete(name);
     this.tell();
@@ -215,10 +298,8 @@ class FrameClock {
         now === null || run.start === null
           ? 0
           : Math.min(1, (now - run.start) / span);
-      this.shown.set(
-        key,
-        t >= 1 ? run.to : between(run.from, run.to, this.ease(t)),
-      );
+      run.p = t >= 1 ? 1 : this.ease(t);
+      this.shown.set(key, t >= 1 ? run.to : between(run.from, run.to, run.p));
       if (t >= 1) this.runs.delete(key);
     }
     if (!moved.size) return;
@@ -283,10 +364,12 @@ class FrameClock {
         ? ""
         : `inset(${top}px ${right}px ${bottom}px ${left}px)`,
     );
+    this.carry(key, part.follow);
   }
 }
 
-type Written = "left" | "top" | "width" | "height" | "transform" | "clipPath";
+type Written =
+  "left" | "top" | "width" | "height" | "transform" | "clipPath" | "translate";
 
 /** What the clock last wrote to each style, and what the engine held then:
  *  the engine may spell a value its own way (a long fraction cut short),
@@ -333,6 +416,11 @@ function samePart(a: FramePart, b: FramePart): boolean {
     a.above === b.above &&
     a.along === b.along
   );
+}
+
+/** A view carried along on its box, whose columns may be held. */
+function carries(part: FramePart): boolean {
+  return !!part.follow && !part.own && !part.above && !part.still;
 }
 
 /** A new part's first frame: none of it yet, at the edge it grows from. */

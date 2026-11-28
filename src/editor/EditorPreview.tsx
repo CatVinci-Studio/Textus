@@ -58,5 +58,12 @@ export function EditorPreview({
     handle.current?.update(markdown);
   }, [markdown]);
 
-  return <div ref={root} className={className} />;
+  // A page's column, held where it was as its pane changes width (carry.ts).
+  return (
+    <div
+      ref={root}
+      className={className}
+      data-frame-column={page ? "" : undefined}
+    />
+  );
 }
