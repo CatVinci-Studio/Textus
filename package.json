@@ -31,6 +31,7 @@
     "check:native": "node scripts/check-native.mjs",
     "check:all": "node scripts/check-all.mjs",
     "screenshots:readme": "playwright test -c playwright.shots.config.ts --project=readme",
+    "screenshots:panels": "playwright test -c playwright.shots.config.ts --project=panels --workers=1",
     "screenshots:website": "playwright test -c playwright.shots.config.ts --project=website",
     "bench:motion": "playwright test -c playwright.bench.config.ts",
     "sync-models": "node scripts/sync-models.mjs",
