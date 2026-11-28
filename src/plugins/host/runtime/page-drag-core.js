@@ -118,6 +118,7 @@
       window.removeEventListener("pointermove", move);
       window.removeEventListener("pointerup", up);
       window.removeEventListener("pointercancel", cancel);
+      window.removeEventListener("blur", lost);
       window.removeEventListener("pointerdown", pressed, true);
       window.removeEventListener("keydown", key, true);
       window.removeEventListener("contextmenu", noMenu, true);
@@ -136,6 +137,11 @@
     var cancel = once(function (e) {
       finish(e.clientX, e.clientY, false);
     });
+    // A release outside the frame is never heard: the window losing focus
+    // ends the drag, dropping nothing.
+    function lost() {
+      finish(last.x, last.y, false);
+    }
     // A new press while this one is still followed: its release went
     // unheard, and the drag ends where it was, dropping nothing.
     function pressed() {
@@ -164,6 +170,7 @@
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
     window.addEventListener("pointercancel", cancel);
+    window.addEventListener("blur", lost);
     window.addEventListener("pointerdown", pressed, true);
     window.addEventListener("keydown", key, true);
     onOrigin.forEach(function (pair) {

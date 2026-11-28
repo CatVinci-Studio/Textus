@@ -29,6 +29,7 @@ type Drag = {
     },
   ) => { cancel(): void };
   reorder: unknown;
+  indexAt: (items: Element[], at: number, axis: "x" | "y") => number;
 };
 const drag = () =>
   (window as unknown as { textus: { drag: Drag } }).textus.drag;
@@ -99,6 +100,16 @@ describe("a mouse", () => {
     fire("pointermove", 30, 10);
     fire("pointerup", 30, 10);
     expect(calls).toEqual([]);
+    expect(document.body.style.userSelect).toBe("");
+  });
+
+  it("ends as a cancel when the window loses focus, and lets go of its listeners", () => {
+    const { calls, handlers } = recorder();
+    drag().track(pointer("pointerdown", 10, 10), handlers);
+    fire("pointermove", 20, 10);
+    window.dispatchEvent(new Event("blur"));
+    fire("pointermove", 30, 10);
+    expect(calls).toEqual(["start 10,10", "move 20,10", "end 20,10 false"]);
     expect(document.body.style.userSelect).toBe("");
   });
 });
@@ -214,6 +225,77 @@ describe("an item among lists", () => {
     window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
     expect(onDrop).not.toHaveBeenCalled();
     expect(a.firstElementChild).toBe(one);
+  });
+
+  const lay = () => {
+    document.body.innerHTML = `<ul id="a"><li>1</li><li>2</li></ul><ul id="b"></ul>`;
+    const [a, b] = Array.from(document.querySelectorAll("ul"));
+    const rect = (l: number) =>
+      ({
+        left: l,
+        top: 0,
+        right: l + 100,
+        bottom: 100,
+        width: 100,
+        height: 100,
+      }) as DOMRect;
+    a.getBoundingClientRect = () => rect(0);
+    b.getBoundingClientRect = () => rect(200);
+    const [one, two] = Array.from(document.querySelectorAll("li"));
+    const onDrop = vi.fn();
+    const options = {
+      item: one,
+      lists: () => [a, b],
+      itemsOf: (list: Element) => Array.from(list.querySelectorAll("li")),
+      onDrop,
+    };
+    return { a, b, one, two, onDrop, options };
+  };
+
+  it("goes home when let go over no list", () => {
+    const { a, b, one, onDrop, options } = lay();
+    drag().sortable(pointer("pointerdown", 10, 10), options);
+    fire("pointermove", 250, 50);
+    expect(one.parentNode).toBe(b);
+    fire("pointermove", 500, 500);
+    fire("pointerup", 500, 500);
+    expect(onDrop).not.toHaveBeenCalled();
+    expect(a.firstElementChild).toBe(one);
+  });
+
+  it("still swallows the click when the page drew its list again mid-drag", () => {
+    const { b, two, options } = lay();
+    drag().sortable(pointer("pointerdown", 10, 10), options);
+    fire("pointermove", 250, 50);
+    two.remove();
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    const clicked = vi.fn();
+    document.body.addEventListener("click", clicked);
+    document.body.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    expect(clicked).not.toHaveBeenCalled();
+    expect(b.querySelector("li")).toBeNull();
+  });
+
+  it("drags nothing from a press in a text field", () => {
+    const { one, options } = lay();
+    one.innerHTML = `<input type="text">`;
+    const down = pointer("pointerdown", 10, 10);
+    Object.defineProperty(down, "target", { value: one.firstChild });
+    drag().sortable(down, options);
+    fire("pointermove", 250, 50);
+    expect(document.querySelector(".tx-drag-ghost")).toBeNull();
+  });
+
+  it("says where a pointer goes among items", () => {
+    document.body.innerHTML = `<p></p><p></p>`;
+    const items = Array.from(document.querySelectorAll("p"));
+    items.forEach((el, i) => {
+      el.getBoundingClientRect = () =>
+        ({ left: i * 50, top: i * 20, width: 50, height: 20 }) as DOMRect;
+    });
+    expect(drag().indexAt(items, 5, "y")).toBe(0);
+    expect(drag().indexAt(items, 35, "y")).toBe(2);
+    expect(drag().indexAt(items, 30, "x")).toBe(1);
   });
 
   it("keeps its core's own parts off the API", () => {

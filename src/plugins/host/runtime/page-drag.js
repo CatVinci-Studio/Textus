@@ -179,6 +179,8 @@
   // `onDrop(list, index)`: the list let go over and the index among its
   // items; `held(x, y)`: a finger lifted it and let go where it was.
   function sortable(down, options) {
+    var pressed = down.target instanceof Element ? down.target : null;
+    if (pressed && pressed.closest(FIELD)) return { cancel: function () {} };
     var item = options.item;
     var axis = options.axis === "x" ? "x" : "y";
     var home = { parent: item.parentNode, next: item.nextSibling };
@@ -223,6 +225,15 @@
       });
       return best;
     }
+    // The item back where it was, if that place is still there.
+    function goHome() {
+      var parent = home.parent;
+      if (!parent || !parent.isConnected) return;
+      var next =
+        home.next && home.next.parentNode === parent ? home.next : null;
+      if (item.parentNode === parent && item.nextSibling === next) return;
+      parent.insertBefore(item, next);
+    }
     // The item to its place for a pointer at x, y. A finger at the
     // window's edge or past a short list counts for the list beside it.
     function place(x, y) {
@@ -233,7 +244,11 @@
             Math.min(Math.max(x, EDGE), innerWidth - EDGE),
             Math.min(Math.max(y, EDGE), innerHeight - EDGE),
           ));
-      if (!list) return;
+      if (!list) {
+        over = null;
+        goHome();
+        return;
+      }
       over = list;
       var rest = options.itemsOf(list).filter(function (n) {
         return n !== item;
@@ -301,7 +316,7 @@
         var list = over;
         var index = list ? options.itemsOf(list).indexOf(item) : -1;
         if (!dropped || !list || index < 0) {
-          home.parent.insertBefore(item, home.next);
+          goHome();
           return;
         }
         options.onDrop(list, index);

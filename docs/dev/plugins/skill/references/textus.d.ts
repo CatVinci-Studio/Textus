@@ -2213,7 +2213,8 @@ declare global {
          *  lists in its place (`tx-drag-source`), so the others make way;
          *  near a scroller's edge it scrolls. `onDrop(list, index)`: the
          *  list let go over and the item's index in it; not let go over a
-         *  list, or Esc, it goes back. `after(list)`: what an empty list's
+         *  list, or Esc, it goes back. A press in a text field is the
+         *  field's own and drags nothing. `after(list)`: what an empty list's
          *  item goes before (its add button). */
         sortable(
           down: PointerEvent,
