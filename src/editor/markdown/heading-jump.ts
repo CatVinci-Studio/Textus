@@ -124,6 +124,17 @@ export function referencePos(doc: ProseNode, anchor: string): number | null {
   return found;
 }
 
+/** `select` run and the keys given with the page held where it is: WebKit
+ *  scrolls an editor to its caret as it takes the focus, so the glide that
+ *  follows began from there - a leap past the heading, then back. */
+function caretInPlace(view: EditorView, select: () => void): void {
+  const scroller = view.dom.closest<HTMLElement>(".editor-scroll");
+  const top = scroller?.scrollTop ?? 0;
+  select();
+  takeKeys(view);
+  if (scroller && scroller.scrollTop !== top) scroller.scrollTop = top;
+}
+
 /** Scrolls to the document's `index`-th top-level heading, as the outline
  *  lists them, the caret at its end: typing goes on there. */
 export function revealNthHeading(view: EditorView, index: number): boolean {
@@ -136,8 +147,9 @@ export function revealNthHeading(view: EditorView, index: number): boolean {
   if (found === null) return false;
   const { pos, end } = found;
   const { doc } = view.state;
-  view.dispatch(view.state.tr.setSelection(TextSelection.create(doc, end)));
-  takeKeys(view);
+  caretInPlace(view, () =>
+    view.dispatch(view.state.tr.setSelection(TextSelection.create(doc, end))),
+  );
   revealPosition(view, pos, "top");
   return true;
 }
@@ -165,8 +177,9 @@ export function selectNthSection(view: EditorView, index: number): boolean {
     doc.resolve(start + 1),
     doc.resolve((end ?? doc.content.size) - 1),
   );
-  view.dispatch(view.state.tr.setSelection(selection));
-  takeKeys(view);
+  caretInPlace(view, () =>
+    view.dispatch(view.state.tr.setSelection(selection)),
+  );
   revealPosition(view, start + 1, "top");
   return true;
 }

@@ -12,6 +12,8 @@ import {
 } from "@milkdown/kit/prose/view";
 import { $prose } from "@milkdown/kit/utils";
 import { HeadingFoldMarks } from "./heading-fold-marks";
+import { flip } from "../../engine/motion/flip";
+import { movingBlocks } from "../blocks/block-lift";
 import { keepInList, uiList } from "../../storage/ui-state";
 import { modIsMeta } from "../../platform/os";
 import "./block-fold.css";
@@ -157,7 +159,14 @@ export const createHeadingFoldPlugin = (path: () => string | null) =>
       const caret = view.state.selection.from;
       if (folding && section && caret > section.from && caret < section.to)
         tr.setSelection(TextSelection.create(tr.doc, pos + node.nodeSize - 1));
-      view.dispatch(tr);
+      // The blocks below glide up into the folded section's room, or down
+      // as it opens and its blocks come in under the heading; drawn at
+      // once, they jumped by its height.
+      flip(movingBlocks(view), () => view.dispatch(tr), {
+        duration: "--dur-base",
+        easing: "--ease-out",
+        arrived: () => movingBlocks(view),
+      });
     };
     return new Plugin<Folds>({
       key: foldKey,

@@ -28,6 +28,7 @@ import { isWithin } from "../utils/path";
 import { DraftRow } from "./DraftRow";
 import { FileNode, FolderRow } from "./TreeRows";
 import { TreeRowsInSight } from "./TreeRowsInSight";
+import { RowsMakeRoom } from "../engine/motion/RowsMakeRoom";
 import type { FileOpenHow } from "./tree-shared";
 
 /** How long something dragged rests on a folded folder before it opens. */
@@ -221,8 +222,17 @@ export const DirNode = memo(function DirNode({
     return () => window.clearTimeout(timer);
   }, [dropping, open, setOpen]);
 
+  // Opened, folded, a row added or gone, a name being typed: the tree's
+  // rows make room. The window's folder filling the tree is not a change.
+  const node = useRef<HTMLDivElement>(null);
+  const shape =
+    depth === 0 && !sorted
+      ? null
+      : `${open}:${sorted?.length ?? "-"}:${drafting ?? ""}`;
+
   return (
     <div
+      ref={node}
       className={`dir-node${dropping ? " tx-drop-into" : ""}`}
       data-drop-dir={depth > 0 ? path : undefined}
       style={
@@ -231,6 +241,11 @@ export const DirNode = memo(function DirNode({
           : undefined
       }
     >
+      <RowsMakeRoom
+        watch={shape}
+        root={() => node.current?.closest('[role="tree"]') ?? null}
+        rows=".tree-row"
+      />
       {depth > 0 && (
         // Scrolled into, the folder's row stays at the top under its own
         // folders' until its last row goes by (FileTree.css).

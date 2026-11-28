@@ -6,6 +6,7 @@ import {
   dragSlots,
   incomingSlots,
   moved,
+  slides,
   stripLength,
   stripSlots,
   type Slot,
@@ -140,6 +141,7 @@ export function useTabStrip({
   ids,
   widths,
   gap,
+  room,
   incomingX,
 }: {
   strip: React.RefObject<HTMLElement | null>;
@@ -150,6 +152,8 @@ export function useTabStrip({
    *  until the row is measured. */
   widths: readonly number[] | null;
   gap: number;
+  /** The length the widths were fitted to. */
+  room: number;
   /** The incoming tab's centre, in the viewport; null when none. */
   incomingX: number | null;
 }) {
@@ -159,12 +163,17 @@ export function useTabStrip({
   // tab rides in.
   const was = useRef<{
     ids: readonly string[];
+    widths: readonly number[];
+    room: number;
+    gap: number;
     incoming: Slot | null;
     startAt: number | null;
-  }>({ ids, incoming: null, startAt: null });
+  }>({ ids, widths: [], room, gap, incoming: null, startAt: null });
   const scrolled = useCallback(() => scrollOf(strip), [strip]);
 
   const tabWidths = widths?.slice(0, ids.length) ?? null;
+  const idsKey = ids.join("\n");
+  const widthsKey = widths?.join(",");
 
   useLayoutEffect(() => {
     if (!widths || !tabWidths) return;
@@ -178,6 +187,8 @@ export function useTabStrip({
       if (id !== INCOMING && !ids.includes(id)) refs.current.delete(id);
     const before = was.current;
     const changed = before.ids.join("\n") !== ids.join("\n");
+    const shape = { ids, widths: tabWidths, room, gap };
+    const slide = slides(before, shape);
     if (incomingX !== null && widths.length > ids.length) {
       was.current.startAt ??= (stripOrigin(pane) ?? 0) - scrolled();
       const ride = incomingSlots(
@@ -189,7 +200,7 @@ export function useTabStrip({
       lay([...ride.slots, ride.incoming], [...ids, INCOMING], true);
       // It rides on the pointer: no slide of its own.
       frameClock.place(keyOf(INCOMING), box(ride.incoming));
-      was.current = { ...was.current, ids, incoming: ride.incoming };
+      was.current = { ...was.current, ...shape, incoming: ride.incoming };
       return;
     }
     was.current.startAt = null;
@@ -197,14 +208,14 @@ export function useTabStrip({
     const arrived =
       before.incoming && ids.find((id) => !before.ids.includes(id));
     if (arrived) frameClock.place(keyOf(arrived), box(before.incoming!));
-    lay(slots, ids, changed || !!before.incoming);
+    lay(slots, ids, slide || !!before.incoming);
     for (const id of ids)
       if (changed && !arrived && !before.ids.includes(id) && before.ids.length)
         popIn(strip.current, keyOf(id));
-    was.current = { ...was.current, ids, incoming: null };
-    // tabWidths is widths' head: the join keeps the effect to real changes.
+    was.current = { ...was.current, ...shape, incoming: null };
+    // tabWidths is widths' head: the joins keep the effect to real changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ids.join("\n"), widths?.join(","), gap, incomingX, lay, keyOf, pane]);
+  }, [idsKey, widthsKey, gap, room, incomingX, lay, keyOf, pane]);
 
   useStripCleanup(name, pane, scrolled);
 

@@ -16,6 +16,7 @@ import { SettingRow } from "./controls";
 import { ChevronIcon } from "../../engine/controls/icons";
 import { NumberField } from "../../engine/controls/NumberField";
 import { fill } from "../../i18n/fill";
+import { makeRoomFor } from "../../engine/motion/RowsMakeRoom";
 
 /** The reader's own size, spacing and font for the document, over the
  *  theme's: folded under one row that says whether any is set. */
@@ -44,7 +45,21 @@ export function DocTextFold({ t, settings, setSettings }: Props) {
     settings.docLetterSpacing !== "auto";
   return (
     <details className="settings-fold">
-      <summary className="settings-row">
+      <summary
+        className="settings-row"
+        onClick={(e) => {
+          // Opened by hand, so the rows under it make room as it unfolds.
+          e.preventDefault();
+          const fold = e.currentTarget.parentElement as HTMLDetailsElement;
+          makeRoomFor(
+            fold.closest(".settings-tab-page"),
+            ".settings-row",
+            () => {
+              fold.open = !fold.open;
+            },
+          );
+        }}
+      >
         <span className="settings-row-label">{t.docTextLabel}</span>
         <span className="settings-row-end">
           <span className="settings-row-value">

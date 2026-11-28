@@ -9,6 +9,8 @@
   inset: 0;
   z-index: var(--z-popover);
   pointer-events: none;
+  /* It dims the window as a dialog's backdrop does, so it fades in as one. */
+  animation: motion-fade-in var(--dur-base) var(--ease-standard);
 }
 
 .tour-scrim {
@@ -25,7 +27,10 @@
   pointer-events: auto;
 }
 
+/* A step that rings a part after one that rang none: the ring fades in
+   where it goes (the glide only moves a ring already there). */
 .tour-ring {
+  animation: motion-fade-in var(--dur-fast) var(--ease-out);
   position: absolute;
   top: 0;
   left: 0;

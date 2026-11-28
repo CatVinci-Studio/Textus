@@ -9,6 +9,7 @@ import { plainInline } from "../utils/markdown-plain";
 import { Tooltip } from "../engine/controls/Tooltip";
 import { ContextMenu } from "../engine/controls/ContextMenu";
 import { Presence } from "../engine/motion/usePresence";
+import { RowsMakeRoom } from "../engine/motion/RowsMakeRoom";
 import { escapeLabel } from "../editor/markdown/link-label";
 import { PluginOutlineRows, usePluginOutline } from "./OutlineExtras";
 import "./FileTree.css";
@@ -128,6 +129,11 @@ export function Outline({ content: shown, tabId }: OutlineProps) {
         setMenu({ x: e.clientX, y: e.clientY });
       }}
     >
+      <RowsMakeRoom
+        watch={collapsed}
+        root={() => treeRef.current}
+        rows=".outline-row"
+      />
       {visible.map((h) => {
         const isCollapsed = collapsed.has(h.id);
         return (

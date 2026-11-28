@@ -1,5 +1,7 @@
 import { currentStrings } from "../../i18n/current";
 import { keepInList, uiList } from "../../storage/ui-state";
+import { flip } from "../../engine/motion/flip";
+import { movingBlocks } from "../blocks/block-lift";
 import "./block-fold.css";
 
 /**
@@ -130,7 +132,16 @@ export function addBlockFold(
     event.stopPropagation();
     const on = !el.hasAttribute("data-folded");
     setBlockFolded(key, on);
-    showBlockFold(el, on);
+    // What follows glides to the block's new end, as a heading's fold does.
+    const editor = el.closest<HTMLElement>(".ProseMirror");
+    flip(
+      editor ? movingBlocks({ dom: editor }) : [],
+      () => showBlockFold(el, on),
+      {
+        duration: "--dur-base",
+        easing: "--ease-out",
+      },
+    );
   };
   for (const button of el.querySelectorAll(
     ":scope > .block-fold, :scope > .block-folded-line",
